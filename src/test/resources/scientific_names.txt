@@ -1,0 +1,369 @@
+scientificName	genusOrAbove	infraGeneric	specificEpithet	infraSpecificEpithet	cultivarEpithet	authorship	year	bracketAuthorship	bracketYear	rank	nomcode	nothotype	nametype
+####
+# Scientific Names Parser Test
+# Test consists of a tab delimited input
+####
+
+#uninomial
+Pseudocercospora 	Pseudocercospora												sciname
+
+#uninomial with author
+Pseudocercospora Speg. 	Pseudocercospora					Speg.							sciname
+
+#uninomial with author and year
+Pseudocercospora Speg. 1910 	Pseudocercospora					Speg.	1910						sciname
+Pseudocercospora Spegazzini, 1910 	Pseudocercospora					Spegazzini	1910						sciname
+Tridentella tangeroae Bruce, 198? 	Tridentella		tangeroae			Bruce	198?						doubtful
+
+#two-letter genus names (legacy genera, not allowed anymore)
+Ca Dyar 1914 	Ca					Dyar	1914						sciname
+Ea Distant 1911 	Ea					Distant	1911						sciname
+Ge Nicéville 1895 	Ge					Nicéville	1895						sciname
+Ia Thomas 1902 	Ia					Thomas	1902						sciname
+Io Lea 1831 	Io					Lea	1831						sciname
+Io Blanchard 1852 	Io					Blanchard	1852						sciname
+Ix Bergroth 1916 	Ix					Bergroth	1916						sciname
+Lo Seale 1906 	Lo					Seale	1906						sciname
+Oa Girault 1929 	Oa					Girault	1929						sciname
+Ra Whitley 1931 	Ra					Whitley	1931						sciname
+Ty Bory de St. Vincent 1827 	Ty					Bory de St. Vincent	1827						sciname
+Ua Girault 1929 	Ua					Girault	1929						sciname
+Aa Baker 1940 	Aa					Baker	1940						sciname
+Ja Uéno 1955 	Ja					Uéno	1955						sciname
+Zu Walters & Fitch 1960 	Zu					Walters & Fitch	1960						sciname
+La Bleszynski 1966 	La					Bleszynski	1966						sciname
+Qu Durkoop 	Qu					Durkoop							sciname
+As Slipinski 1982 	As					Slipinski	1982						sciname
+Ba Solem 1983 	Ba					Solem	1983						sciname
+
+#canonical binomial
+Pseudocercospora     dendrobii 	Pseudocercospora		dendrobii										sciname
+
+#binomial with author and a year
+Platypus bicaudatulus Schedl 1935 	Platypus		bicaudatulus			Schedl	1935						sciname
+Platypus bicaudatulus Schedl, 1935h 	Platypus		bicaudatulus			Schedl	1935h						sciname
+
+# whitespace names (rare, only ~50 cases)
+Donatia novae zelandiae Hook.f.	Donatia		novae zelandiae			Hook.f.							sciname
+Donatia novae-zelandiae Hook.f	Donatia		novae-zelandiae			Hook.f							wellformed
+Denticula van heurckii var. angusta Hust.	Denticula		van heurckii	angusta		Hust.				var.			sciname
+Denticula van heurckii f. ventricosa Hust.	Denticula		van heurckii	ventricosa		Hust.				f.			sciname
+
+#binomial with several authours
+Pseudocercospora dendrobii U. Braun & Crous 	Pseudocercospora		dendrobii			U. Braun & Crous							sciname
+Pseudocercospora dendrobii U. Braun & Crous 	Pseudocercospora		dendrobii			U. Braun & Crous							sciname
+Pseudocercospora dendrobii U. Braun and Crous 	Pseudocercospora		dendrobii			U. Braun & Crous							sciname
+
+#binomial with several authors and a year
+Pseudocercospora dendrobii U. Braun & Crous 2003 	Pseudocercospora		dendrobii			U. Braun & Crous	2003						sciname
+
+#iczn: species name with subgenus
+Hegeter (Hegeter) intercedens Lindberg H 1950 	Hegeter	Hegeter	intercedens			Lindberg H	1950						sciname
+
+#genus with question mark
+Ferganoconcha? oblonga 	Ferganoconcha		oblonga										doubtful
+
+#unicode utf8 characters in name
+Rühlella	Rühlella												wellformed
+Sténométope laevissimus Bibron 1855	Sténométope		laevissimus			Bibron	1855						sciname
+Choriozopella trägårdhi Lawrence, 1947	Choriozopella		trägårdhi			Lawrence	1947						wellformed
+
+#digraph unicode characters
+Læptura laetifica Dow, 1913 	Læptura		laetifica			Dow	1913						sciname
+Leptura lætifica Dow, 1913 	Leptura		lætifica			Dow	1913						sciname
+Leptura leætifica Dow, 1913 	Leptura		leætifica			Dow	1913						sciname
+Leæptura laetifica Dow, 1913 	Leæptura		laetifica			Dow	1913						sciname
+Leœptura laetifica Dow, 1913 	Leœptura		laetifica			Dow	1913						sciname
+Ærenea cognata Lacordaire, 1872 	Ærenea		cognata			Lacordaire	1872						sciname
+Œdicnemus capensis 	Œdicnemus		capensis										sciname
+Œnanthe œnanthe 	Œnanthe		œnanthe										sciname
+
+#basionym in parenthesis
+Zophosis persis (Chatanay, 1914) 	Zophosis		persis					Chatanay	1914				sciname
+Zophosis persis (Chatanay 1914) 	Zophosis		persis					Chatanay	1914				sciname
+
+#binomial with basionym and combination authors
+Pseudocercospora dendrobii(H.C.     Burnett)U. Braun & Crous     2003 	Pseudocercospora		dendrobii			U. Braun & Crous	2003	H.C. Burnett					sciname
+Pseudocercospora dendrobii(H.C.     Burnett, 1873)U. Braun & Crous     2003 	Pseudocercospora		dendrobii			U. Braun & Crous	2003	H.C. Burnett	1873				sciname
+Pseudocercospora dendrobii(H.C.     Burnett 1873)U. Braun & Crous ,    2003 	Pseudocercospora		dendrobii			U. Braun & Crous	2003	H.C. Burnett	1873				sciname
+
+#infraspecies without rank
+Hydnellum scrobiculatum zonatum (Banker) D. Hall & D.E. Stuntz 1972 	Hydnellum		scrobiculatum	zonatum		D. Hall & D.E. Stuntz	1972	Banker					sciname
+Hydnellum (Hydnellum) scrobiculatum zonatum (Banker) D. Hall & D.E. Stuntz 1972 	Hydnellum	Hydnellum	scrobiculatum	zonatum		D. Hall & D.E. Stuntz	1972	Banker					sciname
+Hydnellum scrobiculatum zonatum 	Hydnellum		scrobiculatum	zonatum									sciname
+
+#infraspecies with rank
+Aus bus Linn. var. bus 	Aus		bus	bus						var.			sciname
+Agalinis purpurea (L.) Briton var. borealis (Berg.) Peterson 1987 	Agalinis		purpurea	borealis		Peterson	1987	Berg.		var.			sciname
+Callideriphus flavicollis morph. reductus Fuchs 1961 	Callideriphus		flavicollis	reductus		Fuchs	1961			morph.			sciname
+Caulerpa cupressoides forma nuda 	Caulerpa		cupressoides	nuda						f.			sciname
+Chlorocyperus glaber form. fasciculariforme (Lojac.) Soó 	Chlorocyperus		glaber	fasciculariforme		Soó		Lojac.		f.			sciname
+Sphaerotheca    fuliginea    f.     dahliae    Movss.     1967 	Sphaerotheca		fuliginea	dahliae		Movss.	1967			f.			sciname
+Polypodium vulgare nothosubsp. mantoniae (Rothm.) Schidlay 	Polypodium		vulgare	mantoniae		Schidlay		Rothm.		subsp.		Infraspecific	sciname
+
+#infraspecies_multiple
+Hydnellum scrobiculatum var. zonatum f. parvum (Banker) D. Hall & D.E. Stuntz 1972 	Hydnellum		scrobiculatum	parvum		D. Hall & D.E. Stuntz	1972	Banker		f.			sciname
+Senecio fuchsii C.C.Gmel. subsp. fuchsii var. expansus (Boiss. & Heldr.) Hayek 	Senecio		fuchsii	expansus		Hayek		Boiss. & Heldr.		var.			sciname
+Senecio fuchsii C.C.Gmel. subsp. fuchsii var. fuchsii 	Senecio		fuchsii	fuchsii						var.			sciname
+
+#unknown authorship
+Tragacantha leporina (?) Kuntze 	Tragacantha		leporina			Kuntze							doubtful
+Lachenalia tricolor var. nelsonii (auct.) Baker 	Lachenalia		tricolor	nelsonii		Baker				var.			sciname
+Lachenalia tricolor var. nelsonii (anon.) Baker 	Lachenalia		tricolor	nelsonii		Baker				var.			sciname
+Lachenalia tricolor var. nelsonii (ht.) Baker 	Lachenalia		tricolor	nelsonii		Baker				var.			sciname
+Lachenalia tricolor var. nelsonii (hort.) Baker 	Lachenalia		tricolor	nelsonii		Baker				var.			sciname
+Puya acris ht. 	Puya		acris										sciname
+Puya acris anon. 	Puya		acris										sciname
+Puya acris hort. 	Puya		acris										sciname
+Puya acris auct.	Puya		acris										sciname
+Anabaena catenula (K?tzing) Bornet & Flahault	Anabaena		catenula			Bornet & Flahault		K?tzing					doubtful
+
+#miscellaneous names
+Fagus sylvatica subsp. orientalis (Lipsky) Greuter & Burdet 	Fagus		sylvatica	orientalis		Greuter & Burdet		Lipsky		subsp.			sciname
+Stagonospora polyspora M.T. Lucas & Sousa da Câmara 1934 	Stagonospora		polyspora			M.T. Lucas & Sousa da Câmara	1934						sciname
+Stagonospora polyspora M.T. Lucas et Sousa da Câmara 1934 	Stagonospora		polyspora			M.T. Lucas & Sousa da Câmara	1934						sciname
+Cladoniicola staurospora Diederich, van den Boom & Aptroot 2001 	Cladoniicola		staurospora			Diederich, van den Boom & Aptroot	2001						sciname
+Yarrowia lipolytica var. lipolytica (Wick., Kurtzman & E.A. Herrm.) Van der Walt & Arx 1981 	Yarrowia		lipolytica	lipolytica		Van der Walt & Arx	1981	Wick., Kurtzman & E.A. Herrm.		var.			sciname
+Physalospora rubiginosa (Fr.) anon. 	Physalospora		rubiginosa					Fr.					sciname
+Pleurotus ëous (Berk.) Sacc. 1887 	Pleurotus		ëous			Sacc.	1887	Berk.					sciname
+Lecanora wetmorei Śliwa 2004 	Lecanora		wetmorei			Śliwa	2004						sciname
+Calicium furfuraceum * furfuraceum (L.) Pers. 1797 	Calicium		furfuraceum	furfuraceum		Pers.	1797	L.		*			sciname
+Exobasidium vaccinii ** andromedae (P. Karst.) P. Karst. 1882 	Exobasidium		vaccinii	andromedae		P. Karst.	1882	P. Karst.		**			sciname
+Urceolaria scruposa **** clausa Flot. 1849 	Urceolaria		scruposa	clausa		Flot.	1849			****			sciname
+Cortinarius angulatus B gracilescens Fr. 1838 	Cortinarius		angulatus	gracilescens		Fr.	1838			B			sciname
+Cyathicula scelobelonium 	Cyathicula		scelobelonium										sciname
+Tuber liui A S. Xu 1999 	Tuber		liui			A S. Xu	1999						sciname
+Xylaria potentillae A S. Xu 	Xylaria		potentillae			A S. Xu							sciname
+Agaricus squamula Berk. & M.A. Curtis 1860 	Agaricus		squamula			Berk. & M.A. Curtis	1860						sciname
+Peltula coriacea Büdel, Henssen & Wessels 1986 	Peltula		coriacea			Büdel, Henssen & Wessels	1986						sciname
+Saccharomyces drosophilae anon. 	Saccharomyces		drosophilae										sciname
+Abacetus laevicollis de Chaudoir, 1869 	Abacetus		laevicollis			de Chaudoir	1869						sciname
+Gastrosericus eremorum von Beaumont 1955 	Gastrosericus		eremorum			von Beaumont	1955						sciname
+Cypraeovula (Luponia) amphithales perdentata 	Cypraeovula	Luponia	amphithales	perdentata									sciname
+Polyrhachis orsyllus nat musculus Forel, 1901 	Polyrhachis		orsyllus	musculus		Forel	1901			nat			sciname
+Latrodectus 13-guttatus Thorell, 1875 	Latrodectus		13-guttatus			Thorell	1875						sciname
+Latrodectus 3-guttatus Thorell 1875 	Latrodectus		3-guttatus			Thorell	1875						sciname
+
+#names with status at the end
+Arthopyrenia hyalospora (Nyl.) R.C. Harris comb. nov. 	Arthopyrenia		hyalospora			R.C. Harris		Nyl.					sciname
+
+#names with ex or in authors
+Arthopyrenia hyalospora (Nyl. ex Banker) R.C. Harris 	Arthopyrenia		hyalospora			R.C. Harris		Nyl. ex Banker					sciname
+Arthopyrenia hyalospora Nyl. ex Banker 	Arthopyrenia		hyalospora			Nyl. ex Banker							sciname
+Glomopsis lonicerae Peck ex C.J. Gould 1945 	Glomopsis		lonicerae			Peck ex C.J. Gould	1945						sciname
+Acanthobasidium delicatum (Wakef.) Oberw. ex Jülich 1979 	Acanthobasidium		delicatum			Oberw. ex Jülich	1979	Wakef.					sciname
+Mycosphaerella eryngii (Fr. ex Duby) Johanson ex Oudem. 1897 	Mycosphaerella		eryngii			Johanson ex Oudem.	1897	Fr. ex Duby					sciname
+Mycosphaerella eryngii (Fr. Duby) ex Oudem., 1897 	Mycosphaerella		eryngii			ex Oudem.	1897	Fr. Duby					sciname
+Mycosphaerella eryngii (Fr.ex Duby) ex Oudem. 1897 	Mycosphaerella		eryngii			ex Oudem.	1897	Fr.ex Duby					sciname
+Salmonella werahensis (Castellani) Hauduroy and Ehringer in Hauduroy 1937 	Salmonella		werahensis			Hauduroy & Ehringer	1937	Castellani					sciname
+
+#named hybrids
+×Agropogon P. Fourn. 1934 	Agropogon					P. Fourn.	1934					Generic	sciname
+xAgropogon P. Fourn. 	Agropogon					P. Fourn.						Generic	sciname
+XAgropogon P.Fourn. 	Agropogon					P.Fourn.						Generic	sciname
+× Agropogon 	Agropogon											Generic	sciname
+x Agropogon 	Agropogon											Generic	sciname
+X Agropogon 	Agropogon											Generic	sciname
+X Cupressocyparis leylandii 	Cupressocyparis		leylandii									Generic	sciname
+×Heucherella tiarelloides 	Heucherella		tiarelloides									Generic	sciname
+xHeucherella tiarelloides 	Heucherella		tiarelloides									Generic	sciname
+x Heucherella tiarelloides 	Heucherella		tiarelloides									Generic	sciname
+×Agropogon littoralis (Sm.) C. E. Hubb. 1946 	Agropogon		littoralis			C. E. Hubb.	1946	Sm.				Generic	sciname
+Asplenium X inexpectatum (E.L. Braun 1940) Morton (1956) 	Asplenium		inexpectatum			Morton	1956	E.L. Braun	1940			Specific	sciname
+Mentha ×smithiana R. A. Graham 1949 	Mentha		smithiana			R. A. Graham	1949					Specific	sciname
+Salix ×capreola Andersson (1867) 	Salix		capreola					Andersson	1867			Specific	sciname
+Salix x capreola Andersson 	Salix		capreola			Andersson						Specific	sciname
+
+
+#concepts
+Senecio jacquinianus sec. Rchb. 	Senecio		jacquinianus										sciname
+Senecio legionensis sensu Samp., non Lange	Senecio		legionensis										sciname
+Pseudomonas methanica (Söhngen 1906) sensu. Dworkin and Foster 1956	Pseudomonas		methanica					Söhngen	1906				sciname
+
+#empty spaces
+   Asplenium         Xinexpectatum ( E.L.      Braun   1940 )     Morton(1956)    	Asplenium		inexpectatum			Morton	1956	E.L. Braun	1940			Specific	sciname
+
+
+
+
+####
+#
+# Names with problems
+#
+####
+
+#double parenthesis
+Eichornia crassipes ( (Martius) ) Solms-Laub. 	Eichornia		crassipes			Solms-Laub.		Martius					sciname
+
+#year without authorship
+Acarospora cratericola 1929 	Acarospora		cratericola				1929						sciname
+
+
+#year range
+Tridentella tangeroae Bruce, 1987-92	Tridentella		tangeroae			Bruce	1987-92						wellformed
+
+#year in square brackets
+Anthoscopus Cabanis [1851] 	Anthoscopus					Cabanis	1851						doubtful
+Anthoscopus Cabanis [185?] 	Anthoscopus					Cabanis	185?						doubtful
+Anthoscopus Cabanis [1851?] 	Anthoscopus					Cabanis	1851?						doubtful
+Anthoscopus Cabanis [1851] 	Anthoscopus					Cabanis	1851						doubtful
+Anthoscopus Cabanis [1851?] 	Anthoscopus					Cabanis	1851?						doubtful
+Zygaena witti Wiegel [1973] 	Zygaena		witti			Wiegel	1973						doubtful
+
+#names with garbage at the end
+Morea (Morea) Burt 2342343242 23424322342 23424234 	Morea	Morea				Burt							doubtful
+
+
+#salvage canonical
+Morea ssjjlajajaj324$33 234243242 	Morea												doubtful
+Morea (Morea) burtius 2342343242 23424322342 23424234 	Morea	Morea	burtius										doubtful
+Moraea spathulata ( (L. f. Klatt 	Moraea		spathulata										doubtful
+
+
+
+
+
+################################
+### NEW CHECKLIST BANK ENTRIES
+################################
+# cultivated plants, races
+Verpericola megasoma "Dall" Pils. 	Verpericola		megasoma		Dall	Pils. 				cv.			cultivar
+Abelia 'Edward Goucher'	Abelia				Edward Goucher					cv.			cultivar
+
+# new unparsed checklist bank entries
+Geranium exili Standl. in R. Knuth	Geranium		exili			Standl.							sciname
+Racosperma spirorbe subsp. solandri (Benth.)Pedley	Racosperma		spirorbe	solandri		Pedley		Benth.		subsp.			sciname
+
+
+# names with imprint years cited
+Ctenotus alacer Storr, 1970 ["1969"]	Ctenotus		alacer			Storr	1970						doubtful
+Anomalopus truncatus (Peters, 1876 ["1877"])	Anomalopus		truncatus					Peters	1876				doubtful
+Nostochopis H.C. Wood ex E. Bornet & C. Flahault 1887 ("1886-1888")	Nostochopis					H.C. Wood ex E. Bornet & C. Flahault	1887						sciname
+Protospongia W.S. Kent 1881 ("1880-1882")	Protospongia					W.S. Kent	1881						sciname
+Trismegistia monodii Ando, 1973 [1974] 	Trismegistia		monodii			Ando	1973						doubtful
+Deyeuxia coarctata Kunth, 1815 [1816] 	Deyeuxia		coarctata			Kunth	1815						doubtful
+Proasellus arnautovici (Remy 1932 1941)	Proasellus		arnautovici					Remy	1932				sciname
+Lestodiplosis cryphali Kieffer 1894 1901	Lestodiplosis		cryphali			Kieffer	1894						sciname
+Microrape simplex 1927 1930	Microrape		simplex				1927						sciname
+Matricaria chamomilla L. 1755 1763, non 1753	Matricaria		chamomilla			L.	1755						sciname
+
+
+# informals
+Hymenoscyphus lutisedus (P. Karst.) anon. ined.	Hymenoscyphus		lutisedus					P. Karst.					sciname
+Menegazzia wilsonii (Räsänen) anon.	Menegazzia		wilsonii					Räsänen					sciname
+
+# nomen x
+Sao hispanica R. & E. Richter nom. nud. in Sampelayo 1935	Sao		hispanica			R. & E. Richter	1935						sciname
+Vaucheria longicaulis var. bengalensis Islam, nom. illeg.	Vaucheria		longicaulis	bengalensis		Islam				var.			sciname
+Dorataspidae nom. correct	Dorataspidae												sciname
+Ethmosphaeridae nom. transf.	Ethmosphaeridae												sciname
+Fucus vesiculosus forma volubilis (Goodenough & Woodward) H.T. Powell, nom. inval	Fucus		vesiculosus	volubilis		H.T. Powell		Goodenough & Woodward		f.			sciname
+Fucus ramosissimus Oeder, nom. ambig.	Fucus		ramosissimus			Oeder							sciname
+Myrionema majus Foslie, nom. nov.	Myrionema		majus			Foslie							sciname
+Pithecellobium montanum var. subfalcatum (Zoll. & Moritzi)Miq., nom.rejic.	Pithecellobium		montanum	subfalcatum		Miq.		Zoll. & Moritzi		var.			sciname
+Lithothamnion glaciale forma verrucosum (Foslie) Foslie, nom. superfl.	Lithothamnion		glaciale	verrucosum		Foslie		Foslie		f.			sciname
+Anthoceros agrestis var. agrestis Paton nom. cons. prop.	Anthoceros		agrestis	agrestis		Paton				var.			sciname
+Corydalis bulbosa (L.) DC., nom. utique rej.	Corydalis		bulbosa			DC.		L.					sciname
+
+# original name authors not in brackets, but year is
+Lithobius chibenus Ishii & Tamura (1994)	Lithobius		chibenus					Ishii & Tamura	1994				sciname
+Lithobius elongipes Chamberlin (1952)	Lithobius		elongipes					Chamberlin	1952				sciname
+Rubus rhodanthus W.C.R.Watson (1933)	Rubus		rhodanthus					W.C.R.Watson	1933				sciname
+Platypus bicaudatulus Schedl (1935h) 	Platypus		bicaudatulus					Schedl	1935h				sciname
+Platypus bicaudatulus Schedl (1935) 	Platypus		bicaudatulus					Schedl	1935				sciname
+Sorbus poteriifolia Hand.-Mazz (1933)	Sorbus		poteriifolia					Hand.-Mazz	1933				sciname
+
+# original name in brackets but year not
+Zophosis persis (Chatanay), 1914 	Zophosis		persis					Chatanay	1914				sciname
+
+# weird years
+Malacocarpus schumannianus (Nicolai (1893)) Britton & Rose	Malacocarpus		schumannianus			Britton & Rose		Nicolai	1893				sciname
+
+# conceptual remarks
+Agropyron x acutum auct. non (DC.) Roem. & Schult.	Agropyron		acutum									Specific	sciname
+Carex leporina auct. non L. 1753	Carex		leporina										sciname
+Salicornia annua auct. auct. Sm., ex descr. non Sm. 1796	Salicornia		annua										sciname
+Rubus gremli auct. non Focke	Rubus		gremli										sciname
+Rubus carpinifolius auct. auct. non Weihe 1824	Rubus		carpinifolius										sciname
+Leucobryum glaucum var. albidum auct. eur. non (P. Beauv. ) Cardot	Leucobryum		glaucum	albidum						var.			sciname
+Corynoptera inexpectata auct.	Corynoptera		inexpectata										sciname
+Coccinella (Coccinella) divaricata auct.	Coccinella	Coccinella	divaricata										sciname
+
+# sensu, aff, cf
+Rebutia haagei Frič, Schelle, Fric sec.Backeb. & F.M.Knuth	Rebutia		haagei			Frič, Schelle, Fric							sciname
+Trox haroldi Fisch., sec. Kraatz & Bedel	Trox		haroldi			Fisch.							sciname
+Trophon sarsi S. Wood, sec. Jeffreys	Trophon		sarsi			S. Wood							sciname
+Frustulia aff pararhomboides sec. Metzeltin & Lange-Bertalot	Frustulia		pararhomboides										informal
+Anabaena affinis Lemmermann	Anabaena		affinis			Lemmermann							wellformed
+Anabaena sp.	Anabaena												informal
+Anabaena spec	Anabaena									sp.			informal
+Anabaena specularia	Anabaena		specularia										wellformed
+Rasbora cf. elegans	Rasbora		elegans										informal
+Rasbora aff. elegans	Rasbora		elegans										informal
+
+# swapped initials
+Cathormiocerus inflatiscapus Escalera, M.M. de la 1918	Cathormiocerus		inflatiscapus			Escalera, M.M. de la	1918						wellformed
+Hypnum rutabulum var. campestre Müll. Hal.	Hypnum		rutabulum	campestre		Müll. Hal.				var.			wellformed
+Leptophascum leptophyllum (Müll. Hal.) J. Guerra & Cano	Leptophascum		leptophyllum			J. Guerra & Cano		Müll. Hal.					wellformed
+
+# others
+Pompeja psorica Herrich-Schöffer	Pompeja		psorica			Herrich-Schöffer							wellformed
+Gloveria sphingiformis Barnes & McDunnough, 1910	Gloveria		sphingiformis			Barnes & McDunnough	1910						wellformed
+Gastromega badia Saalmüller, 1877/78	Gastromega		badia			Saalmüller	1877/78						wellformed
+Hasora coulteri Wood-Mason & de Nicóville, 1886	Hasora		coulteri			Wood-Mason & de Nicóville	1886						wellformed
+Pithauria uma De Nicóville, 1888	Pithauria		uma			De Nicóville	1888						wellformed
+Lepidostoma quila Bueno-Soria & Padilla-Ramirez, 1981	Lepidostoma		quila			Bueno-Soria & Padilla-Ramirez	1981						wellformed
+Dinarthrum inerme McLachlan, 1878	Dinarthrum		inerme			McLachlan	1878						wellformed
+Triplectides tambina Mosely, 1953	Triplectides		tambina			Mosely	1953						wellformed
+Oxyothespis sudanensis Giglio-Tos, 1916	Oxyothespis		sudanensis			Giglio-Tos	1916						wellformed
+Parastagmatoptera theresopolitana (Giglio-Tos, 1914)	Parastagmatoptera		theresopolitana					Giglio-Tos	1914				wellformed
+Oxyothespis nilotica nilotica Giglio-Tos, 1916	Oxyothespis		nilotica	nilotica		Giglio-Tos	1916						wellformed
+Photina (Cardioptera) burmeisteri (Westwood, 1889)	Photina	Cardioptera	burmeisteri					Westwood	1889				sciname
+Syngenes inquinatus (Gerstaecker)	Syngenes		inquinatus					Gerstaecker					wellformed
+Myrmeleon libelloides var. nigriventris A. Costa	Myrmeleon		libelloides	nigriventris		A. Costa				var.			wellformed
+Ascalaphus nigripes (van der Weele)	Ascalaphus		nigripes					van der Weele					wellformed
+Ascalaphus guttulatus A. Costa	Ascalaphus		guttulatus			A. Costa							wellformed
+Dichochrysa medogana (C.-K. Yang et al., 1988)	Dichochrysa		medogana					C.-K. Yang et al.	1988				wellformed
+Dichochrysa vitticlypea (C.-K. Yang & X.-X. Wang, 1990)	Dichochrysa		vitticlypea					C.-K. Yang & X.-X. Wang	1990				wellformed
+Dichochrysa qingchengshana (C.-K. Yang et al., 1992)	Dichochrysa		qingchengshana					C.-K. Yang et al.	1992				wellformed
+Colomastix tridentata LeCroy, 1995	Colomastix		tridentata			LeCroy	1995						wellformed
+Sunamphitoe pelagica (H. Milne Edwards, 1830)	Sunamphitoe		pelagica					H. Milne Edwards	1830				wellformed
+Brotogeris jugularis (Statius Muller, 1776)	Brotogeris		jugularis					Statius Muller	1776				wellformed
+Coracopsis nigra sibilans Milne-Edwards & OuStalet, 1885	Coracopsis		nigra	sibilans		Milne-Edwards & OuStalet	1885						wellformed
+Trichoglossus haematodus deplanchii J. Verreaux & Des Murs, 1860	Trichoglossus		haematodus	deplanchii		J. Verreaux & Des Murs	1860						wellformed
+Nannopsittaca dachilleae O'Neill, Munn & Franke, 1991	Nannopsittaca		dachilleae			O'Neill, Munn & Franke	1991						wellformed
+Ramphastos brevis Meyer de Schauensee, 1945	Ramphastos		brevis			Meyer de Schauensee	1945						wellformed
+Touit melanonota (Wied-Neuwied, 1820)	Touit		melanonota					Wied-Neuwied	1820				wellformed
+Trachyphonus darnaudii (Prevost & Des Murs, 1847)	Trachyphonus		darnaudii					Prevost & Des Murs	1847				wellformed
+Anolis porcatus aracelyae Perez-Beato, 1996	Anolis		porcatus	aracelyae		Perez-Beato	1996						wellformed
+Anolis gundlachi Peters, 1877	Anolis		gundlachi			Peters	1877						wellformed
+Anolis marmoratus girafus Lazell, 1964	Anolis		marmoratus	girafus		Lazell	1964						wellformed
+Chorististium maculatum (non Bloch 1790)	Chorististium		maculatum										sciname
+Pikea lunulata (non Guichenot 1864)	Pikea		lunulata										sciname
+Luzonichthys taeniatus Randall & McCosker, 1992	Luzonichthys		taeniatus			Randall & McCosker	1992						wellformed
+Puntius stoliczkae	Puntius		stoliczkae										wellformed
+Puntius arulius subsp. tambraparniei	Puntius		arulius	tambraparniei						subsp.			wellformed
+Actinia stellula Hemprich and Ehrenberg 1834	Actinia		stellula			Hemprich & Ehrenberg	1834						sciname
+Anemonia vagans (Less.) Milne Edw.	Anemonia		vagans			Milne Edw.		Less.					wellformed
+Epiactis fecunda (Verrill, 1899b)	Epiactis		fecunda					Verrill	1899b				wellformed
+Leptodictyum (Schimp.) Warnst.	Leptodictyum					Warnst.		Schimp.					wellformed
+Pseudocurimata Fernandez-Yepez, 1948	Pseudocurimata					Fernandez-Yepez	1948						wellformed
+Pseudophorellia da Costa Lima, 1934	Pseudophorellia					da Costa Lima	1934						wellformed
+Hershkovitzia Guimarães & d'Andretta, 1957	Hershkovitzia					Guimarães & d'Andretta	1957						wellformed
+Plectocolea (Mitten) Mitten, 1873	Plectocolea					Mitten	1873	Mitten					wellformed
+Discoporella d'Orbigny, 1852	Discoporella					d'Orbigny	1852						wellformed
+Acripeza Guérin-Ménéville, 1838	Acripeza					Guérin-Ménéville	1838						wellformed
+Subpeltonotus Swaraj Ghai, Kailash Chandra & Ramamurthy, 1988	Subpeltonotus					Swaraj Ghai, Kailash Chandra & Ramamurthy	1988						wellformed
+Boettcherimima De Souza Lopes, 1950	Boettcherimima					De Souza Lopes	1950						wellformed
+Surnicou Des Murs, 1853	Surnicou					Des Murs	1853						wellformed
+Cristocypridea Hou MS., 1977	Cristocypridea					Hou MS.	1977						wellformed
+Lecythis coriacea DC.	Lecythis		coriacea			DC.							wellformed
+Anhuiphyllum Yu Xueguang, 1991	Anhuiphyllum					Yu Xueguang	1991						wellformed
+Zonosphaeridium minor Tian Chuanrong, 1983	Zonosphaeridium		minor			Tian Chuanrong	1983						wellformed
+Oscarella microlobata Muricy, Boury-Esnault, Bézac & Vacelet, 1996	Oscarella		microlobata			Muricy, Boury-Esnault, Bézac & Vacelet	1996						wellformed
+Neoarctus primigenius Grimaldi de Zio, D'Abbabbo Gallo & Morone de Lucia, 1992	Neoarctus		primigenius			Grimaldi de Zio, D'Abbabbo Gallo & Morone de Lucia	1992						wellformed
+Phaonia wenshuiensis Zhang, Zhao Bin & Wu, 1985	Phaonia		wenshuiensis			Zhang, Zhao Bin & Wu	1985						wellformed
+Heteronychia (Eupierretia) helanshanensis Han, Zhao-Gan & Ye, 1985	Heteronychia	Eupierretia	helanshanensis			Han, Zhao-Gan & Ye	1985						sciname
+Solanophila karisimbica ab. fulvicollis Mader, 1941	Solanophila		karisimbica	fulvicollis		Mader	1941			ab.			wellformed
+Tortrix (Heterognomon) aglossana Kennel, 1899	Tortrix	Heterognomon	aglossana			Kennel	1899						sciname
+Leptochilus (Neoleptochilus) beaumonti Giordani Soika, 1953	Leptochilus	Neoleptochilus	beaumonti			Giordani Soika	1953						sciname
