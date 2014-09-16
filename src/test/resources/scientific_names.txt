@@ -58,7 +58,7 @@ Pseudocercospora dendrobii U. Braun and Crous 	Pseudocercospora		dendrobii			U. 
 Pseudocercospora dendrobii U. Braun & Crous 2003 	Pseudocercospora		dendrobii			U. Braun & Crous	2003						sciname
 
 #iczn: species name with subgenus
-Hegeter (Hegeter) intercedens Lindberg H 1950 	Hegeter	Hegeter	intercedens			Lindberg H	1950						sciname
+Hegeter (Hegeter) intercedens Lindberg 1950 	Hegeter	Hegeter	intercedens			Lindberg	1950						sciname
 
 #genus with question mark
 Ferganoconcha? oblonga 	Ferganoconcha		oblonga										doubtful

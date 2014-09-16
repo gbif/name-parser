@@ -58,7 +58,10 @@ public class NameParser {
                                          "(?:(?:[- ](?:de|da|du)?[- ]?)[" + AUTHOR_LETTERS + "]+[" + author_letters
                                          + "?]*\\.?)?" +
                                          // common name suffices (ms=manuscript, not yet published)
-                                         "(?: ?(?:f|fil|j|jr|jun|junior|sr|sen|senior|ms)\\.?)?" + ")";
+                                         "(?: ?(?:f|fil|j|jr|jun|junior|sr|sen|senior|ms)\\.?)?" +
+                                         // at last there might be 2 well known sanction authors for fungus, see POR-2454
+                                         "(?: *: *(?:Pers|Fr)\\.?)?" +
+                                         ")";
   protected static final String AUTHOR_TEAM =
     AUTHOR + "?(?:(?: ?ex\\.? | & | et | in |, ?|; ?|\\.)(?:" + AUTHOR + "|al\\.?))*";
   protected static final Pattern AUTHOR_TEAM_PATTERN = Pattern.compile("^" + AUTHOR_TEAM + "$");
@@ -88,6 +91,7 @@ public class NameParser {
   protected static final Pattern CULTIVAR =
     Pattern.compile("(?: cv\\.? ?)?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
 
+  private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+ *[0-9]+T?)$");
   // this is only used to detect whether we have a virus name
   public static final Pattern IS_VIRUS_PATTERN =
     Pattern.compile("(\\b(bacterio)?phage(s)?\\b|virus(es)?\\b|\\bictv$)", CASE_INSENSITIVE);
@@ -612,6 +616,16 @@ public class NameParser {
 
     // clean name, removing seriously wrong things
     name = preClean(name);
+
+    // parse out species/strain names with numbers found in Genebank/EBI names, e.g. Advenella kashmirensis W13003
+    m = STRAIN.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst(m.group(1));
+      pn.setType(NameType.INFORMAL);
+      pn.setStrain(m.group(2));
+      LOG.debug("Strain: {}", m.group(2));
+    }
+
     // normalise name
     name = normalize(name);
     if (Strings.isNullOrEmpty(name)) {

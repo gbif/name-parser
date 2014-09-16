@@ -133,7 +133,7 @@ public class NameParserTest {
       StringUtils.trimToNull(cols[2]), StringUtils.trimToNull(cols[3]), StringUtils.trimToNull(cols[4]),
       NamePart.fromString(cols[12]), StringUtils.trimToNull(cols[10]), StringUtils.trimToNull(cols[6]),
       StringUtils.trimToNull(cols[7]), StringUtils.trimToNull(cols[8]), StringUtils.trimToNull(cols[9]),
-      StringUtils.trimToNull(cols[5]), null, null, null);
+      StringUtils.trimToNull(cols[5]), null, null, null, null);
     return pn;
   }
 
@@ -725,9 +725,9 @@ public class NameParserTest {
 
   @Test
   public void testAutonyms() throws Exception {
-    assertParsedParts("Panthera leo leo (Linnaeus, 1758)", "Panthera", "leo", "leo", null, null, null, "Linnaeus",
+    assertParsedParts("Panthera leo leo (Linnaeus, 1758)", NameType.SCINAME, "Panthera", "leo", "leo", null, null, null, "Linnaeus",
       "1758");
-    assertParsedParts("Abies alba subsp. alba L.", "Abies", "alba", "alba", "subsp.", "L.");
+    assertParsedParts("Abies alba subsp. alba L.", NameType.SCINAME, "Abies", "alba", "alba", "subsp.", "L.");
     //TODO: improve nameparser to extract autonym authors, http://dev.gbif.org/issues/browse/GBIFCOM-10
     //    assertParsedParts("Abies alba L. subsp. alba", "Abies", "alba", "alba", "subsp.", "L.");
     // this is a wrong name! autonym authors are the species authors, so if both are given they must be the same!
@@ -736,49 +736,48 @@ public class NameParserTest {
 
   @Test
   public void testNameParserFull() throws Exception {
-    assertParsedParts("Abies alba L.", "Abies", "alba", null, null, "L.");
+    assertParsedParts("Abies alba L.", NameType.WELLFORMED, "Abies", "alba", null, null, "L.");
     assertParsedParts("Abies alba var. kosovo", "Abies", "alba", "kosovo", "var.");
     assertParsedParts("Abies alba subsp. parafil", "Abies", "alba", "parafil", "subsp.");
     assertParsedParts("Abies   alba L. ssp. parafil DC.", "Abies", "alba", "parafil", "subsp.", "DC.");
 
-    assertParsedParts("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea", "behrens",
+    assertParsedParts("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", NameType.DOUBTFUL, "Nuculoidea", "behrens",
       "christoph", "var.", "Williams & Breger", "1916");
-    assertParsedParts(" Nuculoidea Williams et  Breger 1916  ", "Nuculoidea", null, null, null, "Williams & Breger",
-      "1916", null, null);
-    assertParsedParts("Nuculoidea behrens v.christoph Williams & Breger [1916]  ", "Nuculoidea", "behrens", "christoph",
+    assertParsedParts(" Nuculoidea Williams et  Breger 1916  ", NameType.SCINAME, "Nuculoidea", null, null, null, "Williams & Breger", "1916");
+
+    assertParsedParts("Nuculoidea behrens v.christoph Williams & Breger [1916]  ", NameType.DOUBTFUL, "Nuculoidea", "behrens", "christoph",
       "var.", "Williams & Breger", "1916");
-    assertParsedParts("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea", "behrens",
+    assertParsedParts("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", NameType.DOUBTFUL, "Nuculoidea", "behrens",
       "christoph", "var.", "Williams & Breger", "1916");
     assertParsedParts(" Megacardita hornii  calafia", "Megacardita", "hornii", "calafia", null);
     assertParsedParts(" Megacardita hornii  calafia", "Megacardita", "hornii", "calafia", null);
     assertParsedParts(" A. anthophora acervorum", "A.", "anthophora", "acervorum", null);
-    assertParsedParts(" x Festulolium nilssonii Cugnac & A. Camus", "Festulolium", null, "nilssonii", null, null,
-      NamePart.GENERIC, "Cugnac & A. Camus", null, null, null, null);
-    assertParsedParts("x Festulolium nilssonii Cugnac & A. Camus", "Festulolium", null, "nilssonii", null, null,
-      NamePart.GENERIC, "Cugnac & A. Camus", null, null, null, null);
-    assertParsedParts("Festulolium x nilssonii Cugnac & A. Camus", "Festulolium", null, "nilssonii", null, null,
-      NamePart.SPECIFIC, "Cugnac & A. Camus", null, null, null, null);
+    assertParsedParts(" x Festulolium nilssonii Cugnac & A. Camus", NameType.SCINAME, "Festulolium", null, "nilssonii", null, null,
+      NamePart.GENERIC, "Cugnac & A. Camus", null, null, null, null, null);
+    assertParsedParts("x Festulolium nilssonii Cugnac & A. Camus", NameType.SCINAME, "Festulolium", null, "nilssonii", null, null,
+      NamePart.GENERIC, "Cugnac & A. Camus", null, null, null, null, null);
+    assertParsedParts("Festulolium x nilssonii Cugnac & A. Camus", NameType.SCINAME, "Festulolium", null, "nilssonii", null, null,
+      NamePart.SPECIFIC, "Cugnac & A. Camus", null, null, null, null, null);
 
-    assertParsedParts("Ges Klaus 1895", "Ges", null, null, null, "Klaus", "1895", null, null);
-    assertParsedParts("Ge Nicéville 1895", "Ge", null, null, null, "Nicéville", "1895", null, null);
+    assertParsedParts("Ges Klaus 1895", "Ges", null, null, null, "Klaus", "1895");
+    assertParsedParts("Ge Nicéville 1895", "Ge", null, null, null, "Nicéville", "1895");
     assertParsedParts("Œdicnemus capensis", "Œdicnemus", "capensis", null, null, null);
-    assertParsedParts("Zophosis persis (Chatanay, 1914)", "Zophosis", "persis", null, null, null, null, "Chatanay",
+    assertParsedParts("Zophosis persis (Chatanay, 1914)", null, "Zophosis", "persis", null, null, null, null, "Chatanay",
       "1914");
     assertParsedParts("Caulerpa cupressoides forma nuda", "Caulerpa", "cupressoides", "nuda", "f.", null);
-    assertParsedParts("Agalinis purpurea (L.) Briton var. borealis (Berg.) Peterson 1987", "Agalinis", "purpurea",
+    assertParsedParts("Agalinis purpurea (L.) Briton var. borealis (Berg.) Peterson 1987", null, "Agalinis", "purpurea",
       "borealis", "var.", "Peterson", "1987", "Berg.", null);
-    assertParsedParts("Agaricus squamula Berk. & M. A. Curtis 1860", "Agaricus", "squamula", null, null,
+    assertParsedParts("Agaricus squamula Berk. & M. A. Curtis 1860", null, "Agaricus", "squamula", null, null,
       "Berk. & M. A. Curtis", "1860", null, null);
-    assertParsedParts("Agaricus squamula Berk. & M.A. Curtis 1860", "Agaricus", "squamula", null, null,
+    assertParsedParts("Agaricus squamula Berk. & M.A. Curtis 1860", null, "Agaricus", "squamula", null, null,
       "Berk. & M.A. Curtis", "1860", null, null);
     assertParsedParts("Cladoniicola staurospora Diederich, van den Boom & Aptroot 2001", "Cladoniicola", "staurospora",
-      null, null, "Diederich, van den Boom & Aptroot", "2001", null, null);
+      null, null, "Diederich, van den Boom & Aptroot", "2001");
     assertParsedParts(" Pompeja psorica Herrich-Schöffer [1854]", "Pompeja", "psorica", null, null, "Herrich-Schöffer",
-      "1854", null, null);
+      "1854");
     assertParsedParts(" Gloveria sphingiformis Barnes & McDunnough 1910", "Gloveria", "sphingiformis", null, null,
-      "Barnes & McDunnough", "1910", null, null);
-    assertParsedParts("Gastromega badia Saalmüller 1877/78", "Gastromega", "badia", null, null, "Saalmüller", "1877/78",
-      null, null);
+      "Barnes & McDunnough", "1910");
+    assertParsedParts("Gastromega badia Saalmüller 1877/78", "Gastromega", "badia", null, null, "Saalmüller", "1877/78");
     assertParsedParts("Hasora coulteri Wood-Mason & de Nicóville 1886", "Hasora", "coulteri", null, null,
       "Wood-Mason & de Nicóville", "1886");
     assertParsedParts("Pithauria uma De Nicóville 1888", "Pithauria", "uma", null, null, "De Nicóville", "1888");
@@ -790,32 +789,32 @@ public class NameParserTest {
       "Mosely in Mosely & Kimmins", "1953");
     assertParsedParts(" Oxyothespis sudanensis Giglio-Tos 1916", "Oxyothespis", "sudanensis", null, null, "Giglio-Tos",
       "1916");
-    assertParsedParts(" Parastagmatoptera theresopolitana (Giglio-Tos 1914)", "Parastagmatoptera", "theresopolitana",
+    assertParsedParts(" Parastagmatoptera theresopolitana (Giglio-Tos 1914)", null, "Parastagmatoptera", "theresopolitana",
       null, null, null, null, "Giglio-Tos", "1914");
     assertParsedParts(" Oxyothespis nilotica nilotica Giglio-Tos 1916", "Oxyothespis", "nilotica", "nilotica", null,
       "Giglio-Tos", "1916");
-    assertParsedParts(" Photina Cardioptera burmeisteri (Westwood 1889)", "Photina", "burmeisteri", null, null, null,
+    assertParsedParts(" Photina Cardioptera burmeisteri (Westwood 1889)", null, "Photina", "burmeisteri", null, null, null,
       null, "Westwood", "1889");
-    assertParsedParts(" Syngenes inquinatus (Gerstaecker, [1885])", "Syngenes", "inquinatus", null, null, null, null,
+    assertParsedParts(" Syngenes inquinatus (Gerstaecker, [1885])", null, "Syngenes", "inquinatus", null, null, null, null,
       "Gerstaecker", "1885");
     assertParsedParts(" Myrmeleon libelloides var. nigriventris A. Costa, [1855]", "Myrmeleon", "libelloides",
       "nigriventris", "var.", "A. Costa", "1855");
-    assertParsedParts("Ascalaphus nigripes (van der Weele, [1909])", "Ascalaphus", "nigripes", null, null, null, null,
+    assertParsedParts("Ascalaphus nigripes (van der Weele, [1909])", null, "Ascalaphus", "nigripes", null, null, null, null,
       "van der Weele", "1909");
     assertParsedParts(" Ascalaphus guttulatus A. Costa, [1855]", "Ascalaphus", "guttulatus", null, null, "A. Costa",
       "1855");
-    assertParsedParts("Dichochrysa medogana (C.-K. Yang et al in Huang et al. 1988)", "Dichochrysa", "medogana", null,
+    assertParsedParts("Dichochrysa medogana (C.-K. Yang et al in Huang et al. 1988)", null, "Dichochrysa", "medogana", null,
       null, null, null, "C.-K. Yang et al. in Huang et al.", "1988");
-    assertParsedParts(" Dichochrysa vitticlypea (C.-K. Yang & X.-X. Wang 1990)", "Dichochrysa", "vitticlypea", null,
+    assertParsedParts(" Dichochrysa vitticlypea (C.-K. Yang & X.-X. Wang 1990)", null, "Dichochrysa", "vitticlypea", null,
       null, null, null, "C.-K. Yang & X.-X. Wang", "1990");
-    assertParsedParts(" Dichochrysa qingchengshana (C.-K. Yang et al. 1992)", "Dichochrysa", "qingchengshana", null,
+    assertParsedParts(" Dichochrysa qingchengshana (C.-K. Yang et al. 1992)", null, "Dichochrysa", "qingchengshana", null,
       null, null, null, "C.-K. Yang et al.", "1992");
     assertParsedParts(" Colomastix tridentata LeCroy 1995", "Colomastix", "tridentata", null, null, "LeCroy", "1995");
-    assertParsedParts(" Sunamphitoe pelagica (H. Milne Edwards 1830)", "Sunamphitoe", "pelagica", null, null, null,
+    assertParsedParts(" Sunamphitoe pelagica (H. Milne Edwards 1830)", null, "Sunamphitoe", "pelagica", null, null, null,
       null, "H. Milne Edwards", "1830");
 
     // TO BE CONTINUED
-    assertParsedParts(" Brotogeris jugularis (Statius Muller 1776)", "Brotogeris", "jugularis", null, null, null, null,
+    assertParsedParts(" Brotogeris jugularis (Statius Muller 1776)", null, "Brotogeris", "jugularis", null, null, null, null,
       "Statius Muller", "1776");
     assertParsedParts(" Coracopsis nigra sibilans Milne-Edwards & OuStalet 1885", "Coracopsis", "nigra", "sibilans",
       null, "Milne-Edwards & OuStalet", "1885");
@@ -825,9 +824,9 @@ public class NameParserTest {
       null, "O'Neill, Munn & Franke", "1991");
     assertParsedParts(" Ramphastos brevis Meyer de Schauensee 1945", "Ramphastos", "brevis", null, null,
       "Meyer de Schauensee", "1945");
-    assertParsedParts(" Touit melanonota (Wied-Neuwied 1820)", "Touit", "melanonota", null, null, null, null,
+    assertParsedParts(" Touit melanonota (Wied-Neuwied 1820)", null, "Touit", "melanonota", null, null, null, null,
       "Wied-Neuwied", "1820");
-    assertParsedParts(" Trachyphonus darnaudii (Prevost & Des Murs 1847)", "Trachyphonus", "darnaudii", null, null,
+    assertParsedParts(" Trachyphonus darnaudii (Prevost & Des Murs 1847)", null, "Trachyphonus", "darnaudii", null, null,
       null, null, "Prevost & Des Murs", "1847");
     assertParsedParts(" Anolis porcatus aracelyae PEREZ-BEATO 1996", "Anolis", "porcatus", "aracelyae", null,
       "Perez-Beato", "1996");
@@ -835,15 +834,15 @@ public class NameParserTest {
       "Randall & McCosker", "1992");
     assertParsedParts("Actinia stellula Hemprich and Ehrenberg in Ehrenberg 1834", "Actinia", "stellula", null, null,
       "Hemprich & Ehrenberg in Ehrenberg", "1834");
-    assertParsedParts("Anemonia vagans (Less.) Milne Edw.", "Anemonia", "vagans", null, null, "Milne Edw.", null,
+    assertParsedParts("Anemonia vagans (Less.) Milne Edw.", null, "Anemonia", "vagans", null, null, "Milne Edw.", null,
       "Less.", null);
-    assertParsedParts("Epiactis fecunda (Verrill 1899b)", "Epiactis", "fecunda", null, null, null, null, "Verrill",
+    assertParsedParts("Epiactis fecunda (Verrill 1899b)", null, "Epiactis", "fecunda", null, null, null, null, "Verrill",
       "1899b");
     assertParsedParts(" Pseudocurimata Fernandez-Yepez 1948", "Pseudocurimata", null, null, null, "Fernandez-Yepez",
       "1948");
     assertParsedParts(" Hershkovitzia Guimarães & d'Andretta 1957", "Hershkovitzia", null, null, null,
       "Guimarães & d'Andretta", "1957");
-    assertParsedParts(" Plectocolea (Mitten) Mitten in B.C. Seemann 1873", "Plectocolea", null, null, null,
+    assertParsedParts(" Plectocolea (Mitten) Mitten in B.C. Seemann 1873", null, "Plectocolea", null, null, null,
       "Mitten in B.C. Seemann", "1873", "Mitten", null);
     assertParsedParts(" Discoporella d'Orbigny 1852", "Discoporella", null, null, null, "d'Orbigny", "1852");
     assertParsedParts(" Acripeza Guérin-Ménéville 1838", "Acripeza", null, null, null, "Guérin-Ménéville", "1838");
@@ -875,7 +874,7 @@ public class NameParserTest {
       "rispaili", null, null, "Torres-Espejo, Caceres & le Pont", "1995");
     assertParsedParts("Gastropacha minima De Lajonquiére 1979", "Gastropacha", "minima", null, null, "De Lajonquiére",
       "1979");
-    assertParsedParts("Lithobius elongipes Chamberlin (1952)", "Lithobius", "elongipes", null, null, null, null,
+    assertParsedParts("Lithobius elongipes Chamberlin (1952)", null, "Lithobius", "elongipes", null, null, null, null,
       "Chamberlin", "1952");
     assertParsedParts("Maxillaria sect. Multiflorae Christenson", "Maxillaria", null, null, "sect.", "Christenson");
     assertParsedParts("Maxillaria allenii L.O.Williams in Woodson & Schery", "Maxillaria", "allenii", null, null,
@@ -886,13 +885,13 @@ public class NameParserTest {
       "balcanicum", null, "Hadži", "1937");
     assertParsedParts("Nomascus concolor subsp. lu Delacour, 1951", "Nomascus", "concolor", "lu", "subsp.", "Delacour",
       "1951");
-    assertParsedParts("Polygonum subgen. Bistorta (L.) Zernov", "Polygonum", null, null, "subgen.", "Zernov", null,
+    assertParsedParts("Polygonum subgen. Bistorta (L.) Zernov", null, "Polygonum", null, null, "subgen.", "Zernov", null,
       "L.", null);
     assertParsedParts("Stagonospora polyspora M.T. Lucas & Sousa da Câmara, 1934", "Stagonospora", "polyspora", null,
       null, "M.T. Lucas & Sousa da Câmara", "1934");
 
     assertParsedParts("Euphorbiaceae de Jussieu, 1789", "Euphorbiaceae", null, null, null, "de Jussieu", "1789");
-    assertParsedParts("Leucanitis roda Herrich-Schäffer (1851) 1845", "Leucanitis", "roda", null, null, null, "1845",
+    assertParsedParts("Leucanitis roda Herrich-Schäffer (1851) 1845", null, "Leucanitis", "roda", null, null, null, "1845",
       "Herrich-Schäffer", "1851");
 
     ParsedName pn = parser.parse("Loranthus incanus Schumach. & Thonn. subsp. sessilis Sprague");
@@ -996,18 +995,47 @@ public class NameParserTest {
       "subsp.", null);
   }
 
+  /**
+   * http://dev.gbif.org/issues/browse/POR-2454
+   */
+  @Test
+  public void testFungusNames() throws Exception {
+    assertParsedParts("Merulius lacrimans (Wulfen : Fr.) Schum.", null, "Merulius", "lacrimans", null, null, "Schum.", null, "Wulfen : Fr.", null);
+    assertParsedParts("Aecidium berberidis Pers. ex J.F. Gmel.", null, "Aecidium", "berberidis", null, null, "Pers. ex J.F. Gmel.", null);
+    assertParsedParts("Roestelia penicillata (O.F. Müll.) Fr.", null, "Roestelia", "penicillata", null, null, "Fr.", null, "O.F. Müll.", null);
+
+    assertParsedParts("Mycosphaerella eryngii (Fr. Duby) ex Oudem., 1897", null, "Mycosphaerella", "eryngii", null, null, "ex Oudem.", "1897", "Fr. Duby", null);
+    assertParsedParts("Mycosphaerella eryngii (Fr.ex Duby) ex Oudem. 1897", null, "Mycosphaerella", "eryngii", null, null, "ex Oudem.", "1897", "Fr.ex Duby", null);
+    assertParsedParts("Mycosphaerella eryngii (Fr. ex Duby) Johanson ex Oudem. 1897", null, "Mycosphaerella", "eryngii", null, null, "Johanson ex Oudem.", "1897", "Fr. ex Duby", null);
+  }
+
+  /**
+   * http://dev.gbif.org/issues/browse/POR-2397
+   */
+  @Test
+  public void testStrainNames() throws Exception {
+    assertStrain("Candidatus Liberibacter solanacearum", NameType.CANDIDATUS, "Liberibacter", "solanacearum", null, null, null);
+    assertStrain("Methylocystis sp. M6", NameType.INFORMAL, "Methylocystis", null, null, "sp.", "M6");
+    assertStrain("Advenella kashmirensis W13003", NameType.INFORMAL, "Advenella", "kashmirensis", null, null, "W13003");
+    assertStrain("Garra cf. dampaensis M23", NameType.INFORMAL, "Garra", "dampaensis", null, null, "M23");
+    assertStrain("Sphingobium lucknowense F2", NameType.INFORMAL, "Sphingobium", "lucknowense", null, null, "F2");
+    assertStrain("Pseudomonas syringae pv. atrofaciens LMG 5095T", NameType.INFORMAL, "Pseudomonas", "syringae", "atrofaciens", "pv.", "LMG 5095T");
+  }
+
+  @Test
+  public void testPathovars() throws Exception {
+    assertParsedParts("Xanthomonas campestris pv. citri (ex Hasse 1915) Dye 1978", NameType.SCINAME, "Xanthomonas", "campestris", "citri", "pv.", "Dye", "1978", "ex Hasse", "1915");
+    assertParsedParts("Xanthomonas campestris pv. oryzae (Xco)", NameType.WELLFORMED, "Xanthomonas", "campestris", "oryzae", "pv.", null, null, "Xco", null);
+    assertParsedParts("Streptococcus dysgalactiae (ex Diernhofer 1932) Garvie et al. 1983", NameType.SCINAME, "Streptococcus", "dysgalactiae", null, null, "Garvie et al.", "1983", "ex Diernhofer", "1932");
+  }
+
   @Test
   public void testImprintYear() throws Exception {
-    assertParsedParts(" Pompeja psorica Herrich-Schöffer [1854]", "Pompeja", "psorica", null, null, "Herrich-Schöffer",
-      "1854", null, null);
-    assertParsedParts(" Syngenes inquinatus (Gerstaecker, [1885])", "Syngenes", "inquinatus", null, null, null, null,
-      "Gerstaecker", "1885");
-    assertParsedParts(" Myrmeleon libelloides var. nigriventris A. Costa, [1855]", "Myrmeleon", "libelloides",
-      "nigriventris", "var.", "A. Costa", "1855");
-    assertParsedParts("Ascalaphus nigripes (van der Weele, [1909])", "Ascalaphus", "nigripes", null, null, null, null,
-      "van der Weele", "1909");
-    assertParsedParts(" Ascalaphus guttulatus A. Costa, [1855]", "Ascalaphus", "guttulatus", null, null, "A. Costa",
-      "1855");
+    assertParsedParts(" Pompeja psorica Herrich-Schöffer [1854]", NameType.DOUBTFUL, "Pompeja", "psorica", null, null, "Herrich-Schöffer", "1854", null, null);
+    assertParsedParts(" Syngenes inquinatus (Gerstaecker, [1885])", NameType.DOUBTFUL, "Syngenes", "inquinatus", null, null, null, null, "Gerstaecker", "1885");
+    assertParsedParts(" Myrmeleon libelloides var. nigriventris A. Costa, [1855]", NameType.DOUBTFUL, "Myrmeleon", "libelloides", "nigriventris", "var.", "A. Costa", "1855");
+    assertParsedParts("Ascalaphus nigripes (van der Weele, [1909])", NameType.DOUBTFUL, "Ascalaphus", "nigripes", null, null, null, null, "van der Weele", "1909");
+    assertParsedParts(" Ascalaphus guttulatus A. Costa, [1855]", NameType.DOUBTFUL, "Ascalaphus", "guttulatus", null, null, "A. Costa", "1855");
   }
 
   @Test
@@ -1074,9 +1102,17 @@ public class NameParserTest {
   }
 
   private ParsedName assertParsedParts(String name, String genus, String subgenus, String epithet, String infraepithet,
-    String rank, NamePart notho, String author, String year, String basAuthor, String basYear, String nomStatus)
+    String rank, NamePart notho, String author, String year, String basAuthor, String basYear, String nomStatus) throws UnparsableException {
+    return assertParsedParts(name, null, genus, subgenus, epithet, infraepithet, rank, notho, author, year, basAuthor, basYear, nomStatus, null);
+  }
+
+  private ParsedName assertParsedParts(String name, NameType type, String genus, String subgenus, String epithet, String infraepithet,
+    String rank, NamePart notho, String author, String year, String basAuthor, String basYear, String nomStatus, String strain)
     throws UnparsableException {
     ParsedName pn = parser.parse(name);
+    if (type != null) {
+      assertEquals(type, pn.getType());
+    }
     assertEquals(genus, pn.getGenusOrAbove());
     assertEquals(epithet, pn.getSpecificEpithet());
     assertEquals(infraepithet, pn.getInfraSpecificEpithet());
@@ -1087,38 +1123,49 @@ public class NameParserTest {
     assertEquals(basAuthor, pn.getBracketAuthorship());
     assertEquals(basYear, pn.getBracketYear());
     assertEquals(nomStatus, pn.getNomStatus());
+    assertEquals(strain, pn.getStrain());
+
     return pn;
   }
 
-  private void assertParsedName(String name, NameType type, String genus, String epithet, String infraepithet,
-    String rank) {
+  private ParsedName assertParsedName(String name, NameType type, String genus, String epithet, String infraepithet, String rank) {
+    ParsedName pn = null;
     try {
-      ParsedName pn =
-        assertParsedParts(name, genus, null, epithet, infraepithet, rank, null, null, null, null, null, null);
+      pn = assertParsedParts(name, type, genus, null, epithet, infraepithet, rank, null, null, null, null, null, null, null);
       assertEquals("Wrong name type", type, pn.getType());
     } catch (UnparsableException e) {
       assertEquals("Wrong name type", type, e.type);
     }
+    return pn;
   }
 
-  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, String rank,
-    String author, String year, String basAuthor, String basYear) throws UnparsableException {
-    assertParsedParts(name, genus, null, epithet, infraepithet, rank, null, author, year, basAuthor, basYear, null);
+  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, String rank, String author, String year, String basAuthor, String basYear) throws UnparsableException {
+    assertParsedParts(name, type, genus, null, epithet, infraepithet, rank, null, author, year, basAuthor, basYear, null, null);
   }
 
   private void assertParsedParts(String name, String genus, String epithet, String infraepithet, String rank)
     throws UnparsableException {
-    assertParsedParts(name, genus, epithet, infraepithet, rank, null, null, null, null);
+    assertParsedParts(name, null, genus, epithet, infraepithet, rank, null, null, null, null);
   }
 
-  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, String rank,
-    String author) throws UnparsableException {
-    assertParsedParts(name, genus, epithet, infraepithet, rank, author, null, null, null);
+  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, String rank, String author) throws UnparsableException {
+    assertParsedParts(name, null, genus, epithet, infraepithet, rank, author, null, null, null);
   }
 
-  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, String rank,
-    String author, String year) throws UnparsableException {
-    assertParsedParts(name, genus, epithet, infraepithet, rank, author, year, null, null);
+  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, String rank, String author) throws UnparsableException {
+    assertParsedParts(name, type, genus, epithet, infraepithet, rank, author, null, null, null);
+  }
+
+  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, String rank, String author, String year) throws UnparsableException {
+    assertParsedParts(name, null, genus, epithet, infraepithet, rank, author, year, null, null);
+  }
+
+  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, String rank, String author, String year) throws UnparsableException {
+    assertParsedParts(name, type, genus, epithet, infraepithet, rank, author, year, null, null);
+  }
+
+  private void assertStrain(String name, NameType type, String genus, String epithet, String infraepithet, String rank, String strain) throws UnparsableException {
+    assertParsedParts(name, type, genus, null, epithet, infraepithet, rank, null, null, null, null, null, null, strain);
   }
 
   @Test
@@ -1129,20 +1176,20 @@ public class NameParserTest {
     assertEquals("Chordata subgen. Cephalochordata",
       parser.parse("Chordata (Cephalochordata)").canonicalNameWithMarker());
 
-    assertParsedParts("Saperda (Saperda) candida m. bipunctata Breuning, 1952", "Saperda", "Saperda", "candida",
-      "bipunctata", "m.", null, "Breuning", "1952", null, null, null);
+    assertParsedParts("Saperda (Saperda) candida m. bipunctata Breuning, 1952", NameType.SCINAME, "Saperda", "Saperda", "candida",
+      "bipunctata", "m.", null, "Breuning", "1952", null, null, null, null);
 
-    assertParsedParts("Carex section Acrocystis", "Carex", "Acrocystis", null, null, "sect.", null, null, null, null,
+    assertParsedParts("Carex section Acrocystis", NameType.SCINAME, "Carex", "Acrocystis", null, null, "sect.", null, null, null, null,
+      null, null, null);
+
+    assertParsedParts("Juncus subgenus Alpini", NameType.SCINAME, "Juncus", "Alpini", null, null, "subgen.", null, null, null, null, null,
       null, null);
 
-    assertParsedParts("Juncus subgenus Alpini", "Juncus", "Alpini", null, null, "subgen.", null, null, null, null, null,
-      null);
+    assertParsedParts("Solidago subsection Triplinervae", NameType.SCINAME, "Solidago", "Triplinervae", null, null, "subsect.", null,
+      null, null, null, null, null, null);
 
-    assertParsedParts("Solidago subsection Triplinervae", "Solidago", "Triplinervae", null, null, "subsect.", null,
-      null, null, null, null, null);
-
-    assertParsedParts("Eleocharis series Maculosae", "Eleocharis", "Maculosae", null, null, "ser.", null, null, null,
-      null, null, null);
+    assertParsedParts("Eleocharis series Maculosae", NameType.SCINAME, "Eleocharis", "Maculosae", null, null, "ser.", null, null, null,
+      null, null, null, null);
 
   }
 
@@ -1579,11 +1626,10 @@ public class NameParserTest {
 
 
   @Test
-  @Ignore("This test is left only to manually try to parse and test new names. Please leave it in the code")
+ // @Ignore("This test is left only to manually try to parse and test new names. Please leave it in the code")
   public void testNewProblemNames() {
-
     // if no args supplied, then use some default examples
-    String[] names = new String[] {"Abies brevifolia cv. ex Dallim.", "Abies brevifolia cv. excelsia Dallim."};
+    String[] names = new String[] {"Candidatus Liberibacter solanacearum","Advenella kashmirensis W13003","Garra cf. dampaensis M23","Sphingobium lucknowense F2","Pseudomonas syringae pv. atrofaciens LMG 5095"};
 
     for (String name : names) {
       LOG.debug("\n\nIN   : " + name);
@@ -1603,3 +1649,6 @@ public class NameParserTest {
     }
   }
 }
+
+
+
