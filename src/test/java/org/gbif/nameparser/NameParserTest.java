@@ -22,8 +22,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.nameparser.NameParser.normalize;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -55,17 +53,16 @@ public class NameParserTest {
   private static final int CURRENTLY_FAIL_EXCL_AUTHORS = 19;
   private static final String NAMES_TEST_FILE = "scientific_names.txt";
   private static final String MONOMIALS_FILE = "monomials.txt";
-  private static final int SLOW = 100; // in milliseconds
   private static final InputStreamUtils streamUtils = new InputStreamUtils();
   private static NameParser parser;
 
   @BeforeClass
   public static void setup() {
-    parser = new NameParser();
+    parser = new NameParser(50);
     Set<String> mon;
     try {
       mon = FileUtils.streamToSet(streamUtils.classpathStream(MONOMIALS_FILE));
-      parser.setMonomials(mon);
+      parser.getNormalisedNameParser().setMonomials(mon);
       LOG.info("Parser setup. Read {} known monomials", mon.size());
     } catch (IOException e) {
       e.printStackTrace();
@@ -159,7 +156,7 @@ public class NameParserTest {
   }
 
   private boolean testAuthorship(String author) {
-    Matcher m = NameParser.AUTHOR_TEAM_PATTERN.matcher(author);
+    Matcher m = NormalisedNameParser.AUTHOR_TEAM_PATTERN.matcher(author);
     if (m.find()) {
       return true;
     } else {
@@ -606,13 +603,6 @@ public class NameParserTest {
   }
 
   @Test
-  @Ignore
-  public void testMonomialRsGbifOrg() throws Exception {
-    NameParser np = new NameParser();
-    np.readMonomialsRsGbifOrg();
-  }
-
-  @Test
   public void testNameFile() throws Exception {
     LOG.info("\n\nSTARTING FULL PARSER\n");
     Reader reader = FileUtils.getInputStreamReader(streamUtils.classpathStream(NAMES_TEST_FILE));
@@ -1001,7 +991,7 @@ public class NameParserTest {
   @Test
   public void testFungusNames() throws Exception {
     assertParsedParts("Merulius lacrimans (Wulfen : Fr.) Schum.", null, "Merulius", "lacrimans", null, null, "Schum.", null, "Wulfen : Fr.", null);
-    assertParsedParts("Aecidium berberidis Pers. ex J.F. Gmel.", null, "Aecidium", "berberidis", null, null, "Pers. ex J.F. Gmel.", null);
+    assertParsedParts("Aecidium berberidis Pers. ex J.F. Gmel.", null, "Aecidium", "berberidis", null, null, "Pers. ex J.F. Gmel.", null, null, null);
     assertParsedParts("Roestelia penicillata (O.F. Müll.) Fr.", null, "Roestelia", "penicillata", null, null, "Fr.", null, "O.F. Müll.", null);
 
     assertParsedParts("Mycosphaerella eryngii (Fr. Duby) ex Oudem., 1897", null, "Mycosphaerella", "eryngii", null, null, "ex Oudem.", "1897", "Fr. Duby", null);
@@ -1158,6 +1148,10 @@ public class NameParserTest {
 
   private void assertParsedParts(String name, String genus, String epithet, String infraepithet, String rank, String author, String year) throws UnparsableException {
     assertParsedParts(name, null, genus, epithet, infraepithet, rank, author, year, null, null);
+  }
+
+  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, NamePart notho, String rank, String author, String year) throws UnparsableException {
+    assertParsedParts(name, null, genus, null, epithet, infraepithet, rank, notho, author, year, null, null, null, null);
   }
 
   private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, String rank, String author, String year) throws UnparsableException {
@@ -1425,70 +1419,41 @@ public class NameParserTest {
   }
 
   /**
-   * These names have been parsing extremely slowely before - make sure this doesnt happen again
+   * These names have been parsing extremely slowely before.
+   * Verify all these names parse correctly before reaching a parsing timeout.
    */
   @Test
   public void testSlowNames() throws Exception {
-    long start = System.currentTimeMillis();
-    ParsedName pn = parser.parse("\"Acetobacter aceti var. muciparum\" (sic) (Hoyer) Frateur, 1950");
-    assertEquals("Acetobacter", pn.getGenusOrAbove());
-    assertEquals("aceti", pn.getSpecificEpithet());
-    assertEquals("muciparum", pn.getInfraSpecificEpithet());
-    assertEquals("var.", pn.getRankMarker());
-    assertTrue(System.currentTimeMillis() - start < SLOW);
+    assertParsedParts("\"Acetobacter aceti var. muciparum\" (sic) (Hoyer) Frateur, 1950", "Acetobacter", "aceti", "muciparum", "var.");
+    assertParsedParts("\"Acetobacter melanogenum (sic) var. malto-saccharovorans\" Frateur, 1950", "Acetobacter", "melanogenum", "malto-saccharovorans", "var.");
+    assertParsedParts("\"Acetobacter melanogenum (sic) var. maltovorans\" Frateur, 1950", "Acetobacter", "melanogenum", "maltovorans", "var.");
+    assertParsedParts("'Abelmoschus esculentus' bunchy top phytoplasma", "Abelmoschus", "esculentus", null, null);
+    assertParsedParts("Argyropelecus d'Urvillei Valenciennes, 1849", "Argyropelecus", null, null, null, "d'Urvillei Valenciennes", "1849");
+    assertParsedParts("Batillipes africanus Morone De Lucia, D'Addabbo Gallo and Grimaldi de Zio, 1988", "Batillipes", "africanus", null, null, "Morone De Lucia, D'Addabbo Gallo & Grimaldi de Zio", "1988");
+    assertParsedParts("Abrotanellinae H.Rob., G.D.Carr, R.M.King & A.M.Powell", "Abrotanellinae", null, null, null, "H.Rob., G.D.Carr, R.M.King & A.M.Powell");
+    assertParsedParts("Acidomyces B.J. Baker, M.A. Lutz, S.C. Dawson, P.L. Bond & Banfield", "Acidomyces", null, null, null, "B.J. Baker, M.A. Lutz, S.C. Dawson, P.L. Bond & Banfield");
+    assertParsedParts("Acidomyces richmondensis B.J. Baker, M.A. Lutz, S.C. Dawson, P.L. Bond & Banfield, 2004", "Acidomyces", "richmondensis", null, null, "B.J. Baker, M.A. Lutz, S.C. Dawson, P.L. Bond & Banfield", "2004");
+    assertParsedParts("Acrodictys liputii L. Cai, K.Q. Zhang, McKenzie, W.H. Ho & K.D. Hyde", "Acrodictys", "liputii", null, null, "L. Cai, K.Q. Zhang, McKenzie, W.H. Ho & K.D. Hyde");
+    assertParsedParts("×Attabignya minarum M.J.Balick, A.B.Anderson & J.T.de Medeiros-Costa", "Attabignya", "minarum", null, NamePart.GENERIC, null, "M.J.Balick, A.B.Anderson & J.T.de Medeiros-Costa", null);
+    assertParsedParts("Paenibacillus donghaensis Choi,J.H.; Im,W.T.; Yoo,J.S.; Lee,S.M.; Moon,D.S.; Kim,H.J.; Rhee,S.K.; Roh,D.H.", "Paenibacillus", "donghaensis", null, null, "Choi, J.H.; Im, W.T.; Yoo, J.S.; Lee, S.M.; Moon, D.S.; Kim, H.J.; Rhee, S.K.; Roh, D.H.");
+    assertParsedParts("Yamatocallis obscura (Ghosh, M.R., A.K. Ghosh & D.N. Raychaudhuri, 1971", "Yamatocallis", "obscura", null, null, null);
+    assertParsedParts("Xanthotrogus tadzhikorum Nikolajev, 2008", "Xanthotrogus", "tadzhikorum", null, null, "Nikolajev", "2008");
+    assertParsedParts("Xylothamia G.L. Nesom, Y.B. Suh, D.R. Morgan & B.B. Simpson, 1990", "Xylothamia", null, null, null, "G.L. Nesom, Y.B. Suh, D.R. Morgan & B.B. Simpson", "1990");
+    assertParsedParts("Virginianthus E.M. Friis, H. Eklund, K.R. Pedersen & P.R. Crane, 1994", "Virginianthus", null, null, null, "E.M. Friis, H. Eklund, K.R. Pedersen & P.R. Crane", "1994");
 
-    start = System.currentTimeMillis();
-    pn = parser.parse("\"Acetobacter melanogenum (sic) var. malto-saccharovorans\" Frateur, 1950");
-    assertEquals("Acetobacter", pn.getGenusOrAbove());
-    assertEquals("melanogenum", pn.getSpecificEpithet());
-    assertTrue(System.currentTimeMillis() - start < SLOW);
+    // these timeout so no author is parsed! Make sure canonical parsing works!
+    assertParsedParts("Oreocharis aurea var. cordato-ovata (C.Y. Wu ex H.W. Li) K.Y. Pan, A.L. Weitzman, & L.E. Skog", "Oreocharis", "aurea", "cordato-ovata", "var.", null);
+    assertParsedParts("Candida mesorugosa G.M. Chaves, G.R. Terçarioli, A.C.B. Padovan, R. Rosas, R.C. Ferreira, A.S.A. Melo & A.L. Colombo 20", "Candida", "mesorugosa", null, null);
+    assertParsedParts("Torulopsis deparaffina H.T. Gao, C.J. Mu, R.H. Li, L.G. Wei, W.Y. Tan, Yue Y. Li, Zhong Q. Li, X.Z. Zhang & J.E. Wang 1979", "Torulopsis", "deparaffina", null, null);
+    assertParsedParts("Ophiocordyceps mrciensis (Aung, J.C. Kang, Z.Q. Liang, Soytong & K.D. Hyde) G.H. Sung, J.M. Sung, Hywel-Jones & Spatafora 200", "Ophiocordyceps", "mrciensis", null, null);
+    assertParsedParts("Paecilomyces hepiali Q.T. Chen & R.Q. Dai ex R.Q. Dai, X.M. Li, A.J. Shao, Shu F. Lin, J.L. Lan, Wei H. Chen & C.Y. Shen", "Paecilomyces", "hepiali", null, null);
+    assertParsedParts("Fusarium mexicanum Otero-Colina, Rodr.-Alvar., Fern.-Pavía, M. Maymon, R.C. Ploetz, T. Aoki, O'Donnell & S. Freeman 201", "Fusarium", "mexicanum", null, null);
+    assertParsedParts("Cyrtodactylus bintangrendah Grismer, Wood Jr,  Quah, Anuar, Muin, Sumontha, Ahmad, Bauer, Wangkulangkul, Grismer9 & Pauwels, 201", "Cyrtodactylus", "bintangrendah", null, null);
+    assertParsedParts("Equicapillimyces hongkongensis S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, G.K.Y. Choi, R.W.S. Poon, J.J.Y. Hui, F.J. Low, Luk &", "Equicapillimyces", "hongkongensis", null, null);
 
-    start = System.currentTimeMillis();
-    pn = parser.parse("\"Acetobacter melanogenum (sic) var. maltovorans\" Frateur, 1950");
-    assertEquals("Acetobacter", pn.getGenusOrAbove());
-    assertEquals("melanogenum", pn.getSpecificEpithet());
-    assertTrue(System.currentTimeMillis() - start < SLOW);
-
-    start = System.currentTimeMillis();
-    pn = parser.parse("'Abelmoschus esculentus' bunchy top phytoplasma");
-    assertEquals("Abelmoschus", pn.getGenusOrAbove());
-    assertEquals("esculentus", pn.getSpecificEpithet());
-    assertTrue(System.currentTimeMillis() - start < SLOW);
-
-    assertNotSlow("'38/89' designation is probably a typo");
-    assertNotSlow("Argyropelecus d'Urvillei Valenciennes, 1849");
-    assertNotSlow("Batillipes africanus Morone De Lucia, D'Addabbo Gallo and Grimaldi de Zio, 1988");
-    assertNotSlow("Blainville's beaked whale gammaherpesvirus");
-    assertNotSlow("Abrotanellinae H.Rob., G.D.Carr, R.M.King & A.M.Powell");
-    assertNotSlow("Acidomyces B.J. Baker, M.A. Lutz, S.C. Dawson, P.L. Bond & Banfield");
-    assertNotSlow("Acidomyces richmondensis B.J. Baker, M.A. Lutz, S.C. Dawson, P.L. Bond & Banfield, 2004");
-    assertNotSlow("Acrodictys liputii L. Cai, K.Q. Zhang, McKenzie, W.H. Ho & K.D. Hyde");
-    assertNotSlow("×Attabignya minarum M.J.Balick, A.B.Anderson & J.T.de Medeiros-Costa");
-    assertNotSlow(
-      "Paenibacillus donghaensis Choi,J.H.; Im,W.T.; Yoo,J.S.; Lee,S.M.; Moon,D.S.; Kim,H.J.; Rhee,S.K.; Roh,D.H.");
-
-    // TODO: fix nameparser so that these names are faster!
-    //assertNotSlow("Yamatocallis obscura (Ghosh, M.R., A.K. Ghosh & D.N. Raychaudhuri, 1971");
-    //assertNotSlow("Xanthotrogus tadzhikorum Nikolajev, 2008");
-    //assertNotSlow("Xylothamia G.L. Nesom, Y.B. Suh, D.R. Morgan & B.B. Simpson, 1990");
-    //assertNotSlow("Virginianthus E.M. Friis, H. Eklund, K.R. Pedersen & P.R. Crane, 1994");
-
-  }
-
-  /**
-   * @return true if name could be parsed
-   */
-  private boolean assertNotSlow(String name) {
-    long start = System.currentTimeMillis();
-    boolean parsed = false;
-    try {
-      ParsedName pn = parser.parse(name);
-      parsed = true;
-    } catch (UnparsableException e) {
-      // TODO: Handle exception
-    }
-    assertTrue(System.currentTimeMillis() - start < SLOW);
-    return parsed;
+    // unparsables
+    assertUnparsableType(NameType.DOUBTFUL, "'38/89' designation is probably a typo");
+    assertUnparsableType(NameType.VIRUS, "Blainville's beaked whale gammaherpesvirus");
   }
 
   @Test
@@ -1624,30 +1589,6 @@ public class NameParserTest {
     assertEquals("novae guineae", n.getInfraSpecificEpithet());
   }
 
-
-  @Test
- // @Ignore("This test is left only to manually try to parse and test new names. Please leave it in the code")
-  public void testNewProblemNames() {
-    // if no args supplied, then use some default examples
-    String[] names = new String[] {"Candidatus Liberibacter solanacearum","Advenella kashmirensis W13003","Garra cf. dampaensis M23","Sphingobium lucknowense F2","Pseudomonas syringae pv. atrofaciens LMG 5095"};
-
-    for (String name : names) {
-      LOG.debug("\n\nIN   : " + name);
-      ParsedName pn = null;
-      try {
-        pn = parser.parse(name);
-      } catch (UnparsableException e) {
-        LOG.error("UnparsableException", e);
-      }
-      LOG.debug("NORM : " + normalize(name));
-
-      if (pn != null) {
-        LOG.info("FULL : " + pn);
-      } else {
-        LOG.info("FULL : CANNOT PARSE");
-      }
-    }
-  }
 }
 
 
