@@ -99,7 +99,7 @@ public class NameParser {
     .compile("^(sub)?(fossil|" + StringUtils.join(Rank.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+",
       CASE_INSENSITIVE);
   private static final Pattern NORM_SUFFIXES =
-    Pattern.compile("[,;:]? (sp|anon|spp|hort|ms|[a-zA-Z][0-9])?\\.? *$", CASE_INSENSITIVE);
+    Pattern.compile("[,;:]? (sp|anon|spp|hort|ms|&|[a-zA-Z][0-9])?\\.? *$", CASE_INSENSITIVE);
   // removed not|indetermin[a-z]+
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
   private static final Pattern BLACKLISTED = Pattern.compile(
@@ -169,6 +169,8 @@ public class NameParser {
    */
   protected static String cleanStrong(String name) {
     if (name != null) {
+      // remove final & which causes long parse times
+
       // test for known bad suffixes like in Palythoa texaensis author unknown
       name = cutoffBadSuffices(name);
 

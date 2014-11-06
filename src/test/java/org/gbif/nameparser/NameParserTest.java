@@ -1440,6 +1440,7 @@ public class NameParserTest {
     assertParsedParts("Xanthotrogus tadzhikorum Nikolajev, 2008", "Xanthotrogus", "tadzhikorum", null, null, "Nikolajev", "2008");
     assertParsedParts("Xylothamia G.L. Nesom, Y.B. Suh, D.R. Morgan & B.B. Simpson, 1990", "Xylothamia", null, null, null, "G.L. Nesom, Y.B. Suh, D.R. Morgan & B.B. Simpson", "1990");
     assertParsedParts("Virginianthus E.M. Friis, H. Eklund, K.R. Pedersen & P.R. Crane, 1994", "Virginianthus", null, null, null, "E.M. Friis, H. Eklund, K.R. Pedersen & P.R. Crane", "1994");
+    assertParsedParts("Equicapillimyces hongkongensis S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, G.K.Y. Choi, R.W.S. Poon, J.J.Y. Hui, F.J. Low, Luk", "Equicapillimyces", "hongkongensis", null, null, "S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, G.K.Y. Choi, R.W.S. Poon, J.J.Y. Hui, F.J. Low, Luk");
 
     // these timeout so no author is parsed! Make sure canonical parsing works!
     assertParsedParts("Oreocharis aurea var. cordato-ovata (C.Y. Wu ex H.W. Li) K.Y. Pan, A.L. Weitzman, & L.E. Skog", "Oreocharis", "aurea", "cordato-ovata", "var.", null);
@@ -1449,7 +1450,6 @@ public class NameParserTest {
     assertParsedParts("Paecilomyces hepiali Q.T. Chen & R.Q. Dai ex R.Q. Dai, X.M. Li, A.J. Shao, Shu F. Lin, J.L. Lan, Wei H. Chen & C.Y. Shen", "Paecilomyces", "hepiali", null, null);
     assertParsedParts("Fusarium mexicanum Otero-Colina, Rodr.-Alvar., Fern.-Pavía, M. Maymon, R.C. Ploetz, T. Aoki, O'Donnell & S. Freeman 201", "Fusarium", "mexicanum", null, null);
     assertParsedParts("Cyrtodactylus bintangrendah Grismer, Wood Jr,  Quah, Anuar, Muin, Sumontha, Ahmad, Bauer, Wangkulangkul, Grismer9 & Pauwels, 201", "Cyrtodactylus", "bintangrendah", null, null);
-    assertParsedParts("Equicapillimyces hongkongensis S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, G.K.Y. Choi, R.W.S. Poon, J.J.Y. Hui, F.J. Low, Luk &", "Equicapillimyces", "hongkongensis", null, null);
 
     // unparsables
     assertUnparsableType(NameType.DOUBTFUL, "'38/89' designation is probably a typo");

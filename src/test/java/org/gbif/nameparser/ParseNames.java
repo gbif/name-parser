@@ -87,7 +87,7 @@ public class ParseNames {
   @Test
   public void testNewProblemNames() {
     // if no args supplied, then use some default examples
-    String[] names = new String[] {"Candidatus Liberibacter solanacearum","Advenella kashmirensis W13003","Garra cf. dampaensis M23","Sphingobium lucknowense F2","Pseudomonas syringae pv. atrofaciens LMG 5095"};
+    String[] names = new String[] {"Austrostipa feresetacea (Vickery, S.W.L.Jacobs & J.Everett) S.W.L.Jacobs &"};
 
     for (String name : names) {
       LOG.debug("\n\nIN   : " + name);
