@@ -49,9 +49,6 @@ import static org.junit.Assert.fail;
 public class NameParserTest {
 
   private static Logger LOG = LoggerFactory.getLogger(NameParserTest.class);
-  private static final int CURRENTLY_FAIL = 25;
-  private static final int CURRENTLY_FAIL_EXCL_AUTHORS = 19;
-  private static final String NAMES_TEST_FILE = "scientific_names.txt";
   private static final String MONOMIALS_FILE = "monomials.txt";
   private static final InputStreamUtils streamUtils = new InputStreamUtils();
   private static NameParser parser;
@@ -604,8 +601,11 @@ public class NameParserTest {
 
   @Test
   public void testNameFile() throws Exception {
+    final int CURRENTLY_FAIL = 25;
+    final int CURRENTLY_FAIL_EXCL_AUTHORS = 19;
+
     LOG.info("\n\nSTARTING FULL PARSER\n");
-    Reader reader = FileUtils.getInputStreamReader(streamUtils.classpathStream(NAMES_TEST_FILE));
+    Reader reader = FileUtils.getInputStreamReader(streamUtils.classpathStream("scientific_names.txt"));
     LineIterator iter = new LineIterator(reader);
 
     int parseFails = 0;
@@ -1315,6 +1315,95 @@ public class NameParserTest {
 
   }
 
+  /**
+   * http://dev.gbif.org/issues/browse/POR-2508
+   */
+  @Test
+  public void testNovNames() throws Exception {
+
+    ParsedName pn = parser.parse("Euphorbia rossiana var. nov. Steinmann, 1899");
+    assertEquals("Euphorbia", pn.getGenusOrAbove());
+    assertEquals("rossiana", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertEquals("Steinmann", pn.getAuthorship());
+    assertEquals("1899", pn.getYear());
+    assertEquals("var. nov.", pn.getNomStatus());
+    assertEquals("var.", pn.getRankMarker());
+
+    pn = parser.parse("Ipomopsis tridactyla (Rydb.) Wilken, comb. nov. ined.");
+    assertEquals("Ipomopsis", pn.getGenusOrAbove());
+    assertEquals("tridactyla", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertEquals("Rydb.", pn.getBracketAuthorship());
+    assertEquals("Wilken", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("comb. nov. ined.", pn.getNomStatus());
+
+    pn = parser.parse("Orobanche riparia Collins, sp. nov. ined.");
+    assertEquals("Orobanche", pn.getGenusOrAbove());
+    assertEquals("riparia", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertEquals("Collins", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("sp.", pn.getRankMarker());
+    assertEquals("sp. nov. ined.", pn.getNomStatus());
+
+    pn = parser.parse("Stebbinsoseris gen. nov.");
+    assertEquals("Stebbinsoseris", pn.getGenusOrAbove());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("gen.", pn.getRankMarker());
+    assertEquals("gen. nov.", pn.getNomStatus());
+
+    pn = parser.parse("Astelia alpina var. novae-hollandiae");
+    assertEquals("Astelia", pn.getGenusOrAbove());
+    assertEquals("alpina", pn.getSpecificEpithet());
+    assertEquals("novae-hollandiae", pn.getInfraSpecificEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("var.", pn.getRankMarker());
+    assertNull(pn.getNomStatus());
+
+    pn = parser.parse("Astelia alpina var. november ");
+    assertEquals("Astelia", pn.getGenusOrAbove());
+    assertEquals("alpina", pn.getSpecificEpithet());
+    assertEquals("november", pn.getInfraSpecificEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("var.", pn.getRankMarker());
+    assertNull(pn.getNomStatus());
+
+    pn = parser.parse("Astelia alpina subsp. november ");
+    assertEquals("Astelia", pn.getGenusOrAbove());
+    assertEquals("alpina", pn.getSpecificEpithet());
+    assertEquals("november", pn.getInfraSpecificEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("subsp.", pn.getRankMarker());
+    assertNull(pn.getNomStatus());
+
+    pn = parser.parse("Astelia alpina november ");
+    assertEquals("Astelia", pn.getGenusOrAbove());
+    assertEquals("alpina", pn.getSpecificEpithet());
+    assertEquals("november", pn.getInfraSpecificEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getRankMarker());
+    assertNull(pn.getNomStatus());
+
+    pn = parser.parse("Myrionema majus Foslie, nom. nov.");
+    assertEquals("Myrionema", pn.getGenusOrAbove());
+    assertEquals("majus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertEquals("Foslie", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getRankMarker());
+    assertEquals("nom. nov.", pn.getNomStatus());
+
+  }
+
   @Test
   public void testNormalizeName() {
     assertEquals("Nuculoidea Williams et Breger, 1916", NameParser.normalize("Nuculoidea Williams et  Breger 1916  "));
@@ -1338,23 +1427,25 @@ public class NameParserTest {
   @Test
   public void testNormalizeStrongName() {
     assertEquals("Nuculoidea Williams & Breger, 1916",
-      NameParser.normalize(NameParser.normalizeStrong("Nuculoidea Williams et  Breger 1916  ")));
+      NameParser.normalizeStrong("Nuculoidea Williams et  Breger 1916  "));
     assertEquals("Nuculoidea behrens var. christoph Williams & Breger, 1916",
-      NameParser.normalize(NameParser.normalizeStrong("Nuculoidea behrens var.christoph Williams & Breger [1916]  ")));
+      NameParser.normalizeStrong("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
     assertEquals("N. behrens Williams & Breger, 1916",
-      NameParser.normalize(NameParser.normalizeStrong("  N.behrens Williams &amp;  Breger , 1916  ")));
+      NameParser.normalizeStrong("  N.behrens Williams &amp;  Breger , 1916  "));
     assertEquals("Nuculoidea Williams & Breger, 1916",
-      NameParser.normalize(NameParser.normalizeStrong(" 'Nuculoidea Williams & Breger, 1916'")));
+      NameParser.normalizeStrong(" 'Nuculoidea Williams & Breger, 1916'"));
     assertEquals("Malacocarpus schumannianus (Nicolai, 1893) Britton & Rose",
-      NameParser.normalize(NameParser.normalizeStrong("Malacocarpus schumannianus (Nicolai (1893)) Britton & Rose")));
+      NameParser.normalizeStrong("Malacocarpus schumannianus (Nicolai (1893)) Britton & Rose"));
     assertEquals("Photina (Cardioptera) burmeisteri (Westwood, 1889)",
-      NameParser.normalize(NameParser.normalizeStrong("Photina Cardioptera burmeisteri (Westwood 1889)")));
+      NameParser.normalizeStrong("Photina Cardioptera burmeisteri (Westwood 1889)"));
     assertEquals("Suaeda forsskahlei Schweinf.",
-      NameParser.normalize(NameParser.normalizeStrong("Suaeda forsskahlei Schweinf. ms.")));
-    assertEquals("Acacia bicolor Bojer", NameParser.normalize(NameParser.normalizeStrong("Acacia bicolor Bojer ms.")));
-
+      NameParser.normalizeStrong("Suaeda forsskahlei Schweinf. ms."));
+    assertEquals("Acacia bicolor Bojer", NameParser.normalizeStrong("Acacia bicolor Bojer ms."));
     assertEquals("Leucanitis roda (Herrich-Schäffer, 1851), 1845",
-      NameParser.normalize(NameParser.normalizeStrong("Leucanitis roda Herrich-Schäffer (1851) 1845")));
+      NameParser.normalizeStrong("Leucanitis roda Herrich-Schäffer (1851) 1845"));
+    assertEquals("Astelia alpina var. novae-hollandiae",
+      NameParser.normalizeStrong("Astelia alpina var. novae-hollandiae"));
+
   }
 
   @Test

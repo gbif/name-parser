@@ -85,9 +85,8 @@ public class NormalisedNameParser {
       .join(Rank.RANK_MARKER_MAP_INFRAGENERIC.keySet(), "|") + ")\\.? ?([" + NAME_LETTERS + "][" + name_letters + "-]+)"
     + ")";
 
-  protected static final String RANK_MARKER_ALL =
-    "(notho)? *(" + StringUtils.join(Rank.RANK_MARKER_MAP.keySet(), "|") + ")\\.?";
-  private static final Pattern RANK_MARKER = Pattern.compile("^" + RANK_MARKER_ALL + "$");
+  protected static final String RANK_MARKER_ALL = "(notho)? *(" + StringUtils.join(Rank.RANK_MARKER_MAP.keySet(), "|") + ")\\.?";
+  private static final Pattern RANK_MARKER_ONLY = Pattern.compile("^" + RANK_MARKER_ALL + "$");
 
   // main name matcher
   public static final Pattern CANON_NAME_IGNORE_AUTHORS = Pattern.compile("^" +
@@ -292,14 +291,14 @@ public class NormalisedNameParser {
   private void lookForIrregularRankMarker(ParsedName cn) {
     if (cn.getRankMarker() == null) {
       if (cn.getInfraSpecificEpithet() != null) {
-        Matcher m = RANK_MARKER.matcher(cn.getInfraSpecificEpithet());
+        Matcher m = RANK_MARKER_ONLY.matcher(cn.getInfraSpecificEpithet());
         if (m.find()) {
           // we found a rank marker, make it one
           cn.setRankMarker(cn.getInfraSpecificEpithet());
           cn.setInfraSpecificEpithet(null);
         }
       } else if (cn.getSpecificEpithet() != null) {
-        Matcher m = RANK_MARKER.matcher(cn.getSpecificEpithet());
+        Matcher m = RANK_MARKER_ONLY.matcher(cn.getSpecificEpithet());
         if (m.find()) {
           // we found a rank marker, make it one
           cn.setRankMarker(cn.getSpecificEpithet());

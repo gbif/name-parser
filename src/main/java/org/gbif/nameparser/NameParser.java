@@ -57,10 +57,22 @@ public class NameParser {
   private static final String SENSU =
     "(s\\.(?:l\\.|str\\.)|sensu\\s+(?:latu|strictu?)|(sec|sensu|auct|non)((\\.|\\s)(.*))?)";
   private static final Pattern EXTRACT_SENSU = Pattern.compile(",?\\s+(" + SENSU + "$|\\(" + SENSU + "\\))");
-  protected static final Pattern EXTRACT_NOMSTATUS = Pattern.compile(
-    "(?:, ?| )\\(?((?:comb|gen|sp|var)?[\\. ] ?nov\\.?(?: ?ined\\.?)?|ined\\.|nom(?:\\s+|\\.\\s*|en\\s+)(?:utiq(?:ue\\s+|\\.\\s*))?(?:ambig|alter|alt|correct|cons|dubium|dub|herb|illeg|invalid|inval|negatum|neg|novum|nov|nudum|nud|oblitum|obl|praeoccup|prov|prot|transf|superfl|super|rejic|rej)\\.?(?:\\s+(?:prop|proposed)\\.?)?)\\)?");
+  private static final String NOV_RANKS = "fam|gen|sp|ssp|var|forma";
+  private static final Pattern NOV_RANK_MARKER = Pattern.compile("(" + NOV_RANKS + ")");
+  protected static final Pattern EXTRACT_NOMSTATUS = Pattern.compile("(?:, ?| )"
+                                                                 + "\\(?"
+                                                                   + "("
+                                                                     + "(?:comb|"+NOV_RANKS+")?[\\. ] ?nov[\\. $](?: ?ined\\.?)?"
+                                                                     + "|ined\\."
+                                                                     + "|nom(?:\\s+|\\.\\s*|en\\s+)"
+                                                                        + "(?:utiq(?:ue\\s+|\\.\\s*))?"
+                                                                        + "(?:ambig|alter|alt|correct|cons|dubium|dub|herb|illeg|invalid|inval|negatum|neg|novum|nov|nudum|nud|oblitum|obl|praeoccup|prov|prot|transf|superfl|super|rejic|rej)\\.?"
+                                                                        + "(?:\\s+(?:prop|proposed)\\.?)?"
+                                                                   + ")"
+                                                                 + "\\)?");
   private static final Pattern EXTRACT_REMARKS = Pattern.compile("\\s+(anon\\.?)(\\s.+)?$");
   private static final Pattern EXTRACT_YEAR = Pattern.compile("(" + YEAR + "\\s*\\)?)");
+
   private static final Pattern COMMA_BEFORE_YEAR = Pattern.compile("(,+|[^0-9\\(\\[\"])\\s*(\\d{3})");
   private static final Pattern REPLACE_QUOTES = Pattern.compile("(^\\s*[\"',]+)|([\"',]+\\s*$)");
 
@@ -381,7 +393,7 @@ public class NameParser {
     // but keep "et al." instead of "& al."
     name = NORM_ET_AL.matcher(name).replaceAll(" et al.");
 
-    // // add commans between authors in space delimited list
+    // // add commas between authors in space delimited list
     // m = NORM_AUTH_DELIMIT.matcher(name);
     // if (m.find()){
     // name = m.replaceAll("$1, $2");
@@ -523,6 +535,13 @@ public class NameParser {
     if (m.find()) {
       pn.setNomStatus(StringUtils.trimToNull(m.group(1)));
       name = m.replaceFirst("");
+      // if there was a rank given in the nom status populate the rank marker field
+      if (pn.getNomStatus() != null) {
+        Matcher rm = NOV_RANK_MARKER.matcher(pn.getNomStatus());
+        if (rm.find()) {
+          pn.setRankMarker(rm.group(1).trim());
+        }
+      }
     }
 
     // extract sec reference
