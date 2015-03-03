@@ -713,6 +713,17 @@ public class NameParserTest {
     assertEquals("Abelia grandiflora", parser.parseToCanonical("Abelia grandiflora Rehd (species) : Rehd"));
   }
 
+  /**
+   * http://dev.gbif.org/issues/browse/POR-101
+   */
+  @Test
+  public void testAuthorTroubles() throws Exception {
+    assertParsedParts("Cribbia pendula la Croix & P.J.Cribb", NameType.WELLFORMED, "Cribbia", "pendula", null, null, "la Croix & P.J.Cribb", null);
+    assertParsedParts("Cribbia pendula le Croix & P.J.Cribb", NameType.WELLFORMED, "Cribbia", "pendula", null, null, "le Croix & P.J.Cribb", null);
+    assertParsedParts("Cribbia pendula de la Croix & le P.J.Cribb", NameType.WELLFORMED, "Cribbia", "pendula", null, null, "de la Croix & le P.J.Cribb", null);
+    assertParsedParts("Cribbia pendula Croix & de le P.J.Cribb", NameType.WELLFORMED, "Cribbia", "pendula", null, null, "Croix & de le P.J.Cribb", null);
+  }
+
   @Test
   public void testAutonyms() throws Exception {
     assertParsedParts("Panthera leo leo (Linnaeus, 1758)", NameType.SCINAME, "Panthera", "leo", "leo", null, null, null, "Linnaeus",

@@ -45,7 +45,7 @@ public class NormalisedNameParser {
   protected static final String author_letters = name_letters + "\\p{Ll}"; // lower case unicode letter, not numerical
   // (\W is alphanum)
   protected static final String AUTHOR_PREFIXES =
-    "(?:[vV](?:an)(?:[ -](?:den|der) )? ?|von[ -](?:den |der |dem )?|(?:del|Des|De|de|di|Di|da|N)[`' _]|le |d'|D'|de la |Mac|Mc|Le|St\\.? ?|Ou|O')";
+    "(?:[vV](?:an)(?:[ -](?:den|der) )? ?|von[ -](?:den |der |dem )?|(?:del|Des|De|de|di|Di|da|N)[`' _]|(?:de )?(?:la|le) |d'|D'|Mac|Mc|Le|St\\.? ?|Ou|O')";
   protected static final String AUTHOR = "(?:" +
                                          // author initials
                                          "(?:" + "(?:[" + AUTHOR_LETTERS + "]{1,3}\\.?[ -]?){0,3}" +
