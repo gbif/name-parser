@@ -724,6 +724,39 @@ public class NameParserTest {
     assertParsedParts("Cribbia pendula Croix & de le P.J.Cribb", NameType.WELLFORMED, "Cribbia", "pendula", null, null, "Croix & de le P.J.Cribb", null);
   }
 
+  /**
+   * http://dev.gbif.org/issues/browse/POR-159
+   */
+  @Test
+  @Ignore
+  public void testMicrobialRanks() throws Exception {
+    assertParsedMicrobial("Salmonella enterica serovar Typhimurium",
+      NameType.WELLFORMED, "Salmonella", "enterica", "Typhimurium", Rank.SEROVAR);
+    assertParsedMicrobial("Salmonella enterica serovar Dublin",
+      NameType.WELLFORMED, "Salmonella", "enterica", "Dublin", Rank.SEROVAR);
+
+    assertParsedMicrobial("Yersinia pestis biovar Orientalis str. IP674",
+      NameType.WELLFORMED, "Yersinia", "pestis", "Orientalis", Rank.BIOVAR, null, null, null, null, "IP674");
+    assertParsedMicrobial("Rhizobium leguminosarum biovar viciae",
+      NameType.WELLFORMED, "Rhizobium", "leguminosarum", "viciae", Rank.BIOVAR);
+
+    assertParsedMicrobial("Thymus vulgaris ct. thymol",
+      NameType.WELLFORMED, "Thymus", "vulgaris", "thymol", Rank.CHEMOFORM);
+
+    assertParsedMicrobial("Staphyloccocus aureus phagovar 42D",
+      NameType.WELLFORMED, "Staphyloccocus", "aureus", "42D", Rank.PHAGOVAR);
+
+    assertParsedMicrobial("Pseudomonas syringae pv. lachrymans",
+      NameType.WELLFORMED, "Pseudomonas", "syringae", "lachrymans", Rank.PATHOVAR);
+    assertParsedMicrobial("Pseudomonas syringae pv. aceris (Ark 1939) Young, Dye & Wilkie 1978",
+      NameType.WELLFORMED, "Pseudomonas", "syringae", "aceris", Rank.PATHOVAR, "Young, Dye & Wilkie", "1978", "Ark", "1939", null);
+
+    assertParsedMicrobial("Puccinia graminis f. sp. avenae",
+      NameType.WELLFORMED, "Puccinia", "graminis", "avenae", Rank.FORMA_SPECIALIS);
+
+
+  }
+
   @Test
   public void testAutonyms() throws Exception {
     assertParsedParts("Panthera leo leo (Linnaeus, 1758)", NameType.SCINAME, "Panthera", "leo", "leo", null, null, null, "Linnaeus",
@@ -1126,6 +1159,33 @@ public class NameParserTest {
     assertEquals(nomStatus, pn.getNomStatus());
     assertEquals(strain, pn.getStrain());
 
+    return pn;
+  }
+
+  private ParsedName assertParsedMicrobial(String name, NameType type, String genus, String epithet, String infraepithet,
+    Rank rank) throws UnparsableException {
+    return assertParsedMicrobial(name, type, genus, epithet, infraepithet, rank, null, null, null, null, null);
+  }
+
+  private ParsedName assertParsedMicrobial(String name, NameType type, String genus, String epithet, String infraepithet,
+    Rank rank, String author, String year, String basAuthor, String basYear, String strain)
+    throws UnparsableException {
+    ParsedName pn = parser.parse(name);
+    if (type != null) {
+      assertEquals(type, pn.getType());
+    }
+    assertEquals(genus, pn.getGenusOrAbove());
+    assertEquals(epithet, pn.getSpecificEpithet());
+    assertEquals(infraepithet, pn.getInfraSpecificEpithet());
+    assertEquals(rank, pn.getRank());
+    assertEquals(author, pn.getAuthorship());
+    assertEquals(year, pn.getYear());
+    assertEquals(basAuthor, pn.getBracketAuthorship());
+    assertEquals(basYear, pn.getBracketYear());
+    assertEquals(strain, pn.getStrain());
+
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
     return pn;
   }
 

@@ -27,7 +27,7 @@
   <properties>
     <!-- Dependency versions -->
     <gbif-common.version>0.17</gbif-common.version>
-    <gbif-api.version>0.16</gbif-api.version>
+    <gbif-api.version>0.18-SNAPSHOT</gbif-api.version>
     <!-- non gbif -->
     <commons-io.version>2.4</commons-io.version>
     <commons-lang.version>3.3.2</commons-lang.version>
