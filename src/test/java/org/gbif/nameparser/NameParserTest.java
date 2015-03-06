@@ -760,6 +760,29 @@ public class NameParserTest {
     assertParsedMicrobial("Puccinia graminis f.sp. avenae",
       NameType.WELLFORMED, "Puccinia", "graminis", "avenae", Rank.FORMA_SPECIALIS);
 
+    assertParsedMicrobial("Bacillus thuringiensis serovar huazhongensis",
+      NameType.WELLFORMED, "Bacillus", "thuringiensis", "huazhongensis", Rank.SEROVAR);
+
+    // informal indet name
+    assertParsedMicrobial("Bacillus thuringiensis serovar",
+      NameType.INFORMAL, "Bacillus", "thuringiensis", null, Rank.SEROVAR);
+
+    // informal indet name
+    assertParsedMicrobial("Bacillus serovar",
+      NameType.INFORMAL, "Bacillus", null, null, Rank.SEROVAR);
+
+    assertParsedMicrobial("Listeria monocytogenes serovar 4b",
+      NameType.WELLFORMED, "Listeria", "monocytogenes", "4b", Rank.SEROVAR);
+
+    assertParsedMicrobial("Listeria monocytogenes serotype 4b",
+      NameType.SCINAME, "Listeria", "monocytogenes", "4b", Rank.SEROVAR);
+  }
+
+  @Test
+  @Ignore("strains not yet well parsed, see http://dev.gbif.org/issues/browse/POR-2699")
+  public void testBacteriaStrains() throws Exception {
+    assertParsedMicrobial("Listeria monocytogenes serotype 4b str. F, 2365", NameType.INFORMAL, "Listeria",
+      "monocytogenes", "4b", Rank.SEROVAR, "F, 2365");
   }
 
   @Test
@@ -1165,6 +1188,11 @@ public class NameParserTest {
     assertEquals(strain, pn.getStrain());
 
     return pn;
+  }
+
+  private ParsedName assertParsedMicrobial(String name, NameType type, String genus, String epithet, String infraepithet,
+    Rank rank, String strain) throws UnparsableException {
+    return assertParsedMicrobial(name, type, genus, epithet, infraepithet, rank, null, null, null, null, strain);
   }
 
   private ParsedName assertParsedMicrobial(String name, NameType type, String genus, String epithet, String infraepithet,

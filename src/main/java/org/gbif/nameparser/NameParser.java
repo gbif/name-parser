@@ -18,6 +18,7 @@ import static org.gbif.nameparser.NormalisedNameParser.EPHITHET;
 import static org.gbif.nameparser.NormalisedNameParser.MONOMIAL;
 import static org.gbif.nameparser.NormalisedNameParser.NAME_LETTERS;
 import static org.gbif.nameparser.NormalisedNameParser.RANK_MARKER_ALL;
+import static org.gbif.nameparser.NormalisedNameParser.RANK_MARKER_MICROBIAL;
 import static org.gbif.nameparser.NormalisedNameParser.YEAR;
 import static org.gbif.nameparser.NormalisedNameParser.author_letters;
 import static org.gbif.nameparser.NormalisedNameParser.name_letters;
@@ -52,7 +53,11 @@ public class NameParser {
   private static final String CANDIDATUS = "(Candidatus\\s|Ca\\.)\\s*";
   private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS, CASE_INSENSITIVE);
   private static final Pattern IS_CANDIDATUS_QUOTE_PATTERN = Pattern.compile("\"" + CANDIDATUS + "(.+)\"", CASE_INSENSITIVE);
-  private static final Pattern RANK_MARKER_AT_END = Pattern.compile(" " + RANK_MARKER_ALL + "$");
+  private static final Pattern RANK_MARKER_AT_END = Pattern.compile(" " +
+                                                    RANK_MARKER_ALL.substring(0,RANK_MARKER_ALL.lastIndexOf(')')) +
+                                                    "|" +
+                                                    RANK_MARKER_MICROBIAL.substring(3) +
+                                                    "\\.?$");
   // name normalising
   private static final String SENSU =
     "(s\\.(?:l\\.|str\\.)|sensu\\s+(?:latu|strictu?)|(sec|sensu|auct|non)((\\.|\\s)(.*))?)";
@@ -124,6 +129,23 @@ public class NameParser {
   private static final Pattern FIRST_WORD = Pattern.compile("^([×xX]\\s+)?([×x][A-Z])?([a-zA-Z])([a-zA-Z]+) ");
   private static final String WEIRD_CHARS = "[§$%/#+!;:_|\"=*]";
   private static final Pattern NORM_WEIRD_CHARS = Pattern.compile(WEIRD_CHARS);
+
+  // many names still use outdated xxxtype rank marker, e.g. serotype instead of serovar
+  private static final Pattern TYPE_TO_VAR;
+  static {
+    StringBuilder sb = new StringBuilder();
+    sb.append("\\b(");
+    for (Rank r : Rank.INFRASUBSPECIFIC_MICROBIAL_RANKS) {
+      if (r.name().endsWith("VAR")) {
+        if (sb.length()>4) {
+          sb.append("|");
+        }
+        sb.append(r.name().toLowerCase().substring(0, r.name().length()-3));
+      }
+    }
+    sb.append(")type\\b");
+    TYPE_TO_VAR = Pattern.compile(sb.toString());
+  }
 
   private static final Pattern COMB_BAS_AUTHOR_SWAP = Pattern.compile(
     // #1 comb authorteam
@@ -479,6 +501,16 @@ public class NameParser {
     // clean name, removing seriously wrong things
     name = preClean(name);
 
+    // normalize bacterial rank markers
+    name = TYPE_TO_VAR.matcher(name).replaceAll("$1var");
+
+    if (m.find()) {
+      name = m.replaceFirst(m.group(1));
+      pn.setType(NameType.INFORMAL);
+      pn.setStrain(m.group(2));
+      LOG.debug("Strain: {}", m.group(2));
+    }
+
     // parse out species/strain names with numbers found in Genebank/EBI names, e.g. Advenella kashmirensis W13003
     m = STRAIN.matcher(name);
     if (m.find()) {
@@ -622,7 +654,8 @@ public class NameParser {
         if (scientificName.replaceAll(", "," ").equals(pn.canonicalNameComplete().replaceAll(", ", " "))) {
           pn.setType(NameType.WELLFORMED);
         } else {
-          LOG.debug("Not wellformed. Name and reconstructed name mismatch:\n{}\n{}", scientificName, pn.canonicalNameComplete());
+          LOG.debug("Not wellformed. Name and reconstructed name mismatch:\n{}\n{}", scientificName,
+            pn.canonicalNameComplete());
           pn.setType(NameType.SCINAME);
         }
       }
