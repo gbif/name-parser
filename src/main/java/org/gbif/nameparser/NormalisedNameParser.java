@@ -19,6 +19,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,10 +76,21 @@ public class NormalisedNameParser {
   protected static final String RANK_MARKER_SPECIES =
     "(?:notho)?(?:" + StringUtils.join(Rank.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") + "|agg)\\.?";
 
+  protected static final String RANK_MARKER_MICROBIAL =
+    "(?:bv\\.|ct\\.|f\\. ?sp\\.|" + StringUtils.join(Lists.transform(Lists.newArrayList(Rank.INFRASUBSPECIFIC_MICROBIAL_RANKS), new Function<Rank, String>() {
+        @Override
+        public String apply(Rank rank) {
+          return rank.getMarker().replaceAll("\\.", "\\\\.");
+        }
+      }
+    ), "|") + ")";
+
   protected static final String EPHITHET_PREFIXES = "van|novae";
+  protected static final String EPHITHET_UNALLOWED_ENDINGS = "\\bex|var|type|form";
   protected static final String EPHITHET =
-    "(?:[0-9]+-)?" + "(?:(?:" + EPHITHET_PREFIXES + ") [a-z])?" + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters
-    + "](?<!\\bex)";
+    "(?:[0-9]+-)?" + "(?:(?:" + EPHITHET_PREFIXES + ") [a-z])?" + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
+    // avoid epithets ending with the unallowed endings, e.g. serovar
+    + "(?<!(?:"+EPHITHET_UNALLOWED_ENDINGS+"))(?=\\b)";
   protected static final String MONOMIAL =
     "[" + NAME_LETTERS + "](?:\\.|[" + name_letters + "]+)(?:-[" + NAME_LETTERS + "]?[" + name_letters + "]+)?";
   protected static final String INFRAGENERIC =
@@ -99,17 +112,26 @@ public class NormalisedNameParser {
               // #5 species
               "(?: (×?" + EPHITHET + "))?" +
               // catch author name prefixes just to ignore them so they dont become wrong epithets
-              "(?: " + AUTHOR_PREFIXES + ")?" + "(?:" +
-              // either directly a infraspecific epitheton or a author but then mandate rank marker
+              "(?: " + AUTHOR_PREFIXES + ")?" +
               "(?:" +
-              // anything in between
-              ".*" +
-              // #6 infraspecies rank
-              "( " + RANK_MARKER_SPECIES + "[ .])" +
-              // #7 infraspecies epitheton
-              "(×?" + EPHITHET + ")" + ")" + "|" +
-              // #8 infraspecies epitheton
-              " (×?" + EPHITHET + ")" + ")?");
+                // either directly a infraspecific epitheton or a author but then mandate rank marker
+                "(?:" +
+                  // anything in between
+                  ".*" +
+                  // #6 infraspecies rank
+                  "( " + RANK_MARKER_SPECIES + "[ .])" +
+                  // #7 infraspecies epithet
+                  "(×?" + EPHITHET + ")" +
+                ")|" +
+                  // #8 infraspecies epithet
+                " (×?" + EPHITHET + ")" +
+              ")?" +
+              "(?: " +
+                // #9 microbial rank
+                "(" + RANK_MARKER_MICROBIAL + ")[ .]" +
+                // #10 microbial infrasubspecific epithet
+                "(\\S+)" +
+              ")?");
 
   public static final Pattern NAME_PATTERN = Pattern.compile("^" +
              // #1 genus/monomial
@@ -117,26 +139,41 @@ public class NormalisedNameParser {
              // #2 or #4 subgenus/section with #3 infrageneric rank marker
              "(?:(?<!ceae) " + INFRAGENERIC + ")?" +
              // #5 species
-             "(?: (×?" + EPHITHET + "))?" + "(?:" +
+             "(?: (×?" + EPHITHET + "))?" +
 
              "(?:" +
-             // #6 strip out intermediate, irrelevant authors or infraspecific ranks in case of quadrinomials
-             "( .*?)?" +
-             // #7 infraspecies rank
-             "( " + RANK_MARKER_SPECIES + ")" + ")?" +
+               "(?:" +
+                 // #6 strip out intermediate, irrelevant authors or infraspecific ranks in case of quadrinomials
+                 "( .*?)?" +
+                 // #7 infraspecies rank
+                 "( " + RANK_MARKER_SPECIES + ")" +
+               ")?" +
+               // #8 infraspecies epitheton
+               "(?: (×?\"?" + EPHITHET + "\"?))" +
+             ")?" +
 
-             // #8 infraspecies epitheton
-             "(?: (×?\"?" + EPHITHET + "\"?))" + ")?" +
-             // #9 entire authorship incl basionyms and year
-             "(,?" + "(?: ?\\(" +
-             // #10 basionym authors
-             "(" + AUTHOR_TEAM + ")?" +
-             // #11 basionym year
-             ",?( ?" + YEAR + ")?" + "\\))?" +
-             // #12 authors
-             "( " + AUTHOR_TEAM + ")?" +
-             // #13 year with or without brackets
-             "(?: ?\\(?,? ?(" + YEAR + ")\\)?)?" + ")" + "$");
+             "(?: " +
+               // #9 microbial rank
+               "(" + RANK_MARKER_MICROBIAL + ")[ .]" +
+               // #10 microbial infrasubspecific epithet
+               "(\\S+)" +
+             ")?" +
+
+             // #11 entire authorship incl basionyms and year
+             "(,?" +
+               "(?: ?\\(" +
+                 // #12 basionym authors
+                 "(" + AUTHOR_TEAM + ")?" +
+                 // #13 basionym year
+                 ",?( ?" + YEAR + ")?" +
+               "\\))?" +
+
+               // #14 authors
+               "( " + AUTHOR_TEAM + ")?" +
+               // #15 year with or without brackets
+               "(?: ?\\(?,? ?(" + YEAR + ")\\)?)?" +
+             ")" +
+             "$");
 
 
   private class MatcherCallable implements Callable<Matcher> {
@@ -193,8 +230,14 @@ public class NormalisedNameParser {
         }
         cn.setInfraSpecificEpithet(StringUtils.trimToNull(matcher.group(8)));
 
-        // #9 is entire authorship, not stored in ParsedName
-        cn.setBracketAuthorship(StringUtils.trimToNull(matcher.group(10)));
+        // microbial ranks
+        if (matcher.group(9) != null) {
+          cn.setRankMarker(matcher.group(9));
+          cn.setInfraSpecificEpithet(matcher.group(10));
+        }
+
+        // #11 is entire authorship, not stored in ParsedName
+        cn.setBracketAuthorship(StringUtils.trimToNull(matcher.group(12)));
         if (bracketSubrankFound && cn.getBracketAuthorship() == null && cn.getSpecificEpithet() == null && !monomials
           .contains(cn.getInfraGeneric())) {
           // rather an author than a infrageneric rank. Swap
@@ -202,13 +245,13 @@ public class NormalisedNameParser {
           cn.setInfraGeneric(null);
           LOG.debug("swapped subrank with bracket author: {}", cn.getBracketAuthorship());
         }
-        if (matcher.group(11) != null && matcher.group(11).length() > 2) {
-          String yearAsString = matcher.group(11).trim();
-          cn.setBracketYear(yearAsString);
-        }
-        cn.setAuthorship(StringUtils.trimToNull(matcher.group(12)));
         if (matcher.group(13) != null && matcher.group(13).length() > 2) {
           String yearAsString = matcher.group(13).trim();
+          cn.setBracketYear(yearAsString);
+        }
+        cn.setAuthorship(StringUtils.trimToNull(matcher.group(14)));
+        if (matcher.group(15) != null && matcher.group(15).length() > 2) {
+          String yearAsString = matcher.group(15).trim();
           cn.setYear(yearAsString);
         }
 
@@ -259,12 +302,16 @@ public class NormalisedNameParser {
       }
       cn.setSpecificEpithet(StringUtils.trimToNull(matcher.group(5)));
       if (matcher.group(6) != null && matcher.group(6).length() > 1) {
-        cn.setRankMarker(StringUtils.trimToNull(matcher.group(6)));
+        cn.setRankMarker(matcher.group(6));
       }
       if (matcher.group(7) != null && matcher.group(7).length() >= 2) {
         setCanonicalInfraSpecies(cn, matcher.group(7));
       } else {
         setCanonicalInfraSpecies(cn, matcher.group(8));
+      }
+      if (matcher.group(9) != null) {
+        cn.setRankMarker(matcher.group(9));
+        cn.setInfraSpecificEpithet(matcher.group(10));
       }
 
       // make sure (infra)specific epithet is not a rank marker!

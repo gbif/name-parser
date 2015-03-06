@@ -601,7 +601,7 @@ public class NameParserTest {
 
   @Test
   public void testNameFile() throws Exception {
-    final int CURRENTLY_FAIL = 25;
+    final int CURRENTLY_FAIL = 24;
     final int CURRENTLY_FAIL_EXCL_AUTHORS = 19;
 
     LOG.info("\n\nSTARTING FULL PARSER\n");
@@ -639,11 +639,11 @@ public class NameParserTest {
         expected.setScientificName(n.getScientificName());
         if (!n.equals(expected)) {
           parseErrors++;
-          LOG.warn("WRONG\t " + name + "\tEXPECTED: " + expected + "\tPARSED: " + n);
+          LOG.warn("WRONG\t " + name + "\n  EXPECTED: " + expected + "\n  PARSED  : " + n);
         }
       } catch (Exception e) {
         parseFails++;
-        LOG.warn("FAIL\t " + name + "\tEXPECTED: " + expected);
+        LOG.warn("FAIL\t " + name + "\nEXPECTED: " + expected);
       }
     }
     long end = System.currentTimeMillis();
@@ -728,7 +728,6 @@ public class NameParserTest {
    * http://dev.gbif.org/issues/browse/POR-159
    */
   @Test
-  @Ignore
   public void testMicrobialRanks() throws Exception {
     assertParsedMicrobial("Salmonella enterica serovar Typhimurium",
       NameType.WELLFORMED, "Salmonella", "enterica", "Typhimurium", Rank.SEROVAR);
@@ -736,24 +735,30 @@ public class NameParserTest {
       NameType.WELLFORMED, "Salmonella", "enterica", "Dublin", Rank.SEROVAR);
 
     assertParsedMicrobial("Yersinia pestis biovar Orientalis str. IP674",
-      NameType.WELLFORMED, "Yersinia", "pestis", "Orientalis", Rank.BIOVAR, null, null, null, null, "IP674");
+      NameType.INFORMAL, "Yersinia", "pestis", "Orientalis", Rank.BIOVAR, null, null, null, null, "IP674");
     assertParsedMicrobial("Rhizobium leguminosarum biovar viciae",
       NameType.WELLFORMED, "Rhizobium", "leguminosarum", "viciae", Rank.BIOVAR);
 
     assertParsedMicrobial("Thymus vulgaris ct. thymol",
-      NameType.WELLFORMED, "Thymus", "vulgaris", "thymol", Rank.CHEMOFORM);
+      NameType.SCINAME, "Thymus", "vulgaris", "thymol", Rank.CHEMOFORM);
 
     assertParsedMicrobial("Staphyloccocus aureus phagovar 42D",
       NameType.WELLFORMED, "Staphyloccocus", "aureus", "42D", Rank.PHAGOVAR);
 
     assertParsedMicrobial("Pseudomonas syringae pv. lachrymans",
       NameType.WELLFORMED, "Pseudomonas", "syringae", "lachrymans", Rank.PATHOVAR);
-    assertParsedMicrobial("Pseudomonas syringae pv. aceris (Ark 1939) Young, Dye & Wilkie 1978",
+
+    assertParsedMicrobial("Pseudomonas syringae pv. aceris (Ark, 1939) Young, Dye & Wilkie, 1978",
       NameType.WELLFORMED, "Pseudomonas", "syringae", "aceris", Rank.PATHOVAR, "Young, Dye & Wilkie", "1978", "Ark", "1939", null);
 
-    assertParsedMicrobial("Puccinia graminis f. sp. avenae",
-      NameType.WELLFORMED, "Puccinia", "graminis", "avenae", Rank.FORMA_SPECIALIS);
+    assertParsedMicrobial("Acinetobacter junii morphovar I",
+      NameType.WELLFORMED, "Acinetobacter", "junii", "I", Rank.MORPHOVAR);
 
+    assertParsedMicrobial("Puccinia graminis f. sp. avenae",
+      NameType.SCINAME, "Puccinia", "graminis", "avenae", Rank.FORMA_SPECIALIS);
+
+    assertParsedMicrobial("Puccinia graminis f.sp. avenae",
+      NameType.WELLFORMED, "Puccinia", "graminis", "avenae", Rank.FORMA_SPECIALIS);
 
   }
 
@@ -1058,9 +1063,9 @@ public class NameParserTest {
 
   @Test
   public void testPathovars() throws Exception {
-    assertParsedParts("Xanthomonas campestris pv. citri (ex Hasse 1915) Dye 1978", NameType.SCINAME, "Xanthomonas", "campestris", "citri", "pv.", "Dye", "1978", "ex Hasse", "1915");
+    assertParsedParts("Xanthomonas campestris pv. citri (ex Hasse 1915) Dye 1978", NameType.WELLFORMED, "Xanthomonas", "campestris", "citri", "pv.", "Dye", "1978", "ex Hasse", "1915");
     assertParsedParts("Xanthomonas campestris pv. oryzae (Xco)", NameType.WELLFORMED, "Xanthomonas", "campestris", "oryzae", "pv.", null, null, "Xco", null);
-    assertParsedParts("Streptococcus dysgalactiae (ex Diernhofer 1932) Garvie et al. 1983", NameType.SCINAME, "Streptococcus", "dysgalactiae", null, null, "Garvie et al.", "1983", "ex Diernhofer", "1932");
+    assertParsedParts("Streptococcus dysgalactiae (ex Diernhofer 1932) Garvie et al. 1983", NameType.WELLFORMED, "Streptococcus", "dysgalactiae", null, null, "Garvie et al.", "1983", "ex Diernhofer", "1932");
   }
 
   @Test
@@ -1171,9 +1176,6 @@ public class NameParserTest {
     Rank rank, String author, String year, String basAuthor, String basYear, String strain)
     throws UnparsableException {
     ParsedName pn = parser.parse(name);
-    if (type != null) {
-      assertEquals(type, pn.getType());
-    }
     assertEquals(genus, pn.getGenusOrAbove());
     assertEquals(epithet, pn.getSpecificEpithet());
     assertEquals(infraepithet, pn.getInfraSpecificEpithet());
@@ -1183,7 +1185,9 @@ public class NameParserTest {
     assertEquals(basAuthor, pn.getBracketAuthorship());
     assertEquals(basYear, pn.getBracketYear());
     assertEquals(strain, pn.getStrain());
-
+    if (type != null) {
+      assertEquals(type, pn.getType());
+    }
     assertNull(pn.getNomStatus());
     assertNull(pn.getNotho());
     return pn;

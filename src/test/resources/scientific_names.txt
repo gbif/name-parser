@@ -65,7 +65,7 @@ Ferganoconcha? oblonga 	Ferganoconcha		oblonga										doubtful
 
 #unicode utf8 characters in name
 Rühlella	Rühlella												wellformed
-Sténométope laevissimus Bibron 1855	Sténométope		laevissimus			Bibron	1855						sciname
+Sténométope laevissimus Bibron 1855	Sténométope		laevissimus			Bibron	1855						wellformed
 Choriozopella trägårdhi Lawrence, 1947	Choriozopella		trägårdhi			Lawrence	1947						wellformed
 
 #digraph unicode characters
@@ -317,7 +317,7 @@ Dinarthrum inerme McLachlan, 1878	Dinarthrum		inerme			McLachlan	1878						wellf
 Triplectides tambina Mosely, 1953	Triplectides		tambina			Mosely	1953						wellformed
 Oxyothespis sudanensis Giglio-Tos, 1916	Oxyothespis		sudanensis			Giglio-Tos	1916						wellformed
 Parastagmatoptera theresopolitana (Giglio-Tos, 1914)	Parastagmatoptera		theresopolitana					Giglio-Tos	1914				wellformed
-Oxyothespis nilotica nilotica Giglio-Tos, 1916	Oxyothespis		nilotica	nilotica		Giglio-Tos	1916						wellformed
+Oxyothespis nilotica nilotica Giglio-Tos, 1916	Oxyothespis		nilotica	nilotica		Giglio-Tos	1916						sciname
 Photina (Cardioptera) burmeisteri (Westwood, 1889)	Photina	Cardioptera	burmeisteri					Westwood	1889				sciname
 Syngenes inquinatus (Gerstaecker)	Syngenes		inquinatus					Gerstaecker					wellformed
 Myrmeleon libelloides var. nigriventris A. Costa	Myrmeleon		libelloides	nigriventris		A. Costa				var.			wellformed

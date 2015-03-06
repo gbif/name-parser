@@ -619,9 +619,10 @@ public class NameParser {
         pn.setType(NameType.DOUBTFUL);
       } else {
         // a wellformed, code compliant name?
-        if (scientificName.equals(pn.canonicalNameComplete())) {
+        if (scientificName.replaceAll(", "," ").equals(pn.canonicalNameComplete().replaceAll(", ", " "))) {
           pn.setType(NameType.WELLFORMED);
         } else {
+          LOG.debug("Not wellformed. Name and reconstructed name mismatch:\n{}\n{}", scientificName, pn.canonicalNameComplete());
           pn.setType(NameType.SCINAME);
         }
       }
