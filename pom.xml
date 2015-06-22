@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>20</version>
+    <version>23-SNAPSHOT</version>
   </parent>
 
   <groupId>org.gbif</groupId>
@@ -25,9 +25,12 @@
   </scm>
 
   <properties>
+    <!-- The IPT depends on this project and so this must stay at java 6 until IPT is upgraded -->
+    <jdkLevel>1.6</jdkLevel>
+
     <!-- Dependency versions -->
-    <gbif-common.version>0.17</gbif-common.version>
-    <gbif-api.version>0.18</gbif-api.version>
+    <gbif-common.version>0.18-SNAPSHOT</gbif-common.version>
+    <gbif-api.version>0.23-SNAPSHOT</gbif-api.version>
     <!-- non gbif -->
     <commons-io.version>2.4</commons-io.version>
     <commons-lang.version>3.3.2</commons-lang.version>
