@@ -476,6 +476,8 @@ public class NameParser {
    * For strings which are no scientific names and scientific names that cannot be expressed by the ParsedName class
    * the parser will throw an UnparsableException with a given NameType and the original, unparsed name. This is the
    * case for all virus names and proper hybrid formulas, so make sure you catch and process this exception.
+   *
+   * @throws org.gbif.nameparser.UnparsableException
    */
   public ParsedName parse(final String scientificName) throws UnparsableException {
     if (Strings.isNullOrEmpty(scientificName)) {
