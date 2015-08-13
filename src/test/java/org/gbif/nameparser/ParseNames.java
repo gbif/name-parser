@@ -43,7 +43,7 @@ public class ParseNames {
       }
       try {
         final long pStart = System.currentTimeMillis();
-        ParsedName n = parser.parse(name);
+        ParsedName n = parser.parse(name, null);
         final long duration = System.currentTimeMillis() - pStart;
         if (!n.isAuthorsParsed()) {
           parseNoAuthors++;
@@ -79,7 +79,7 @@ public class ParseNames {
     name = "Candida mesorugosa G.M. Chaves, G.R. Terçarioli, A.C.B. Padovan, R. Rosas, R.C. Ferreira, A.S.A. Melo & A.L. Colombo 20";
 
     final long pStart = System.currentTimeMillis();
-    ParsedName n = parser.parse(name);
+    ParsedName n = parser.parse(name, null);
     final long duration = System.currentTimeMillis() - pStart;
     LOG.info("Parsed name in {}ms: {}", duration, n);
   }
@@ -93,7 +93,7 @@ public class ParseNames {
       LOG.debug("\n\nIN   : " + name);
       ParsedName pn = null;
       try {
-        pn = parser.parse(name);
+        pn = parser.parse(name, null);
       } catch (UnparsableException e) {
         LOG.error("UnparsableException", e);
       }

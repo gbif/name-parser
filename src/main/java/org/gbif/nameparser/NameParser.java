@@ -7,6 +7,8 @@ import org.gbif.api.vocabulary.Rank;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -477,9 +479,12 @@ public class NameParser {
    * the parser will throw an UnparsableException with a given NameType and the original, unparsed name. This is the
    * case for all virus names and proper hybrid formulas, so make sure you catch and process this exception.
    *
+   * @param scientificName the full scientific name to parse
+   * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
+   *
    * @throws org.gbif.nameparser.UnparsableException
    */
-  public ParsedName parse(final String scientificName) throws UnparsableException {
+  public ParsedName parse(final String scientificName, @Nullable Rank rank) throws UnparsableException {
     if (Strings.isNullOrEmpty(scientificName)) {
       throw new UnparsableException(NameType.BLACKLISTED, scientificName);
     }
@@ -615,16 +620,16 @@ public class NameParser {
     Rank origRank = pn.getRank();
 
     // try regular parsing
-    boolean parsed = nnParser.parseNormalisedName(pn, name);
+    boolean parsed = nnParser.parseNormalisedName(pn, name, rank);
     if (!parsed) {
       // try again with stronger normalisation, maybe that helps...
       LOG.debug("Can't parse, use dirty normalizer");
       final String deDirtedName = cleanStrong(name);
-      parsed = nnParser.parseNormalisedName(pn, deDirtedName);
+      parsed = nnParser.parseNormalisedName(pn, deDirtedName, rank);
       if (!parsed) {
         LOG.debug("Still can't parse, try to ignore authors");
         // try to parse canonical alone ignoring authorship as last resort
-        parsed = nnParser.parseNormalisedNameIgnoreAuthors(pn, deDirtedName);
+        parsed = nnParser.parseNormalisedNameIgnoreAuthors(pn, deDirtedName, rank);
         pn.setAuthorsParsed(false);
         if (!parsed) {
           // we just cant parse this one
@@ -681,13 +686,14 @@ public class NameParser {
 
   /**
    * parses the name without authorship and returns the ParsedName.canonicalName() string
+   * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
    */
-  public String parseToCanonical(String scientificName) {
+  public String parseToCanonical(String scientificName, @Nullable Rank rank) {
     if (Strings.isNullOrEmpty(scientificName)) {
       return null;
     }
     try {
-      ParsedName pn = parse(scientificName);
+      ParsedName pn = parse(scientificName, rank);
       if (pn != null) {
         return pn.canonicalName();
       }

@@ -4,20 +4,12 @@ import org.gbif.api.model.checklistbank.ParsedName;
 
 import java.util.regex.Pattern;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class NormalisedNameParserTest {
-
-  @Test
-  @Ignore
-  public void testMonomialRsGbifOrg() throws Exception {
-    NormalisedNameParser np = new NormalisedNameParser(100);
-    np.readMonomialsRsGbifOrg();
-  }
 
   @Test
   public void testEpithetPattern() throws Exception {
@@ -51,7 +43,7 @@ public class NormalisedNameParserTest {
 
     ParsedName n = new ParsedName();
     final long pStart = System.currentTimeMillis();
-    assertFalse("No timeout happening for long running parsing", parser.parseNormalisedName(n, name));
+    assertFalse("No timeout happening for long running parsing", parser.parseNormalisedName(n, name, null));
     final long duration = System.currentTimeMillis() - pStart;
 
     // the duration is the timeout PLUS some initialization overhead thats why we add 50ms to it

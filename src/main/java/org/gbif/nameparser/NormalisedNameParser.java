@@ -2,13 +2,7 @@ package org.gbif.nameparser;
 
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.Rank;
-import org.gbif.utils.file.FileUtils;
-import org.gbif.utils.rs.RsGbifOrg;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -18,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -32,7 +27,6 @@ import org.slf4j.LoggerFactory;
 public class NormalisedNameParser {
   private static Logger LOG = LoggerFactory.getLogger(NormalisedNameParser.class);
   private static final ExecutorService THREAD_POOL = Executors.newCachedThreadPool();
-  private TreeSet<String> monomials = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
   private final long timeout;  // max parsing time in milliseconds
 
   public NormalisedNameParser(long timeout) {
@@ -190,15 +184,17 @@ public class NormalisedNameParser {
       return matcher;
     }
   }
+
   /**
    * Tries to parse a name string with the full regular expression.
    * In very few, extreme cases names with very long authorships might cause the regex to never finish or take hours
    * we run this parsing in a separate thread that can be stopped if it runs too long.
    * @param cn
    * @param scientificName
+   * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
    * @return
    */
-  public boolean parseNormalisedName(ParsedName cn, String scientificName) {
+  public boolean parseNormalisedName(ParsedName cn, String scientificName, @Nullable Rank rank) {
     LOG.debug("Parse normed name string: {}", scientificName);
     FutureTask<Matcher> task = new FutureTask<Matcher>(new MatcherCallable(scientificName));
     THREAD_POOL.execute(task);
@@ -216,11 +212,11 @@ public class NormalisedNameParser {
           bracketSubrankFound = true;
           cn.setInfraGeneric(StringUtils.trimToNull(matcher.group(2)));
         } else if (matcher.group(4) != null) {
-          String rank = StringUtils.trimToNull(matcher.group(3));
-          if (!rank.endsWith(".")) {
-            rank = rank + ".";
+          String rankMarker = StringUtils.trimToNull(matcher.group(3));
+          if (!rankMarker.endsWith(".")) {
+              rankMarker = rankMarker + ".";
           }
-          cn.setRankMarker(rank);
+          cn.setRankMarker(rankMarker);
           cn.setInfraGeneric(StringUtils.trimToNull(matcher.group(4)));
         }
         cn.setSpecificEpithet(StringUtils.trimToNull(matcher.group(5)));
@@ -238,8 +234,7 @@ public class NormalisedNameParser {
 
         // #11 is entire authorship, not stored in ParsedName
         cn.setBracketAuthorship(StringUtils.trimToNull(matcher.group(12)));
-        if (bracketSubrankFound && cn.getBracketAuthorship() == null && cn.getSpecificEpithet() == null && !monomials
-          .contains(cn.getInfraGeneric())) {
+        if (bracketSubrankFound && infragenericIsAuthor(cn, rank)) {
           // rather an author than a infrageneric rank. Swap
           cn.setBracketAuthorship(cn.getInfraGeneric());
           cn.setInfraGeneric(null);
@@ -259,6 +254,11 @@ public class NormalisedNameParser {
         lookForIrregularRankMarker(cn);
         // 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
         checkEpithetVsAuthorPrefx(cn);
+
+        // if no rank was parsed but given externally use it!
+        if (cn.getRankMarker() == null && rank != null) {
+            cn.setRank(rank);
+        }
         return true;
       }
 
@@ -276,7 +276,22 @@ public class NormalisedNameParser {
     return false;
   }
 
-  public boolean parseNormalisedNameIgnoreAuthors(ParsedName cn, String scientificName) {
+    private boolean infragenericIsAuthor(ParsedName pn, Rank rank) {
+        return pn.getBracketAuthorship() == null && pn.getSpecificEpithet() == null && (
+                rank == null
+                        || !(rank.isInfrageneric() && !rank.isSpeciesOrBelow())
+                        || pn.getInfraGeneric().contains(" ")
+        );
+    }
+
+  /**
+   *
+   * @param cn
+   * @param scientificName
+   * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
+   * @return
+   */
+  public boolean parseNormalisedNameIgnoreAuthors(ParsedName cn, String scientificName, @Nullable Rank rank) {
     LOG.debug("Parse normed name string ignoring authors: {}", scientificName);
 
     // match for canonical
@@ -290,14 +305,14 @@ public class NormalisedNameParser {
       if (matcher.group(2) != null) {
         // subrank in paranthesis. Not an author?
         cn.setInfraGeneric(StringUtils.trimToNull(matcher.group(2)));
-        if (!monomials.contains(cn.getInfraGeneric())) {
-          // rather an author...
-          cn.setInfraGeneric(null);
+        if (infragenericIsAuthor(cn, rank)) {
+            // rather an author...
+            cn.setInfraGeneric(null);
         }
       } else if (matcher.group(4) != null) {
         // infrageneric with rank indicator given
-        String rank = StringUtils.trimToNull(matcher.group(3));
-        cn.setRankMarker(rank);
+        String rankMarker = StringUtils.trimToNull(matcher.group(3));
+        cn.setRankMarker(rankMarker);
         cn.setInfraGeneric(StringUtils.trimToNull(matcher.group(4)));
       }
       cn.setSpecificEpithet(StringUtils.trimToNull(matcher.group(5)));
@@ -339,8 +354,8 @@ public class NormalisedNameParser {
     if (cn.getRankMarker() == null) {
       if (cn.getInfraSpecificEpithet() != null) {
         Matcher m = RANK_MARKER_ONLY.matcher(cn.getInfraSpecificEpithet());
-        if (m.find()) {
-          // we found a rank marker, make it one
+          if (m.find()) {
+              // we found a rank marker, make it one
           cn.setRankMarker(cn.getInfraSpecificEpithet());
           cn.setInfraSpecificEpithet(null);
         }
@@ -391,54 +406,6 @@ public class NormalisedNameParser {
       i++;
       LOG.debug("  {}: >{}<", i, matcher.group(i));
     }
-  }
-
-  public void addMonomials(Set<String> monomials) {
-    this.monomials.addAll(monomials);
-  }
-
-  /**
-   * Read generic and suprageneric names from rs.gbif.org dictionaries and feed them into nameparser for monomial
-   * references.
-   * Used to better disambiguate subgenera/genera and authors
-   */
-  public void readMonomialsRsGbifOrg() {
-    monomials.clear();
-    // add suprageneric names
-    InputStream in;
-    Set<String> names;
-    try {
-      in = RsGbifOrg.authorityUrl(RsGbifOrg.FILENAME_SUPRAGENERIC).openStream();
-      names = FileUtils.streamToSet(in);
-      addMonomials(names);
-      LOG.debug("Loaded " + names.size() + " suprageneric names from rs.gbif.org into NameParser");
-    } catch (IOException e) {
-      LOG.warn(
-        "Couldn't read suprageneric names dictionary from rs.gbif.org to feed into NameParser: " + e.getMessage());
-    } catch (Exception e) {
-      LOG.warn("Error supplying NameParser with suprageneric names from rs.gbif.org", e);
-    }
-    // add genera
-    try {
-      in = RsGbifOrg.authorityUrl(RsGbifOrg.FILENAME_GENERA).openStream();
-      names = FileUtils.streamToSet(in);
-      addMonomials(names);
-      LOG.debug("Loaded " + names.size() + " generic names from rs.gbif.org into NameParser");
-    } catch (IOException e) {
-      LOG.warn("Couldn't read generic names dictionary from rs.gbif.org to feed into NameParser: " + e.getMessage());
-    } catch (Exception e) {
-      LOG.warn("Error supplying NameParser with generic names from rs.gbif.org", e);
-    }
-  }
-
-  /**
-   * Provide a set of case insensitive words that indicate a true monomial to detect a taxonomic subrank instead of an
-   * author.
-   * For example in "Chordata Vertebrata"
-   */
-  public void setMonomials(Set<String> monomials) {
-    this.monomials.clear();
-    this.monomials.addAll(monomials);
   }
 
 }
