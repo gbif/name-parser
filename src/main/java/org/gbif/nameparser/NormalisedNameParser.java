@@ -2,7 +2,10 @@ package org.gbif.nameparser;
 
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.utils.file.FileUtils;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -15,6 +18,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -72,11 +76,11 @@ public class NormalisedNameParser {
 
   protected static final String RANK_MARKER_MICROBIAL =
     "(?:bv\\.|ct\\.|f\\. ?sp\\.|" + StringUtils.join(Lists.transform(Lists.newArrayList(Rank.INFRASUBSPECIFIC_MICROBIAL_RANKS), new Function<Rank, String>() {
-        @Override
-        public String apply(Rank rank) {
-          return rank.getMarker().replaceAll("\\.", "\\\\.");
-        }
-      }
+                @Override
+                public String apply(Rank rank) {
+                    return rank.getMarker().replaceAll("\\.", "\\\\.");
+                }
+            }
     ), "|") + ")";
 
   protected static final String EPHITHET_PREFIXES = "van|novae";
@@ -87,6 +91,16 @@ public class NormalisedNameParser {
     + "(?<!(?:"+EPHITHET_UNALLOWED_ENDINGS+"))(?=\\b)";
   protected static final String MONOMIAL =
     "[" + NAME_LETTERS + "](?:\\.|[" + name_letters + "]+)(?:-[" + NAME_LETTERS + "]?[" + name_letters + "]+)?";
+  // a pattern matching typical latin word endings. Helps identify name parts from authors
+  private static final Pattern LATIN_ENDINGS;
+  static {
+      try {
+          List<String> endings = FileUtils.streamToList(FileUtils.classpathStream("latin-endings.txt"));
+          LATIN_ENDINGS = Pattern.compile("(" + Joiner.on('|').skipNulls().join(endings) + ")$");
+      } catch (IOException e) {
+          throw new IllegalStateException("Failed to read latin-endings.txt from classpath resources", e);
+      }
+  }
   protected static final String INFRAGENERIC =
     "(?:" + "\\( ?([" + NAME_LETTERS + "][" + name_letters + "-]+) ?\\)" + "|" + "(" + StringUtils
       .join(Rank.RANK_MARKER_MAP_INFRAGENERIC.keySet(), "|") + ")\\.? ?([" + NAME_LETTERS + "][" + name_letters + "-]+)"
@@ -278,9 +292,9 @@ public class NormalisedNameParser {
 
     private boolean infragenericIsAuthor(ParsedName pn, Rank rank) {
         return pn.getBracketAuthorship() == null && pn.getSpecificEpithet() == null && (
-                rank == null
-                        || !(rank.isInfrageneric() && !rank.isSpeciesOrBelow())
-                        || pn.getInfraGeneric().contains(" ")
+                rank != null && !(rank.isInfrageneric() && !rank.isSpeciesOrBelow())
+                        //|| pn.getInfraGeneric().contains(" ")
+                        || rank == null && !LATIN_ENDINGS.matcher(pn.getInfraGeneric()).find()
         );
     }
 

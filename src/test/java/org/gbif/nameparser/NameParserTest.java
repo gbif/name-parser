@@ -1286,14 +1286,12 @@ public class NameParserTest {
 
     @Test
     public void testInfragenericRanks() throws Exception {
-        assertParsedInfrageneric("Bodotria (Vertebrata)", null, "Bodotria", null, null, "Vertebrata", null);
         assertParsedInfrageneric("Bodotria (Vertebrata)", Rank.SUBGENUS, "Bodotria", "Vertebrata", "subgen.", null, null);
 
         assertParsedInfrageneric("Bodotria (Goodsir)", null, "Bodotria", null, null, "Goodsir", null);
         assertParsedInfrageneric("Bodotria (Goodsir)", Rank.SUBGENUS, "Bodotria", "Goodsir", "subgen.", null, null);
         assertParsedInfrageneric("Bodotria (J.Goodsir)", Rank.SUBGENUS, "Bodotria", null, "subgen.", "J.Goodsir", null);
 
-        assertParsedInfrageneric("Latrunculia (Biannulata)", null, "Latrunculia", null, null, "Biannulata", null);
         assertParsedInfrageneric("Latrunculia (Biannulata)", Rank.SUBGENUS, "Latrunculia", "Biannulata", "subgen.", null, null);
 
         assertParsedParts("Saperda (Saperda) candida m. bipunctata Breuning, 1952", null, NameType.SCINAME, "Saperda", "Saperda", "candida",
@@ -1308,7 +1306,29 @@ public class NameParserTest {
         assertParsedParts("Eleocharis series Maculosae", null, NameType.SCINAME, "Eleocharis", "Maculosae", null, null, "ser.", null, null, null, null, null, null, null);
 
         assertParsedParts("Hylaeus (Alfkenylaeus) Snelling, 1985", Rank.SECTION, NameType.SCINAME, "Hylaeus", "Alfkenylaeus", null, null, "sect.", null, "Snelling", "1985", null, null, null, null);
+    }
 
+    @Test
+    public void testInfragenericRanks2() throws Exception {
+        assertParsedInfrageneric("Bodotria (Vertebrata)", null, "Bodotria", "Vertebrata", null, null, null);
+
+        assertParsedInfrageneric("Bodotria (Goodsir)", null, "Bodotria", null, null, "Goodsir", null);
+        assertParsedInfrageneric("Bodotria (J.Goodsir)", null, "Bodotria", null, null, "J.Goodsir", null);
+
+        assertParsedInfrageneric("Latrunculia (Biannulata)", null, "Latrunculia", "Biannulata", null, null, null);
+
+        assertParsedParts("Saperda (Saperda) candida m. bipunctata Breuning, 1952", null, NameType.SCINAME, "Saperda", "Saperda", "candida",
+                "bipunctata", "m.", null, "Breuning", "1952", null, null, null, null);
+
+        assertParsedParts("Carex section Acrocystis", null, NameType.SCINAME, "Carex", "Acrocystis", null, null, "sect.", null, null, null, null, null, null, null);
+
+        assertParsedParts("Juncus subgenus Alpini", null, NameType.SCINAME, "Juncus", "Alpini", null, null, "subgen.", null, null, null, null, null, null, null);
+
+        assertParsedParts("Solidago subsection Triplinervae", null, NameType.SCINAME, "Solidago", "Triplinervae", null, null, "subsect.", null, null, null, null, null, null, null);
+
+        assertParsedParts("Eleocharis series Maculosae", null, NameType.SCINAME, "Eleocharis", "Maculosae", null, null, "ser.", null, null, null, null, null, null, null);
+
+        assertParsedParts("Hylaeus (Alfkenylaeus) Snelling, 1985", null, NameType.WELLFORMED, "Hylaeus", "Alfkenylaeus", null, null, null, null, "Snelling", "1985", null, null, null, null);
     }
 
     @Test
