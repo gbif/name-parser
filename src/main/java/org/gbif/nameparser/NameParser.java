@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,7 +117,7 @@ public class NameParser {
   private static final Pattern NORM_IN_BIB = Pattern.compile("( in .+$| ?: ?[0-9]+)", CASE_INSENSITIVE);
   private static final Pattern NORM_PREFIXES = Pattern
     .compile("^(sub)?(fossil|" + StringUtils.join(Rank.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+",
-      CASE_INSENSITIVE);
+            CASE_INSENSITIVE);
   private static final Pattern NORM_SUFFIXES =
     Pattern.compile("[,;:]? (sp|anon|spp|hort|ms|&|[a-zA-Z][0-9])?\\.? *$", CASE_INSENSITIVE);
   // removed not|indetermin[a-z]+
@@ -126,7 +127,11 @@ public class NameParser {
     CASE_INSENSITIVE);
   private static final Pattern DOUBTFUL =
     Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + "&*+ ,.()/'`´0-9-]+$");
-  private static final String[] badNameParts = {"author", "unknown", "unassigned", "not_stated"};
+  private static final Pattern BAD_NAME_SUFFICES = Pattern.compile(" (author|unknown|unassigned|not_stated)$", CASE_INSENSITIVE);
+  private static final Pattern XML_ENTITY_STRIP = Pattern.compile("&\\s*([a-z]+)\\s*;");
+  // matches badly formed amoersands which are important in names / authorships
+  private static final Pattern AMPERSAND_ENTITY = Pattern.compile("& +amp +");
+
   private static final Pattern XML_TAGS = Pattern.compile("< */? *[a-zA-Z] *>");
   private static final Pattern FIRST_WORD = Pattern.compile("^([×xX]\\s+)?([×x][A-Z])?([a-zA-Z])([a-zA-Z]+) ");
   private static final String WEIRD_CHARS = "[§$%/#+!;:_|\"=*]";
@@ -174,28 +179,6 @@ public class NameParser {
     this.nnParser= new NormalisedNameParser(timeout / 2);
   }
 
-
-  private static String cutoffBadSuffices(String name) {
-    boolean done = false;
-    String lowercase = name.toLowerCase();
-    int cuttoff = lowercase.length();
-    while (!done) {
-      done = true;
-      for (String bad : badNameParts) {
-        if (lowercase.endsWith(" " + bad)) {
-          int remove = bad.length() + 1;
-          cuttoff -= remove;
-          lowercase = lowercase.substring(0, cuttoff);
-          done = false;
-        }
-      }
-    }
-    if (cuttoff != name.length()) {
-      name = name.substring(0, cuttoff);
-    }
-    return name;
-  }
-
   /**
    * A very optimistic cleaning intended for names potentially very very dirty
    *
@@ -208,7 +191,10 @@ public class NameParser {
       // remove final & which causes long parse times
 
       // test for known bad suffixes like in Palythoa texaensis author unknown
-      name = cutoffBadSuffices(name);
+      Matcher m = BAD_NAME_SUFFICES.matcher(name);
+      if (m.find()) {
+        name = m.replaceAll("");
+      }
 
       // replace weird chars
       name = NORM_WEIRD_CHARS.matcher(name).replaceAll(" ");
@@ -222,7 +208,7 @@ public class NameParser {
       // m.group(1)+StringUtils.trimToEmpty(m.group(2)));
       // }
       // uppercase the first letter, lowercase the rest of the first word
-      Matcher m = FIRST_WORD.matcher(name);
+      m = FIRST_WORD.matcher(name);
       if (m.find() && m.group(2) == null) {
         // System.out.println(m.group(1)+"|"+m.group(2)+"|"+m.group(3)+"|"+m.group(4));
         name = m.replaceFirst(
@@ -446,7 +432,15 @@ public class NameParser {
   protected static String preClean(String name) {
     // unescape unicode
     name = org.gbif.utils.text.StringUtils.unescapeUnicodeChars(name);
-    // TODO: unescape html entities
+    // remove bad whitespace in html entities
+    Matcher m = XML_ENTITY_STRIP.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("&$1;");
+    }
+    // unescape html entities
+    name = StringEscapeUtils.unescapeHtml4(name);
+    // finally remove still existing bad ampersands missing the closing ;
+    name = AMPERSAND_ENTITY.matcher(name).replaceAll("& ");
     // replace xml tags
     name = XML_TAGS.matcher(name).replaceAll("");
     // trim

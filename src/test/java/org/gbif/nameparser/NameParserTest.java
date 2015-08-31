@@ -1357,6 +1357,29 @@ public class NameParserTest {
     }
 
     @Test
+    public void testBadAmpersands() throws Exception {
+        assertParsedParts("Salix taiwanalpina var. chingshuishanensis (S.S.Ying) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng ", null, "Salix", "taiwanalpina", "chingshuishanensis", "var.", "F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng", null, "S.S.Ying", null);
+        assertParsedParts("Salix taiwanalpina var. chingshuishanensis (S.S.Ying) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp  Y.H.Tseng ", null, "Salix", "taiwanalpina", "chingshuishanensis", "var.", "F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng", null, "S.S.Ying", null);
+        assertParsedParts("Salix morrisonicola var. takasagoalpina (Koidz.) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp; Y.H.Tseng", null, "Salix", "morrisonicola", "takasagoalpina", "var.", "F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng", null, "Koidz.", null);
+        assertParsedParts("Ficus ernanii Carauta, Pederneir., P.P.Souza, A.F.P.Machado, M.D.M.Vianna & amp; Romaniuc", "Ficus", "ernanii", null, null, "Carauta, Pederneir., P.P.Souza, A.F.P.Machado, M.D.M.Vianna & Romaniuc");
+    }
+
+    @Test
+    public void testCommonPlaceholders() throws Exception {
+        assertBlacklisted("Salix taiwanalpina unassigned");
+        assertBlacklisted("Salix taiwanalpina alpina UNKNOWN ");
+    }
+
+    @Test
+    public void testStringIndexOutOfBoundsException() throws Exception {
+        parser.parse("Amblyomma americanum (Linnaeus, 1758)", null);
+        parser.parse("Salix taiwanalpina var. chingshuishanensis (S.S.Ying) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng ", null);
+        parser.parse("Salix taiwanalpina var. chingshuishanensis (S.S.Ying) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp  Y.H.Tseng ", null);
+        parser.parse("Salix morrisonicola var. takasagoalpina (Koidz.) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp; Y.H.Tseng", null);
+        parser.parse("Ficus ernanii Carauta, Pederneir., P.P.Souza, A.F.P.Machado, M.D.M.Vianna & amp; Romaniuc", null);
+    }
+
+    @Test
     public void testNameType() throws Exception {
         assertUnparsableType(NameType.HYBRID, "Asplenium rhizophyllum DC. x ruta-muraria E.L. Braun 1939");
         assertUnparsableType(NameType.HYBRID, "Agrostis L. × Polypogon Desf. ");
