@@ -122,7 +122,7 @@ public class NameParser {
     Pattern.compile("[,;:]? (sp|anon|spp|hort|ms|&|[a-zA-Z][0-9])?\\.? *$", CASE_INSENSITIVE);
   // removed not|indetermin[a-z]+
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
-  private static final Pattern BLACKLISTED = Pattern.compile(
+  private static final Pattern PLACEHOLDER = Pattern.compile(
     "\\b(unnamed|mixed|unassigned|unallocated|unplaced|undetermined|unclassified|uncultured|unknown|unspecified|uncertain|incertae sedis|not assigned|awaiting allocation)\\b",
     CASE_INSENSITIVE);
   private static final Pattern DOUBTFUL =
@@ -480,7 +480,7 @@ public class NameParser {
    */
   public ParsedName parse(final String scientificName, @Nullable Rank rank) throws UnparsableException {
     if (Strings.isNullOrEmpty(scientificName)) {
-      throw new UnparsableException(NameType.BLACKLISTED, scientificName);
+      throw new UnparsableException(NameType.NO_NAME, scientificName);
     }
     long start = 0;
     if (LOG.isDebugEnabled()) {
@@ -524,7 +524,7 @@ public class NameParser {
     // normalise name
     name = normalize(name);
     if (Strings.isNullOrEmpty(name)) {
-      throw new UnparsableException(NameType.BLACKLISTED, scientificName);
+      throw new UnparsableException(NameType.NO_NAME, scientificName);
     }
 
     // parse cultivar names first BEFORE we strongly normalize
@@ -539,14 +539,14 @@ public class NameParser {
     }
 
     // detect unparsable names
-    m = BLACKLISTED.matcher(name);
+    m = PLACEHOLDER.matcher(name);
     if (m.find()) {
-      throw new UnparsableException(NameType.BLACKLISTED, scientificName);
+      throw new UnparsableException(NameType.PLACEHOLDER, scientificName);
     }
     // name without any latin char letter at all?
     m = NO_LETTERS.matcher(name);
     if (m.find()) {
-      throw new UnparsableException(NameType.BLACKLISTED, scientificName);
+      throw new UnparsableException(NameType.NO_NAME, scientificName);
     }
     m = HYBRID_FORMULA_PATTERN.matcher(name);
     if (m.find()) {
@@ -651,19 +651,11 @@ public class NameParser {
       if (!m.find()) {
         pn.setType(NameType.DOUBTFUL);
       } else {
-        // a wellformed, code compliant name?
-        if (scientificName.replaceAll(", "," ").equals(pn.canonicalNameComplete().replaceAll(", ", " "))) {
-          pn.setType(NameType.WELLFORMED);
-        } else {
-          LOG.debug("Not wellformed. Name and reconstructed name mismatch:\n{}\n{}", scientificName,
-            pn.canonicalNameComplete());
-          pn.setType(NameType.SCINAME);
-        }
+        pn.setType(NameType.SCIENTIFIC);
       }
     }
 
     LOG.debug("Parsing time: {}", (System.currentTimeMillis() - start));
-
     return pn;
   }
 

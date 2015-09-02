@@ -20,8 +20,7 @@ import org.gbif.api.vocabulary.NameType;
 
 /**
  * Exception thrown when a scientific name cannot be parsed.
- * The type property is set for known name types that cannot be parsed but be detected, for example hybrids, virus
- * or blacklisted names.
+ * The type property is set for known name types that cannot be parsed but be detected, for example hybrids, virus or placeholder names.
  * The name property holds the name that cannot be parsed.
  *
  * @author markus

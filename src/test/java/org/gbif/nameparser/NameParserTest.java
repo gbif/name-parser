@@ -74,8 +74,8 @@ public class NameParserTest {
         }
     }
 
-    private void assertBlacklisted(String name) {
-        assertUnparsableType(NameType.BLACKLISTED, name);
+    private void assertNoName(String name) {
+        assertUnparsableType(NameType.NO_NAME, name);
     }
 
     private void assertUnparsableDoubtful(String name) {
@@ -592,9 +592,22 @@ public class NameParserTest {
         assertEquals("Dioscoreales", pn.getGenusOrAbove());
         assertEquals("Hooker f.", pn.getAuthorship());
         assertEquals(Rank.ORDER, pn.getRank());
-        assertTrue(NameType.WELLFORMED == pn.getType());
+        assertTrue(NameType.SCIENTIFIC == pn.getType());
 
         pn = parser.parse("Melastoma vacillans Blume var.", null);
+    }
+
+    @Test
+    public void testTimeoutNameFile() throws Exception {
+        Reader reader = FileUtils.getInputStreamReader(streamUtils.classpathStream("timeout-names.txt"));
+        LineIterator iter = new LineIterator(reader);
+        while (iter.hasNext()) {
+            String line = iter.nextLine();
+            if (line == null || line.startsWith("#") || line.trim().isEmpty()) {
+                continue;
+            }
+            ParsedName n = parser.parse(line, null);
+        }
     }
 
     @Test
@@ -637,8 +650,8 @@ public class NameParserTest {
                 }
                 // copy scientific name, we dont wanna compare it, it might be slightly different
                 expected.setScientificName(n.getScientificName());
-                // remove sciname or wellformed nametype as we only like to compare other values
-                if (NameType.SCINAME==n.getType() || NameType.WELLFORMED==n.getType()) {
+                // remove SCIENTIFIC nametype as we only like to compare other values
+                if (NameType.SCIENTIFIC==n.getType()) {
                     n.setType(null);
                 }
                 if (!n.equals(expected)) {
@@ -722,10 +735,10 @@ public class NameParserTest {
      */
     @Test
     public void testAuthorTroubles() throws Exception {
-        assertParsedParts("Cribbia pendula la Croix & P.J.Cribb", NameType.WELLFORMED, "Cribbia", "pendula", null, null, "la Croix & P.J.Cribb", null);
-        assertParsedParts("Cribbia pendula le Croix & P.J.Cribb", NameType.WELLFORMED, "Cribbia", "pendula", null, null, "le Croix & P.J.Cribb", null);
-        assertParsedParts("Cribbia pendula de la Croix & le P.J.Cribb", NameType.WELLFORMED, "Cribbia", "pendula", null, null, "de la Croix & le P.J.Cribb", null);
-        assertParsedParts("Cribbia pendula Croix & de le P.J.Cribb", NameType.WELLFORMED, "Cribbia", "pendula", null, null, "Croix & de le P.J.Cribb", null);
+        assertParsedParts("Cribbia pendula la Croix & P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, null, "la Croix & P.J.Cribb", null);
+        assertParsedParts("Cribbia pendula le Croix & P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, null, "le Croix & P.J.Cribb", null);
+        assertParsedParts("Cribbia pendula de la Croix & le P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, null, "de la Croix & le P.J.Cribb", null);
+        assertParsedParts("Cribbia pendula Croix & de le P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, null, "Croix & de le P.J.Cribb", null);
     }
 
     /**
@@ -734,38 +747,38 @@ public class NameParserTest {
     @Test
     public void testMicrobialRanks() throws Exception {
         assertParsedMicrobial("Salmonella enterica serovar Typhimurium",
-                NameType.WELLFORMED, "Salmonella", "enterica", "Typhimurium", Rank.SEROVAR);
+                NameType.SCIENTIFIC, "Salmonella", "enterica", "Typhimurium", Rank.SEROVAR);
         assertParsedMicrobial("Salmonella enterica serovar Dublin",
-                NameType.WELLFORMED, "Salmonella", "enterica", "Dublin", Rank.SEROVAR);
+                NameType.SCIENTIFIC, "Salmonella", "enterica", "Dublin", Rank.SEROVAR);
 
         assertParsedMicrobial("Yersinia pestis biovar Orientalis str. IP674",
                 NameType.INFORMAL, "Yersinia", "pestis", "Orientalis", Rank.BIOVAR, null, null, null, null, "IP674");
         assertParsedMicrobial("Rhizobium leguminosarum biovar viciae",
-                NameType.WELLFORMED, "Rhizobium", "leguminosarum", "viciae", Rank.BIOVAR);
+                NameType.SCIENTIFIC, "Rhizobium", "leguminosarum", "viciae", Rank.BIOVAR);
 
         assertParsedMicrobial("Thymus vulgaris ct. thymol",
-                NameType.SCINAME, "Thymus", "vulgaris", "thymol", Rank.CHEMOFORM);
+                NameType.SCIENTIFIC, "Thymus", "vulgaris", "thymol", Rank.CHEMOFORM);
 
         assertParsedMicrobial("Staphyloccocus aureus phagovar 42D",
-                NameType.WELLFORMED, "Staphyloccocus", "aureus", "42D", Rank.PHAGOVAR);
+                NameType.SCIENTIFIC, "Staphyloccocus", "aureus", "42D", Rank.PHAGOVAR);
 
         assertParsedMicrobial("Pseudomonas syringae pv. lachrymans",
-                NameType.WELLFORMED, "Pseudomonas", "syringae", "lachrymans", Rank.PATHOVAR);
+                NameType.SCIENTIFIC, "Pseudomonas", "syringae", "lachrymans", Rank.PATHOVAR);
 
         assertParsedMicrobial("Pseudomonas syringae pv. aceris (Ark, 1939) Young, Dye & Wilkie, 1978",
-                NameType.WELLFORMED, "Pseudomonas", "syringae", "aceris", Rank.PATHOVAR, "Young, Dye & Wilkie", "1978", "Ark", "1939", null);
+                NameType.SCIENTIFIC, "Pseudomonas", "syringae", "aceris", Rank.PATHOVAR, "Young, Dye & Wilkie", "1978", "Ark", "1939", null);
 
         assertParsedMicrobial("Acinetobacter junii morphovar I",
-                NameType.WELLFORMED, "Acinetobacter", "junii", "I", Rank.MORPHOVAR);
+                NameType.SCIENTIFIC, "Acinetobacter", "junii", "I", Rank.MORPHOVAR);
 
         assertParsedMicrobial("Puccinia graminis f. sp. avenae",
-                NameType.SCINAME, "Puccinia", "graminis", "avenae", Rank.FORMA_SPECIALIS);
+                NameType.SCIENTIFIC, "Puccinia", "graminis", "avenae", Rank.FORMA_SPECIALIS);
 
         assertParsedMicrobial("Puccinia graminis f.sp. avenae",
-                NameType.WELLFORMED, "Puccinia", "graminis", "avenae", Rank.FORMA_SPECIALIS);
+                NameType.SCIENTIFIC, "Puccinia", "graminis", "avenae", Rank.FORMA_SPECIALIS);
 
         assertParsedMicrobial("Bacillus thuringiensis serovar huazhongensis",
-                NameType.WELLFORMED, "Bacillus", "thuringiensis", "huazhongensis", Rank.SEROVAR);
+                NameType.SCIENTIFIC, "Bacillus", "thuringiensis", "huazhongensis", Rank.SEROVAR);
 
         // informal indet name
         assertParsedMicrobial("Bacillus thuringiensis serovar",
@@ -776,10 +789,10 @@ public class NameParserTest {
                 NameType.INFORMAL, "Bacillus", null, null, Rank.SEROVAR);
 
         assertParsedMicrobial("Listeria monocytogenes serovar 4b",
-                NameType.WELLFORMED, "Listeria", "monocytogenes", "4b", Rank.SEROVAR);
+                NameType.SCIENTIFIC, "Listeria", "monocytogenes", "4b", Rank.SEROVAR);
 
         assertParsedMicrobial("Listeria monocytogenes serotype 4b",
-                NameType.SCINAME, "Listeria", "monocytogenes", "4b", Rank.SEROVAR);
+                NameType.SCIENTIFIC, "Listeria", "monocytogenes", "4b", Rank.SEROVAR);
     }
 
     @Test
@@ -791,9 +804,9 @@ public class NameParserTest {
 
     @Test
     public void testAutonyms() throws Exception {
-        assertParsedParts("Panthera leo leo (Linnaeus, 1758)", NameType.SCINAME, "Panthera", "leo", "leo", null, null, null, "Linnaeus",
+        assertParsedParts("Panthera leo leo (Linnaeus, 1758)", NameType.SCIENTIFIC, "Panthera", "leo", "leo", null, null, null, "Linnaeus",
                 "1758");
-        assertParsedParts("Abies alba subsp. alba L.", NameType.SCINAME, "Abies", "alba", "alba", "subsp.", "L.");
+        assertParsedParts("Abies alba subsp. alba L.", NameType.SCIENTIFIC, "Abies", "alba", "alba", "subsp.", "L.");
         //TODO: improve nameparser to extract autonym authors, http://dev.gbif.org/issues/browse/GBIFCOM-10
         //    assertParsedParts("Abies alba L. subsp. alba", "Abies", "alba", "alba", "subsp.", "L.");
         // this is a wrong name! autonym authors are the species authors, so if both are given they must be the same!
@@ -802,14 +815,14 @@ public class NameParserTest {
 
     @Test
     public void testNameParserFull() throws Exception {
-        assertParsedParts("Abies alba L.", NameType.WELLFORMED, "Abies", "alba", null, null, "L.");
+        assertParsedParts("Abies alba L.", NameType.SCIENTIFIC, "Abies", "alba", null, null, "L.");
         assertParsedParts("Abies alba var. kosovo", "Abies", "alba", "kosovo", "var.");
         assertParsedParts("Abies alba subsp. parafil", "Abies", "alba", "parafil", "subsp.");
         assertParsedParts("Abies   alba L. ssp. parafil DC.", "Abies", "alba", "parafil", "subsp.", "DC.");
 
         assertParsedParts("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", NameType.DOUBTFUL, "Nuculoidea", "behrens",
                 "christoph", "var.", "Williams & Breger", "1916");
-        assertParsedParts(" Nuculoidea Williams et  Breger 1916  ", NameType.SCINAME, "Nuculoidea", null, null, null, "Williams & Breger", "1916");
+        assertParsedParts(" Nuculoidea Williams et  Breger 1916  ", NameType.SCIENTIFIC, "Nuculoidea", null, null, null, "Williams & Breger", "1916");
 
         assertParsedParts("Nuculoidea behrens v.christoph Williams & Breger [1916]  ", NameType.DOUBTFUL, "Nuculoidea", "behrens", "christoph",
                 "var.", "Williams & Breger", "1916");
@@ -818,11 +831,11 @@ public class NameParserTest {
         assertParsedParts(" Megacardita hornii  calafia", "Megacardita", "hornii", "calafia", null);
         assertParsedParts(" Megacardita hornii  calafia", "Megacardita", "hornii", "calafia", null);
         assertParsedParts(" A. anthophora acervorum", "A.", "anthophora", "acervorum", null);
-        assertParsedParts(" x Festulolium nilssonii Cugnac & A. Camus", null, NameType.SCINAME, "Festulolium", null, "nilssonii", null, null,
+        assertParsedParts(" x Festulolium nilssonii Cugnac & A. Camus", null, NameType.SCIENTIFIC, "Festulolium", null, "nilssonii", null, null,
                 NamePart.GENERIC, "Cugnac & A. Camus", null, null, null, null, null);
-        assertParsedParts("x Festulolium nilssonii Cugnac & A. Camus", null, NameType.SCINAME, "Festulolium", null, "nilssonii", null, null,
+        assertParsedParts("x Festulolium nilssonii Cugnac & A. Camus", null, NameType.SCIENTIFIC, "Festulolium", null, "nilssonii", null, null,
                 NamePart.GENERIC, "Cugnac & A. Camus", null, null, null, null, null);
-        assertParsedParts("Festulolium x nilssonii Cugnac & A. Camus", null, NameType.SCINAME, "Festulolium", null, "nilssonii", null, null,
+        assertParsedParts("Festulolium x nilssonii Cugnac & A. Camus", null, NameType.SCIENTIFIC, "Festulolium", null, "nilssonii", null, null,
                 NamePart.SPECIFIC, "Cugnac & A. Camus", null, null, null, null, null);
 
         assertParsedParts("Ges Klaus 1895", "Ges", null, null, null, "Klaus", "1895");
@@ -933,11 +946,11 @@ public class NameParserTest {
                 null, "Han, Zhao-Gan & Ye", "1985");
         assertParsedParts(" Solanophila karisimbica ab. fulvicollis Mader 1941", "Solanophila", "karisimbica",
                 "fulvicollis", "ab.", "Mader", "1941");
-        assertParsedParts(" Tortrix Heterognomon aglossana Kennel 1899", NameType.SCINAME, "Tortrix", "Heterognomon", "aglossana", null, null, "Kennel",
+        assertParsedParts(" Tortrix Heterognomon aglossana Kennel 1899", NameType.SCIENTIFIC, "Tortrix", "Heterognomon", "aglossana", null, null, "Kennel",
                 "1899", null, null);
-        assertParsedParts(" Leptochilus (Neoleptochilus) beaumonti Giordani Soika 1953", NameType.SCINAME, "Leptochilus", "Neoleptochilus", "beaumonti", null,
+        assertParsedParts(" Leptochilus (Neoleptochilus) beaumonti Giordani Soika 1953", NameType.SCIENTIFIC, "Leptochilus", "Neoleptochilus", "beaumonti", null,
                 null, "Giordani Soika", "1953", null, null);
-        assertParsedParts(" Lutzomyia (Helcocyrtomyia) rispaili Torres-Espejo, Caceres & le Pont 1995", NameType.SCINAME, "Lutzomyia", "Helcocyrtomyia",
+        assertParsedParts(" Lutzomyia (Helcocyrtomyia) rispaili Torres-Espejo, Caceres & le Pont 1995", NameType.SCIENTIFIC, "Lutzomyia", "Helcocyrtomyia",
                 "rispaili", null, null, "Torres-Espejo, Caceres & le Pont", "1995", null, null);
         assertParsedParts("Gastropacha minima De Lajonquiére 1979", "Gastropacha", "minima", null, null, "De Lajonquiére",
                 "1979");
@@ -949,11 +962,11 @@ public class NameParserTest {
                 "L.O.Williams in Woodson & Schery");
         assertParsedParts("Masdevallia strumosa P.Ortiz & E.Calderón", "Masdevallia", "strumosa", null, null,
                 "P.Ortiz & E.Calderón");
-        assertParsedParts("Neobisium (Neobisium) carcinoides balcanicum Hadži 1937", NameType.SCINAME, "Neobisium", "Neobisium",
+        assertParsedParts("Neobisium (Neobisium) carcinoides balcanicum Hadži 1937", NameType.SCIENTIFIC, "Neobisium", "Neobisium",
                 "carcinoides", "balcanicum", null, "Hadži", "1937", null, null);
         assertParsedParts("Nomascus concolor subsp. lu Delacour, 1951", "Nomascus", "concolor", "lu", "subsp.", "Delacour",
                 "1951");
-        assertParsedParts("Polygonum subgen. Bistorta (L.) Zernov", NameType.WELLFORMED, "Polygonum", "Bistorta",
+        assertParsedParts("Polygonum subgen. Bistorta (L.) Zernov", NameType.SCIENTIFIC, "Polygonum", "Bistorta",
                 null, null, "subgen.", "Zernov", null, "L.", null);
         assertParsedParts("Stagonospora polyspora M.T. Lucas & Sousa da Câmara, 1934", "Stagonospora", "polyspora", null,
                 null, "M.T. Lucas & Sousa da Câmara", "1934");
@@ -1092,9 +1105,9 @@ public class NameParserTest {
 
     @Test
     public void testPathovars() throws Exception {
-        assertParsedParts("Xanthomonas campestris pv. citri (ex Hasse 1915) Dye 1978", NameType.WELLFORMED, "Xanthomonas", "campestris", "citri", "pv.", "Dye", "1978", "ex Hasse", "1915");
-        assertParsedParts("Xanthomonas campestris pv. oryzae (Xco)", NameType.WELLFORMED, "Xanthomonas", "campestris", "oryzae", "pv.", null, null, "Xco", null);
-        assertParsedParts("Streptococcus dysgalactiae (ex Diernhofer 1932) Garvie et al. 1983", NameType.WELLFORMED, "Streptococcus", "dysgalactiae", null, null, "Garvie et al.", "1983", "ex Diernhofer", "1932");
+        assertParsedParts("Xanthomonas campestris pv. citri (ex Hasse 1915) Dye 1978", NameType.SCIENTIFIC, "Xanthomonas", "campestris", "citri", "pv.", "Dye", "1978", "ex Hasse", "1915");
+        assertParsedParts("Xanthomonas campestris pv. oryzae (Xco)", NameType.SCIENTIFIC, "Xanthomonas", "campestris", "oryzae", "pv.", null, null, "Xco", null);
+        assertParsedParts("Streptococcus dysgalactiae (ex Diernhofer 1932) Garvie et al. 1983", NameType.SCIENTIFIC, "Streptococcus", "dysgalactiae", null, null, "Garvie et al.", "1983", "ex Diernhofer", "1932");
     }
 
     @Test
@@ -1294,18 +1307,18 @@ public class NameParserTest {
 
         assertParsedInfrageneric("Latrunculia (Biannulata)", Rank.SUBGENUS, "Latrunculia", "Biannulata", "subgen.", null, null);
 
-        assertParsedParts("Saperda (Saperda) candida m. bipunctata Breuning, 1952", null, NameType.SCINAME, "Saperda", "Saperda", "candida",
+        assertParsedParts("Saperda (Saperda) candida m. bipunctata Breuning, 1952", null, NameType.SCIENTIFIC, "Saperda", "Saperda", "candida",
                 "bipunctata", "m.", null, "Breuning", "1952", null, null, null, null);
 
-        assertParsedParts("Carex section Acrocystis", null, NameType.SCINAME, "Carex", "Acrocystis", null, null, "sect.", null, null, null, null, null, null, null);
+        assertParsedParts("Carex section Acrocystis", null, NameType.SCIENTIFIC, "Carex", "Acrocystis", null, null, "sect.", null, null, null, null, null, null, null);
 
-        assertParsedParts("Juncus subgenus Alpini", null, NameType.SCINAME, "Juncus", "Alpini", null, null, "subgen.", null, null, null, null, null, null, null);
+        assertParsedParts("Juncus subgenus Alpini", null, NameType.SCIENTIFIC, "Juncus", "Alpini", null, null, "subgen.", null, null, null, null, null, null, null);
 
-        assertParsedParts("Solidago subsection Triplinervae", null, NameType.SCINAME, "Solidago", "Triplinervae", null, null, "subsect.", null, null, null, null, null, null, null);
+        assertParsedParts("Solidago subsection Triplinervae", null, NameType.SCIENTIFIC, "Solidago", "Triplinervae", null, null, "subsect.", null, null, null, null, null, null, null);
 
-        assertParsedParts("Eleocharis series Maculosae", null, NameType.SCINAME, "Eleocharis", "Maculosae", null, null, "ser.", null, null, null, null, null, null, null);
+        assertParsedParts("Eleocharis series Maculosae", null, NameType.SCIENTIFIC, "Eleocharis", "Maculosae", null, null, "ser.", null, null, null, null, null, null, null);
 
-        assertParsedParts("Hylaeus (Alfkenylaeus) Snelling, 1985", Rank.SECTION, NameType.SCINAME, "Hylaeus", "Alfkenylaeus", null, null, "sect.", null, "Snelling", "1985", null, null, null, null);
+        assertParsedParts("Hylaeus (Alfkenylaeus) Snelling, 1985", Rank.SECTION, NameType.SCIENTIFIC, "Hylaeus", "Alfkenylaeus", null, null, "sect.", null, "Snelling", "1985", null, null, null, null);
     }
 
     @Test
@@ -1317,36 +1330,28 @@ public class NameParserTest {
 
         assertParsedInfrageneric("Latrunculia (Biannulata)", null, "Latrunculia", "Biannulata", null, null, null);
 
-        assertParsedParts("Saperda (Saperda) candida m. bipunctata Breuning, 1952", null, NameType.SCINAME, "Saperda", "Saperda", "candida",
+        assertParsedParts("Saperda (Saperda) candida m. bipunctata Breuning, 1952", null, NameType.SCIENTIFIC, "Saperda", "Saperda", "candida",
                 "bipunctata", "m.", null, "Breuning", "1952", null, null, null, null);
 
-        assertParsedParts("Carex section Acrocystis", null, NameType.SCINAME, "Carex", "Acrocystis", null, null, "sect.", null, null, null, null, null, null, null);
+        assertParsedParts("Carex section Acrocystis", null, NameType.SCIENTIFIC, "Carex", "Acrocystis", null, null, "sect.", null, null, null, null, null, null, null);
 
-        assertParsedParts("Juncus subgenus Alpini", null, NameType.SCINAME, "Juncus", "Alpini", null, null, "subgen.", null, null, null, null, null, null, null);
+        assertParsedParts("Juncus subgenus Alpini", null, NameType.SCIENTIFIC, "Juncus", "Alpini", null, null, "subgen.", null, null, null, null, null, null, null);
 
-        assertParsedParts("Solidago subsection Triplinervae", null, NameType.SCINAME, "Solidago", "Triplinervae", null, null, "subsect.", null, null, null, null, null, null, null);
+        assertParsedParts("Solidago subsection Triplinervae", null, NameType.SCIENTIFIC, "Solidago", "Triplinervae", null, null, "subsect.", null, null, null, null, null, null, null);
 
-        assertParsedParts("Eleocharis series Maculosae", null, NameType.SCINAME, "Eleocharis", "Maculosae", null, null, "ser.", null, null, null, null, null, null, null);
+        assertParsedParts("Eleocharis series Maculosae", null, NameType.SCIENTIFIC, "Eleocharis", "Maculosae", null, null, "ser.", null, null, null, null, null, null, null);
 
-        assertParsedParts("Hylaeus (Alfkenylaeus) Snelling, 1985", null, NameType.WELLFORMED, "Hylaeus", "Alfkenylaeus", null, null, null, null, "Snelling", "1985", null, null, null, null);
+        assertParsedParts("Hylaeus (Alfkenylaeus) Snelling, 1985", null, NameType.SCIENTIFIC, "Hylaeus", "Alfkenylaeus", null, null, null, null, "Snelling", "1985", null, null, null, null);
     }
 
     @Test
     public void testBlacklisted() throws Exception {
-        assertBlacklisted("unknown Plantanus");
-        assertBlacklisted("Macrodasyida incertae sedis");
-        assertBlacklisted(" uncertain Plantanus");
-        assertBlacklisted("Unknown Cyanobacteria");
-        assertBlacklisted("Unknown methanomicrobium (strain EBac)");
-        assertBlacklisted("Demospongiae incertae sedis");
-        assertBlacklisted("Unallocated Demospongiae");
-        assertBlacklisted("Asteracea (awaiting allocation)");
-        assertBlacklisted("143");
-        assertBlacklisted("321-432");
-        assertBlacklisted("-,.#");
-        assertBlacklisted("");
-        assertBlacklisted(" ");
-        assertBlacklisted(" .");
+        assertNoName("143");
+        assertNoName("321-432");
+        assertNoName("-,.#");
+        assertNoName("");
+        assertNoName(" ");
+        assertNoName(" .");
     }
 
     @Test
@@ -1366,8 +1371,16 @@ public class NameParserTest {
 
     @Test
     public void testCommonPlaceholders() throws Exception {
-        assertBlacklisted("Salix taiwanalpina unassigned");
-        assertBlacklisted("Salix taiwanalpina alpina UNKNOWN ");
+        assertUnparsableType(NameType.PLACEHOLDER, "Salix taiwanalpina unassigned");
+        assertUnparsableType(NameType.PLACEHOLDER, "Salix taiwanalpina alpina UNKNOWN ");
+        assertUnparsableType(NameType.PLACEHOLDER, "unknown Plantanus");
+        assertUnparsableType(NameType.PLACEHOLDER, "Asteracea (awaiting allocation)");
+        assertUnparsableType(NameType.PLACEHOLDER, "Macrodasyida incertae sedis");
+        assertUnparsableType(NameType.PLACEHOLDER, " uncertain Plantanus");
+        assertUnparsableType(NameType.PLACEHOLDER, "Unknown Cyanobacteria");
+        assertUnparsableType(NameType.PLACEHOLDER, "Unknown methanomicrobium (strain EBac)");
+        assertUnparsableType(NameType.PLACEHOLDER, "Demospongiae incertae sedis");
+        assertUnparsableType(NameType.PLACEHOLDER, "Unallocated Demospongiae");
     }
 
     @Test
@@ -1386,22 +1399,22 @@ public class NameParserTest {
 
         assertUnparsableType(NameType.VIRUS, "Cactus virus 2");
 
-        assertEquals(NameType.WELLFORMED, parser.parse("Neobisium carcinoides subsp. balcanicum Hadži, 1937", null).getType());
-        assertEquals(NameType.WELLFORMED, parser.parse("Festulolium nilssonii Cugnac & A. Camus", null).getType());
-        assertEquals(NameType.WELLFORMED, parser.parse("Coccyzuz americanus", null).getType());
-        assertEquals(NameType.WELLFORMED, parser.parse("Tavila indeterminata Walker, 1869", null).getType());
-        assertEquals(NameType.WELLFORMED, parser.parse("Phyllodonta indeterminata Schaus, 1901", null).getType());
-        assertEquals(NameType.WELLFORMED, parser.parse("×Festulolium nilssonii Cugnac & A. Camus", null).getType());
+        assertEquals(NameType.SCIENTIFIC, parser.parse("Neobisium carcinoides subsp. balcanicum Hadži, 1937", null).getType());
+        assertEquals(NameType.SCIENTIFIC, parser.parse("Festulolium nilssonii Cugnac & A. Camus", null).getType());
+        assertEquals(NameType.SCIENTIFIC, parser.parse("Coccyzuz americanus", null).getType());
+        assertEquals(NameType.SCIENTIFIC, parser.parse("Tavila indeterminata Walker, 1869", null).getType());
+        assertEquals(NameType.SCIENTIFIC, parser.parse("Phyllodonta indeterminata Schaus, 1901", null).getType());
+        assertEquals(NameType.SCIENTIFIC, parser.parse("×Festulolium nilssonii Cugnac & A. Camus", null).getType());
 
         // not using the multiplication sign, but an simple x
-        assertEquals(NameType.SCINAME, parser.parse("x Festulolium nilssonii Cugnac & A. Camus", null).getType());
-        assertEquals(NameType.SCINAME, parser.parse("xFestulolium nilssonii Cugnac & A. Camus", null).getType());
-        assertEquals(NameType.SCINAME, parser.parse("nuculoidea behrens subsp. behrens var.christoph", null).getType());
-        assertEquals(NameType.SCINAME, parser.parse("Neobisium (Neobisium) carcinoides balcanicum Hadži 1937", null).getType());
-        assertEquals(NameType.SCINAME, parser.parse("Neobisium carcinoides ssp. balcanicum Hadži, 1937", null).getType());
-        assertEquals(NameType.SCINAME,
+        assertEquals(NameType.SCIENTIFIC, parser.parse("x Festulolium nilssonii Cugnac & A. Camus", null).getType());
+        assertEquals(NameType.SCIENTIFIC, parser.parse("xFestulolium nilssonii Cugnac & A. Camus", null).getType());
+        assertEquals(NameType.SCIENTIFIC, parser.parse("nuculoidea behrens subsp. behrens var.christoph", null).getType());
+        assertEquals(NameType.SCIENTIFIC, parser.parse("Neobisium (Neobisium) carcinoides balcanicum Hadži 1937", null).getType());
+        assertEquals(NameType.SCIENTIFIC, parser.parse("Neobisium carcinoides ssp. balcanicum Hadži, 1937", null).getType());
+        assertEquals(NameType.SCIENTIFIC,
                 parser.parse("Valsa hypodermia sensu Berkeley & Broome (Not. Brit. Fungi no., 862)", null).getType());
-        assertEquals(NameType.SCINAME, parser.parse("Solanum aculeatissimum auct. not Jacq.", null).getType());
+        assertEquals(NameType.SCIENTIFIC, parser.parse("Solanum aculeatissimum auct. not Jacq.", null).getType());
 
         assertEquals(NameType.INFORMAL, parser.parse("Coccyzuz cf americanus", null).getType());
         assertEquals(NameType.INFORMAL, parser.parse("Coccyzuz americanus ssp.", null).getType());
@@ -1722,26 +1735,26 @@ public class NameParserTest {
         assertEquals("tuberosus", pn.getInfraSpecificEpithet());
         assertEquals("Borss.Waalk.", pn.getAuthorship());
         assertEquals("Span.", pn.getBracketAuthorship());
-        assertEquals(NameType.SCINAME, pn.getType());
+        assertEquals(NameType.SCIENTIFIC, pn.getType());
 
         pn = parser.parse("Acalypha hochstetteriana Müll.Arg.", null);
         assertEquals("Acalypha", pn.getGenusOrAbove());
         assertEquals("hochstetteriana", pn.getSpecificEpithet());
         assertEquals("Müll.Arg.", pn.getAuthorship());
-        assertEquals(NameType.WELLFORMED, pn.getType());
+        assertEquals(NameType.SCIENTIFIC, pn.getType());
 
         pn = parser.parse("Caloplaca variabilis (Pers.) Müll.Arg.", null);
         assertEquals("Caloplaca", pn.getGenusOrAbove());
         assertEquals("variabilis", pn.getSpecificEpithet());
         assertEquals("Müll.Arg.", pn.getAuthorship());
         assertEquals("Pers.", pn.getBracketAuthorship());
-        assertEquals(NameType.WELLFORMED, pn.getType());
+        assertEquals(NameType.SCIENTIFIC, pn.getType());
 
         pn = parser.parse("Tridax imbricatus Sch.Bip.", null);
         assertEquals("Tridax", pn.getGenusOrAbove());
         assertEquals("imbricatus", pn.getSpecificEpithet());
         assertEquals("Sch.Bip.", pn.getAuthorship());
-        assertEquals(NameType.WELLFORMED, pn.getType());
+        assertEquals(NameType.SCIENTIFIC, pn.getType());
 
     }
 
