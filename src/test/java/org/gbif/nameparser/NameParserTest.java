@@ -68,7 +68,7 @@ public class NameParserTest {
     private void assertUnparsableType(NameType type, String name) {
         try {
             parser.parse(name, null);
-            fail("Name should be unparsable: " + name);
+            fail("Name should be an unparsable "+type+": " + name);
         } catch (UnparsableException e) {
             assertEquals(type, e.type);
         }
@@ -559,6 +559,150 @@ public class NameParserTest {
         assertEquals("willei", n.getSpecificEpithet());
         assertEquals("libidi", n.getInfraSpecificEpithet());
         assertEquals("L.L.Daniel", n.getAuthorship());
+    }
+
+    @Test
+    public void testApostropheAuthors() throws Exception {
+        ParsedName pn = parser.parse("Cirsium creticum d'Urv.", null);
+        assertEquals("Cirsium", pn.getGenusOrAbove());
+        assertEquals("creticum", pn.getSpecificEpithet());
+        assertNull(pn.getInfraSpecificEpithet());
+        assertEquals(Rank.SPECIES, pn.getRank());
+        assertEquals("d'Urv.", pn.getAuthorship());
+
+        pn = parser.parse("Cirsium creticum d'Urv. subsp. creticum", null);
+        assertEquals("Cirsium", pn.getGenusOrAbove());
+        assertEquals("creticum", pn.getSpecificEpithet());
+        assertEquals("creticum", pn.getInfraSpecificEpithet());
+        assertEquals(Rank.SUBSPECIES, pn.getRank());
+        assertNull(pn.getAuthorship());
+    }
+
+    @Test
+    public void testApostropheEpithets() throws Exception {
+        ParsedName pn = parser.parse("Junellia o'donelli Moldenke, 1946", null);
+        assertEquals("Junellia", pn.getGenusOrAbove());
+        assertEquals("o'donelli", pn.getSpecificEpithet());
+        assertNull(pn.getInfraSpecificEpithet());
+        assertEquals(Rank.SPECIES, pn.getRank());
+        assertEquals("Moldenke", pn.getAuthorship());
+        assertEquals("1946", pn.getYear());
+
+        pn = parser.parse("Trophon d'orbignyi Carcelles, 1946", null);
+        assertEquals("Trophon", pn.getGenusOrAbove());
+        assertEquals("d'orbignyi", pn.getSpecificEpithet());
+        assertNull(pn.getInfraSpecificEpithet());
+        assertEquals(Rank.SPECIES, pn.getRank());
+        assertEquals("Carcelles", pn.getAuthorship());
+        assertEquals("1946", pn.getYear());
+
+        pn = parser.parse("Arca m'coyi Tenison-Woods, 1878", null);
+        assertEquals("Arca", pn.getGenusOrAbove());
+        assertEquals("m'coyi", pn.getSpecificEpithet());
+        assertNull(pn.getInfraSpecificEpithet());
+        assertEquals(Rank.SPECIES, pn.getRank());
+        assertEquals("Tenison-Woods", pn.getAuthorship());
+        assertEquals("1878", pn.getYear());
+
+        pn = parser.parse("Nucula m'andrewii Hanley, 1860", null);
+        assertEquals("Nucula", pn.getGenusOrAbove());
+        assertEquals("m'andrewii", pn.getSpecificEpithet());
+        assertNull(pn.getInfraSpecificEpithet());
+        assertEquals(Rank.SPECIES, pn.getRank());
+        assertEquals("Hanley", pn.getAuthorship());
+        assertEquals("1860", pn.getYear());
+
+        pn = parser.parse("Eristalis l'herminierii Macquart", null);
+        assertEquals("Eristalis", pn.getGenusOrAbove());
+        assertEquals("l'herminierii", pn.getSpecificEpithet());
+        assertNull(pn.getInfraSpecificEpithet());
+        assertEquals(Rank.SPECIES, pn.getRank());
+        assertEquals("Macquart", pn.getAuthorship());
+
+        pn = parser.parse("Odynerus o'neili Cameron", null);
+        assertEquals("Odynerus", pn.getGenusOrAbove());
+        assertEquals("o'neili", pn.getSpecificEpithet());
+        assertNull(pn.getInfraSpecificEpithet());
+        assertEquals(Rank.SPECIES, pn.getRank());
+        assertEquals("Cameron", pn.getAuthorship());
+
+        pn = parser.parse("Serjania meridionalis Cambess. var. o'donelli F.A. Barkley", null);
+        assertEquals("Serjania", pn.getGenusOrAbove());
+        assertEquals("meridionalis", pn.getSpecificEpithet());
+        assertEquals("o'donelli", pn.getInfraSpecificEpithet());
+        assertEquals(Rank.VARIETY, pn.getRank());
+        assertEquals("F.A. Barkley", pn.getAuthorship());
+    }
+
+
+
+
+
+
+
+
+    @Test
+    public void testVirusNames() throws Exception {
+        ParsedName pn = parser.parse("Crassatellites janus Hedley, 1906", null);
+        assertEquals("Crassatellites", pn.getGenusOrAbove());
+        assertEquals("janus", pn.getSpecificEpithet());
+        assertEquals("Hedley", pn.getAuthorship());
+        assertEquals("1906", pn.getYear());
+
+        pn = parser.parse("Ypsolophus satellitella", null);
+        assertEquals("Ypsolophus", pn.getGenusOrAbove());
+        assertEquals("satellitella", pn.getSpecificEpithet());
+
+        pn = parser.parse("Nephodia satellites", null);
+        assertEquals("Nephodia", pn.getGenusOrAbove());
+        assertEquals("satellites", pn.getSpecificEpithet());
+
+        Reader reader = FileUtils.getInputStreamReader(streamUtils.classpathStream("viruses.txt"));
+        LineIterator iter = new LineIterator(reader);
+        while (iter.hasNext()) {
+            String line = iter.nextLine();
+            if (line == null || line.startsWith("#") || line.trim().isEmpty()) {
+                continue;
+            }
+            assertUnparsableType(NameType.VIRUS, line);
+        }
+    }
+
+    @Test
+    public void testRNANames() throws Exception {
+        ParsedName pn = parser.parse("Calathus (Lindrothius) KURNAKOV 1961", null);
+        assertEquals("Calathus", pn.getGenusOrAbove());
+        assertEquals("Lindrothius", pn.getInfraGeneric());
+        assertNull(pn.getSpecificEpithet());
+        assertEquals("Kurnakov", pn.getAuthorship());
+        assertEquals("1961", pn.getYear());
+
+        assertUnparsableType(NameType.VIRUS, "Cactus virus 2");
+        assertUnparsableType(NameType.VIRUS, "Ustilaginoidea virens RNA virus");
+        assertUnparsableType(NameType.VIRUS, "Rhizoctonia solani dsRNA virus 2");
+
+        pn = parser.parse("Candida albicans RNA_CTR0-3", null);
+        assertEquals("Candida", pn.getGenusOrAbove());
+        assertEquals("albicans", pn.getSpecificEpithet());
+        assertEquals(NameType.INFORMAL, pn.getType());
+        assertNull(pn.getInfraSpecificEpithet());
+        assertNull(pn.getAuthorship());
+
+        pn = parser.parse("Alpha proteobacterium RNA12", null);
+        assertEquals("Alpha", pn.getGenusOrAbove());
+        assertEquals("proteobacterium", pn.getSpecificEpithet());
+        assertEquals(NameType.INFORMAL, pn.getType());
+        assertNull(pn.getInfraSpecificEpithet());
+        assertNull(pn.getAuthorship());
+
+        pn = parser.parse("Armillaria ostoyae RNA1", null);
+        assertEquals("Armillaria", pn.getGenusOrAbove());
+        assertEquals("ostoyae", pn.getSpecificEpithet());
+        assertEquals(NameType.INFORMAL, pn.getType());
+        assertNull(pn.getInfraSpecificEpithet());
+        assertNull(pn.getAuthorship());
+
+        assertUnparsableType(NameType.DOUBTFUL, "siRNA");
     }
 
     @Test
@@ -1381,6 +1525,15 @@ public class NameParserTest {
         assertUnparsableType(NameType.PLACEHOLDER, "Unknown methanomicrobium (strain EBac)");
         assertUnparsableType(NameType.PLACEHOLDER, "Demospongiae incertae sedis");
         assertUnparsableType(NameType.PLACEHOLDER, "Unallocated Demospongiae");
+    }
+
+    @Test
+    public void testMissingSpeciesEpithet() throws Exception {
+        ParsedName pn = parser.parse("Navicula var. fasciata", null);
+        assertEquals("Navicula", pn.getGenusOrAbove());
+        assertEquals("fasciata", pn.getInfraSpecificEpithet());
+        assertEquals("var.", pn.getRankMarker());
+        assertNull(pn.getSpecificEpithet());
     }
 
     @Test

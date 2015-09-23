@@ -1,0 +1,26 @@
+Gossypium mustilinum symptomless alphasatellite
+Okra leaf curl Mali alphasatellites-Cameroon
+Bemisia betasatellite LW-2014
+Tomato leaf curl Bangladesh betasatellites [India/Patna/Chilli/2008]
+Intracisternal A-particles
+Saccharomyces cerevisiae killer particle M1
+Uranotaenia sapphirina NPV
+Spodoptera exigua nuclear polyhedrosis virus SeMNPV
+Spodoptera frugiperda MNPV
+Rachiplusia ou MNPV (strain R1)
+Orgyia pseudotsugata nuclear polyhedrosis virus OpMNPV
+Mamestra configurata NPV-A
+Helicoverpa armigera SNPV NNg1
+Zamilon virophage
+Sputnik virophage 3
+Honeysuckle yellow vein betasatellite [Australia:Ayr:, 1983]
+Okra enation leaf curl alphasatellite
+beta satellites
+Faba bean necrotic stunt alphasatellite 1
+beta satellites
+Gremmeniella abietina mitochondrial RNA virus S11
+Heterosigma akashiwo RNA virus
+
+
+#Honeysuckle yellow vein mosaic disease associated satellite Dna beta
+#Double-stranded satellite RNAs

@@ -49,9 +49,11 @@ public class NameParser {
 
   private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+ *[0-9]+T?)$");
   // this is only used to detect whether we have a virus name
-  public static final Pattern IS_VIRUS_PATTERN =
-    Pattern.compile("(\\b(bacterio)?phage(s)?\\b|virus(es)?\\b|\\bictv$)", CASE_INSENSITIVE);
+  public static final Pattern IS_VIRUS_PATTERN = Pattern.compile("virus(es)?\\b|\\b((bacterio|viro)?phages?|(alpha|beta) ?satellites?|particles?|ictv$)\\b", CASE_INSENSITIVE);
+  public static final Pattern IS_VIRUS_PATTERN_CASE_SENSITIVE = Pattern.compile("NPV\\b");
   private static final Pattern IS_VIRUS_PATTERN_POSTFAIL = Pattern.compile("(\\b(vector)\\b)", CASE_INSENSITIVE);
+  // RNA or other gene markers
+  public static final Pattern IS_GENE = Pattern.compile("(RNA|DNA)[0-9]*(?:\\b|_)");
   // spots a Candidatus bacterial name
   private static final String CANDIDATUS = "(Candidatus\\s|Ca\\.)\\s*";
   private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS, CASE_INSENSITIVE);
@@ -490,7 +492,8 @@ public class NameParser {
     ParsedName pn = new ParsedName();
     pn.setScientificName(scientificName);
 
-    String name = scientificName;
+    // clean name, removing seriously wrong things
+    String name = preClean(scientificName);
 
     // before any cleaning test for properly quoted candidate names
     Matcher m = IS_CANDIDATUS_QUOTE_PATTERN.matcher(scientificName);
@@ -499,18 +502,8 @@ public class NameParser {
       name = m.replaceFirst(m.group(2));
     }
 
-    // clean name, removing seriously wrong things
-    name = preClean(name);
-
     // normalize bacterial rank markers
     name = TYPE_TO_VAR.matcher(name).replaceAll("$1var");
-
-    if (m.find()) {
-      name = m.replaceFirst(m.group(1));
-      pn.setType(NameType.INFORMAL);
-      pn.setStrain(m.group(2));
-      LOG.debug("Strain: {}", m.group(2));
-    }
 
     // parse out species/strain names with numbers found in Genebank/EBI names, e.g. Advenella kashmirensis W13003
     m = STRAIN.matcher(name);
@@ -519,6 +512,15 @@ public class NameParser {
       pn.setType(NameType.INFORMAL);
       pn.setStrain(m.group(2));
       LOG.debug("Strain: {}", m.group(2));
+    }
+
+    if (IS_VIRUS_PATTERN.matcher(name).find() || IS_VIRUS_PATTERN_CASE_SENSITIVE.matcher(name).find()) {
+      throw new UnparsableException(NameType.VIRUS, scientificName);
+    }
+
+    // detect RNA/DNA gene/strain names and flag as informal
+    if (IS_GENE.matcher(name).find()) {
+      pn.setType(NameType.INFORMAL);
     }
 
     // normalise name
@@ -539,22 +541,16 @@ public class NameParser {
     }
 
     // detect unparsable names
-    m = PLACEHOLDER.matcher(name);
-    if (m.find()) {
+    if (PLACEHOLDER.matcher(name).find()) {
       throw new UnparsableException(NameType.PLACEHOLDER, scientificName);
     }
     // name without any latin char letter at all?
-    m = NO_LETTERS.matcher(name);
-    if (m.find()) {
+    if (NO_LETTERS.matcher(name).find()) {
       throw new UnparsableException(NameType.NO_NAME, scientificName);
     }
-    m = HYBRID_FORMULA_PATTERN.matcher(name);
-    if (m.find()) {
+
+    if (HYBRID_FORMULA_PATTERN.matcher(name).find()) {
       throw new UnparsableException(NameType.HYBRID, scientificName);
-    }
-    m = IS_VIRUS_PATTERN.matcher(name);
-    if (m.find()) {
-      throw new UnparsableException(NameType.VIRUS, scientificName);
     }
 
     m = IS_CANDIDATUS_PATTERN.matcher(name);

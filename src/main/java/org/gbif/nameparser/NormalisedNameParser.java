@@ -85,10 +85,11 @@ public class NormalisedNameParser {
 
   protected static final String EPHITHET_PREFIXES = "van|novae";
   protected static final String EPHITHET_UNALLOWED_ENDINGS = "\\bex|var|type|form";
-  protected static final String EPHITHET =
-    "(?:[0-9]+-)?" + "(?:(?:" + EPHITHET_PREFIXES + ") [a-z])?" + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
-    // avoid epithets ending with the unallowed endings, e.g. serovar
-    + "(?<!(?:"+EPHITHET_UNALLOWED_ENDINGS+"))(?=\\b)";
+  protected static final String EPHITHET = "(?:[0-9]+-|[doml]')?"
+            + "(?:(?:" + EPHITHET_PREFIXES + ") [a-z])?"
+            + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
+            // avoid epithets ending with the unallowed endings, e.g. serovar
+            + "(?<!(?:"+EPHITHET_UNALLOWED_ENDINGS+"))(?=\\b)";
   protected static final String MONOMIAL =
     "[" + NAME_LETTERS + "](?:\\.|[" + name_letters + "]+)(?:-[" + NAME_LETTERS + "]?[" + name_letters + "]+)?";
   // a pattern matching typical latin word endings. Helps identify name parts from authors
