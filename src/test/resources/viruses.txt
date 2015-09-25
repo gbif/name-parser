@@ -20,7 +20,53 @@ Faba bean necrotic stunt alphasatellite 1
 beta satellites
 Gremmeniella abietina mitochondrial RNA virus S11
 Heterosigma akashiwo RNA virus
-
+Australian grapevine viroid
+Australian bat lyssavirus
+Algerian watermelon mosaic virus
+Allamanda leaf curl virus
+Alligatorweed stunting virus
+Allium virus X
+Allpahuayo mammarenavirus
+Alphacoronavirus 1
+Alphamesonivirus 1
+Alphapapillomavirus 1
+Alphapapillomavirus 10
+Abutilon yellows virus
+Acanthamoeba polyphaga mimivirus
+Acanthocystis turfacea chlorella virus 1
+Acara virus
+Acholeplasma phage L2
+Acholeplasma phage MV-L51
+Acidianus bottle-shaped virus
+Aeromonas phage 44RR2.8t
+Aeromonas phage 65
+Aeromonas phage Aeh1
+Aeromonas phage phiO18P
+Aeropyrum coil-shaped virus
+Aeropyrum pernix bacilliform virus 1
+Aeropyrum pernix ovoid virus 1
+African cassava mosaic virus
+African green monkey polyomavirus
+African green monkey simian foamy virus
+African horse sickness virus
+African oil palm ringspot virus
+African swine fever virus
+Aquareovirus G
+Arabidopsis thaliana Art1 virus
+Arabidopsis thaliana AtRE1 virus
+Arabidopsis thaliana Athila virus
+Arabidopsis thaliana Endovir virus
+Arabidopsis thaliana Evelknievel virus
+Arabidopsis thaliana Ta1 virus
+Arabidopsis thaliana Tat4 virus
+Arabis mosaic virus
+Araujia mosaic virus
+Aravan virus
+Avian sapelovirus
+Avian sarcoma virus CT10
+Avihepatovirus A
+Avisivirus A
+Avocado sunblotch viroid
 
 #Honeysuckle yellow vein mosaic disease associated satellite Dna beta
 #Double-stranded satellite RNAs

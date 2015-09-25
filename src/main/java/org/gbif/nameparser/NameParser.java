@@ -49,7 +49,7 @@ public class NameParser {
 
   private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+ *[0-9]+T?)$");
   // this is only used to detect whether we have a virus name
-  public static final Pattern IS_VIRUS_PATTERN = Pattern.compile("virus(es)?\\b|\\b((bacterio|viro)?phages?|(alpha|beta) ?satellites?|particles?|ictv$)\\b", CASE_INSENSITIVE);
+  public static final Pattern IS_VIRUS_PATTERN = Pattern.compile("virus(es)?\\b|\\b(viroid|(bacterio|viro)?phages?|(alpha|beta) ?satellites?|particles?|ictv$)\\b", CASE_INSENSITIVE);
   public static final Pattern IS_VIRUS_PATTERN_CASE_SENSITIVE = Pattern.compile("NPV\\b");
   private static final Pattern IS_VIRUS_PATTERN_POSTFAIL = Pattern.compile("(\\b(vector)\\b)", CASE_INSENSITIVE);
   // RNA or other gene markers

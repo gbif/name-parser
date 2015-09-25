@@ -634,13 +634,6 @@ public class NameParserTest {
         assertEquals("F.A. Barkley", pn.getAuthorship());
     }
 
-
-
-
-
-
-
-
     @Test
     public void testVirusNames() throws Exception {
         ParsedName pn = parser.parse("Crassatellites janus Hedley, 1906", null);
