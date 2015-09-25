@@ -738,6 +738,13 @@ public class NameParserTest {
         assertEquals(Rank.ORDER, pn.getRank());
         assertTrue(NameType.SCIENTIFIC == pn.getType());
 
+        pn = parser.parse("Lepidoptera sp. JGP0404", null);
+        assertEquals("Lepidoptera", pn.getGenusOrAbove());
+        assertNull(pn.getSpecificEpithet());
+        assertNull(pn.getAuthorship());
+        assertEquals(Rank.SPECIES, pn.getRank());
+        assertTrue(NameType.INFORMAL == pn.getType());
+
         pn = parser.parse("Melastoma vacillans Blume var.", null);
     }
 
