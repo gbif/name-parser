@@ -20,17 +20,14 @@ Faba bean necrotic stunt alphasatellite 1
 beta satellites
 Gremmeniella abietina mitochondrial RNA virus S11
 Heterosigma akashiwo RNA virus
-Australian grapevine viroid
-Australian bat lyssavirus
-Algerian watermelon mosaic virus
-Allamanda leaf curl virus
-Alligatorweed stunting virus
-Allium virus X
-Allpahuayo mammarenavirus
-Alphacoronavirus 1
-Alphamesonivirus 1
-Alphapapillomavirus 1
-Alphapapillomavirus 10
+
+# from wikipedia
+# https://en.wikipedia.org/wiki/List_of_viruses
+Abaca bunchy top virus
+Abutilon Brazil virus
+Abutilon mosaic Bolivia virus
+Abutilon mosaic Brazil virus
+Abutilon mosaic virus
 Abutilon yellows virus
 Acanthamoeba polyphaga mimivirus
 Acanthocystis turfacea chlorella virus 1
@@ -38,6 +35,36 @@ Acara virus
 Acholeplasma phage L2
 Acholeplasma phage MV-L51
 Acidianus bottle-shaped virus
+Acidianus filamentous virus 1
+Acidianus filamentous virus 2
+Acidianus filamentous virus 3
+Acidianus filamentous virus 6
+Acidianus filamentous virus 7
+Acidianus filamentous virus 8
+Acidianus filamentous virus 9
+Acidianus rod-shaped virus 1
+Acidianus spindle-shaped virus 1
+Acidianus two-tailed virus
+Acinetobacter phage 133
+Acipenserid herpesvirus 2
+Aconitum latent virus
+Acrobasis zelleri entomopoxvirus
+Actinidia virus A
+Actinidia virus B
+Actinomyces phage Av-1
+Acute bee paralysis virus
+Adelaide River virus
+Adeno-associated dependoparvovirus A
+Adeno-associated dependoparvovirus B
+Adoxophyes honmai entomopoxvirus
+Adoxophyes honmai nucleopolyhedrovirus
+Adoxophyes orana granulovirus
+Aedes aegypti Mosqcopia virus
+Aedes aegypti entomopoxvirus
+Aedes pseudoscutellaris reovirus
+Aeromonas phage 25
+Aeromonas phage 31
+Aeromonas phage 43
 Aeromonas phage 44RR2.8t
 Aeromonas phage 65
 Aeromonas phage Aeh1
@@ -51,6 +78,110 @@ African green monkey simian foamy virus
 African horse sickness virus
 African oil palm ringspot virus
 African swine fever virus
+Agaricus bisporus virus 4
+Ageratum enation virus
+Ageratum leaf curl Cameroon virus
+Ageratum leaf curl virus
+Ageratum yellow vein Hualian virus
+Ageratum yellow vein Sri Lanka virus
+Ageratum yellow vein virus
+Aglaonema bacilliform virus
+Agropyron mosaic virus
+Agrotis ipsilon multiple nucleopolyhedrovirus
+Agrotis segetum nucleopolyhedrovirus
+Ahlum waterborne virus
+Aichivirus A
+Aichivirus B
+Aichivirus C
+Akabane virus
+Alajuela virus
+Alcelaphine herpesvirus 1
+Alcelaphine herpesvirus 2
+Alethinophid 1 reptarenavirus
+Alethinophid 2 reptarenavirus
+Alethinophid 3 reptarenavirus
+Alfalfa cryptic virus 1
+Alfalfa mosaic virus
+Algerian watermelon mosaic virus
+Allamanda leaf curl virus
+Alligatorweed stunting virus
+Allium virus X
+Allpahuayo mammarenavirus
+Alphacoronavirus 1
+Alphamesonivirus 1
+Alphapapillomavirus 1
+Alphapapillomavirus 10
+Alphapapillomavirus 11
+Alphapapillomavirus 12
+Alphapapillomavirus 13
+Alphapapillomavirus 14
+Alphapapillomavirus 2
+Alphapapillomavirus 3
+Alphapapillomavirus 4
+Alphapapillomavirus 5
+Alphapapillomavirus 6
+Alphapapillomavirus 7
+Alphapapillomavirus 8
+Alphapapillomavirus 9
+Alpinia mosaic virus
+Alstroemeria mosaic virus
+Alstroemeria virus X
+Alternanthera mild mosaic virus
+Alternanthera mosaic virus
+Alternanthera yellow vein virus
+Amapar¡ mammarenavirus
+Amaranthus leaf mottle virus
+Amasya cherry disease associated chrysovirus
+Amazon lily mild mottle virus
+Amazon lily mosaic virus
+Ambystoma tigrinum virus
+American hop latent virus
+American plum line pattern virus
+Amsacta moorei entomopoxvirus
+Anagyris vein yellowing virus
+Anatid herpesvirus 1
+Andean potato latent virus
+Andean potato mild mosaic virus
+Andean potato mottle virus
+Andes virus
+Angelica virus Y
+Angelonia flower break virus
+Anguillid herpesvirus 1
+Anguillid rhabdovirus
+Anomala cuprea entomopoxvirus
+Anopheles A virus
+Anopheles B virus
+Anopheles gambiae Moose virus
+Anseriform dependoparvovirus 1
+Antheraea eucalypti virus
+Antheraea pernyi nucleopolyhedrovirus
+Anthoxanthum latent blanching virus
+Anthriscus yellows virus
+Anticarsia gemmatalis multiple nucleopolyhedrovirus
+Aotine herpesvirus 1
+Apanteles crassicornis bracovirus
+Apanteles fumiferanae bracovirus
+Aphid lethal paralysis virus
+Aphodius tasmaniae entomopoxvirus
+Apium virus Y
+Apoi virus
+Apple chlorotic leaf spot virus
+Apple dimple fruit viroid
+Apple latent spherical virus
+Apple mosaic virus
+Apple scar skin viroid
+Apple stem grooving virus
+Apple stem pitting virus
+Apricot latent ringspot virus
+Apricot latent virus
+Apricot pseudo-chlorotic leaf spot virus
+Aquamavirus A
+Aquareovirus A
+Aquareovirus B
+Aquareovirus C
+Aquareovirus D
+Aquareovirus E
+Aquareovirus F
 Aquareovirus G
 Arabidopsis thaliana Art1 virus
 Arabidopsis thaliana AtRE1 virus
@@ -62,11 +193,3021 @@ Arabidopsis thaliana Tat4 virus
 Arabis mosaic virus
 Araujia mosaic virus
 Aravan virus
+Aroa virus
+Arphia conspersa entomopoxvirus
+Arracacha mottle virus
+Arracacha virus A
+Arracacha virus B
+Artichoke Aegean ringspot virus
+Artichoke Italian latent virus
+Artichoke latent virus
+Artichoke mottled crinkle virus
+Artichoke yellow ringspot virus
+Artogeia rapae granulovirus
+Ascaris lumbricoides Tas virus
+Ascogaster argentifrons bracovirus
+Ascogaster quadridentata bracovirus
+Asian prunus virus 1
+Asparagus virus 1
+Asparagus virus 2
+Asparagus virus 3
+Aspergillus foetidus slow virus 1
+Aspergillus fumigatus chrysovirus
+Aspergillus ochraceous virus
+Ateline herpesvirus 1
+Ateline herpesvirus 2
+Ateline herpesvirus 3
+Atkinsonella hypoxylon virus
+Atlantic salmon paramyxovirus
+Aura virus
+Aurantiochytrium single-stranded RNA virus 01
+Australian bat lyssavirus
+Australian grapevine viroid
+Autographa californica multiple nucleopolyhedrovirus
+Avastrovirus 1
+Avastrovirus 2
+Avastrovirus 3
+Avian carcinoma Mill Hill virus 2
+Avian coronavirus
+Avian dependoparvovirus 1
+Avian leukosis virus
+Avian metapneumovirus
+Avian myeloblastosis virus
+Avian myelocytomatosis virus 29
+Avian orthoreovirus
+Avian paramyxovirus 2
+Avian paramyxovirus 3
+Avian paramyxovirus 4
+Avian paramyxovirus 5
+Avian paramyxovirus 6
+Avian paramyxovirus 7
+Avian paramyxovirus 8
+Avian paramyxovirus 9
 Avian sapelovirus
 Avian sarcoma virus CT10
 Avihepatovirus A
 Avisivirus A
 Avocado sunblotch viroid
+BK polyomavirus
+Baboon orthoreovirus
+Baboon polyomavirus 2
+Bacillus phage 250
+Bacillus phage AP50
+Bacillus phage B103
+Bacillus phage BMBtp2
+Bacillus phage Bam35
+Bacillus phage G
+Bacillus phage GA-1
+Bacillus phage IEBH
+Bacillus phage PBS1
+Bacillus phage SPO1
+Bacillus phage SPbeta
+Bacillus phage TP21
+Bacillus phage Wbeta
+Bacillus phage andromeda
+Bacillus phage blastoid
+Bacillus phage curly
+Bacillus phage eoghan
+Bacillus phage finn
+Bacillus phage glittering
+Bacillus phage phi29
+Bacillus phage phiNS11
+Bacillus phage riggi
+Bacillus phage taylor
+Bagaza virus
+Bakau virus
+Bamboo mosaic virus
+Banana bract mosaic virus
+Banana bunchy top virus
+Banana mild mosaic virus
+Banana streak GF virus
+Banana streak IM virus
+Banana streak MY virus
+Banana streak OL virus
+Banana streak UA virus
+Banana streak UI virus
+Banana streak UL virus
+Banana streak UM virus
+Banana streak VN virus
+Banana virus X
+Banna virus
+Banzi virus
+Barfin flounder nervous necrosis virus
+Barley mild mosaic virus
+Barley stripe mosaic virus
+Barley yellow dwarf virus-GPV
+Barley yellow dwarf virus-MAV
+Barley yellow dwarf virus-PAS
+Barley yellow dwarf virus-PAV
+Barley yellow dwarf virus-SGV
+Barley yellow dwarf virus-kerII
+Barley yellow dwarf virus-kerIII
+Barley yellow mosaic virus
+Barley yellow striate mosaic virus
+Barmah Forest virus
+Basella rugose mosaic virus
+Bat hepatitis virus
+Bat mastadenovirus A
+Bat mastadenovirus B
+Batama virus
+Bayou virus
+Bdellovibrio phage MAC 1
+Bdellovibrio phage phiMH2K
+Beak and feather disease virus
+Bean calico mosaic virus
+Bean chlorosis virus
+Bean common mosaic necrosis virus
+Bean common mosaic virus
+Bean dwarf mosaic virus
+Bean golden mosaic virus
+Bean golden yellow mosaic virus
+Bean leafroll virus
+Bean mild mosaic virus
+Bean pod mottle virus
+Bean rugose mosaic virus
+Bean yellow disorder virus
+Bean yellow mosaic Mexico virus
+Bean yellow mosaic virus
+Bear Canyon mammarenavirus
+Beauveria bassiana victorivirus 1
+Bebaru virus
+Beet black scorch virus
+Beet chlorosis virus
+Beet cryptic virus 1
+Beet cryptic virus 2
+Beet cryptic virus 3
+Beet curly top Iran virus
+Beet curly top virus
+Beet mild yellowing virus
+Beet mosaic virus
+Beet necrotic yellow vein virus
+Beet pseudoyellows virus
+Beet ringspot virus
+Beet soil-borne mosaic virus
+Beet soil-borne virus
+Beet virus Q
+Beet western yellows virus
+Beet yellow stunt virus
+Beet yellows virus
+Bell pepper endornavirus
+Bell pepper mottle virus
+Belladonna mottle virus
+Beluga whale coronavirus SW1
+Benevides virus
+Bermuda grass etched-line virus
+Berrimah virus
+Bertioga virus
+Betacoronavirus 1
+Betapapillomavirus 1
+Betapapillomavirus 2
+Betapapillomavirus 3
+Betapapillomavirus 4
+Betapapillomavirus 5
+Betapapillomavirus 6
+Bhendi yellow vein Bhubhaneswar virus
+Bhendi yellow vein Haryana virus
+Bhendi yellow vein India virus
+Bhendi yellow vein mosaic virus
+Bidens mosaic virus
+Bidens mottle virus
+Bimiti virus
+Bitter gourd yellow vein virus
+Black Creek Canal virus
+Black beetle virus
+Black queen cell virus
+Black raspberry necrosis virus
+Blackberry chlorotic ringspot virus
+Blackberry virus E
+Blackberry virus S
+Blackberry virus Y
+Blackberry yellow vein-associated virus
+Blackcurrant reversion virus
+Blainvillea yellow spot virus
+Blattodean ambidensovirus 1
+Blattodean ambidensovirus 2
+Blechum interveinal chlorosis virus
+Blotched snakehead virus
+Blue squill virus A
+Blueberry latent spherical virus
+Blueberry latent virus
+Blueberry leaf mottle virus
+Blueberry red ringspot virus
+Blueberry scorch virus
+Blueberry shock virus
+Blueberry shoestring virus
+Bluetongue virus
+Boerhavia yellow spot virus
+Bohle iridovirus
+Bokeloh bat lyssavirus
+Bombyx mori Mag virus
+Bombyx mori Pao virus
+Bombyx mori bidensovirus
+Bombyx mori latent virus
+Bombyx mori nucleopolyhedrovirus
+Boolarra virus
+Border disease virus
+Bordetella phage BPP-1
+Botambi virus
+Botrytis virus F
+Botrytis virus X
+Bouboui virus
+Bougainvillea chlorotic vein banding virus
+Bovine atadenovirus D
+Bovine ephemeral fever virus
+Bovine foamy virus
+Bovine herpesvirus 1
+Bovine herpesvirus 2
+Bovine herpesvirus 4
+Bovine herpesvirus 5
+Bovine herpesvirus 6
+Bovine immunodeficiency virus
+Bovine leukemia virus
+Bovine mastadenovirus A
+Bovine mastadenovirus B
+Bovine mastadenovirus C
+Bovine papular stomatitis virus
+Bovine parainfluenza virus 3
+Bovine polyomavirus
+Bovine respiratory syncytial virus
+Bovine rhinitis A virus
+Bovine rhinitis B virus
+Bovine torovirus
+Bovine viral diarrhea virus 1
+Bovine viral diarrhea virus 2
+Brassica oleracea Melmoth virus
+Broad bean mottle virus
+Broad bean necrosis virus
+Broad bean stain virus
+Broad bean true mosaic virus
+Broad bean wilt virus 1
+Broad bean wilt virus 2
+Broccoli necrotic yellows virus
+Brome mosaic virus
+Brome streak mosaic virus
+Bromus catharticus striate mosaic virus
+Brugmansia mild mottle virus
+Brugmansia mosaic virus
+Brugmansia suaveolens mottle virus
+Bubaline herpesvirus 1
+Budgerigar fledgling disease polyomavirus
+Bujaru virus
+Bukalasa bat virus
+Bulbul coronavirus HKU11
+Bundibugyo ebolavirus
+Bunyamwera virus
+Burdock mottle virus
+Burdock yellows virus
+Burkholderia phage Bcep1
+Burkholderia phage Bcep22
+Burkholderia phage Bcep43
+Burkholderia phage Bcep781
+Burkholderia phage BcepC6B
+Burkholderia phage BcepF1
+Burkholderia phage BcepMu
+Burkholderia phage BcepNY3
+Burkholderia phage Bcepil02
+Burkholderia phage Bcepmigl
+Burkholderia phage Dc1
+Burkholderia phage phi1026b
+Burkholderia phage phi52237
+Burkholderia phage phi6442
+Burkholderia phage phiE12-2
+Burkholderia phage phiE202
+Burkholderia phage phiE255
+Burkholderia phage phie125
+Bushbush virus
+Butterbur mosaic virus
+Butterfly flower mosaic virus
+Buzura suppressaria nucleopolyhedrovirus
+Bwamba virus
+Cabassou virus
+Cabbage leaf curl Jamaica virus
+Cabbage leaf curl virus
+Cacao swollen shoot virus
+Cacao yellow mosaic virus
+Cacipacore virus
+Cactus mild mottle virus
+Cactus virus 2
+Cactus virus X
+Cadicivirus A
+Caenorhabditis elegans Cer1 virus
+Caenorhabditis elegans Cer13 virus
+Cafeteria roenbergensis virus
+Cajanus cajan Panzee virus
+Calanthe mild mosaic virus
+Calibrachoa mottle virus
+California encephalitis virus
+Calla lily latent virus
+Callitrichine herpesvirus 3
+Calopogonium yellow vein virus
+Camelpox virus
+Campoletis aprilis ichnovirus
+Campoletis flavicincta ichnovirus
+Campoletis sonorensis ichnovirus
+Camptochironomus tentans entomopoxvirus
+Campylobacter phage CP21
+Campylobacter phage CP220
+Campylobacter phage CP81
+Campylobacter phage CPX
+Campylobacter phage CPt10
+Campylobacter phage IBB35
+Campylobacter phage NCTC12673
+Canary circovirus
+Canarypox virus
+Candida albicans Tca2 virus
+Candida albicans Tca5 virus
+Candiru virus
+Canid herpesvirus 1
+Canine distemper virus
+Canine mastadenovirus A
+Canna yellow mottle virus
+Canna yellow streak virus
+Cannabis cryptic virus
+Cano Delgadito virus
+Caper latent virus
+Capim virus
+Caprine arthritis encephalitis virus
+Caprine herpesvirus 1
+Caprine herpesvirus 2
+Carajas virus
+Caraparu virus
+Cardamine chlorotic fleck virus
+Cardamom bushy dwarf virus
+Cardamom mosaic virus
+Cardiochiles nigriceps bracovirus
+Cardiovirus A
+Cardiovirus B
+Cardiovirus C
+Carey Island virus
+Carnation Italian ringspot virus
+Carnation cryptic virus 1
+Carnation etched ring virus
+Carnation latent virus
+Carnation mottle virus
+Carnation necrotic fleck virus
+Carnation ringspot virus
+Carnation vein mottle virus
+Carnivore amdoparvovirus 1
+Carnivore amdoparvovirus 2
+Carnivore bocaparvovirus 1
+Carnivore bocaparvovirus 2
+Carnivore bocaparvovirus 3
+Carnivore protoparvovirus 1
+Carrot cryptic virus
+Carrot mottle mimic virus
+Carrot mottle virus
+Carrot necrotic dieback virus
+Carrot red leaf virus
+Carrot temperate virus 1
+Carrot temperate virus 2
+Carrot temperate virus 3
+Carrot temperate virus 4
+Carrot thin leaf virus
+Carrot virus Y
+Carrot yellow leaf virus
+Casinaria arjuna ichnovirus
+Casinaria forcipata ichnovirus
+Casinaria infesta ichnovirus
+Cassava American latent virus
+Cassava brown streak virus
+Cassava common mosaic virus
+Cassava green mottle virus
+Cassava vein mosaic virus
+Cassava virus C
+Cassava virus X
+Cassia yellow blotch virus
+Catu virus
+Cauliflower mosaic virus
+Caulobacter phage karma
+Caulobacter phage magneto
+Caulobacter phage phicbk
+Caulobacter phage rogue
+Caulobacter phage swift
+Caviid herpesvirus 2
+Cebine herpesvirus 1
+Celery mosaic virus
+Centrosema yellow spot virus
+Ceratitis capitata Yoyo virus
+Ceratobium mosaic virus
+Ceratocystis resinifera virus 1
+Cercopithecine herpesvirus 14
+Cercopithecine herpesvirus 2
+Cercopithecine herpesvirus 5
+Cercopithecine herpesvirus 9
+Cereal yellow dwarf virus-RPS
+Cereal yellow dwarf virus-RPV
+Cervid herpesvirus 1
+Cervid herpesvirus 2
+Cestrum yellow leaf curling virus
+Cetacean morbillivirus
+Chaetoceros salsugineum DNA virus 01
+Chaetoceros socialis f. radians RNA virus 01
+Chaetoceros tenuissimus RNA virus 01
+Chalara elegans RNA Virus 1
+Chandipura virus
+Changuinola virus
+Chapare mammarenavirus
+Chayote mosaic virus
+Chayote yellow mosaic virus
+Chelonid herpesvirus 5
+Chelonid herpesvirus 6
+Chelonus altitudinis bracovirus
+Chelonus blackburni bracovirus
+Chelonus inanitus bracovirus
+Chelonus insularis bracovirus
+Chelonus nr. curvimaculatus bracovirus
+Chelonus texanus bracovirus
+Chenopodium necrosis virus
+Chenuda virus
+Cherry chlorotic rusty spot associated partitivirus
+Cherry green ring mottle virus
+Cherry leaf roll virus
+Cherry mottle leaf virus
+Cherry necrotic rusty mottle virus
+Cherry rasp leaf virus
+Cherry virus A
+Chick syncytial virus
+Chicken anemia virus
+Chickpea chlorosis Australia virus
+Chickpea chlorosis virus
+Chickpea chlorotic dwarf virus
+Chickpea chlorotic stunt virus
+Chickpea redleaf virus
+Chickpea stunt disease associated virus
+Chickpea yellows virus
+Chicory yellow mottle virus
+Chikungunya virus
+Chilibre virus
+Chilli leaf curl virus
+Chilli ringspot virus
+Chilli veinal mottle virus
+Chiltepin yellow mosaic virus
+Chinese artichoke mosaic virus
+Chinese wheat mosaic virus
+Chinese yam necrotic mosaic virus
+Chino del tomate Amazonas virus
+Chino del tomate virus
+Chipapillomavirus 1
+Chipapillomavirus 2
+Chipapillomavirus 3
+Chironomus attenuatus entomopoxvirus
+Chironomus luridus entomopoxvirus
+Chironomus plumosus entomopoxvirus
+Chiropteran dependoparvovirus 1
+Chiropteran tetraparvovirus 1
+Chlamydia phage 1
+Chlamydia phage 2
+Chlamydia pneumoniae phage CPAR39
+Chloris striate mosaic virus
+Chobar Gorge virus
+Chondrostereum purpureum cryptic virus 1
+Choristoneura biennis entomopoxvirus
+Choristoneura conflicta entomopoxvirus
+Choristoneura diversuma entomopoxvirus
+Choristoneura fumiferana DEF multiple nucleopolyhedrovirus
+Choristoneura fumiferana entomopoxvirus
+Choristoneura fumiferana granulovirus
+Choristoneura fumiferana multiple nucleopolyhedrovirus
+Choristoneura rosaceana entomopoxvirus
+Choristoneura rosaceana nucleopolyhedrovirus
+Chorizagrotis auxiliaris entomopoxvirus
+Chrysanthemum chlorotic mottle viroid
+Chrysanthemum stunt viroid
+Chrysanthemum virus B
+Chrysochromulina brevifilum virus PW1
+Chrysodeixis chalcites nucleopolyhedrovirus
+Citrus bark cracking viroid
+Citrus bent leaf viroid
+Citrus dwarfing viroid
+Citrus exocortis viroid
+Citrus leaf blotch virus
+Citrus leaf rugose virus
+Citrus leprosis virus C
+Citrus psorosis virus
+Citrus sudden death-associated virus
+Citrus tristeza virus
+Citrus variegation virus
+Citrus viroid V
+Citrus viroid VI
+Citrus yellow mosaic virus
+Citrus yellow vein clearing virus
+Cladosporium fulvum T-1 virus
+Clanis bilineata nucleopolyhedrovirus
+Classical swine fever virus
+Cleome golden mosaic virus
+Cleome leaf crumple virus
+Clerodendron golden mosaic virus
+Clitoria virus Y
+Clitoria yellow mottle virus
+Clitoria yellow vein virus
+Clostridium phage phiC2
+Clostridium phage phiCD119
+Clostridium phage phiCD27
+Clover yellow mosaic virus
+Clover yellow vein virus
+Coastal Plains virus
+Cocal virus
+Cocksfoot mild mosaic virus
+Cocksfoot mottle virus
+Cocksfoot streak virus
+Cocoa necrosis virus
+Coconut cadang-cadang viroid
+Coconut foliar decay virus
+Coconut tinangaja viroid
+Cole latent virus
+Coleus blumei viroid 1
+Coleus blumei viroid 2
+Coleus blumei viroid 3
+Coleus vein necrosis virus
+Colombian datura virus
+Colorado tick fever virus
+Columbid herpesvirus 1
+Columnea latent viroid
+Commelina mosaic virus
+Commelina virus X
+Commelina yellow mottle virus
+Coniothyrium minitans RNA virus
+Corchorus golden mosaic virus
+Corchorus yellow spot virus
+Corchorus yellow vein virus
+Cordyline virus 1
+Corriparta virus
+Cosavirus A
+Cotesia congregata bracovirus
+Cotesia flavipes bracovirus
+Cotesia glomerata bracovirus
+Cotesia hyphantriae bracovirus
+Cotesia kariyai bracovirus
+Cotesia marginiventris bracovirus
+Cotesia melanoscela bracovirus
+Cotesia rubecula bracovirus
+Cotesia schaeferi bracovirus
+Cotton leaf crumple virus
+Cotton leaf curl Alabad virus
+Cotton leaf curl Bangalore virus
+Cotton leaf curl Gezira virus
+Cotton leaf curl Kokhran virus
+Cotton leaf curl Multan virus
+Cotton leafroll dwarf virus
+Cowbone Ridge virus
+Cowpea aphid-borne mosaic virus
+Cowpea chlorotic mottle virus
+Cowpea golden mosaic virus
+Cowpea green vein banding virus
+Cowpea mild mottle virus
+Cowpea mosaic virus
+Cowpea mottle virus
+Cowpea severe mosaic virus
+Cowpox virus
+Cricetid herpesvirus 2
+Cricket paralysis virus
+Crimean-Congo hemorrhagic fever virus
+Crimson clover cryptic virus 2
+Crimson clover latent virus
+Cronobacter phage Esp2949-1
+Croton yellow vein mosaic virus
+Cryphonectria hypovirus 1
+Cryphonectria hypovirus 2
+Cryphonectria hypovirus 3
+Cryphonectria hypovirus 4
+Cryphonectria mitovirus 1
+Cryphonectria nitschkei chrysovirus 1
+Cryptophlebia leucotreta granulovirus
+Cryptosporidium parvum virus 1
+Cucumber Bulgarian virus
+Cucumber fruit mottle mosaic virus
+Cucumber green mottle mosaic virus
+Cucumber leaf spot virus
+Cucumber mosaic virus
+Cucumber mottle virus
+Cucumber necrosis virus
+Cucumber soil-borne virus
+Cucumber vein yellowing virus
+Cucumber vein-clearing virus
+Cucurbit aphid-borne yellows virus
+Cucurbit leaf crumple virus
+Cucurbit mild mosaic virus
+Cucurbit yellow stunting disorder virus
+Culex nigripalpus nucleopolyhedrovirus
+Cupixi mammarenavirus
+Cycas necrotic stunt virus
+Cydia pomonella granulovirus
+Cymbidium mosaic virus
+Cymbidium ringspot virus
+Cypovirus 1
+Cypovirus 10
+Cypovirus 11
+Cypovirus 12
+Cypovirus 13
+Cypovirus 14
+Cypovirus 15
+Cypovirus 16
+Cypovirus 2
+Cypovirus 3
+Cypovirus 4
+Cypovirus 5
+Cypovirus 6
+Cypovirus 7
+Cypovirus 8
+Cypovirus 9
+Cyprinid herpesvirus 1
+Cyprinid herpesvirus 2
+Cyprinid herpesvirus 3
+Cypripedium virus Y
+Cyrtanthus elatus virus A
+Dahlia latent viroid
+Dahlia mosaic virus
+Dakar bat virus
+Dalechampia chlorotic mosaic virus
+Dandelion latent virus
+Dandelion yellow mosaic virus
+Daphne mosaic virus
+Daphne virus S
+Daphne virus X
+Darna trima virus
+Dasheen mosaic virus
+Dasychira pudibunda virus
+Datura leaf distortion virus
+Datura shoestring virus
+Datura yellow vein virus
+Decapod hepandensovirus 1
+Decapod penstyldensovirus 1
+Deformed wing virus
+Deltapapillomavirus 1
+Deltapapillomavirus 2
+Deltapapillomavirus 3
+Deltapapillomavirus 4
+Deltapapillomavirus 5
+Deltapapillomavirus 6
+Demodema bonariensis entomopoxvirus
+Dendrolimus punctatus virus
+Dengue virus
+Dera Ghazi Khan virus
+Dermolepida albohirtum entomopoxvirus
+Desmodium leaf distortion virus
+Desmodium yellow mottle virus
+Dhori virus
+Diachasmimorpha entomopoxvirus
+Diadegma acronyctae ichnovirus
+Diadegma interruptum ichnovirus
+Diadegma terebrans ichnovirus
+Diadromus pulchellus ascovirus 4a
+Dickeya phage Limestone
+Dicliptera yellow mottle Cuba virus
+Dicliptera yellow mottle virus
+Dictyostelium discoideum Skipper virus
+Digitaria ciliaris striate mosaic virus
+Digitaria didactyla striate mosaic virus
+Digitaria streak virus
+Dill cryptic virus 2
+Diodia vein chlorosis virus
+Diolcogaster facetosa bracovirus
+Dioscorea bacilliform AL virus
+Dioscorea bacilliform SN virus
+Dipteran ambidensovirus 1
+Dipteran brevidensovirus 1
+Dipteran brevidensovirus 2
+Discula destructiva virus 1
+Discula destructiva virus 2
+Diuris virus A
+Diuris virus B
+Diuris virus Y
+Dobrava-Belgrade virus
+Dolichos yellow mosaic virus
+Drosophila C virus
+Drosophila X virus
+Drosophila affinis sigmavirus
+Drosophila ananassae Tom virus
+Drosophila ananassae sigmavirus
+Drosophila buzzatii Osvaldo virus
+Drosophila immigrans sigmavirus
+Drosophila melanogaster 17.6 virus
+Drosophila melanogaster 1731 virus
+Drosophila melanogaster 297 virus
+Drosophila melanogaster 412 virus
+Drosophila melanogaster Bel virus
+Drosophila melanogaster Blastopia virus
+Drosophila melanogaster Gypsy virus
+Drosophila melanogaster Idefix virus
+Drosophila melanogaster Mdg1 virus
+Drosophila melanogaster Mdg3 virus
+Drosophila melanogaster Micropia virus
+Drosophila melanogaster Roo virus
+Drosophila melanogaster Tirant virus
+Drosophila melanogaster Zam virus
+Drosophila melanogaster copia virus
+Drosophila melanogaster sigmavirus
+Drosophila obscura sigmavirus
+Drosophila simulans Ninja virus
+Drosophila tristis sigmavirus
+Drosophila virilis Tv1 virus
+Drosophila virilis Ulysses virus
+Duck atadenovirus A
+Duck circovirus
+Duck hepatitis B virus
+Dugbe virus
+Dulcamara mottle virus
+Durham virus
+Duvenhage virus
+Dyodeltapapillomavirus 1
+Dyoepsilonpapillomavirus 1
+Dyoetapapillomavirus 1
+Dyoiotapapillomavirus 1
+Dyoiotapapillomavirus 2
+Dyokappapapillomavirus 1
+Dyolambdapapillomavirus 1
+Dyomupapillomavirus 1
+Dyonupapillomavirus 1
+Dyoomikronpapillomavirus 1
+Dyopipapillomavirus 1
+Dyorhopapillomavirus 1
+Dyosigmapapillomavirus 1
+Dyothetapapillomavirus 1
+Dyoxipapillomavirus 1
+Dyozetapapillomavirus 1
+East African cassava mosaic Cameroon virus
+East African cassava mosaic Kenya virus
+East African cassava mosaic Malawi virus
+East African cassava mosaic Zanzibar virus
+East African cassava mosaic virus
+East Asian Passiflora virus
+Ebola virus
+Eastern equine encephalitis virus
+Echinochloa hoja blanca virus
+Echinochloa ragged stunt virus
+Eclipta yellow vein virus
+Ectocarpus fasciculatus virus a
+Ectocarpus siliculosus virus 1
+Ectocarpus siliculosus virus a
+Ectromelia virus
+Ectropis obliqua nucleopolyhedrovirus
+Ectropis obliqua virus
+Edge Hill virus
+Eggplant latent viroid
+Eggplant mosaic virus
+Eggplant mottled crinkle virus
+Eggplant mottled dwarf virus
+Eilat virus
+El Moro Canyon virus
+Elderberry latent virus
+Elderberry symptomless virus
+Elephantid herpesvirus 1
+Elm mottle virus
+Emiliania huxleyi virus 86
+Endive necrotic mosaic virus
+Endosymbiont phage APSE-1
+Entebbe bat virus
+Enterobacter phage F20
+Enterobacteria phage 186
+Enterobacteria phage AE2
+Enterobacteria phage BZ13
+Enterobacteria phage C-2
+Enterobacteria phage Ec9
+Enterobacteria phage FI
+Enterobacteria phage G4
+Enterobacteria phage HK022
+Enterobacteria phage HK97
+Enterobacteria phage HR
+Enterobacteria phage I2-2
+Enterobacteria phage IKe
+Enterobacteria phage If1
+Enterobacteria phage JL1
+Enterobacteria phage K1-5
+Enterobacteria phage K1E
+Enterobacteria phage K5
+Enterobacteria phage M13
+Enterobacteria phage MS2
+Enterobacteria phage Mu
+Enterobacteria phage N15
+Enterobacteria phage P1
+Enterobacteria phage P2
+Enterobacteria phage P22
+Enterobacteria phage PR64FS
+Enterobacteria phage PRD1
+Enterobacteria phage Phieco32
+Enterobacteria phage PsP3
+Enterobacteria phage Qbeta
+Enterobacteria phage SF
+Enterobacteria phage SP6
+Enterobacteria phage SSL2009a
+Enterobacteria phage SV14
+Enterobacteria phage St-1
+Enterobacteria phage T1
+Enterobacteria phage T4
+Enterobacteria phage T5
+Enterobacteria phage T7
+Enterobacteria phage Wphi
+Enterobacteria phage X
+Enterobacteria phage X-2
+Enterobacteria phage ZJ/2
+Enterobacteria phage alpha3
+Enterobacteria phage dA
+Enterobacteria phage f1
+Enterobacteria phage fd
+Enterobacteria phage lambda
+Enterobacteria phage phiK
+Enterobacteria phage phiX174
+Enterobacteria phage tf-1
+Enterococcus phage BC611
+Enterococcus phage IMEEF1
+Enterococcus phage SAP6
+Enterococcus phage VD13
+Enterococcus phage phiEC24C
+Enterococcus phage phifl1
+Enterococcus phage phifl2
+Enterococcus phage phifl3
+Enterovirus A
+Enterovirus B
+Enterovirus C
+Enterovirus D
+Enterovirus E
+Enterovirus F
+Enterovirus G
+Enterovirus H
+Enterovirus J
+Enytus montanus ichnovirus
+Epichloe festucae virus 1
+Epiphyas postvittana nucleopolyhedrovirus
+Epirus cherry virus
+Epizootic haematopoietic necrosis virus
+Epizootic hemorrhagic disease virus
+Epsilonpapillomavirus 1
+Equid herpesvirus 1
+Equid herpesvirus 2
+Equid herpesvirus 3
+Equid herpesvirus 4
+Equid herpesvirus 5
+Equid herpesvirus 7
+Equid herpesvirus 8
+Equid herpesvirus 9
+Equine arteritis virus
+Equine encephalosis virus
+Equine foamy virus
+Equine infectious anemia virus
+Equine mastadenovirus A
+Equine mastadenovirus B
+Equine rhinitis A virus
+Equine torovirus
+Eragrostis curvula streak virus
+Eragrostis minor streak virus
+Eragrostis streak virus
+Erbovirus A
+Erectites yellow mosaic virus
+Eriborus terebrans ichnovirus
+Eriocheir sinensis reovirus
+Erwinia amylovora phage Era103
+Erwinia phage phiEa21-4
+Erysimum latent virus
+Escherichia phage Akfv33
+Escherichia phage Bf23
+Escherichia phage Cba120
+Escherichia phage Eb49
+Escherichia phage Eps7
+Escherichia phage H8
+Escherichia phage HK578
+Escherichia phage JS98
+Escherichia phage Jk06
+Escherichia phage N4
+Escherichia phage PhaxI
+Escherichia phage PhiV10
+Escherichia phage RB14
+Escherichia phage RB16
+Escherichia phage RB32
+Escherichia phage RB43
+Escherichia phage RB49
+Escherichia phage RB69
+Escherichia phage Rogue1
+Escherichia phage Rtp
+Escherichia phage T5
+Escherichia phage Tls
+Escherichia phage phi1
+Escherichia phage wV8
+Estero Real virus
+Etapapillomavirus 1
+Eubenangee virus
+Eupatorium yellow vein mosaic virus
+Eupatorium yellow vein virus
+Euphorbia leaf curl Guangxi virus
+Euphorbia leaf curl virus
+Euphorbia mosaic virus
+Euphorbia ringspot virus
+Euphorbia yellow mosaic virus
+Euproctis pseudoconspersa nucleopolyhedrovirus
+Euprosterna elaeasa virus
+European bat lyssavirus 1
+European bat lyssavirus 2
+European brown hare syndrome virus
+European catfish virus
+European mountain ash ringspot-associated virus
+Everglades virus
+Eyach virus
+Faba bean necrotic stunt virus
+Faba bean necrotic yellows virus
+Faba bean yellow leaf virus
+Falcon aviadenovirus A
+Feldmannia irregularis virus a
+Feldmannia species virus
+Feldmannia species virus a
+Felid herpesvirus 1
+Feline calicivirus
+Feline foamy virus
+Feline immunodeficiency virus
+Feline leukemia virus
+Fer-de-Lance paramyxovirus
+Festuca leaf streak virus
+Fig badnavirus 1
+Fig cryptic virus
+Fig mosaic virus
+Figulus sublaevis entomopoxvirus
+Figwort mosaic virus
+Fiji disease virus
+Finch circovirus
+Finkel-Biskis-Jinkins murine sarcoma virus
+Flammulina velutipes browning virus
+Flanders virus
+Flexal mammarenavirus
+Flock House virus
+Foot-and-mouth disease virus
+Fort Morgan virus
+Fowl aviadenovirus A
+Fowl aviadenovirus B
+Fowl aviadenovirus C
+Fowl aviadenovirus D
+Fowl aviadenovirus E
+Fowlpox virus
+Foxtail mosaic virus
+Fragaria chiloensis latent virus
+Frangipani mosaic virus
+Freesia mosaic virus
+Freesia sneak virus
+Frijoles virus
+Fritillary virus Y
+Frog siadenovirus A
+Frog virus 3
+Fugu rubripes Suzu virus
+Fujinami sarcoma virus
+Furcraea necrotic streak virus
+Fusarium oxysporum Skippy virus
+Fusarium oxysporum chrysovirus 1
+Fusarium poae virus 1
+Fusarium solani virus 1
+Gadgets Gully virus
+Gaeumannomyces graminis virus 019/6-A
+Gaeumannomyces graminis virus T1-A
+Galinsoga mosaic virus
+Gallid herpesvirus 1
+Gallid herpesvirus 2
+Gallid herpesvirus 3
+Galliform aveparvovirus 1
+Gallivirus A
+Gamboa virus
+Gammapapillomavirus 1
+Gammapapillomavirus 10
+Gammapapillomavirus 11
+Gammapapillomavirus 12
+Gammapapillomavirus 13
+Gammapapillomavirus 14
+Gammapapillomavirus 15
+Gammapapillomavirus 16
+Gammapapillomavirus 17
+Gammapapillomavirus 18
+Gammapapillomavirus 19
+Gammapapillomavirus 2
+Gammapapillomavirus 20
+Gammapapillomavirus 3
+Gammapapillomavirus 4
+Gammapapillomavirus 5
+Gammapapillomavirus 6
+Gammapapillomavirus 7
+Gammapapillomavirus 8
+Gammapapillomavirus 9
+Gardner-Arnstein feline sarcoma virus
+Garlic common latent virus
+Garlic dwarf virus
+Garlic mite-borne filamentous virus
+Garlic virus A
+Garlic virus B
+Garlic virus C
+Garlic virus D
+Garlic virus E
+Garlic virus X
+Gayfeather mild mottle virus
+Gentian mosaic virus
+Geotrupes sylvaticus entomopoxvirus
+Getah virus
+Giardia lamblia virus
+Gibbon ape leukemia virus
+Gill-associated virus
+Gloriosa stripe mosaic virus
+Glossina hytrovirus
+Glycine max SIRE1 virus
+Glycine max Tgmr virus
+Glycine mosaic virus
+Glypta fumiferanae ichnovirus
+Glyptapanteles flavicoxis bracovirus
+Glyptapanteles indiensis bracovirus
+Glyptapanteles liparidis bracovirus
+Goatpox virus
+Goeldichironomus holoprasinus entomopoxvirus
+Goose aviadenovirus A
+Goose circovirus
+Gooseberry vein banding associated virus
+Gorilline herpesvirus 1
+Grapevine Algerian latent virus
+Grapevine Anatolian ringspot virus
+Grapevine Bulgarian latent virus
+Grapevine Pinot gris virus
+Grapevine Syrah virus 1
+Grapevine Tunisian ringspot virus
+Grapevine berry inner necrosis virus
+Grapevine chrome mosaic virus
+Grapevine deformation virus
+Grapevine fanleaf virus
+Grapevine fleck virus
+Grapevine leafroll-associated virus 1
+Grapevine leafroll-associated virus 2
+Grapevine leafroll-associated virus 3
+Grapevine leafroll-associated virus 4
+Grapevine leafroll-associated virus 7
+Grapevine rupestris stem pitting-associated virus
+Grapevine vein clearing virus
+Grapevine virus A
+Grapevine virus B
+Grapevine virus D
+Grapevine virus E
+Grapevine virus F
+Grapevine yellow speckle viroid 1
+Grapevine yellow speckle viroid 2
+Great Island virus
+Great tit siadenovirus A
+Gremmeniella abietina RNA virus L1
+Gremmeniella abietina RNA virus MS1
+Ground squirrel hepatitis virus
+Groundnut bud necrosis virus
+Groundnut eyespot virus
+Groundnut ringspot virus
+Groundnut rosette assistor virus
+Groundnut rosette virus
+Groundnut yellow spot virus
+Gryllus bimaculatus nudivirus
+Guajara virus
+Guama virus
+Guanarito mammarenavirus
+Guaroa virus
+Guinea grass mosaic virus
+Guinea pig Chlamydia phage
+Guinea pig type-C oncovirus
+Gull circovirus
+Habenaria mosaic virus
+Haemophilus phage HP1
+Haemophilus phage HP2
+Haliotid herpesvirus 1
+Haloarcula hispanica icosahedral virus 2
+Haloarcula hispanica virus ph1
+Haloarcula hispanica virus sh1
+Halobacterium phage phiH
+Halomonas phage phiHAP-1
+Hamster polyomavirus
+Hantaan virus
+Hardenbergia mosaic virus
+Hardenbergia virus A
+Hardy-Zuckerman feline sarcoma virus
+Hare fibroma virus
+Harrisina brillians granulovirus
+Harvey murine sarcoma virus
+Havel River virus
+Helenium virus S
+Helenium virus Y
+Helicobasidium mompa endornavirus 1
+Helicobasidium mompa partitivirus V70
+Helicobasidium mompa totivirus 1-17
+Helicoverpa armigera granulovirus
+Helicoverpa armigera nucleopolyhedrovirus
+Helicoverpa armigera stunt virus
+Heliothis armigera entomopoxvirus
+Heliothis virescens ascovirus 3a
+Heliothis zea nudivirus
+Helleborus mosaic virus
+Helleborus net necrosis virus
+Helminthosporium victoriae 145S virus
+Helminthosporium victoriae virus 190S
+Hemipteran ambidensovirus 1
+Henbane mosaic virus
+Hendra virus
+Hepatitis B virus
+Hepatitis C virus
+Hepatitis delta virus
+Hepatovirus A
+Heracleum latent virus
+Heron hepatitis B virus
+Heterobasidion partitivirus 1
+Heterobasidion partitivirus 2
+Heterobasidion partitivirus 3
+Heterobasidion partitivirus 8
+Heterobasidion partitivirus P
+Heterocapsa circularisquama DNA virus 01
+Heterocapsa circularisquama RNA virus 01
+Heterosigma akashiwo RNA virus
+Heterosigma akashiwo virus 01
+Hibbertia virus Y
+Hibiscus chlorotic ringspot virus
+Hibiscus green spot virus 2
+Hibiscus latent Fort Pierce virus
+Hibiscus latent Singapore virus
+Hibiscus latent ringspot virus
+Highlands J virus
+Himetobi P virus
+Hincksia hinckiae virus a
+Hippeastrum latent virus
+Hippeastrum mosaic virus
+Hippotragine herpesvirus 1
+Hirame rhabdovirus
+His 1 virus
+Hollyhock leaf crumple virus
+Hollyhock leaf curl virus
+Homalodisca coagulata virus-1
+Honeysuckle latent virus
+Honeysuckle ringspot virus
+Honeysuckle yellow vein Kagoshima virus
+Honeysuckle yellow vein mosaic virus
+Honeysuckle yellow vein virus
+Hop latent viroid
+Hop latent virus
+Hop mosaic virus
+Hop stunt viroid
+Hop trefoil cryptic virus 1
+Hop trefoil cryptic virus 2
+Hop trefoil cryptic virus 3
+Hordeum mosaic virus
+Hordeum vulgare BARE-1 virus
+Horsegram yellow mosaic virus
+Horseradish curly top virus
+Horseradish latent virus
+Hosta virus X
+Hughes virus
+Human coronavirus 229E
+Human coronavirus HKU1
+Human coronavirus NL63
+Human herpesvirus 1
+Human herpesvirus 2
+Human herpesvirus 3
+Human herpesvirus 4
+Human herpesvirus 5
+Human herpesvirus 6A
+Human herpesvirus 6B
+Human herpesvirus 7
+Human herpesvirus 8
+Human immunodeficiency virus 1
+Human immunodeficiency virus 2
+Human mastadenovirus A
+Human mastadenovirus B
+Human mastadenovirus C
+Human mastadenovirus D
+Human mastadenovirus E
+Human mastadenovirus F
+Human mastadenovirus G
+Human metapneumovirus
+Human parainfluenza virus 1
+Human parainfluenza virus 2
+Human parainfluenza virus 3
+Human parainfluenza virus 4
+Human picobirnavirus
+Human polyomavirus
+Human respiratory syncytial virus
+Human torovirus
+Humulus japonicus latent virus
+Hunnivirus A
+Hyacinth mosaic virus
+Hydra viridis Chlorella virus 1
+Hydrangea chlorotic mottle virus
+Hydrangea latent virus
+Hydrangea ringspot virus
+Hyphantria cunea nucleopolyhedrovirus
+Hypomicrogaster canadensis bracovirus
+Hypomicrogaster ectdytolophae bracovirus
+Hyposoter annulipes ichnovirus
+Hyposoter exiguae ichnovirus
+Hyposoter fugitivus ichnovirus
+Hyposoter lymantriae ichnovirus
+Hyposoter pilosulus ichnovirus
+Hyposoter rivalis ichnovirus
+Ictalurid herpesvirus 1
+Ictalurid herpesvirus 2
+Idnoreovirus 1
+Idnoreovirus 2
+Idnoreovirus 3
+Idnoreovirus 4
+Idnoreovirus 5
+Ieri virus
+Iguanid herpesvirus 2
+Ikoma lyssavirus
+Ilheus virus
+Impatiens necrotic spot virus
+Imperata yellow mottle virus
+Indian cassava mosaic virus
+Indian citrus ringspot virus
+Indian peanut clump virus
+Indonesian soybean dwarf virus
+Infectious bursal disease virus
+Infectious flacherie virus
+Infectious hematopoietic necrosis virus
+Infectious pancreatic necrosis virus
+Infectious salmon anemia virus
+Infectious spleen and kidney necrosis virus
+Influenza A virus
+Influenza B virus
+Influenza C virus
+Invertebrate iridescent virus 1
+Invertebrate iridescent virus 3
+Invertebrate iridescent virus 6
+Iotapapillomavirus 1
+Ippy mammarenavirus
+Iranian wheat stripe virus
+Iresine viroid 1
+Iris fulva mosaic virus
+Iris mild mosaic virus
+Iris severe mosaic virus
+Iris yellow spot virus
+Irkut virus
+Isfahan virus
+Isla Vista virus
+Israel turkey meningoencephalomyelitis virus
+Israeli acute paralysis virus
+JC polyomavirus
+Jaagsiekte sheep retrovirus
+Jacquemontia mosaic Yucatan virus
+Japanese encephalitis virus
+Japanese iris necrotic ring virus
+Japanese soil-borne wheat mosaic virus
+Japanese yam mosaic virus
+Jatropha mosaic India virus
+Johnsongrass chlorotic stripe mosaic virus
+Johnsongrass mosaic virus
+Johnston Atoll virus
+Jugra virus
+Juncopox virus
+Jun¡n mammarenavirus
+Jutiapa virus
+Kadam virus
+Kadipiro virus
+Kaeng Khoi virus
+Kairi virus
+Kalancho‰ latent virus
+Kalancho‰ mosaic virus
+Kalancho‰ top-spotting virus
+Kappapapillomavirus 1
+Kappapapillomavirus 2
+Kashmir bee virus
+Kedougou virus
+Kenaf leaf curl virus
+Kennedya yellow mosaic virus
+Keunjorong mosaic virus
+Khabarovsk virus
+Khujand virus
+Kirsten murine sarcoma virus
+Kluyvera phage Kvp1
+Kokobera virus
+Konjac mosaic virus
+Koongol virus
+Kotonkan virus
+Koutango virus
+Kudzu mosaic virus
+Kunsagivirus A
+Kurthia phage 6
+Kyasanur Forest disease virus
+Kyuri green mottle mosaic virus
+Lacanobia oleracea granulovirus
+Lactate dehydrogenase-elevating virus
+Lactobacillus phage ATCC8014
+Lactobacillus phage LLKu
+Lactobacillus phage LP65
+Lactobacillus phage c5
+Lactobacillus phage phijl1
+Lactococcus phage 712
+Lactococcus phage Ascc191
+Lactococcus phage Ascc273
+Lactococcus phage Ascc281
+Lactococcus phage Ascc465
+Lactococcus phage Ascc532
+Lactococcus phage Bibb29
+Lactococcus phage CB13
+Lactococcus phage CB14
+Lactococcus phage CB19
+Lactococcus phage CB20
+Lactococcus phage KSY1
+Lactococcus phage P008
+Lactococcus phage P2
+Lactococcus phage SK1
+Lactococcus phage Sl4
+Lactococcus phage bIL67
+Lactococcus phage bil170
+Lactococcus phage c2
+Lactococcus phage jj50
+Lagenaria mild mosaic virus
+Lagos bat virus
+Laguna Negra virus
+Lambdapapillomavirus 1
+Lambdapapillomavirus 2
+Lambdapapillomavirus 3
+Lambdapapillomavirus 4
+Lambdapapillomavirus 5
+Lamium leaf distortion virus
+Lamium mild mosaic virus
+Langat virus
+Langur virus
+Lassa mammarenavirus
+Latino mammarenavirus
+Lato River virus
+Lausannevirus
+Lebombo virus
+Leek white stripe virus
+Leek yellow stripe virus
+Leishmania RNA virus 1
+Leishmania RNA virus 2
+Leonurus mosaic virus
+Lepidopteran ambidensovirus 1
+Lepidopteran iteradensovirus 1
+Lepidopteran iteradensovirus 2
+Lepidopteran iteradensovirus 3
+Lepidopteran iteradensovirus 4
+Lepidopteran iteradensovirus 5
+Leporid herpesvirus 4
+Lettuce big-vein associated virus
+Lettuce chlorosis virus
+Lettuce infectious yellows virus
+Lettuce mosaic virus
+Lettuce necrotic leaf curl virus
+Lettuce necrotic yellows virus
+Lettuce ring necrosis virus
+Lettuce speckles mottle virus
+Lettuce virus X
+Lettuce yellow mottle virus
+Leucania separata nucleopolyhedrovirus
+Liao ning virus
+Ligustrum necrotic ringspot virus
+Lilac leaf chlorosis virus
+Lilac mottle virus
+Lilac ring mottle virus
+Lilium henryi Del1 virus
+Lily mottle virus
+Lily symptomless virus
+Lily virus X
+Limonium flower distortion virus
+Lindernia anagallis yellow vein virus
+Listeria phage A511
+Listeria phage P100
+Little cherry virus 1
+Little cherry virus 2
+Lloviu cuevavirus
+Locusta migratoria entomopoxvirus
+Lolium latent virus
+Louping ill virus
+Lucerne Australian latent virus
+Lucerne transient streak virus
+Ludwigia yellow vein Vietnam virus
+Ludwigia yellow vein virus
+Luffa yellow mosaic virus
+Lujo mammarenavirus
+Lumpy skin disease virus
+Luna mammarenavirus
+Lunk mammarenavirus
+Lupinus mosaic virus
+Lychnis ringspot virus
+Lycopersicon esculentum ToRTL1 virus
+Lycoris mild mottle virus
+Lygus lineolaris virus 1
+Lymantria dispar multiple nucleopolyhedrovirus
+Lymphocystis disease virus 1
+Lymphocytic choriomeningitis mammarenavirus
+M'Poko virus
+Macacine herpesvirus 1
+Macacine herpesvirus 3
+Macacine herpesvirus 4
+Macacine herpesvirus 5
+Macaque simian foamy virus
+Machupo mammarenavirus
+Maclura mosaic virus
+Macropodid herpesvirus 1
+Macropodid herpesvirus 2
+Macroptilium golden mosaic virus
+Macroptilium mosaic Puerto Rico virus
+Macroptilium yellow mosaic Florida virus
+Macroptilium yellow mosaic virus
+Macroptilium yellow net virus
+Macroptilium yellow spot virus
+Macroptilium yellow vein virus
+Madariaga virus
+Madrid virus
+Magnaporthe oryzae virus 1
+Magnaporthe oryzae virus 2
+Main Drain virus
+Maize Iranian mosaic virus
+Maize chlorotic dwarf virus
+Maize chlorotic mottle virus
+Maize dwarf mosaic virus
+Maize fine streak virus
+Maize mosaic virus
+Maize necrotic streak virus
+Maize rayado fino virus
+Maize rough dwarf virus
+Maize streak Reunion virus
+Maize streak virus
+Maize stripe virus
+Maize white line mosaic virus
+Maize yellow dwarf virus-RMV
+Mal de Rio Cuarto virus
+Malva mosaic virus
+Malva vein clearing virus
+Malvastrum leaf curl Guangdong virus
+Malvastrum leaf curl virus
+Malvastrum yellow leaf curl virus
+Malvastrum yellow mosaic Helshire virus
+Malvastrum yellow mosaic Jamaica virus
+Malvastrum yellow mosaic virus
+Malvastrum yellow vein Changa Manga virus
+Malvastrum yellow vein Honghe virus
+Malvastrum yellow vein Yunnan virus
+Malvastrum yellow vein virus
+Mamastrovirus 1
+Mamastrovirus 10
+Mamastrovirus 11
+Mamastrovirus 12
+Mamastrovirus 13
+Mamastrovirus 14
+Mamastrovirus 15
+Mamastrovirus 16
+Mamastrovirus 17
+Mamastrovirus 18
+Mamastrovirus 19
+Mamastrovirus 2
+Mamastrovirus 3
+Mamastrovirus 4
+Mamastrovirus 5
+Mamastrovirus 6
+Mamastrovirus 7
+Mamastrovirus 8
+Mamastrovirus 9
+Mamestra brassicae multiple nucleopolyhedrovirus
+Mamestra configurata nucleopolyhedrovirus A
+Mamestra configurata nucleopolyhedrovirus B
+Mammalian 1 bornavirus
+Mammalian orthoreovirus
+Mannheimia phage phiMhaA1-PHL101
+Manzanilla virus
+Mapuera virus
+Maraba virus
+Maracuja mosaic virus
+Marburg marburgvirus
+Marituba virus
+Marseillevirus marseillevirus
+Maruca vitrata nucleopolyhedrovirus
+Mason-Pfizer monkey virus
+Mayaro virus
+Meaban virus
+Meadow saffron breaking virus
+Measles virus
+Megakepasma mosaic virus
+Melandrium yellow fleck virus
+Melanoplus sanguinipes entomopoxvirus 'O'
+Meleagrid herpesvirus 1
+Melegrivirus A
+Melolontha melolontha entomopoxvirus
+Melon aphid-borne yellows virus
+Melon chlorotic leaf curl virus
+Melon chlorotic mosaic virus
+Melon mild mottle virus
+Melon necrotic spot virus
+Melon rugose mosaic virus
+Melon yellowing-associated virus
+Merino Walk mammarenavirus
+Merremia mosaic Puerto Rico virus
+Merremia mosaic virus
+Mesta yellow vein mosaic virus
+Methanobacterium phage psiM1
+Microcystis aeruginosa phage Ma-LMM01
+Micromonas pusilla reovirus
+Micromonas pusilla virus SP1
+Microplitis croceipes bracovirus
+Microplitis demolitor bracovirus
+Middelburg virus
+Midway nyavirus
+Milk vetch dwarf virus
+Mimosa yellow leaf curl virus
+Minatitlan virus
+Miniopterus bat coronavirus 1
+Miniopterus bat coronavirus HKU8
+Mint vein banding-associated virus
+Mint virus 1
+Mint virus 2
+Mint virus X
+Mirabilis jalapa mottle virus
+Mirabilis mosaic virus
+Mirafiori lettuce big-vein virus
+Miscanthus streak virus
+Mischivirus A
+Mobala mammarenavirus
+Modoc virus
+Mokola virus
+Molluscum contagiosum virus
+Moloney murine sarcoma virus
+Monkeypox virus
+Montana myotis leukoencephalitis virus
+Mopeia mammarenavirus
+Moroccan pepper virus
+Moroccan watermelon mosaic virus
+Mosavirus A
+Mosso das Pedras virus (78V3531)
+Mouse mammary tumor virus
+Moussa virus
+Mucambo virus
+Mud crab virus
+Mulberry latent virus
+Mulberry ringspot virus
+Mule deerpox virus
+Muleshoe virus
+Mumps virus
+Mungbean yellow mosaic India virus
+Mungbean yellow mosaic virus
+Munia coronavirus HKU13
+Mupapillomavirus 1
+Mupapillomavirus 2
+Murid herpesvirus 1
+Murid herpesvirus 2
+Murid herpesvirus 4
+Murid herpesvirus 7
+Murid herpesvirus 8
+Murine coronavirus
+Murine leukemia virus
+Murine mastadenovirus A
+Murine mastadenovirus B
+Murine mastadenovirus C
+Murine pneumonia virus
+Murine pneumotropic virus
+Murine polyomavirus
+Murray Valley encephalitis virus
+Musca hytrovirus
+Muscina stabulans sigmavirus
+Mushroom bacilliform virus
+Muskmelon vein necrosis virus
+Mustelid herpesvirus 1
+Mycobacterium phage 244
+Mycobacterium phage BBPiebs31
+Mycobacterium phage Bask21
+Mycobacterium phage Bxb1
+Mycobacterium phage Bxz2
+Mycobacterium phage CJW1
+Mycobacterium phage Che12
+Mycobacterium phage Che8
+Mycobacterium phage Che9c
+Mycobacterium phage Che9d
+Mycobacterium phage D29
+Mycobacterium phage Faith1
+Mycobacterium phage I3
+Mycobacterium phage JC27
+Mycobacterium phage JHC117
+Mycobacterium phage Jasper
+Mycobacterium phage KBG
+Mycobacterium phage L5
+Mycobacterium phage LHTSCC
+Mycobacterium phage Llij
+Mycobacterium phage PBI1
+Mycobacterium phage PMC
+Mycobacterium phage Pacc40
+Mycobacterium phage Perseus
+Mycobacterium phage Pg1
+Mycobacterium phage Ridgecb
+Mycobacterium phage SG4
+Mycobacterium phage SWU1
+Mycobacterium phage TM4
+Mycobacterium phage Ta17a
+Mycobacterium phage U2
+Mycobacterium phage acadian
+Mycobacterium phage alma
+Mycobacterium phage anaya
+Mycobacterium phage angelica
+Mycobacterium phage ardmore
+Mycobacterium phage arturo
+Mycobacterium phage astro
+Mycobacterium phage athena
+Mycobacterium phage avani
+Mycobacterium phage babsiella
+Mycobacterium phage backyardigan
+Mycobacterium phage baka
+Mycobacterium phage barnyard
+Mycobacterium phage benedict
+Mycobacterium phage bethlehem
+Mycobacterium phage bignuz
+Mycobacterium phage billknuckles
+Mycobacterium phage bongo
+Mycobacterium phage boomer
+Mycobacterium phage bron
+Mycobacterium phage brujita
+Mycobacterium phage bruns
+Mycobacterium phage charlie
+Mycobacterium phage chrisnmich
+Mycobacterium phage cooper
+Mycobacterium phage corndog
+Mycobacterium phage courthouse
+Mycobacterium phage crimd
+Mycobacterium phage cuco
+Mycobacterium phage deadp
+Mycobacterium phage dlane
+Mycobacterium phage doom
+Mycobacterium phage dorothy
+Mycobacterium phage dotproduct
+Mycobacterium phage drago
+Mycobacterium phage ericb
+Mycobacterium phage euphoria
+Mycobacterium phage eureka
+Mycobacterium phage fionn
+Mycobacterium phage firecracker
+Mycobacterium phage fruitloop
+Mycobacterium phage gadjet
+Mycobacterium phage george
+Mycobacterium phage gladiator
+Mycobacterium phage goose
+Mycobacterium phage gumbie
+Mycobacterium phage halo
+Mycobacterium phage hammer
+Mycobacterium phage heldan
+Mycobacterium phage ibhubesi
+Mycobacterium phage jaws
+Mycobacterium phage jebeks
+Mycobacterium phage jeffabunny
+Mycobacterium phage joedirt
+Mycobacterium phage konstantine
+Mycobacterium phage kostya
+Mycobacterium phage kssjeb
+Mycobacterium phage kugel
+Mycobacterium phage larva
+Mycobacterium phage lesedi
+Mycobacterium phage liefie
+Mycobacterium phage littlee
+Mycobacterium phage lockley
+Mycobacterium phage macncheese
+Mycobacterium phage marcell
+Mycobacterium phage microwolf
+Mycobacterium phage mozy
+Mycobacterium phage mrgordo
+Mycobacterium phage museum
+Mycobacterium phage mutaforma13
+Mycobacterium phage nepal
+Mycobacterium phage nigel
+Mycobacterium phage oline
+Mycobacterium phage omega
+Mycobacterium phage optimus
+Mycobacterium phage packman
+Mycobacterium phage patience
+Mycobacterium phage peaches
+Mycobacterium phage pipefish
+Mycobacterium phage pixie
+Mycobacterium phage porky
+Mycobacterium phage predator
+Mycobacterium phage pukovnik
+Mycobacterium phage pumpkin
+Mycobacterium phage ramsey
+Mycobacterium phage rebeuca
+Mycobacterium phage redi
+Mycobacterium phage redrock
+Mycobacterium phage rey
+Mycobacterium phage rockstar
+Mycobacterium phage rockyhorror
+Mycobacterium phage rosebush
+Mycobacterium phage rumpelstiltskin
+Mycobacterium phage saintus
+Mycobacterium phage shauna1
+Mycobacterium phage shilan
+Mycobacterium phage sirduracell
+Mycobacterium phage skipole
+Mycobacterium phage solon
+Mycobacterium phage spartacus
+Mycobacterium phage stinger
+Mycobacterium phage switzer
+Mycobacterium phage taj
+Mycobacterium phage thibault
+Mycobacterium phage tiger
+Mycobacterium phage timshel
+Mycobacterium phage toto
+Mycobacterium phage trixie
+Mycobacterium phage turbido
+Mycobacterium phage tweety
+Mycobacterium phage twister
+Mycobacterium phage violet
+Mycobacterium phage wee
+Mycobacterium phage wonder
+Mycobacterium phage yoshi
+Mycobacterium phage zemanar
+Mycoplasma phage P1
+Mycoreovirus 1
+Mycoreovirus 2
+Mycoreovirus 3
+Mynahpox virus
+Myriotrichia clavaeformis virus a
+Myrobalan latent ringspot virus
+Mythimna separata entomopoxvirus
+Myxoma virus
+Narcissus common latent virus
+Narcissus degeneration virus
+Narcissus late season yellows virus
+Narcissus latent virus
+Narcissus mosaic virus
+Narcissus yellow stripe virus
+Natrinema virus snj1
+Ndumu virus
+Neckar River virus
+Nelson Bay orthoreovirus
+Nemesia ring necrosis virus
+Neodiprion lecontei nucleopolyhedrovirus
+Neodiprion sertifer nucleopolyhedrovirus
+Nerine latent virus
+Nerine virus X
+Nerine yellow stripe virus
+New York virus
+Newbury-1 virus
+Newcastle disease virus
+Ngaingan virus
+Nicotiana tabacum Tnt1 virus
+Nicotiana tabacum Tto1 virus
+Nilaparvata lugens honeydew virus 1
+Nilaparvata lugens reovirus
+Nile crocodilepox virus
+Nipah virus
+Nodamura virus
+Nootka lupine vein clearing virus
+Northern cereal mosaic virus
+Norwalk virus
+Nothoscordum mosaic virus
+Ntaya virus
+Nudaurelia capensis beta virus
+Nudaurelia capensis omega virus
+Nupapillomavirus 1
+Nyamanini nyavirus
+Nyando virus
+O'nyong-nyong virus
+Oat blue dwarf virus
+Oat chlorotic stunt virus
+Oat dwarf virus
+Oat golden stripe virus
+Oat mosaic virus
+Oat necrotic mottle virus
+Oat sterile dwarf virus
+Obodhiang virus
+Obuda pepper virus
+Odontoglossum ringspot virus
+Oedaleus senegalensis entomopoxvirus
+Okra enation leaf curl virus
+Okra leaf curl Cameroon virus
+Okra mosaic virus
+Okra mottle virus
+Okra yellow crinkle virus
+Okra yellow mosaic Mexico virus
+Okra yellow mottle Iguala virus
+Okra yellow vein mosaic virus
+Olesicampe benefactor ichnovirus
+Olesicampe geniculatae ichnovirus
+Olifantsvlei virus
+Olive latent ringspot virus
+Olive latent virus 1
+Olive latent virus 2
+Olive latent virus 3
+Olive leaf yellowing-associated virus
+Olive mild mosaic virus
+Oliveros mammarenavirus
+Omegapapillomavirus 1
+Omikronpapillomavirus 1
+Omsk hemorrhagic fever virus
+Onion yellow dwarf virus
+Ononis yellow mosaic virus
+Operophtera brumata entomopoxvirus
+Ophiostoma mitovirus 3a
+Ophiostoma mitovirus 4
+Ophiostoma mitovirus 5
+Ophiostoma mitovirus 6
+Ophiostoma partitivirus 1
+Opuntia virus X
+Orf virus
+Orgyia pseudotsugata multiple nucleopolyhedrovirus
+Oriboca virus
+Ornithogalum mosaic virus
+Ornithogalum virus 2
+Ornithogalum virus 3
+Oropouche virus
+Orthohepevirus A
+Orthohepevirus B
+Orthohepevirus C
+Orthohepevirus D
+Orthopteran ambidensovirus 1
+Orungo virus
+Oryctes rhinoceros nudivirus
+Oryza australiensis RIRE1 virus
+Oryza longistaminata Retrofit virus
+Oryza rufipogon endornavirus
+Oryza sativa endornavirus
+Oscivirus A
+Ostreid herpesvirus 1
+Ostreococcus tauri virus OtV5
+Ourmia melon virus
+Ovine atadenovirus D
+Ovine herpesvirus 2
+Ovine mastadenovirus A
+Ovine mastadenovirus B
+Pagoda yellow mosaic associated virus
+Palyam virus
+Panax virus Y
+Pangola stunt virus
+Panicum mosaic virus
+Panicum streak virus
+Panine herpesvirus 1
+Panine herpesvirus 2
+Pantoea phage Limelight
+Pantoea phage Limezero
+Papaya leaf crumple virus
+Papaya leaf curl China virus
+Papaya leaf curl Guandong virus
+Papaya leaf curl virus
+Papaya leaf distortion mosaic virus
+Papaya mosaic virus
+Papaya ringspot virus
+Papiine herpesvirus 1
+Papiine herpesvirus 2
+Papiine herpesvirus 3
+Paprika mild mottle virus
+Parainfluenza virus 5
+Paramecium bursaria Chlorella virus 1
+Paramecium bursaria Chlorella virus A1
+Paramecium bursaria Chlorella virus AL1A
+Paramecium bursaria Chlorella virus AL2A
+Paramecium bursaria Chlorella virus BJ2C
+Paramecium bursaria Chlorella virus CA4A
+Paramecium bursaria Chlorella virus CA4B
+Paramecium bursaria Chlorella virus IL3A
+Paramecium bursaria Chlorella virus NC1A
+Paramecium bursaria Chlorella virus NE8A
+Paramecium bursaria Chlorella virus NY2A
+Paramecium bursaria Chlorella virus NYs1
+Paramecium bursaria Chlorella virus SC1A
+Paramecium bursaria Chlorella virus XY6E
+Paramecium bursaria Chlorella virus XZ3A
+Paramecium bursaria Chlorella virus XZ4A
+Paramecium bursaria Chlorella virus XZ4C
+Paran mammarenavirus
+Parapoxvirus of red deer in New Zealand
+Parechovirus A
+Parechovirus B
+Pariacoto virus
+Parietaria mottle virus
+Parsnip mosaic virus
+Parsnip yellow fleck virus
+Pasivirus A
+Paspalum dilatatum striate mosaic virus
+Paspalum striate mosaic virus
+Passeriform 1 bornavirus
+Passeriform 2 bornavirus
+Passerivirus A
+Passiflora chlorosis virus
+Passiflora latent virus
+Passion fruit mosaic virus
+Passion fruit woodiness virus
+Passion fruit yellow mosaic virus
+Passionfruit severe leaf distortion virus
+Pasteurella phage F108
+Patois virus
+Pea early-browning virus
+Pea enation mosaic virus 1
+Pea enation mosaic virus 2
+Pea green mottle virus
+Pea mild mosaic virus
+Pea necrotic yellow dwarf virus
+Pea seed-borne mosaic virus
+Pea stem necrosis virus
+Pea streak virus
+Peach chlorotic mottle virus
+Peach latent mosaic viroid
+Peach mosaic virus
+Peach rosette mosaic virus
+Peanut chlorotic streak virus
+Peanut clump virus
+Peanut mottle virus
+Peanut stunt virus
+Peanut yellow mosaic virus
+Pear blister canker viroid
+Pedilenthus leaf curl virus
+Pediococcus phage clp1
+Pegivirus A
+Pegivirus B
+Pelargonium chlorotic ring pattern virus
+Pelargonium flower break virus
+Pelargonium leaf curl virus
+Pelargonium line pattern virus
+Pelargonium necrotic spot virus
+Pelargonium ringspot virus
+Pelargonium zonate spot virus
+Penicillium brevicompactum virus
+Penicillium chrysogenum virus
+Penicillium cyaneo-fulvum virus
+Penicillium stoloniferum virus F
+Penicillium stoloniferum virus S
+Pennisetum mosaic virus
+Pepino mosaic virus
+Pepper chat fruit viroid
+Pepper cryptic virus 1
+Pepper cryptic virus 2
+Pepper golden mosaic virus
+Pepper huasteco yellow vein virus
+Pepper leaf curl Bangladesh virus
+Pepper leaf curl Lahore virus
+Pepper leaf curl Yunnan virus
+Pepper leaf curl virus
+Pepper mild mottle virus
+Pepper mottle virus
+Pepper ringspot virus
+Pepper severe mosaic virus
+Pepper vein yellows virus
+Pepper veinal mottle virus
+Pepper yellow leaf curl Indonesia virus
+Pepper yellow mosaic virus
+Pepper yellow vein Mali virus
+Perch rhabdovirus
+Perina nuda virus
+Peru tomato mosaic virus
+Peruvian horse sickness virus
+Peste-des-petits-ruminants virus
+Petunia asteroid mosaic virus
+Petunia vein banding virus
+Petunia vein clearing virus
+Pfaffia mosaic virus
+Phage phiJl001
+Phaius virus X
+Phanerotoma flavitestacea bracovirus
+Phaseolus vulgaris Tpv2-6 virus
+Phaseolus vulgaris endornavirus 1
+Phaseolus vulgaris endornavirus 2
+Philosamia cynthia x ricini virus
+Phipapillomavirus 1
+Phlomis mottle virus
+Phlox virus B
+Phlox virus M
+Phlox virus S
+Phnom Penh bat virus
+Phocid herpesvirus 1
+Phocid herpesvirus 2
+Phocine distemper virus
+Pholetesor ornigis bracovirus
+Phormidium phage Pf-WMP3
+Phormidium phage Pf-WMP4
+Phthorimaea operculella granulovirus
+Physalis mottle virus
+Physarum polycephalum Tp1 virus
+Phytophthora endornavirus 1
+Pichind‚ mammarenavirus
+Pigeon circovirus
+Pigeonpea sterility mosaic virus
+Pigeonpox virus
+Pike fry rhabdovirus
+Pilayella littoralis virus 1
+Pineapple bacilliform CO virus
+Pineapple bacilliform ER virus
+Pineapple mealybug wilt-associated virus 1
+Pineapple mealybug wilt-associated virus 2
+Pineapple mealybug wilt-associated virus 3
+Pinniped bocaparvovirus 1
+Pinniped bocaparvovirus 2
+Pinniped dependoparvovirus 1
+Pipapillomavirus 1
+Pipapillomavirus 2
+Piper yellow mottle virus
+Pipistrellus bat coronavirus HKU5
+Pirital mammarenavirus
+Piry virus
+Piscihepevirus A
+Pixuna virus
+Plantago asiatica mosaic virus
+Plantago mottle virus
+Plantago severe mottle virus
+Plantain virus X
+Plautia stali intestine virus
+Pleione virus Y
+Pleurotus ostreatus virus 1
+Plodia interpunctella granulovirus
+Plum bark necrosis stem pitting-associated virus
+Plum pox virus
+Plutella xylostella granulovirus
+Poa semilatent virus
+Poinsettia latent virus
+Poinsettia mosaic virus
+Pokeweed mosaic virus
+Polygonum ringspot virus
+Pongine herpesvirus 2
+Poplar mosaic virus
+Porcine circovirus-1
+Porcine circovirus-2
+Porcine epidemic diarrhea virus
+Porcine mastadenovirus A
+Porcine mastadenovirus B
+Porcine mastadenovirus C
+Porcine reproductive and respiratory syndrome virus
+Porcine rubulavirus
+Porcine torovirus
+Porcine type-C oncovirus
+Possum atadenovirus A
+Potato aucuba mosaic virus
+Potato black ringspot virus
+Potato latent virus
+Potato leafroll virus
+Potato mop-top virus
+Potato spindle tuber viroid
+Potato virus A
+Potato virus M
+Potato virus P
+Potato virus S
+Potato virus T
+Potato virus U
+Potato virus V
+Potato virus X
+Potato virus Y
+Potato yellow dwarf virus
+Potato yellow mosaic Panama virus
+Potato yellow mosaic virus
+Potato yellow vein virus
+Pothos latent virus
+Powassan virus
+Primate T-lymphotropic virus 1
+Primate T-lymphotropic virus 2
+Primate T-lymphotropic virus 3
+Primate bocaparvovirus 1
+Primate bocaparvovirus 2
+Primate erythroparvovirus 1
+Primate erythroparvovirus 2
+Primate erythroparvovirus 3
+Primate erythroparvovirus 4
+Primate protoparvovirus 1
+Primate tetraparvovirus 1
+Primula malacoides virus 1
+Prochlorococcus phage P-SSP7
+Prospect Hill virus
+Protapanteles paleacritae bracovirus
+Providence virus
+Prune dwarf virus
+Prunus necrotic ringspot virus
+Pseudalatia unipuncta granulovirus
+Pseudoalteromonas phage PM2
+Pseudocowpox virus
+Pseudomonad phage gh-1
+Pseudomonas phage 119X
+Pseudomonas phage 14-1
+Pseudomonas phage 42
+Pseudomonas phage D3
+Pseudomonas phage D3112
+Pseudomonas phage DMS3
+Pseudomonas phage EL
+Pseudomonas phage F116
+Pseudomonas phage F116
+Pseudomonas phage F8
+Pseudomonas phage FHA0480
+Pseudomonas phage H66
+Pseudomonas phage LBL3
+Pseudomonas phage LKA1
+Pseudomonas phage LMA2
+Pseudomonas phage LPB1
+Pseudomonas phage LUZ24
+Pseudomonas phage Lin68
+Pseudomonas phage M6
+Pseudomonas phage MP22
+Pseudomonas phage MP29
+Pseudomonas phage MP38
+Pseudomonas phage PA1phi
+Pseudomonas phage PB1
+Pseudomonas phage PMG1
+Pseudomonas phage PaP3
+Pseudomonas phage Pf1
+Pseudomonas phage Pf2
+Pseudomonas phage Pf3
+Pseudomonas phage SN
+Pseudomonas phage Yua
+Pseudomonas phage phi6
+Pseudomonas phage phiCTX
+Pseudomonas phage phiKMV
+Pseudomonas phage phiKZ
+Pseudoplusia includens virus
+Psipapillomavirus 1
+Psittacid herpesvirus 1
+Psittaciform 1 bornavirus
+Psittacinepox virus
+Puma lentivirus
+Pumpkin yellow mosaic virus
+Punta Toro virus
+Puumala virus
+Pyrobaculum spherical virus
+Qalyub virus
+Quail pea mosaic virus
+Quailpox virus
+Quaranfil virus
+Rabbit fibroma virus
+Rabbit hemorrhagic disease virus
+Rabbit kidney vacuolating virus
+Rabbit picobirnavirus
+Rabies virus
+Raccoonpox virus
+Radish leaf curl virus
+Radish mosaic virus
+Radish yellow edge virus
+Ralstonia phage RSA1
+Ranid herpesvirus 1
+Ranid herpesvirus 2
+Ranunculus latent virus
+Ranunculus leaf distortion virus
+Ranunculus mild mosaic virus
+Ranunculus mosaic virus
+Ranunculus white mottle virus
+Raptor siadenovirus A
+Raspberry bushy dwarf virus
+Raspberry leaf blotch virus
+Raspberry leaf mottle virus
+Raspberry ringspot virus
+Rattail cactus necrosis-associated virus
+Red clover cryptic virus 2
+Red clover mottle virus
+Red clover necrotic mosaic virus
+Red clover vein mosaic virus
+Redspotted grouper nervous necrosis virus
+Rehmannia mosaic virus
+Reptilian orthoreovirus
+Reston ebolavirus
+Reticuloendotheliosis virus
+Rhinolophus bat coronavirus HKU2
+Rhinovirus A
+Rhinovirus B
+Rhinovirus C
+Rhizidiomyces virus
+Rhizoctonia solani virus 717
+Rhizosolenia setigera RNA virus 01
+Rhodococcus phage RER2
+Rhodococcus phage RGL3
+Rhododendron virus A
+Rhopalanthe virus Y
+Rhopalosiphum padi virus
+Rhopapillomavirus 1
+Rhynchosia golden mosaic Havana virus
+Rhynchosia golden mosaic Sinaloa virus
+Rhynchosia golden mosaic Yucatan virus
+Rhynchosia golden mosaic virus
+Rhynchosia mild mosaic virus
+Rhynchosia rugose golden mosaic virus
+Rhynchosia yellow mosaic virus
+Ribgrass mosaic virus
+Rice black streaked dwarf virus
+Rice dwarf virus
+Rice gall dwarf virus
+Rice grassy stunt virus
+Rice hoja blanca virus
+Rice necrosis mosaic virus
+Rice ragged stunt virus
+Rice stripe necrosis virus
+Rice stripe virus
+Rice tungro bacilliform virus
+Rice tungro spherical virus
+Rice yellow mottle virus
+Rice yellow stunt virus
+Rift Valley fever virus
+Rinderpest virus
+Rio Bravo virus
+Rio Mamore virus
+Rio Negro virus
+Rio Segundo virus
+Rodent erythroparvovirus 1
+Rodent protoparvovirus 1
+Rodent protoparvovirus 2
+Rosa rugosa leaf distortion virus
+Rosavirus A
+Rose leaf curl virus
+Rose rosette virus
+Rose spring dwarf-associated virus
+Rose yellow mosaic virus
+Rose yellow vein virus
+Rosellinia necatrix megabirnavirus 1
+Rosellinia necatrix partitivirus 2
+Rosellinia necatrix quadrivirus 1
+Rosellinia necatrix victorivirus 1
+Rosellinia necatrix virus 1
+Roseobacter phage SIO1
+Ross River virus
+Rotavirus A
+Rotavirus B
+Rotavirus C
+Rotavirus D
+Rotavirus E
+Rotavirus F
+Rotavirus G
+Rotavirus H
+Rous sarcoma virus
+Rousettus bat coronavirus HKU9
+Royal Farm virus
+Rubella virus
+Rubus canadensis virus 1
+Rubus yellow net virus
+Ryegrass cryptic virus
+Ryegrass mosaic virus
+Ryegrass mottle virus
+SFTS virus
+Saaremaa virus
+Sabi mammarenavirus
+Saboya virus
+Sacbrood virus
+Saccharomyces 20S RNA narnavirus
+Saccharomyces 23S RNA narnavirus
+Saccharomyces cerevisiae Ty1 virus
+Saccharomyces cerevisiae Ty2 virus
+Saccharomyces cerevisiae Ty3 virus
+Saccharomyces cerevisiae Ty4 virus
+Saccharomyces cerevisiae Ty5 virus
+Saccharomyces cerevisiae virus L-A
+Saccharomyces cerevisiae virus L-BC (La)
+Saccharum streak virus
+Saguaro cactus virus
+Saguinine herpesvirus 1
+Saimiriine herpesvirus 1
+Saimiriine herpesvirus 2
+Saimiriine herpesvirus 4
+Sakhalin virus
+Sakobuvirus A
+Sal Vieja virus
+Salehabad virus
+Salivirus A
+Salmon pancreas disease virus
+Salmonella phage Chi
+Salmonella phage Ent1
+Salmonella phage FSLSP030
+Salmonella phage FSLSP088
+Salmonella phage FelixO1
+Salmonella phage HK620
+Salmonella phage SE2
+Salmonella phage SETP3
+Salmonella phage SPN19
+Salmonella phage SS3e
+Salmonella phage ST64T
+Salmonella phage Sfp10
+Salmonella phage Sh19
+Salmonella phage Spc35
+Salmonella phage ViI
+Salmonella phage epsilon15
+Salmonella phage iEPS5
+Salmonella phage jersey
+Salmonella phage wksl3
+Salmonid herpesvirus 1
+Salmonid herpesvirus 2
+Salmonid herpesvirus 3
+Sammons's Opuntia virus
+San Perlita virus
+Sandfly fever Naples virus
+Sangassou virus
+Santee-Cooper ranavirus
+Sapelovirus A
+Sapelovirus B
+Sapporo virus
+Sarcochilus virus Y
+Sathuperi virus
+Satsuma dwarf virus
+Saumarez Reef virus
+Scallion mosaic virus
+Scheffersomyces segobiensis virus L
+Schefflera ringspot virus
+Schistocerca gregaria entomopoxvirus
+Schizosaccharomyces pombe Tf1 virus
+Schizosaccharomyces pombe Tf2 virus
+Schlumbergera virus X
+Sclerotinia sclerotiorum debilitation-associated RNA virus
+Scotophilus bat coronavirus 512
+Scrophularia mottle virus
+Sea trout rhabdovirus
+Semliki Forest virus
+Sendai virus
+Senecavirus A
+Senecio yellow mosaic virus
+Senegalvirus marseillevirus
+Seoul virus
+Sepik virus
+Sesbania mosaic virus
+Severe acute respiratory syndrome-related coronavirus
+Shallot latent virus
+Shallot virus X
+Shallot yellow stripe virus
+Shamonda virus
+Sheeppox virus
+Shigella phage Ag3
+Shigella phage EP23
+Shigella phage Sf6
+Shigella phage Shfl1
+Shimoni bat virus
+Shuni virus
+Sicinivirus A
+Sida golden mosaic Braco virus
+Sida golden mosaic Buckup virus
+Sida golden mosaic Costa Rica virus
+Sida golden mosaic Florida virus
+Sida golden mosaic Honduras virus
+Sida golden mosaic Liguanea virus
+Sida golden mosaic virus
+Sida golden mottle virus
+Sida golden yellow vein virus
+Sida leaf curl virus
+Sida micrantha mosaic virus
+Sida mosaic Alagoas virus
+Sida mosaic Bolivia virus 1
+Sida mosaic Bolivia virus 2
+Sida mosaic Sinaloa virus
+Sida mottle Alagoas virus
+Sida mottle virus
+Sida yellow blotch virus
+Sida yellow mosaic Alagoas virus
+Sida yellow mosaic China virus
+Sida yellow mosaic Yucatan virus
+Sida yellow mosaic virus
+Sida yellow mottle virus
+Sida yellow net virus
+Sida yellow vein Madurai virus
+Sida yellow vein Vietnam virus
+Sida yellow vein virus
+Siegesbeckia yellow vein Guangxi virus
+Siegesbeckia yellow vein virus
+Sierra Nevada nyavirus
+Sigmapapillomavirus 1
+Simbu virus
+Simian foamy virus
+Simian hemorrhagic fever virus
+Simian immunodeficiency virus
+Simian mastadenovirus A
+Simian virus 10
+Simian virus 12
+Simian virus 40
+Simian virus 41
+Sin Nombre virus
+Sindbis virus
+Sint-Jan's onion latent virus
+Sitke waterborne virus
+Skua siadenovirus A
+Skunkpox virus
+Slow bee paralysis virus
+Snake atadenovirus A
+Snakehead virus
+Snyder-Theilen feline sarcoma virus
+Sodalis phage SO1
+Soil-borne cereal mosaic virus
+Soil-borne wheat mosaic virus
+Solanum nodiflorum mottle virus
+Solanum tuberosum Tst1 virus
+Solenopsis invicta virus-1
+Sonchus virus
+Sonchus yellow net virus
+Sorghum chlorotic spot virus
+Sorghum mosaic virus
+South African cassava mosaic virus
+Southern bean mosaic virus
+Southern cowpea mosaic virus
+Southern elephant seal virus
+Southern tomato virus
+Sowbane mosaic virus
+Sowthistle yellow vein virus
+Soybean Putnam virus
+Soybean blistering mosaic virus
+Soybean chlorotic mottle virus
+Soybean chlorotic spot virus
+Soybean crinkle leaf virus
+Soybean cyst nematode virus
+Soybean dwarf virus
+Soybean mild mottle virus
+Soybean mosaic virus
+Soybean yellow mottle mosaic virus
+Sparrowpox virus
+Spartina mottle virus
+Sphaeropsis sapinea RNA virus 1
+Sphaeropsis sapinea RNA virus 2
+Spilanthes yellow vein virus
+Spinach curly top Arizona virus
+Spinach latent virus
+Spinach severe curly top virus
+Spinach temperate virus
+Spiraea yellow leaf spot virus
+Spiranthes mosaic virus 3
+Spiroplasma phage 1-C74
+Spiroplasma phage 1-KC3
+Spiroplasma phage 1-R8A2B
+Spiroplasma phage 1-S102
+Spiroplasma phage 1-T78
+Spiroplasma phage 1-aa
+Spiroplasma phage 4
+Spodoptera exigua multiple nucleopolyhedrovirus
+Spodoptera frugiperda ascovirus 1a
+Spodoptera frugiperda multiple nucleopolyhedrovirus
+Spodoptera littoralis nucleopolyhedrovirus
+Spodoptera litura nucleopolyhedrovirus
+Sporolobus striate mosaic virus 1
+Sporolobus striate mosaic virus 2
+Spring beauty latent virus
+Spring viraemia of carp virus
+Squamate dependoparvovirus 1
+Squash leaf curl China virus
+Squash leaf curl Philippines virus
+Squash leaf curl Yunnan virus
+Squash leaf curl virus
+Squash mild leaf curl virus
+Squash mosaic virus
+Squash vein yellowing virus
+Squirrel fibroma virus
+Squirrel monkey retrovirus
+Squirrelpox virus
+Sri Lankan cassava mosaic virus
+St Croix River virus
+St. Louis encephalitis virus
+Stachytarpheta leaf curl virus
+Staphylococcus phage 11
+Staphylococcus phage 13
+Staphylococcus phage 187
+Staphylococcus phage 29
+Staphylococcus phage 37
+Staphylococcus phage 3a
+Staphylococcus phage 42e
+Staphylococcus phage 44AHJD
+Staphylococcus phage 47
+Staphylococcus phage 52a
+Staphylococcus phage 53
+Staphylococcus phage 55
+Staphylococcus phage 69
+Staphylococcus phage 71
+Staphylococcus phage 77
+Staphylococcus phage 80
+Staphylococcus phage 80alpha
+Staphylococcus phage 85
+Staphylococcus phage 88
+Staphylococcus phage 92
+Staphylococcus phage 96
+Staphylococcus phage Cnph82
+Staphylococcus phage Ew
+Staphylococcus phage G1
+Staphylococcus phage Ipla35
+Staphylococcus phage Ipla5
+Staphylococcus phage Ipla7
+Staphylococcus phage Ipla88
+Staphylococcus phage K
+Staphylococcus phage Ph15
+Staphylococcus phage Phi12
+Staphylococcus phage Phieta
+Staphylococcus phage Phieta2
+Staphylococcus phage Phieta3
+Staphylococcus phage Pvl108
+Staphylococcus phage Sap26
+Staphylococcus phage Slt
+Staphylococcus phage Twort
+Staphylococcus phage X2
+Staphylococcus phage phimr11
+Staphylococcus phage phimr25
+Staphylococcus phage phinm1
+Staphylococcus phage phinm2
+Staphylococcus phage phinm4
+Starling circovirus
+Starlingpox virus
+Stocky prune virus
+Strawberry chlorotic fleck-associated virus
+Strawberry crinkle virus
+Strawberry latent ringspot virus
+Strawberry mild yellow edge virus
+Strawberry mottle virus
+Strawberry necrotic shock virus
+Strawberry pallidosis-associated virus
+Strawberry pseudo mild yellow edge virus
+Strawberry vein banding virus
+Streptocarpus flower break virus
+Streptococcus phage 2972
+Streptococcus phage 7201
+Streptococcus phage 858
+Streptococcus phage Abc2
+Streptococcus phage Alq132
+Streptococcus phage C1
+Streptococcus phage Cp-1
+Streptococcus phage DT1
+Streptococcus phage O1205
+Streptococcus phage SPQS1
+Streptococcus phage Sfi11
+Streptococcus phage Sfi19
+Streptococcus phage Sfi21
+Streptomyces phage TG1
+Streptomyces phage phiC31
+Streptomyces phage phibt1
+Striped jack nervous necrosis virus
+Sturgeon ichtadenovirus A
+Suakwa aphid-borne yellows virus
+Subterranean clover mottle virus
+Subterranean clover stunt virus
+Sudan ebolavirus
+Sugarcane bacilliform IM virus
+Sugarcane bacilliform MO virus
+Sugarcane mosaic virus
+Sugarcane streak Egypt virus
+Sugarcane streak Reunion virus
+Sugarcane streak mosaic virus
+Sugarcane streak virus
+Sugarcane striate mosaic-associated virus
+Sugarcane yellow leaf virus
+Suid herpesvirus 1
+Suid herpesvirus 2
+Suid herpesvirus 3
+Suid herpesvirus 4
+Suid herpesvirus 5
+Sulfolobus islandicus filamentous virus
+Sulfolobus islandicus rod-shaped virus 1
+Sulfolobus islandicus rod-shaped virus 2
+Sulfolobus newzealandicus droplet-shaped virus
+Sulfolobus spindle-shaped virus 1
+Sulfolobus spindle-shaped virus 2
+Sulfolobus spindle-shaped virus 4
+Sulfolobus spindle-shaped virus 5
+Sulfolobus spindle-shaped virus 6
+Sulfolobus spindle-shaped virus 7
+Sulfolobus spindle-shaped virus 8
+Sulfolobus spindle-shaped virus 9
+Sulfolobus turreted icosahedral virus 1
+Sulfolobus turreted icosahedral virus 2
+Sunflower chlorotic mottle virus
+Sunflower mosaic virus
+Sunn-hemp mosaic virus
+Swan circovirus
+Sweet clover necrotic mosaic virus
+Sweet potato C6 virus
+Sweet potato chlorotic fleck virus
+Sweet potato chlorotic stunt virus
+Sweet potato collusive virus
+Sweet potato feathery mottle virus
+Sweet potato latent virus
+Sweet potato leaf curl Canary virus
+Sweet potato leaf curl China virus
+Sweet potato leaf curl Georgia virus
+Sweet potato leaf curl Sao Paulo virus
+Sweet potato leaf curl South Carolina virus
+Sweet potato leaf curl Uganda virus
+Sweet potato leaf curl virus
+Sweet potato leaf speckling virus
+Sweet potato mild mottle virus
+Sweet potato mild speckling virus
+Sweet potato mosaic virus
+Sweet potato pakakuy virus
+Sweet potato vein clearing virus
+Sweet potato virus 2
+Sweet potato virus C
+Sweet potato virus G
+Swinepox virus
+Synechococcus phage P60
+Synechococcus phage syn5
+Synetaeris tenuifemur ichnovirus
+Tacaiuma virus
+Tacaribe mammarenavirus
+Tai Forest ebolavirus
+Takifugu rubripes Sushi virus
+Tall oatgrass mosaic virus
+Tamiami mammarenavirus
+Tamus red mosaic virus
+Tanapox virus
+Taro bacilliform virus
+Taro vein chlorosis virus
+Taterapox virus
+Taupapillomavirus 1
+Taupapillomavirus 2
+Taura syndrome virus
+Telfairia mosaic virus
+Tellina virus
+Telosma mosaic virus
+Tembusu virus
+Teschovirus A
+Tete virus
+Thailand virus
+Thermoproteus tenax spherical virus 1
+Thermoproteus tenax virus 1
+Thermus phage P2345
+Thermus phage P37-14
+Thermus phage P7426
+Thermus thermophilus bacteriophage p23-77
+Thermus thermophilus phagein in93
+Thetapapillomavirus 1
+Thiafora virus
+Thimiri virus
+Thin paspalum asymptomatic virus
+Thistle mottle virus
+Thogoto virus
+Thosea asigna virus
+Thottapalayam virus
+Thrush coronavirus HKU12
+Thunberg fritillary mosaic virus
+Thysanoplusia orichalcea nucleopolyhedrovirus
+Tibrogargan virus
+Tick-borne encephalitis virus
+Tiger puffer nervous necrosis virus
+Timboteua virus
+Tobacco bushy top virus
+Tobacco curly shoot virus
+Tobacco etch virus
+Tobacco latent virus
+Tobacco leaf curl Cuba virus
+Tobacco leaf curl Japan virus
+Tobacco leaf curl Pusa virus
+Tobacco leaf curl Thailand virus
+Tobacco leaf curl Yunnan virus
+Tobacco leaf curl Zimbabwe virus
+Tobacco leaf rugose virus
+Tobacco mild green mosaic virus
+Tobacco mosaic virus
+Tobacco mottle leaf curl virus
+Tobacco mottle virus
+Tobacco necrosis virus A
+Tobacco necrosis virus D
+Tobacco necrotic dwarf virus
+Tobacco rattle virus
+Tobacco ringspot virus
+Tobacco streak virus
+Tobacco vein banding mosaic virus
+Tobacco vein clearing virus
+Tobacco vein distorting virus
+Tobacco vein mottling virus
+Tobacco yellow crinkle virus
+Tobacco yellow dwarf virus
+Tolypocladium cylindrosporum virus 1
+Tomato apical stunt viroid
+Tomato aspermy virus
+Tomato black ring virus
+Tomato bushy stunt virus
+Tomato chino La Paz virus
+Tomato chlorosis virus
+Tomato chlorotic dwarf viroid
+Tomato chlorotic leaf distortion virus
+Tomato chlorotic mottle virus
+Tomato chlorotic spot virus
+Tomato common mosaic virus
+Tomato curly stunt virus
+Tomato dwarf leaf virus
+Tomato golden mosaic virus
+Tomato golden mottle virus
+Tomato golden vein virus
+Tomato infectious chlorosis virus
+Tomato leaf curl Anjouan virus
+Tomato leaf curl Arusha virus
+Tomato leaf curl Bangalore virus
+Tomato leaf curl Bangladesh virus
+Tomato leaf curl Cebu virus
+Tomato leaf curl China virus
+Tomato leaf curl Comoros virus
+Tomato leaf curl Diana virus
+Tomato leaf curl Ghana virus
+Tomato leaf curl Guangdong virus
+Tomato leaf curl Guangxi virus
+Tomato leaf curl Gujarat virus
+Tomato leaf curl Hainan virus
+Tomato leaf curl Hanoi virus
+Tomato leaf curl Hsinchu virus
+Tomato leaf curl Iran virus
+Tomato leaf curl Java virus
+Tomato leaf curl Joydebpur virus
+Tomato leaf curl Karnataka virus
+Tomato leaf curl Kerala virus
+Tomato leaf curl Kumasi virus
+Tomato leaf curl Laos virus
+Tomato leaf curl Madagascar virus
+Tomato leaf curl Malaysia virus
+Tomato leaf curl Mali virus
+Tomato leaf curl Mindanao virus
+Tomato leaf curl Moheli virus
+Tomato leaf curl Namakely virus
+Tomato leaf curl New Delhi virus
+Tomato leaf curl Nigeria virus
+Tomato leaf curl Oman virus
+Tomato leaf curl Philippines virus
+Tomato leaf curl Pune virus
+Tomato leaf curl Seychelles virus
+Tomato leaf curl Sinaloa virus
+Tomato leaf curl Sri Lanka virus
+Tomato leaf curl Sudan virus
+Tomato leaf curl Taiwan virus
+Tomato leaf curl Toliara virus
+Tomato leaf curl Uganda virus
+Tomato leaf curl Vietnam virus
+Tomato leaf curl virus
+Tomato leaf deformation virus
+Tomato leaf distortion virus
+Tomato marchitez virus
+Tomato mild mosaic virus
+Tomato mild mottle virus
+Tomato mild yellow leaf curl Aragua virus
+Tomato mosaic Havana virus
+Tomato mosaic leaf curl virus
+Tomato mosaic virus
+Tomato mottle Taino virus
+Tomato mottle leaf curl virus
+Tomato mottle mosaic virus
+Tomato mottle virus
+Tomato necrotic stunt virus
+Tomato planta macho viroid
+Tomato pseudo-curly top virus
+Tomato ringspot virus
+Tomato rugose mosaic virus
+Tomato rugose yellow leaf curl virus
+Tomato severe leaf curl virus
+Tomato severe rugose virus
+Tomato spotted wilt virus
+Tomato torrado virus
+Tomato yellow leaf curl Axarquia virus
+Tomato yellow leaf curl China virus
+Tomato yellow leaf curl Guangdong virus
+Tomato yellow leaf curl Indonesia virus
+Tomato yellow leaf curl Kanchanaburi virus
+Tomato yellow leaf curl Malaga virus
+Tomato yellow leaf curl Mali virus
+Tomato yellow leaf curl Sardinia virus
+Tomato yellow leaf curl Thailand virus
+Tomato yellow leaf curl Vietnam virus
+Tomato yellow leaf curl virus
+Tomato yellow leaf distortion virus
+Tomato yellow margin leaf curl virus
+Tomato yellow mottle virus
+Tomato yellow spot virus
+Tomato yellow vein streak virus
+Tonate virus
+Topografov virus
+Torque teno canis virus
+Torque teno douroucouli virus
+Torque teno felis virus
+Torque teno felis virus 2
+Torque teno midi virus 1
+Torque teno midi virus 10
+Torque teno midi virus 11
+Torque teno midi virus 12
+Torque teno midi virus 13
+Torque teno midi virus 14
+Torque teno midi virus 15
+Torque teno midi virus 2
+Torque teno midi virus 3
+Torque teno midi virus 4
+Torque teno midi virus 5
+Torque teno midi virus 6
+Torque teno midi virus 7
+Torque teno midi virus 8
+Torque teno midi virus 9
+Torque teno mini virus 1
+Torque teno mini virus 10
+Torque teno mini virus 11
+Torque teno mini virus 12
+Torque teno mini virus 2
+Torque teno mini virus 3
+Torque teno mini virus 4
+Torque teno mini virus 5
+Torque teno mini virus 6
+Torque teno mini virus 7
+Torque teno mini virus 8
+Torque teno mini virus 9
+Torque teno sus virus 1a
+Torque teno sus virus 1b
+Torque teno sus virus k2
+Torque teno tamarin virus
+Torque teno tupaia virus
+Torque teno virus 1
+Torque teno virus 10
+Torque teno virus 11
+Torque teno virus 12
+Torque teno virus 13
+Torque teno virus 14
+Torque teno virus 15
+Torque teno virus 16
+Torque teno virus 17
+Torque teno virus 18
+Torque teno virus 19
+Torque teno virus 2
+Torque teno virus 20
+Torque teno virus 21
+Torque teno virus 22
+Torque teno virus 23
+Torque teno virus 24
+Torque teno virus 25
+Torque teno virus 26
+Torque teno virus 27
+Torque teno virus 28
+Torque teno virus 29
+Torque teno virus 3
+Torque teno virus 4
+Torque teno virus 5
+Torque teno virus 6
+Torque teno virus 7
+Torque teno virus 8
+Torque teno virus 9
+Torque teno zalophus virus 1
+Tradescantia mild mosaic virus
+Trager duck spleen necrosis virus
+Trailing lespedeza virus 1
+Tranosema rostrale bracovirus
+Tree shrew mastadenovirus A
+Tremovirus A
+Triatoma virus
+Tribolium castaneum Woot virus
+Trichomonas vaginalis virus 1
+Trichomonas vaginalis virus 2
+Trichomonas vaginalis virus 3
+Trichomonas vaginalis virus 4
+Trichoplusia ni TED virus
+Trichoplusia ni ascovirus 2a
+Trichoplusia ni granulovirus
+Trichoplusia ni single nucleopolyhedrovirus
+Trichoplusia ni virus
+Tripneustis gratilla SURL virus
+Triticum aestivum WIS-2 virus
+Triticum mosaic virus
+Trocara virus
+Tropaeolum mosaic virus
+Tropical soda apple mosaic virus
+Tuber aestivum virus 1
+Tuberose mild mosaic virus
+Tuberose mild mottle virus
+Tula virus
+Tulare apple mosaic virus
+Tulip breaking virus
+Tulip mild mottle mosaic virus
+Tulip mosaic virus
+Tulip virus X
+Tunisvirus
+Tupaia virus
+Tupaiid herpesvirus 1
+Turkey aviadenovirus B
+Turkey siadenovirus A
+Turkeypox virus
+Turlock virus
+Turnip crinkle virus
+Turnip curly top virus
+Turnip mosaic virus
+Turnip rosette virus
+Turnip vein-clearing virus
+Turnip yellow mosaic virus
+Turnip yellows virus
+Twisted-stalk chlorotic streak virus
+Tylonycteris bat coronavirus HKU4
+Tyuleniy virus
+UR2 sarcoma virus
+Uganda S virus
+Ugandan cassava brown streak virus
+Ullucus mild mottle virus
+Ullucus virus C
+Umatilla virus
+Una virus
+Ungulate bocaparvovirus 1
+Ungulate bocaparvovirus 2
+Ungulate bocaparvovirus 3
+Ungulate bocaparvovirus 4
+Ungulate bocaparvovirus 5
+Ungulate copiparvovirus 1
+Ungulate copiparvovirus 2
+Ungulate erythroparvovirus 1
+Ungulate protoparvovirus 1
+Ungulate tetraparvovirus 1
+Ungulate tetraparvovirus 2
+Ungulate tetraparvovirus 3
+Ungulate tetraparvovirus 4
+Upsilonpapillomavirus 1
+Upsilonpapillomavirus 2
+Upsilonpapillomavirus 3
+Urochloa hoja blanca virus
+Urochloa streak virus
+Ustilago maydis virus H1
+Usutu virus
+Uukuniemi virus
+Vaccinia virus
+Vallota mosaic virus
+Variola virus
+Varroa destructor virus-1
+Velvet tobacco mottle virus
+Venezuelan equine encephalitis virus
+Verbena latent virus
+Verbena virus Y
+Vernonia yellow vein virus
+Verticillium dahliae chrysovirus 1
+Vesicular exanthema of swine virus
+Vesicular stomatitis Alagoas virus
+Vesicular stomatitis Indiana virus
+Vesicular stomatitis New Jersey virus
+Vibrio phage 149 (type IV)
+Vibrio phage 493
+Vibrio phage CTX
+Vibrio phage K139
+Vibrio phage KVP40
+Vibrio phage Kappa
+Vibrio phage VP882
+Vibrio phage VSK
+Vibrio phage Vf12
+Vibrio phage Vf33
+Vibrio phage VpV262
+Vibrio phage fs1
+Vibrio phage fs2
+Vibrio phage nt-1
+Vibrio phage v6
+Vicia cryptic virus
+Vicia cryptic virus M
+Vicia faba endornavirus
+Viper retrovirus
+Viral hemorrhagic septicemia virus
+Visna/maedi virus
+Voandzeia necrotic mosaic virus
+Volepox virus
+Volvox carteri Lueckenbuesser virus
+Volvox carteri Osser virus
+Wad Medani virus
+Wallal virus
+Walleye dermal sarcoma virus
+Walleye epidermal hyperplasia virus 1
+Walleye epidermal hyperplasia virus 2
+Warrego virus
+Wasabi mottle virus
+Waterbird 1 bornavirus
+Watermelon bud necrosis virus
+Watermelon chlorotic stunt virus
+Watermelon leaf mottle virus
+Watermelon mosaic virus
+Watermelon silver mottle virus
+Weddel waterborne virus
+Wesselsbron virus
+West African Asystasia virus 1
+West African Asystasia virus 2
+West Caucasian bat virus
+West Nile virus
+Western equine encephalitis virus
+Whataroa virus
+Wheat American striate mosaic virus
+Wheat dwarf India virus
+Wheat dwarf virus
+Wheat eqlid mosaic virus
+Wheat spindle streak mosaic virus
+Wheat streak mosaic virus
+Wheat yellow leaf virus
+Wheat yellow mosaic virus
+White bream virus
+White clover cryptic virus 1
+White clover cryptic virus 2
+White clover cryptic virus 3
+White clover mosaic virus
+White spot syndrome virus
+Whitewater Arroyo mammarenavirus
+Wild cucumber mosaic virus
+Wild potato mosaic virus
+Wild tomato mosaic virus
+Wiseana signata nucleopolyhedrovirus
+Wissadula golden mosaic virus
+Wisteria vein mosaic virus
+Wongabel virus
+Wongorr virus
+Woodchuck hepatitis virus
+Woolly monkey hepatitis B virus
+Woolly monkey sarcoma virus
+Wound tumor virus
+Wyeomyia virus
+Xanthomonas phage CP1
+Xanthomonas phage Cf16
+Xanthomonas phage Cf1c
+Xanthomonas phage Cf1t
+Xanthomonas phage Cf1tv
+Xanthomonas phage Lf
+Xanthomonas phage OP1
+Xanthomonas phage OP2
+Xanthomonas phage Xf
+Xanthomonas phage Xfo
+Xanthomonas phage Xfv
+Xanthomonas phage Xop411
+Xanthomonas phage Xp10
+Xanthomonas phage phil7
+Xanthophyllomyces dendrorhous virus L1A
+Xanthophyllomyces dendrorhous virus L1B
+Xestia c-nigrum granulovirus
+Xipapillomavirus 1
+Xipapillomavirus 2
+Y73 sarcoma virus
+Yaba monkey tumor virus
+Yam mild mosaic virus
+Yam mosaic virus
+Yambean mosaic virus
+Yaounde virus
+Yellow fever virus
+Yellow oat-grass mosaic virus
+Yellow tailflower mild mottle virus
+Yellowtail ascites virus
+Yersinia phage L-413C
+Yokose virus
+Youcai mosaic virus
+Yunnan orbivirus
+Zaire ebolavirus
+Zantedeschia mild mosaic virus
+Zea mays Hopscotch virus
+Zea mays Opie-2 virus
+Zea mays Prem-2 virus
+Zea mays Sto-4 virus
+Zea mosaic virus
+Zegla virus
+Zetapapillomavirus 1
+Zika virus
+Zucchini green mottle mosaic virus
+Zucchini lethal chlorosis virus
+Zucchini tigre mosaic virus
+Zucchini yellow fleck virus
+Zucchini yellow mosaic virus
+Zygocactus virus X
 
 #Honeysuckle yellow vein mosaic disease associated satellite Dna beta
 #Double-stranded satellite RNAs
