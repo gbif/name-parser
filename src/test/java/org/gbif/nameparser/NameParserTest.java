@@ -661,6 +661,21 @@ public class NameParserTest {
         }
     }
 
+    /**
+     * http://dev.gbif.org/issues/browse/POR-2459
+     */
+    @Test
+    public void testEbiUncultured() throws Exception {
+        assertUnparsableType(NameType.PLACEHOLDER, "uncultured Verrucomicrobiales bacterium");
+        assertUnparsableType(NameType.PLACEHOLDER, "uncultured Verrucomicrobium sp.");
+        assertUnparsableType(NameType.PLACEHOLDER, "uncultured Verrucomicrobia bacterium");
+        assertUnparsableType(NameType.PLACEHOLDER, "uncultured Vibrio sp.");
+        assertUnparsableType(NameType.PLACEHOLDER, "uncultured Wilcoxina");
+        assertUnparsableType(NameType.PLACEHOLDER, "uncultured zygomycete");
+        assertUnparsableType(NameType.PLACEHOLDER, "uncultured Yonghaparkia sp");
+        assertUnparsableType(NameType.PLACEHOLDER, "uncultured virus");
+    }
+
     @Test
     public void testRNANames() throws Exception {
         ParsedName pn = parser.parse("Calathus (Lindrothius) KURNAKOV 1961", null);

@@ -514,6 +514,11 @@ public class NameParser {
       LOG.debug("Strain: {}", m.group(2));
     }
 
+    // detect unparsable names
+    if (PLACEHOLDER.matcher(name).find()) {
+      throw new UnparsableException(NameType.PLACEHOLDER, scientificName);
+    }
+
     if (IS_VIRUS_PATTERN.matcher(name).find() || IS_VIRUS_PATTERN_CASE_SENSITIVE.matcher(name).find()) {
       throw new UnparsableException(NameType.VIRUS, scientificName);
     }
@@ -540,10 +545,6 @@ public class NameParser {
       LOG.debug("Cultivar: {}", pn.getCultivarEpithet());
     }
 
-    // detect unparsable names
-    if (PLACEHOLDER.matcher(name).find()) {
-      throw new UnparsableException(NameType.PLACEHOLDER, scientificName);
-    }
     // name without any latin char letter at all?
     if (NO_LETTERS.matcher(name).find()) {
       throw new UnparsableException(NameType.NO_NAME, scientificName);
