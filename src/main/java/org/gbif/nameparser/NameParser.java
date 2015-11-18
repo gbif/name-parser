@@ -101,7 +101,6 @@ public class NameParser {
   private static final Pattern NORM_SUBGENUS = Pattern.compile("(" + MONOMIAL + ") (" + MONOMIAL + ") ([" + name_letters + "+-]{5,})");
   private static final Pattern NO_Q_MARKS = Pattern.compile("([" + author_letters + "])\\?+");
   private static final Pattern NORM_COMMAS = Pattern.compile("\\s*,+");
-  private static final String AUTHOR_STRONG = "[" + AUTHOR_LETTERS + "]+[" + author_letters + "]{2,}\\.?";
   // TODO: this next regex gets real slow with long list of authors - needs fixing !!!
   private static final Pattern NORM_ORIG_AUTH =
     Pattern.compile("(?<=[ \\(])(" + AUTHOR_TEAM + ") ?\\( ?(" + YEAR + ")\\)");
