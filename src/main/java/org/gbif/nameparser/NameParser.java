@@ -94,7 +94,7 @@ public class NameParser {
   private static final Pattern NORM_BRACKETS_CLOSE = Pattern.compile(",?\\s*([})\\]])");
   private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("( ?[{(\\[] ?)+");
   private static final Pattern NORM_BRACKETS_CLOSE_STRONG = Pattern.compile("( ?[})\\]] ?)+");
-  private static final Pattern NORM_AND = Pattern.compile(" (and|et|und|&amp;) ");
+  private static final Pattern NORM_AND = Pattern.compile(" (and|et|und) ");
   private static final Pattern NORM_ET_AL = Pattern.compile("(?:& )+al\\.?");
   private static final Pattern NORM_AMPERSAND_WS = Pattern.compile("&");
   private static final Pattern NORM_HYPHENS = Pattern.compile("\\s*-\\s*");
@@ -131,7 +131,7 @@ public class NameParser {
   private static final Pattern BAD_NAME_SUFFICES = Pattern.compile(" (author|unknown|unassigned|not_stated)$", CASE_INSENSITIVE);
   private static final Pattern XML_ENTITY_STRIP = Pattern.compile("&\\s*([a-z]+)\\s*;");
   // matches badly formed amoersands which are important in names / authorships
-  private static final Pattern AMPERSAND_ENTITY = Pattern.compile("& +amp +");
+  private static final Pattern AMPERSAND_ENTITY = Pattern.compile("& *amp +");
 
   private static final Pattern XML_TAGS = Pattern.compile("< */? *[a-zA-Z] *>");
   private static final Pattern FIRST_WORD = Pattern.compile("^([×xX]\\s+)?([×x][A-Z])?([a-zA-Z])([a-zA-Z]+) ");
