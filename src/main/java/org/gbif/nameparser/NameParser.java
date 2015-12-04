@@ -95,7 +95,7 @@ public class NameParser {
   private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("( ?[{(\\[] ?)+");
   private static final Pattern NORM_BRACKETS_CLOSE_STRONG = Pattern.compile("( ?[})\\]] ?)+");
   private static final Pattern NORM_AND = Pattern.compile(" (and|et|und|&amp;) ");
-  private static final Pattern NORM_ET_AL = Pattern.compile("& al\\.?");
+  private static final Pattern NORM_ET_AL = Pattern.compile("(?:& )+al\\.?");
   private static final Pattern NORM_AMPERSAND_WS = Pattern.compile("&");
   private static final Pattern NORM_HYPHENS = Pattern.compile("\\s*-\\s*");
   private static final Pattern NORM_SUBGENUS = Pattern.compile("(" + MONOMIAL + ") (" + MONOMIAL + ") ([" + name_letters + "+-]{5,})");

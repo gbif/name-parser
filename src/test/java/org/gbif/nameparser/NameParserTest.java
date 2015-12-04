@@ -1926,7 +1926,28 @@ public class NameParserTest {
 
     }
 
-    @Test
+
+  /**
+   * http://dev.gbif.org/issues/browse/POR-2988
+   */
+  @Test
+  public void testDoubleEtAl() throws Exception {
+    ParsedName pn = parser.parse("Hymenopus coronatoides Wang & et al., 1994", null);
+    assertEquals("Hymenopus", pn.getGenusOrAbove());
+    assertEquals("coronatoides", pn.getSpecificEpithet());
+    assertEquals("Wang et al.", pn.getAuthorship());
+    assertEquals("1994", pn.getYear());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Hymenopus coronatoides Wang & & et & al., 1994", null);
+    assertEquals("Hymenopus", pn.getGenusOrAbove());
+    assertEquals("coronatoides", pn.getSpecificEpithet());
+    assertEquals("Wang et al.", pn.getAuthorship());
+    assertEquals("1994", pn.getYear());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+  }
+
+  @Test
     public void testViralNames() throws Exception {
         assertTrue(isViralName("Vibrio phage 149 (type IV)"));
         assertTrue(isViralName("Cactus virus 2"));
@@ -2031,22 +2052,8 @@ public class NameParserTest {
     @Ignore
     public void manuallyTestProblematicName() throws Exception {
         for (String n : new String[]{
-                "Tragacantha leporina (?) Kuntze",
-                "Lachenalia tricolor var. nelsonii (anon.) Baker",
-                "Lachenalia tricolor var. nelsonii (ht.) Baker",
-                "Lachenalia tricolor var. nelsonii (hort.) Baker",
-                "Puya acris ht.",
-                "Puya acris hort.",
-                "Cortinarius angulatus B gracilescens Fr. 1838",
-                "Salmonella werahensis (Castellani) Hauduroy and Ehringer in Hauduroy 1937",
-                "Asplenium X inexpectatum (E.L. Braun 1940) Morton (1956)",
-                "Geranium exili Standl. in R. Knuth",
-                "Lestodiplosis cryphali Kieffer 1894 1901",
-                "Cathormiocerus inflatiscapus Escalera, M.M. de la 1918",
-                "Coracopsis nigra sibilans Milne-Edwards & OuStalet, 1885",
-                "Trichoglossus haematodus deplanchii J. Verreaux & Des Murs, 1860",
-                "Anolis porcatus aracelyae Perez-Beato, 1996",
-                "Anolis marmoratus girafus Lazell, 1964"
+            "Severinia turcomaniae amplialata Unknown, 1921",
+            "Tipula (Unplaced) fumipennis Alexander, 1912",
         }) {
             System.out.println(parser.parse(n, null));
         }
