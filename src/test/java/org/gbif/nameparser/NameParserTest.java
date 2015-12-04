@@ -1781,8 +1781,6 @@ public class NameParserTest {
         NameParser.normalizeStrong("Nuculoidea Williams et  Breger 1916  "));
     assertEquals("Nuculoidea behrens var. christoph Williams & Breger, 1916",
         NameParser.normalizeStrong("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
-    assertEquals("N. behrens Williams & Breger, 1916",
-        NameParser.normalizeStrong("  N.behrens Williams &amp;  Breger , 1916  "));
     assertEquals("Nuculoidea Williams & Breger, 1916",
         NameParser.normalizeStrong(" 'Nuculoidea Williams & Breger, 1916'"));
     assertEquals("Malacocarpus schumannianus (Nicolai, 1893) Britton & Rose",
@@ -1796,7 +1794,13 @@ public class NameParserTest {
         NameParser.normalizeStrong("Leucanitis roda Herrich-Schäffer (1851) 1845"));
     assertEquals("Astelia alpina var. novae-hollandiae",
         NameParser.normalizeStrong("Astelia alpina var. novae-hollandiae"));
-
+    // ampersand entities are handled as part of the regular html entity escaping:
+    assertEquals("N. behrens Williams & amp; Breger, 1916",
+        NameParser.normalizeStrong("  N.behrens Williams &amp;  Breger , 1916  "));
+    assertEquals("N.behrens Williams & Breger , 1916",
+        NameParser.preClean("  N.behrens Williams &amp;  Breger , 1916  "));
+    assertEquals("N. behrens Williams & Breger, 1916",
+        NameParser.normalizeStrong(NameParser.preClean("  N.behrens Williams &amp;  Breger , 1916  ")));
   }
 
   @Test
