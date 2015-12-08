@@ -587,12 +587,13 @@ public class NameParserTest {
     assertNull(pn.getRank());
     assertNull(pn.getAuthorship());
 
-    pn = parser.parse("†Gryllavoidea", null);
-    assertEquals("Gryllavoidea", pn.getGenusOrAbove());
+    pn = parser.parse("† Tuarangiida MacKinnon, 1982", null);
+    assertEquals("Tuarangiida", pn.getGenusOrAbove());
     assertNull(pn.getSpecificEpithet());
     assertNull(pn.getInfraSpecificEpithet());
-    assertEquals(Rank.SUPERFAMILY, pn.getRank());
-    assertNull(pn.getAuthorship());
+    assertNull(pn.getRank());
+    assertEquals("MacKinnon", pn.getAuthorship());
+    assertEquals("1982", pn.getYear());
   }
 
   @Test
