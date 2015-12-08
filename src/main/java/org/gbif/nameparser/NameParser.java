@@ -44,6 +44,9 @@ public class NameParser {
   // this is only used to detect whether we have a hybrid formula. If not, all markers are normalised
   public static final String HYBRID_MARKER = "×";
   public static final Pattern HYBRID_FORMULA_PATTERN = Pattern.compile(" " + HYBRID_MARKER + " ");
+  public static final String EXTINCT_MARKER = "†";
+  private static final Pattern EXTINCT_PATTERN = Pattern.compile(EXTINCT_MARKER + "\\s*");
+
   protected static final Pattern CULTIVAR =
     Pattern.compile("(?: cv\\.? ?)?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
 
@@ -493,6 +496,9 @@ public class NameParser {
 
     // clean name, removing seriously wrong things
     String name = preClean(scientificName);
+
+    // remove extinct markers
+    name = EXTINCT_PATTERN.matcher(name).replaceFirst("");
 
     // before any cleaning test for properly quoted candidate names
     Matcher m = IS_CANDIDATUS_QUOTE_PATTERN.matcher(scientificName);

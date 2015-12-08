@@ -579,6 +579,23 @@ public class NameParserTest {
   }
 
   @Test
+  public void testExtinctNames() throws Exception {
+    ParsedName pn = parser.parse("†Titanoptera", null);
+    assertEquals("Titanoptera", pn.getGenusOrAbove());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getRank());
+    assertNull(pn.getAuthorship());
+
+    pn = parser.parse("†Gryllavoidea", null);
+    assertEquals("Gryllavoidea", pn.getGenusOrAbove());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertEquals(Rank.SUPERFAMILY, pn.getRank());
+    assertNull(pn.getAuthorship());
+  }
+
+  @Test
   public void testApostropheEpithets() throws Exception {
     ParsedName pn = parser.parse("Junellia o'donelli Moldenke, 1946", null);
     assertEquals("Junellia", pn.getGenusOrAbove());
