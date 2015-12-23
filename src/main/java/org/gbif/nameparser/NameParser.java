@@ -661,13 +661,21 @@ public class NameParser {
     return pn;
   }
 
-  private void postAssertParsing(ParsedName pn, final String rawName, final String normedName)
-    throws UnparsableException {
+  private void postAssertParsing(ParsedName pn, final String rawName, final String normedName) throws UnparsableException {
     // if we only match a monomial in the 3rd pass its suspicious
-    if (pn.getGenusOrAbove() != null && !pn.isBinomial()) {
+    if (pn.getGenusOrAbove() != null && !pn.isBinomial() && Character.isLowerCase(normedName.charAt(0))) {
       // a monomial match, but it was a lower case name - doubtful at least!
-      if (Character.isLowerCase(normedName.charAt(0))) {
-        throw new UnparsableException(NameType.DOUBTFUL, rawName);
+      throw new UnparsableException(NameType.DOUBTFUL, rawName);
+
+    } else if (pn.getRank() != null) {
+      if (pn.getRank().isSpeciesOrBelow() && !pn.isBinomial() && !pn.getRank().equals(Rank.CULTIVAR)) {
+        pn.setType(NameType.INFORMAL);
+      } else if (pn.getRank().equals(Rank.CULTIVAR) && pn.getCultivarEpithet() == null) {
+        pn.setType(NameType.INFORMAL);
+      } else if (pn.getRank().isInfraspecific() && pn.getInfraSpecificEpithet() == null) {
+        pn.setType(NameType.INFORMAL);
+      } else if (!pn.getRank().isSpeciesOrBelow() && pn.isBinomial()) {
+        pn.setType(NameType.DOUBTFUL);
       }
     }
   }

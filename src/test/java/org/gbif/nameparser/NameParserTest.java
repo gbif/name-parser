@@ -751,27 +751,79 @@ public class NameParserTest {
     assertEquals(Rank.SPECIES, pn.getRank());
     assertEquals(NameType.INFORMAL, pn.getType());
 
-    // but dont treat these bacterial names as indets
+    // also treat these bacterial names as indets
     pn = parser.parse("Bartonella sp. RN, 10623LA", null);
     assertEquals("Bartonella", pn.getGenusOrAbove());
     assertEquals(Rank.SPECIES, pn.getRank());
-    assertTrue(NameType.INFORMAL != pn.getType());
+    assertEquals(NameType.INFORMAL, pn.getType());
 
     // and dont treat these authorships as forms
     pn = parser.parse("Dioscoreales Hooker f.", null);
     assertEquals("Dioscoreales", pn.getGenusOrAbove());
     assertEquals("Hooker f.", pn.getAuthorship());
     assertEquals(Rank.ORDER, pn.getRank());
-    assertTrue(NameType.SCIENTIFIC == pn.getType());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
 
     pn = parser.parse("Lepidoptera sp. JGP0404", null);
     assertEquals("Lepidoptera", pn.getGenusOrAbove());
     assertNull(pn.getSpecificEpithet());
     assertNull(pn.getAuthorship());
     assertEquals(Rank.SPECIES, pn.getRank());
-    assertTrue(NameType.INFORMAL == pn.getType());
+    assertEquals(NameType.INFORMAL, pn.getType());
 
     pn = parser.parse("Melastoma vacillans Blume var.", null);
+
+    pn = parser.parse("Lepidoptera Hooker", Rank.SPECIES);
+    assertEquals("Lepidoptera", pn.getGenusOrAbove());
+    assertNull(pn.getSpecificEpithet());
+    assertEquals("Hooker", pn.getAuthorship());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertEquals(NameType.INFORMAL, pn.getType());
+
+    pn = parser.parse("Lepidoptera alba DC.", Rank.SUBSPECIES);
+    assertEquals("Lepidoptera", pn.getGenusOrAbove());
+    assertEquals("alba", pn.getSpecificEpithet());
+    assertEquals("DC.", pn.getAuthorship());
+    assertEquals(Rank.SUBSPECIES, pn.getRank());
+    assertEquals(NameType.INFORMAL, pn.getType());
+
+    pn = parser.parse("Lepidoptera alba DC.", Rank.SUBSPECIES);
+    assertEquals("Lepidoptera", pn.getGenusOrAbove());
+    assertEquals("alba", pn.getSpecificEpithet());
+    assertEquals("DC.", pn.getAuthorship());
+    assertEquals(Rank.SUBSPECIES, pn.getRank());
+    assertEquals(NameType.INFORMAL, pn.getType());
+  }
+
+
+  @Test
+  public void testRankMismatch() throws Exception {
+    ParsedName pn = parser.parse("Polygonum", Rank.SUBGENUS);
+    assertEquals("Polygonum", pn.getGenusOrAbove());
+    assertNull(pn.getSpecificEpithet());
+    assertEquals(Rank.SUBGENUS, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Polygonum", Rank.SUBSPECIES);
+    assertEquals("Polygonum", pn.getGenusOrAbove());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getAuthorship());
+    assertEquals(Rank.SUBSPECIES, pn.getRank());
+    assertEquals(NameType.INFORMAL, pn.getType());
+
+    pn = parser.parse("Polygonum alba", Rank.GENUS);
+    assertEquals("Polygonum", pn.getGenusOrAbove());
+    assertEquals("alba", pn.getSpecificEpithet());
+    assertNull(pn.getAuthorship());
+    assertEquals(Rank.GENUS, pn.getRank());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Polygonum", Rank.CULTIVAR);
+    assertEquals("Polygonum", pn.getGenusOrAbove());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getAuthorship());
+    assertEquals(Rank.CULTIVAR, pn.getRank());
+    assertEquals(NameType.INFORMAL, pn.getType());
   }
 
   @Test
