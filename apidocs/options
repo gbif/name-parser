@@ -1,5 +1,5 @@
 -classpath
-'/var/lib/jenkins/jobs/name-parser/workspace/target/checkout/target/classes:/var/lib/jenkins/.m2/repository/org/apache/commons/commons-compress/1.9/commons-compress-1.9.jar:/var/lib/jenkins/.m2/repository/org/gbif/gbif-common/0.20/gbif-common-0.20.jar:/var/lib/jenkins/.m2/repository/org/gbif/dwc-api/1.13/dwc-api-1.13.jar:/var/lib/jenkins/.m2/repository/org/codehaus/jackson/jackson-mapper-asl/1.9.12/jackson-mapper-asl-1.9.12.jar:/var/lib/jenkins/.m2/repository/org/apache/commons/commons-lang3/3.4/commons-lang3-3.4.jar:/var/lib/jenkins/.m2/repository/com/vividsolutions/jts/1.13/jts-1.13.jar:/var/lib/jenkins/.m2/repository/commons-io/commons-io/2.4/commons-io-2.4.jar:/var/lib/jenkins/.m2/repository/org/codehaus/jackson/jackson-core-asl/1.9.12/jackson-core-asl-1.9.12.jar:/var/lib/jenkins/.m2/repository/com/google/code/findbugs/jsr305/3.0.0/jsr305-3.0.0.jar:/var/lib/jenkins/.m2/repository/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final.jar:/var/lib/jenkins/.m2/repository/org/slf4j/slf4j-api/1.7.12/slf4j-api-1.7.12.jar:/var/lib/jenkins/.m2/repository/org/gbif/gbif-api/0.30/gbif-api-0.30.jar:/var/lib/jenkins/.m2/repository/com/google/guava/guava/18.0/guava-18.0.jar'
+'/var/lib/jenkins/jobs/name-parser/workspace/target/checkout/target/classes:/var/lib/jenkins/.m2/repository/org/apache/commons/commons-compress/1.9/commons-compress-1.9.jar:/var/lib/jenkins/.m2/repository/org/gbif/gbif-common/0.21/gbif-common-0.21.jar:/var/lib/jenkins/.m2/repository/org/gbif/dwc-api/1.13/dwc-api-1.13.jar:/var/lib/jenkins/.m2/repository/org/codehaus/jackson/jackson-mapper-asl/1.9.12/jackson-mapper-asl-1.9.12.jar:/var/lib/jenkins/.m2/repository/org/apache/commons/commons-lang3/3.4/commons-lang3-3.4.jar:/var/lib/jenkins/.m2/repository/com/vividsolutions/jts/1.13/jts-1.13.jar:/var/lib/jenkins/.m2/repository/commons-io/commons-io/2.4/commons-io-2.4.jar:/var/lib/jenkins/.m2/repository/org/codehaus/jackson/jackson-core-asl/1.9.12/jackson-core-asl-1.9.12.jar:/var/lib/jenkins/.m2/repository/com/google/code/findbugs/jsr305/3.0.0/jsr305-3.0.0.jar:/var/lib/jenkins/.m2/repository/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final.jar:/var/lib/jenkins/.m2/repository/org/slf4j/slf4j-api/1.7.13/slf4j-api-1.7.13.jar:/var/lib/jenkins/.m2/repository/org/gbif/gbif-api/0.31/gbif-api-0.31.jar:/var/lib/jenkins/.m2/repository/com/google/guava/guava/18.0/guava-18.0.jar'
 -encoding
 'UTF-8'
 -protected
@@ -8,7 +8,7 @@
 '/var/lib/jenkins/jobs/name-parser/workspace/target/checkout/src/main/java:/var/lib/jenkins/jobs/name-parser/workspace/target/checkout/target/generated-sources/annotations'
 -author
 -bottom
-'Copyright &#169; 2015 <a href="http://www.gbif.org">Global Biodiversity Information Facility</a>. All rights reserved.'
+'Copyright &#169; 2016 <a href="http://www.gbif.org">Global Biodiversity Information Facility</a>. All rights reserved.'
 -charset
 'UTF-8'
 -d
@@ -17,7 +17,7 @@
 'UTF-8'
 -docfilessubdirs
 -doctitle
-'GBIF Name Parser 2.10 API'
+'GBIF Name Parser 2.12 API'
 -link
 'http://freemarker.org/docs/api'
 -link
@@ -30,4 +30,4 @@
 -use
 -version
 -windowtitle
-'GBIF Name Parser 2.10 API'
+'GBIF Name Parser 2.12 API'
