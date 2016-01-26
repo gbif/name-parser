@@ -997,8 +997,8 @@ public class NameParserTest {
     assertParsedMicrobial("Pseudomonas syringae pv. aceris (Ark, 1939) Young, Dye & Wilkie, 1978",
         NameType.SCIENTIFIC, "Pseudomonas", "syringae", "aceris", Rank.PATHOVAR, "Young, Dye & Wilkie", "1978", "Ark", "1939", null);
 
-    assertParsedMicrobial("Acinetobacter junii morphovar I",
-        NameType.SCIENTIFIC, "Acinetobacter", "junii", "I", Rank.MORPHOVAR);
+//    assertParsedMicrobial("Acinetobacter junii morphovar I",
+//        NameType.SCIENTIFIC, "Acinetobacter", "junii", null, Rank.MORPHOVAR, "I", null, null, null, null);
 
     assertParsedMicrobial("Puccinia graminis f. sp. avenae",
         NameType.SCIENTIFIC, "Puccinia", "graminis", "avenae", Rank.FORMA_SPECIALIS);
@@ -1022,6 +1022,31 @@ public class NameParserTest {
 
     assertParsedMicrobial("Listeria monocytogenes serotype 4b",
         NameType.SCIENTIFIC, "Listeria", "monocytogenes", "4b", Rank.SEROVAR);
+
+    // make sure real names get properly parsed still!
+    assertParsedSpecies("Calathus bolivar Negre", NameType.SCIENTIFIC, "Calathus", "bolivar", "Negre", null);
+    assertParsedSpecies("Eublemma debivar Berio, 1945", NameType.SCIENTIFIC, "Eublemma", "debivar", "Berio", 1945);
+    assertParsedSpecies("Ceryx evar Pagenstecher, 1886", NameType.SCIENTIFIC, "Ceryx", "evar", "Pagenstecher", 1886);
+
+    assertParsedSpecies("Klyxum equisetiform (Luttschwager, 1922)", NameType.SCIENTIFIC, "Klyxum", "equisetiform", null, null, "Luttschwager", 1922);
+    assertParsedSpecies("Dendronthema grandiform", NameType.SCIENTIFIC, "Dendronthema", "grandiform", null, null);
+    assertParsedSpecies("Bryconamericus subtilisform Román-Valencia, 2003", NameType.SCIENTIFIC, "Bryconamericus", "subtilisform", "Román-Valencia", 2003);
+    assertParsedSpecies("Crisia bucinaform", NameType.SCIENTIFIC, "Crisia", "bucinaform", null, null);
+
+    assertParsedSpecies("Melitoxestis centrotype Janse, 1958", NameType.SCIENTIFIC, "Melitoxestis", "centrotype", "Janse", 1958);
+    assertParsedSpecies("Sanys coenotype Hampson, 1926", NameType.SCIENTIFIC, "Sanys", "coenotype", "Hampson", 1926);
+    assertParsedSpecies("Ethmia phricotype Bradley, 1965", NameType.SCIENTIFIC, "Ethmia", "phricotype", "Bradley", 1965);
+    assertParsedSpecies("Pseudoceros maximus-type A Lang, 1884", NameType.SCIENTIFIC, "Pseudoceros", "maximus-type", "A Lang", 1884);
+    assertParsedSpecies("Egnasia microtype Hampson, 1926", NameType.SCIENTIFIC, "Egnasia", "microtype", "Hampson", 1926);
+    assertParsedSpecies("Oenochroa zalotype Turner, 1935", NameType.SCIENTIFIC, "Oenochroa", "zalotype", "Turner", 1935);
+
+    assertParsedSpecies("Leptura vibex Horn, 1885", NameType.SCIENTIFIC, "Leptura", "vibex", "Horn", 1885);
+    assertParsedSpecies("Hylesia tapabex Dyar, 1913", NameType.SCIENTIFIC, "Hylesia", "tapabex", "Dyar", 1913);
+    assertParsedSpecies("Myristica mediovibex W.J.de Wilde", NameType.SCIENTIFIC, "Myristica", "mediovibex", "W.J.de Wilde", null);
+    assertParsedSpecies("Peperomia obex Trel.", NameType.SCIENTIFIC, "Peperomia", "obex", "Trel.", null);
+    assertParsedInfraspecies("Capra ibex graicus Matschie, 1912", NameType.SCIENTIFIC, "Capra", "ibex", "graicus", "Matschie", 1912);
+    assertParsedSpecies("Neogastromyzon crassiobex Tan, 2006", NameType.SCIENTIFIC, "Neogastromyzon", "crassiobex", "Tan", 2006);
+
   }
 
   @Test
@@ -1376,6 +1401,50 @@ public class NameParserTest {
   }
 
   @Test
+  @Ignore
+  public void testElmisSp() throws Exception {
+    ParsedName pn = parser.parse("Elmis sp. Lv.", null);
+    assertEquals("Elmis", pn.getGenusOrAbove());
+    assertEquals("Lv.", pn.getAuthorship());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getInfraSpecificEpithet());
+  }
+
+  @Test
+  public void testAraneae() throws Exception {
+    ParsedName pn = parser.parse("Araneae", Rank.ORDER);
+    assertEquals("Araneae", pn.getGenusOrAbove());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertEquals(Rank.ORDER, pn.getRank());
+  }
+
+  @Test
+  public void testINFRASPECIFIC_NAME() throws Exception {
+    ParsedName pn = parser.parse("Melitaea didyma embriki Bryk, 1940", Rank.INFRASPECIFIC_NAME);
+    assertEquals("Melitaea", pn.getGenusOrAbove());
+    assertEquals("didyma", pn.getSpecificEpithet());
+    assertEquals("embriki", pn.getInfraSpecificEpithet());
+    assertEquals("Bryk", pn.getAuthorship());
+    assertEquals("1940", pn.getYear());
+    assertNull(pn.getInfraGeneric());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+
+    pn = parser.parse("Melitaea didyma elevar Fruhstorfer, 1917", Rank.INFRASPECIFIC_NAME);
+    assertEquals("Melitaea", pn.getGenusOrAbove());
+    assertEquals("didyma", pn.getSpecificEpithet());
+    assertEquals("elevar", pn.getInfraSpecificEpithet());
+    assertEquals("Fruhstorfer", pn.getAuthorship());
+    assertEquals("1917", pn.getYear());
+    assertNull(pn.getInfraGeneric());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+  }
+
+
+
+
+  @Test
   public void testNameParserRankMarker() throws Exception {
     assertEquals(Rank.SUBSPECIES, parser.parse("Coccyzuz americanus ssp.", null).getRank());
     assertEquals(Rank.SUBSPECIES, parser.parse("Coccyzuz ssp", null).getRank());
@@ -1482,6 +1551,39 @@ public class NameParserTest {
     ParsedName pn = null;
     try {
       pn = assertParsedParts(name, null, type, genus, null, epithet, infraepithet, rank, null, null, null, null, null, null, null);
+      assertEquals("Wrong name type", type, pn.getType());
+    } catch (UnparsableException e) {
+      assertEquals("Wrong name type", type, e.type);
+    }
+    return pn;
+  }
+
+  private ParsedName assertParsedSpecies(String name, NameType type, String genus, String epithet, String author, Integer year) {
+    ParsedName pn = null;
+    try {
+      pn = assertParsedParts(name, null, type, genus, null, epithet, null, null, null, author, year == null ? null : year.toString(), null, null, null, null);
+      assertEquals("Wrong name type", type, pn.getType());
+    } catch (UnparsableException e) {
+      assertEquals("Wrong name type", type, e.type);
+    }
+    return pn;
+  }
+
+  private ParsedName assertParsedInfraspecies(String name, NameType type, String genus, String epithet, String infraepithet, String author, Integer year) {
+    ParsedName pn = null;
+    try {
+      pn = assertParsedParts(name, null, type, genus, null, epithet, infraepithet, null, null, author, year == null ? null : year.toString(), null, null, null, null);
+      assertEquals("Wrong name type", type, pn.getType());
+    } catch (UnparsableException e) {
+      assertEquals("Wrong name type", type, e.type);
+    }
+    return pn;
+  }
+
+  private ParsedName assertParsedSpecies(String name, NameType type, String genus, String epithet, String author, Integer year, String basAuthor, Integer basYear) {
+    ParsedName pn = null;
+    try {
+      pn = assertParsedParts(name, null, type, genus, null, epithet, null, null, null, author, year == null ? null : year.toString(), basAuthor, basYear == null ? null : basYear.toString(), null, null);
       assertEquals("Wrong name type", type, pn.getType());
     } catch (UnparsableException e) {
       assertEquals("Wrong name type", type, e.type);
