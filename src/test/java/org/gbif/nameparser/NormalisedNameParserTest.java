@@ -18,7 +18,11 @@ public class NormalisedNameParserTest {
     assertTrue(epi.matcher("biovas").find());
     assertTrue(epi.matcher("serovat").find());
     assertTrue(epi.matcher("novo-zelandia").find());
-    assertTrue(epi.matcher("novae zelandia").find());
+    assertTrue(epi.matcher("elevar").find());
+    assertTrue(epi.matcher("zelandia").find());
+    assertTrue(epi.matcher("zelandia").find());
+    assertTrue(epi.matcher("zelandia").find());
+    assertTrue(epi.matcher("zelandia").find());
 
     assertFalse(epi.matcher("").find());
     assertFalse(epi.matcher("a").find());
@@ -27,11 +31,8 @@ public class NormalisedNameParserTest {
     assertFalse(epi.matcher("agamovar").find());
     assertFalse(epi.matcher("cultivar").find());
     assertFalse(epi.matcher("serotype").find());
-    assertFalse(epi.matcher("form").find());
-    assertFalse(epi.matcher("nvar").find());
     assertFalse(epi.matcher("cytoform").find());
     assertFalse(epi.matcher("chemoform").find());
-    assertFalse(epi.matcher("form").find());
   }
 
   @Test

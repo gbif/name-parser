@@ -84,7 +84,7 @@ public class NormalisedNameParser {
     ), "|") + ")";
 
   protected static final String EPHITHET_PREFIXES = "van|novae";
-  protected static final String GENETIC_EPHITHETS = "bacilliform|coliform|coryneform|biovar|serovar|genomovar|genotype|serotype|subtype|ribotype|isolate";
+  protected static final String GENETIC_EPHITHETS = "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
 
   protected static final String __EPHITHET_UNALLOWED_ENDINGS = "\\bex|var|type|form";
   protected static final String EPHITHET = "(?:[0-9]+-|[doml]')?"

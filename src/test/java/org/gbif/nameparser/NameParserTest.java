@@ -1421,7 +1421,7 @@ public class NameParserTest {
   }
 
   @Test
-  public void testINFRASPECIFIC_NAME() throws Exception {
+  public void testInfraspecificName() throws Exception {
     ParsedName pn = parser.parse("Melitaea didyma embriki Bryk, 1940", Rank.INFRASPECIFIC_NAME);
     assertEquals("Melitaea", pn.getGenusOrAbove());
     assertEquals("didyma", pn.getSpecificEpithet());
@@ -1441,8 +1441,17 @@ public class NameParserTest {
     assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
   }
 
-
-
+  @Test
+  public void testFormAlikes() throws Exception {
+    ParsedName pn = parser.parse("Abacosa pallida Alef.", null);
+    assertEquals("Abacosa", pn.getGenusOrAbove());
+    assertEquals("pallida", pn.getSpecificEpithet());
+    assertEquals("Alef.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getInfraGeneric());
+    assertEquals(Rank.SPECIES, pn.getRank());
+  }
 
   @Test
   public void testNameParserRankMarker() throws Exception {
