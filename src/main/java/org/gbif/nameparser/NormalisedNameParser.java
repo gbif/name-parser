@@ -74,13 +74,16 @@ public class NormalisedNameParser {
   protected static final String RANK_MARKER_SPECIES =
     "(?:notho)?(?:" + StringUtils.join(Rank.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") + "|agg)\\.?";
 
+  private static final Function<Rank,String> REMOVE_RANK_MARKER = new Function<Rank, String>() {
+    @Override
+    public String apply(Rank rank) {
+      return rank.getMarker().replaceAll("\\.", "\\\\.");
+    }
+  };
+
   protected static final String RANK_MARKER_MICROBIAL =
-    "(?:bv\\.|ct\\.|f\\. ?sp\\.|" + StringUtils.join(Lists.transform(Lists.newArrayList(Rank.INFRASUBSPECIFIC_MICROBIAL_RANKS), new Function<Rank, String>() {
-                @Override
-                public String apply(Rank rank) {
-                    return rank.getMarker().replaceAll("\\.", "\\\\.");
-                }
-            }
+    "(?:bv\\.|ct\\.|f\\. ?sp\\.|"
+    + StringUtils.join(Lists.transform(Lists.newArrayList(Rank.INFRASUBSPECIFIC_MICROBIAL_RANKS), REMOVE_RANK_MARKER
     ), "|") + ")";
 
   protected static final String EPHITHET_PREFIXES = "van|novae";
@@ -209,7 +212,7 @@ public class NormalisedNameParser {
    * @param cn
    * @param scientificName
    * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
-   * @return
+   * @return  true if the name could be parsed, false in case of failure
    */
   public boolean parseNormalisedName(ParsedName cn, String scientificName, @Nullable Rank rank) {
     LOG.debug("Parse normed name string: {}", scientificName);
@@ -293,7 +296,7 @@ public class NormalisedNameParser {
     return false;
   }
 
-    private boolean infragenericIsAuthor(ParsedName pn, Rank rank) {
+    private static boolean infragenericIsAuthor(ParsedName pn, Rank rank) {
         return pn.getBracketAuthorship() == null && pn.getSpecificEpithet() == null && (
                 rank != null && !(rank.isInfrageneric() && !rank.isSpeciesOrBelow())
                         //|| pn.getInfraGeneric().contains(" ")
@@ -306,7 +309,7 @@ public class NormalisedNameParser {
    * @param cn
    * @param scientificName
    * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
-   * @return
+   * @return  true if the name could be parsed, false in case of failure
    */
   public boolean parseNormalisedNameIgnoreAuthors(ParsedName cn, String scientificName, @Nullable Rank rank) {
     LOG.debug("Parse normed name string ignoring authors: {}", scientificName);
