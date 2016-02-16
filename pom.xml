@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>26</version>
+    <version>35</version>
   </parent>
 
   <artifactId>name-parser</artifactId>
@@ -29,7 +29,7 @@
 
     <!-- Dependency versions -->
     <gbif-common.version> 0.23</gbif-common.version>
-    <gbif-api.version>0.34</gbif-api.version>
+    <gbif-api.version>0.36</gbif-api.version>
     <!-- non gbif -->
     <commons-io.version>2.4</commons-io.version>
     <commons-lang.version>3.4</commons-lang.version>
