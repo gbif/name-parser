@@ -692,6 +692,9 @@ public class NameParserTest {
     assertUnparsableType(NameType.PLACEHOLDER, "uncultured zygomycete");
     assertUnparsableType(NameType.PLACEHOLDER, "uncultured Yonghaparkia sp");
     assertUnparsableType(NameType.PLACEHOLDER, "uncultured virus");
+    // other placeholders e.g from ITIS:
+    assertUnparsableType(NameType.PLACEHOLDER, "Temp dummy name");
+
   }
 
   @Test
@@ -1795,6 +1798,14 @@ public class NameParserTest {
     assertEquals("sensu Baker f.", parser.parse("Trifolium repens sensu Baker f.", null).getSensu());
     assertEquals("sensu latu", parser.parse("Achillea millefolium sensu latu", null).getSensu());
     assertEquals("sec. Greuter, 2009", parser.parse("Achillea millefolium sec. Greuter 2009", null).getSensu());
+  }
+
+  @Test
+  public void testExtinctPrefix() throws Exception {
+    ParsedName pn = parser.parse("†Lachnus bonneti", null);
+    assertEquals("Lachnus", pn.getGenusOrAbove());
+    assertEquals("bonneti", pn.getSpecificEpithet());
+    assertNull(pn.getAuthorship());
   }
 
   @Test
