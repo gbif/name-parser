@@ -133,15 +133,28 @@ public class NameParserTest {
   }
 
   @Test
-  @Ignore
   public void test4PartedNames() throws Exception {
     ParsedName n = parser.parse("Bombus sichelii alticola latofasciatus", null);
-    assertEquals("Bombus sichelii infrasubsp. latofasciatus", n.canonicalNameWithMarker());
     assertEquals("Bombus sichelii latofasciatus", n.canonicalName());
+    assertEquals("Bombus sichelii infrasubsp. latofasciatus", n.canonicalNameWithMarker());
 
     n = parser.parse("Bombus sichelii alticola latofasciatus Vogt, 1909", null);
-    assertEquals("Bombus sichelii infrasubsp. latofasciatus", n.canonicalNameWithMarker());
     assertEquals("Bombus sichelii latofasciatus", n.canonicalName());
+    assertEquals("Bombus sichelii infrasubsp. latofasciatus", n.canonicalNameWithMarker());
+    assertEquals("Bombus sichelii infrasubsp. latofasciatus Vogt, 1909", n.canonicalNameComplete());
+
+    n = parser.parse("Poa pratensis kewensis proles (L.) Rouy, 1913", null);
+    assertEquals("Poa", n.getGenusOrAbove());
+    assertEquals("pratensis", n.getSpecificEpithet());
+    assertEquals("proles", n.getInfraSpecificEpithet());
+    assertEquals("Rouy", n.getAuthorship());
+    assertEquals("1913", n.getYear());
+    assertEquals("L.", n.getBracketAuthorship());
+    assertNull(n.getBracketYear());
+    assertEquals(NameType.SCIENTIFIC, n.getType());
+    assertEquals("Poa pratensis proles", n.canonicalName());
+    assertEquals("Poa pratensis infrasubsp. proles", n.canonicalNameWithMarker());
+    assertEquals("Poa pratensis infrasubsp. proles (L.) Rouy, 1913", n.canonicalNameComplete());
   }
 
   private boolean testAuthorship(String author) {
@@ -680,6 +693,18 @@ public class NameParserTest {
   }
 
   /**
+   * http://dev.gbif.org/issues/browse/POR-3069
+   */
+  @Test
+  public void testNullNameParts() throws Exception {
+    assertParsedParts("Austrorhynchus pectatus null pectatus", NameType.DOUBTFUL, "Austrorhynchus", "pectatus", "pectatus", null, null);
+    assertParsedParts("Poa pratensis kewensis proles", NameType.SCIENTIFIC, "Poa", "pratensis", "proles", "infrasubsp.", null);
+
+    assertParsedParts("Poa pratensis null proles (L.) Rouy, 1913", NameType.DOUBTFUL, "Poa", "pratensis", "proles", null, "Rouy", "1913", "L.", null);
+    assertParsedParts("Poa pratensis kewensis proles (L.) Rouy, 1913", NameType.SCIENTIFIC, "Poa", "pratensis", "proles", "infrasubsp.", "Rouy", "1913", "L.", null);
+  }
+
+  /**
    * http://dev.gbif.org/issues/browse/POR-2459
    */
   @Test
@@ -694,7 +719,6 @@ public class NameParserTest {
     assertUnparsableType(NameType.PLACEHOLDER, "uncultured virus");
     // other placeholders e.g from ITIS:
     assertUnparsableType(NameType.PLACEHOLDER, "Temp dummy name");
-
   }
 
   @Test

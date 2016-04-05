@@ -88,8 +88,6 @@ public class NormalisedNameParser {
 
   protected static final String EPHITHET_PREFIXES = "van|novae";
   protected static final String GENETIC_EPHITHETS = "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
-
-  protected static final String __EPHITHET_UNALLOWED_ENDINGS = "\\bex|var|type|form";
   protected static final String EPHITHET = "(?:[0-9]+-|[doml]')?"
             + "(?:(?:" + EPHITHET_PREFIXES + ") [a-z])?"
             + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
@@ -129,15 +127,15 @@ public class NormalisedNameParser {
               "(?: " + AUTHOR_PREFIXES + ")?" +
               "(?:" +
                 // either directly a infraspecific epitheton or a author but then mandate rank marker
+                // #6 superfluent intermediate (subspecies) epithet in quadrinomials
+                "( " + EPHITHET + ")?" +
                 "(?:" +
                   // anything in between
-                  ".*" +
-                  // #6 infraspecies rank
+                  "(?: .+)?" +
+                  // #7 infraspecies rank
                   "( " + RANK_MARKER_SPECIES + "[ .])" +
-                  // #7 infraspecies epithet
-                  "(×?" + EPHITHET + ")" +
-                ")|" +
-                  // #8 infraspecies epithet
+                ")?" +
+                // #8 infraspecies epithet
                 " (×?" + EPHITHET + ")" +
               ")?" +
               "(?: " +
@@ -156,9 +154,11 @@ public class NormalisedNameParser {
              "(?: (×?" + EPHITHET + "))?" +
 
              "(?:" +
+               // #6 superfluent intermediate (subspecies) epithet in quadrinomials
+               "( " + EPHITHET + ")??" +
                "(?:" +
-                 // #6 strip out intermediate, irrelevant authors or infraspecific ranks in case of quadrinomials
-                 "( .*?)?" +
+                 // strip out intermediate, irrelevant authors
+                 "(?: .+)??" +
                  // #7 infraspecies rank
                  "( " + RANK_MARKER_SPECIES + ")" +
                ")?" +
@@ -240,7 +240,10 @@ public class NormalisedNameParser {
           cn.setInfraGeneric(StringUtils.trimToNull(matcher.group(4)));
         }
         cn.setSpecificEpithet(StringUtils.trimToNull(matcher.group(5)));
-        // #6 is filling authors or ranks in the middle not stored in ParsedName
+        if (matcher.group(6) != null && matcher.group(6).length() > 1 && !matcher.group(6).contains("null")) {
+          // 4 parted name, so its below subspecies
+          cn.setRank(Rank.INFRASUBSPECIFIC_NAME);
+        }
         if (matcher.group(7) != null && matcher.group(7).length() > 1) {
           cn.setRankMarker(StringUtils.trimToNull(matcher.group(7)));
         }
@@ -336,12 +339,14 @@ public class NormalisedNameParser {
         cn.setInfraGeneric(StringUtils.trimToNull(matcher.group(4)));
       }
       cn.setSpecificEpithet(StringUtils.trimToNull(matcher.group(5)));
-      if (matcher.group(6) != null && matcher.group(6).length() > 1) {
-        cn.setRankMarker(matcher.group(6));
+      if (matcher.group(6) != null && matcher.group(6).length() > 1 && !matcher.group(6).contains("null")) {
+        // 4 parted name, so its below subspecies
+        cn.setRank(Rank.INFRASUBSPECIFIC_NAME);
       }
-      if (matcher.group(7) != null && matcher.group(7).length() >= 2) {
-        setCanonicalInfraSpecies(cn, matcher.group(7));
-      } else {
+      if (matcher.group(7) != null && matcher.group(7).length() > 1) {
+        cn.setRankMarker(matcher.group(7));
+      }
+      if (matcher.group(8) != null && matcher.group(8).length() >= 2) {
         setCanonicalInfraSpecies(cn, matcher.group(8));
       }
       if (matcher.group(9) != null) {

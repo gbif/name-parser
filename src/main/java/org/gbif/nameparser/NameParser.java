@@ -128,8 +128,8 @@ public class NameParser {
   private static final Pattern PLACEHOLDER = Pattern.compile(
     "\\b(unnamed|mixed|unassigned|unallocated|unplaced|undetermined|unclassified|uncultured|unknown|unspecified|uncertain|incertae sedis|not assigned|awaiting allocation|temp|dummy)\\b",
     CASE_INSENSITIVE);
-  private static final Pattern DOUBTFUL =
-    Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + "&*+ ,.()/'`´0-9-]+$");
+  private static final Pattern DOUBTFUL = Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + "&*+ ,.()/'`´0-9-]+$");
+  private static final Pattern DOUBTFUL2 = Pattern.compile("\\bnull\\b");
   private static final Pattern BAD_NAME_SUFFICES = Pattern.compile(" (author|unknown|unassigned|not_stated)$", CASE_INSENSITIVE);
   private static final Pattern XML_ENTITY_STRIP = Pattern.compile("&\\s*([a-z]+)\\s*;");
   // matches badly formed amoersands which are important in names / authorships
@@ -652,7 +652,12 @@ public class NameParser {
       if (!m.find()) {
         pn.setType(NameType.DOUBTFUL);
       } else {
-        pn.setType(NameType.SCIENTIFIC);
+        m = DOUBTFUL2.matcher(scientificName);
+        if (m.find()) {
+          pn.setType(NameType.DOUBTFUL);
+        } else {
+          pn.setType(NameType.SCIENTIFIC);
+        }
       }
     }
 
