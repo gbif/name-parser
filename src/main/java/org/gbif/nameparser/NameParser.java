@@ -118,6 +118,7 @@ public class NameParser {
   private static final Pattern NORM_DOTS = Pattern.compile("(^\\s*[" + NAME_LETTERS + "]|" + RANK_MARKER_ALL + ")\\.");
   private static final Pattern NORM_TF_GENUS =
     Pattern.compile("^([" + NAME_LETTERS + "])\\(([" + name_letters + "-]+)\\)\\.? ");
+  private static final Pattern NORM_IN_COMMA = Pattern.compile(", in ", CASE_INSENSITIVE);
   private static final Pattern NORM_IN_BIB = Pattern.compile("( in .+$| ?: ?[0-9]+)", CASE_INSENSITIVE);
   private static final Pattern NORM_PREFIXES = Pattern.compile("^(sub)?(fossil|" +
       StringUtils.join(Rank.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
@@ -351,6 +352,7 @@ public class NameParser {
     }
 
     // replace bibliographic in authorship
+    name = NORM_IN_COMMA.matcher(name).replaceFirst(" in ");
     /*
      * m = NORM_IN_BIB.matcher(name);
      * if (m.find()) {

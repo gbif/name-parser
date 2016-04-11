@@ -1459,6 +1459,17 @@ public class NameParserTest {
   }
 
   @Test
+  public void testInCitation() throws Exception {
+    ParsedName pn = parser.parse("Codonellina Canu & Bassler in Bassler, 1934", Rank.GENUS);
+    assertEquals("Codonellina", pn.getGenusOrAbove());
+    assertEquals("Canu & Bassler in Bassler", pn.getAuthorship());
+    assertEquals("1934", pn.getYear());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertEquals(Rank.GENUS, pn.getRank());
+  }
+
+  @Test
   public void testInfraspecificName() throws Exception {
     ParsedName pn = parser.parse("Melitaea didyma embriki Bryk, 1940", Rank.INFRASPECIFIC_NAME);
     assertEquals("Melitaea", pn.getGenusOrAbove());
