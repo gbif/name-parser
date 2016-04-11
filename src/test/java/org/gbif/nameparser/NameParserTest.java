@@ -228,6 +228,8 @@ public class NameParserTest {
     assertTrue(this.testAuthorship("van Helmsick"));
     assertTrue(this.testAuthorship("Xing, Yan & Yin"));
     assertTrue(this.testAuthorship("Xiao & Knoll"));
+    assertTrue(this.testAuthorship("Wang, Yuwen & Xian-wei Liu"));
+    assertTrue(this.testAuthorship("Liu, Xian-wei, Z. Zheng & G. Xi"));
   }
 
   @Test
@@ -995,6 +997,15 @@ public class NameParserTest {
     assertParsedParts("Cribbia pendula le Croix & P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, null, "le Croix & P.J.Cribb", null);
     assertParsedParts("Cribbia pendula de la Croix & le P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, null, "de la Croix & le P.J.Cribb", null);
     assertParsedParts("Cribbia pendula Croix & de le P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, null, "Croix & de le P.J.Cribb", null);
+  }
+
+  @Test
+  public void testChineseAuthors() throws Exception {
+    assertParsedParts("Abaxisotima acuminata (Wang & Liu, 1996)", NameType.SCIENTIFIC, "Abaxisotima", "acuminata", null, null, null, null, "Wang & Liu", "1996");
+    assertParsedParts("Abaxisotima acuminata (Wang, Yuwen & Xian-wei Liu, 1996)", NameType.SCIENTIFIC, "Abaxisotima", "acuminata", null, null, null, null, "Wang, Yuwen & Xian-wei Liu", "1996");
+
+    assertParsedParts("Abaxisotima bicolor (Liu, Zheng & Xi, 1991)", NameType.SCIENTIFIC, "Abaxisotima", "bicolor", null, null, null, null, "Liu, Zheng & Xi", "1991");
+    assertParsedParts("Abaxisotima bicolor (Liu, Xian-wei, Z. Zheng & G. Xi, 1991)", NameType.SCIENTIFIC, "Abaxisotima", "bicolor", null, null, null, null, "Liu, Xian-wei, Z. Zheng & G. Xi", "1991");
   }
 
   /**

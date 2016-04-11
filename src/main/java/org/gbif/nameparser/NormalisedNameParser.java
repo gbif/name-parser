@@ -42,7 +42,7 @@ public class NormalisedNameParser {
   protected static final String name_letters = "a-zïëöüäåéèčáàæœ";
   protected static final String AUTHOR_LETTERS = NAME_LETTERS + "\\p{Lu}"; // upper case unicode letter, not numerical
   // (\W is alphanum)
-  protected static final String author_letters = name_letters + "\\p{Ll}"; // lower case unicode letter, not numerical
+  protected static final String author_letters = name_letters + "\\p{Ll}-"; // lower case unicode letter, not numerical
   // (\W is alphanum)
   protected static final String AUTHOR_PREFIXES =
     "(?:[vV](?:an)(?:[ -](?:den|der) )? ?|von[ -](?:den |der |dem )?|(?:del|Des|De|de|di|Di|da|N)[`' _]|(?:de )?(?:la|le) |d'|D'|Mac|Mc|Le|St\\.? ?|Ou|O')";
