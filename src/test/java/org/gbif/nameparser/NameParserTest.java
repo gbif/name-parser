@@ -2215,6 +2215,13 @@ public class NameParserTest {
     assertTrue(isViralName("bacteriophage, 315.6"));
     assertTrue(isViralName("bacteriophages"));
     assertTrue(isViralName("\"T1-like viruses\""));
+    assertTrue(isViralName("Inachis io NPV"));
+    assertTrue(isViralName("Hyloicus pinastri NPV"));
+    assertTrue(isViralName("Dictyoploca japonica NPV"));
+    assertTrue(isViralName("Apocheima pilosaria NPV"));
+    assertTrue(isViralName("Lymantria xylina NPV"));
+    assertTrue(isViralName("Feltia subterranea GV"));
+    assertTrue(isViralName("Dionychopus amasis GV"));
 
     assertFalse(isViralName("Forcipomyia flavirustica Remm, 1968"));
 
