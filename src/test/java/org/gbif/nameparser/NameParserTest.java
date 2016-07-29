@@ -2215,6 +2215,7 @@ public class NameParserTest {
     assertTrue(isViralName("bacteriophage, 315.6"));
     assertTrue(isViralName("bacteriophages"));
     assertTrue(isViralName("\"T1-like viruses\""));
+    // http://dev.gbif.org/issues/browse/PF-2574
     assertTrue(isViralName("Inachis io NPV"));
     assertTrue(isViralName("Hyloicus pinastri NPV"));
     assertTrue(isViralName("Dictyoploca japonica NPV"));
