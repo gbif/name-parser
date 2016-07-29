@@ -3209,5 +3209,13 @@ Zucchini yellow fleck virus
 Zucchini yellow mosaic virus
 Zygocactus virus X
 
+Inachis io NPV
+Hyloicus pinastri NPV
+Dictyoploca japonica NPV
+Apocheima pilosaria NPV
+Lymantria xylina NPV
+Feltia subterranea GV
+Dionychopus amasis GV
+
 #Honeysuckle yellow vein mosaic disease associated satellite Dna beta
 #Double-stranded satellite RNAs
