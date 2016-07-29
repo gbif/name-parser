@@ -707,6 +707,26 @@ public class NameParser {
     return null;
   }
 
+  /**
+   * Tries to parses the name without authorship and returns the ParsedName.canonicalName() string
+   * For unparsable types and other UnparsableExceptions the original scientific name is returned.
+   * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
+   */
+  public String parseToCanonicalOrScientificName(String scientificName, @Nullable Rank rank) {
+    if (Strings.isNullOrEmpty(scientificName)) {
+      return null;
+    }
+    try {
+      ParsedName pn = parse(scientificName, rank);
+      if (pn != null) {
+        return pn.canonicalName();
+      }
+    } catch (UnparsableException e) {
+      LOG.warn("Unparsable name " + scientificName + " >>> " + e.getMessage());
+    }
+    return StringUtils.normalizeSpace(scientificName.trim());
+  }
+
   public NormalisedNameParser getNormalisedNameParser() {
     return nnParser;
   }
