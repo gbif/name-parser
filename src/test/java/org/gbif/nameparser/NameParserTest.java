@@ -2251,6 +2251,18 @@ public class NameParserTest {
   }
 
   @Test
+  public void backboneBasionymPlaceholder() throws Exception {
+    ParsedName n = parser.parse("? attenuata Hincks, 1866", null);
+    assertEquals("?", n.getGenusOrAbove());
+    assertTrue(n.getInfraGeneric() == null);
+    assertEquals("attenuata", n.getSpecificEpithet());
+    assertTrue(n.getInfraSpecificEpithet() == null);
+    assertEquals("Hincks", n.getAuthorship());
+    assertEquals("1866", n.getYear());
+    assertEquals(NameType.PLACEHOLDER, n.getType());
+  }
+
+  @Test
   public void testWhitespaceEpitheta() throws Exception {
     ParsedName n = parser.parse("Nupserha van rooni usambarica", null);
     assertEquals("Nupserha", n.getGenusOrAbove());

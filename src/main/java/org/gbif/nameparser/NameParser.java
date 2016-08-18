@@ -651,16 +651,21 @@ public class NameParser {
 
     // determine name type if not yet assigned
     if (pn.getType() == null) {
-      // a doubtful name?
-      m = DOUBTFUL.matcher(scientificName);
-      if (!m.find()) {
-        pn.setType(NameType.DOUBTFUL);
+      // a placeholder spithet only?
+      if (pn.getGenusOrAbove().equals("?")) {
+        pn.setType(NameType.PLACEHOLDER);
       } else {
-        m = DOUBTFUL2.matcher(scientificName);
-        if (m.find()) {
+        // a doubtful name?
+        m = DOUBTFUL.matcher(scientificName);
+        if (!m.find()) {
           pn.setType(NameType.DOUBTFUL);
         } else {
-          pn.setType(NameType.SCIENTIFIC);
+          m = DOUBTFUL2.matcher(scientificName);
+          if (m.find()) {
+            pn.setType(NameType.DOUBTFUL);
+          } else {
+            pn.setType(NameType.SCIENTIFIC);
+          }
         }
       }
     }

@@ -116,7 +116,7 @@ public class NormalisedNameParser {
   // main name matcher
   public static final Pattern CANON_NAME_IGNORE_AUTHORS = Pattern.compile("^" +
               // #1 genus/monomial
-              "(×?" + MONOMIAL + ")" +
+              "(×?(?:\\?|" + MONOMIAL + "))" +
               // #2 or #4 subgenus/section with #3 infrageneric rank marker
               "(?:(?<!ceae) " + INFRAGENERIC + ")?" +
               // catch author name prefixes just to ignore them so they dont become wrong epithets
@@ -147,7 +147,7 @@ public class NormalisedNameParser {
 
   public static final Pattern NAME_PATTERN = Pattern.compile("^" +
              // #1 genus/monomial
-             "(×?" + MONOMIAL + ")" +
+             "(×?(?:\\?|" + MONOMIAL + "))" +
              // #2 or #4 subgenus/section with #3 infrageneric rank marker
              "(?:(?<!ceae) " + INFRAGENERIC + ")?" +
              // #5 species
