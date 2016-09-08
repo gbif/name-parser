@@ -45,7 +45,7 @@ public class NormalisedNameParser {
   protected static final String author_letters = name_letters + "\\p{Ll}-"; // lower case unicode letter, not numerical
   // (\W is alphanum)
   protected static final String AUTHOR_PREFIXES =
-    "(?:[vV](?:an)(?:[ -](?:den|der) )? ?|von[ -](?:den |der |dem )?|(?:del|Des|De|de|di|Di|da|N)[`' _]|(?:de )?(?:la|le) |d'|D'|Mac|Mc|Le|St\\.? ?|Ou|O')";
+    "(?:[vV](?:an)(?:[ -](?:den|der) )? ?|von[ -](?:den |der |dem )?|(?:del|de|di|da)[`' _]|(?:Des|De|Di|N)[`' _]?|(?:de )?(?:la|le) |d'|D'|Mac|Mc|Le|St\\.? ?|Ou|O')";
   protected static final String AUTHOR = "(?:" +
                                          // author initials
                                          "(?:" + "(?:[" + AUTHOR_LETTERS + "]{1,3}\\.?[ -]?){0,3}" +
@@ -88,7 +88,7 @@ public class NormalisedNameParser {
 
   protected static final String EPHITHET_PREFIXES = "van|novae";
   protected static final String GENETIC_EPHITHETS = "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
-  protected static final String EPHITHET = "(?:[0-9]+-|[doml]')?"
+  protected static final String EPHITHET = "(?:[0-9]+-?|[doml]')?"
             + "(?:(?:" + EPHITHET_PREFIXES + ") [a-z])?"
             + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
             // avoid epithets ending with the unallowed endings, e.g. serovar

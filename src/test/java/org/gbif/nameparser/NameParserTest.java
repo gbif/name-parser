@@ -2262,6 +2262,54 @@ public class NameParserTest {
     assertEquals(NameType.PLACEHOLDER, n.getType());
   }
 
+  /**
+   * http://dev.gbif.org/issues/browse/POR-3081
+   */
+  @Test
+  public void parseProblematicSpecies() throws Exception {
+    ParsedName n = parser.parse("Angiopteris d'urvilleana de Vriese", Rank.SPECIES);
+    assertEquals("Angiopteris", n.getGenusOrAbove());
+    assertNull(n.getInfraGeneric());
+    assertEquals("d'urvilleana", n.getSpecificEpithet());
+    assertNull(n.getInfraSpecificEpithet());
+    assertEquals("de Vriese", n.getAuthorship());
+    assertEquals(NameType.SCIENTIFIC, n.getType());
+
+    n = parser.parse("Polana (Bulbusana) vana DeLong & Freytag 1972", Rank.SPECIES);
+    assertEquals("Polana", n.getGenusOrAbove());
+    assertEquals("Bulbusana", n.getInfraGeneric());
+    assertEquals("vana", n.getSpecificEpithet());
+    assertNull(n.getInfraSpecificEpithet());
+    assertEquals("DeLong & Freytag", n.getAuthorship());
+    assertEquals("1972", n.getYear());
+    assertEquals(NameType.SCIENTIFIC, n.getType());
+
+    n = parser.parse("Tabanus 4punctatus Fabricius, 1805", Rank.SPECIES);
+    assertEquals("Tabanus", n.getGenusOrAbove());
+    assertTrue(n.getInfraGeneric() == null);
+    assertEquals("4punctatus", n.getSpecificEpithet());
+    assertNull(n.getInfraSpecificEpithet());
+    assertEquals("Fabricius", n.getAuthorship());
+    assertEquals("1805", n.getYear());
+    assertEquals(NameType.SCIENTIFIC, n.getType());
+
+    n = parser.parse("Acer √ó hillieri Lancaster", Rank.SPECIES);
+    assertEquals("Acer", n.getGenusOrAbove());
+    assertNull(n.getInfraGeneric());
+    assertEquals("hillieri", n.getSpecificEpithet());
+    assertEquals(NamePart.SPECIFIC, n.getNotho());
+    assertEquals("Acer ×hillieri Lancaster", n.canonicalNameComplete());
+    assertEquals("Acer ×hillieri Lancaster", n.fullName());
+    //assertEquals("Acer × hillieri Lancaster", n.getScientificName());
+    assertNull(n.getInfraSpecificEpithet());
+    assertEquals("Lancaster", n.getAuthorship());
+    assertNull(n.getYear());
+    // the garbage hybrid cross makes this doubtful
+    assertEquals(NameType.DOUBTFUL, n.getType());
+
+  }
+
+
   @Test
   public void testWhitespaceEpitheta() throws Exception {
     ParsedName n = parser.parse("Nupserha van rooni usambarica", null);

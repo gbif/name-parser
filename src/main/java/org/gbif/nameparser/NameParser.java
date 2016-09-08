@@ -112,10 +112,10 @@ public class NameParser {
   private static final Pattern NORM_ORIG_AUTH2 = Pattern.compile("\\((" + AUTHOR_TEAM + ")\\) ?,? ?(" + YEAR + ")");
   private static final Pattern NORM_IMPRINT_YEAR =
     Pattern.compile("(" + YEAR + ")\\s*(?:\\(\"?[\\s0-9-_,?]+\"?\\)|\\[\"?[0-9 -,]+\"?\\]|\"[0-9 -,]+\")");
-  private static final Pattern NORM_HYBRIDS_GENUS = Pattern.compile("^\\s*[+×xX]\\s*([" + NAME_LETTERS + "])");
-  private static final Pattern NORM_HYBRIDS_EPITH =
-    Pattern.compile("^\\s*(×?" + MONOMIAL + ")\\s+(?:×|[xX]\\s)\\s*(" + EPHITHET + ")");
-  private static final Pattern NORM_HYBRIDS_FORM = Pattern.compile(" [×xX] ");
+  // √ó is an utf garbaged version of the hybrid cross found in IPNI. See http://dev.gbif.org/issues/browse/POR-3081
+  private static final Pattern NORM_HYBRIDS_GENUS = Pattern.compile("^\\s*(?:[+×xX]|√ó)\\s*([" + NAME_LETTERS + "])");
+  private static final Pattern NORM_HYBRIDS_EPITH = Pattern.compile("^\\s*(×?" + MONOMIAL + ")\\s+(?:×|√ó|[xX]\\s)\\s*(" + EPHITHET + ")");
+  private static final Pattern NORM_HYBRIDS_FORM = Pattern.compile(" ([×xX]|√ó) ");
   private static final Pattern NORM_INDET = Pattern.compile("((^| )(undet|indet|aff|cf)[#!?\\.]?)+(?![a-z])");
   private static final Pattern NORM_DOTS = Pattern.compile("(^\\s*[" + NAME_LETTERS + "]|" + RANK_MARKER_ALL + ")\\.");
   private static final Pattern NORM_TF_GENUS =
