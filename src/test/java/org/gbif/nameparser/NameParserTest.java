@@ -2263,6 +2263,21 @@ public class NameParserTest {
   }
 
   /**
+   * http://dev.gbif.org/issues/browse/POR-2987
+   */
+  @Test
+  public void parseUnknownAuthor() throws Exception {
+    ParsedName n = parser.parse("Severinia turcomaniae amplialata Unknown, 1921", Rank.SUBSPECIES);
+    assertEquals("Severinia", n.getGenusOrAbove());
+    assertNull(n.getInfraGeneric());
+    assertEquals("turcomaniae", n.getSpecificEpithet());
+    assertEquals("amplialata", n.getInfraSpecificEpithet());
+    assertNull(n.getAuthorship());
+    assertEquals("1921", n.getYear());
+    assertEquals(NameType.PLACEHOLDER, n.getType());
+  }
+
+  /**
    * http://dev.gbif.org/issues/browse/POR-3081
    */
   @Test

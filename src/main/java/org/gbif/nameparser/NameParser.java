@@ -128,9 +128,11 @@ public class NameParser {
     Pattern.compile("[,;:]? (sp|anon|spp|hort|ms|&|[a-zA-Z][0-9])?\\.? *$", CASE_INSENSITIVE);
   // removed not|indetermin[a-z]+
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
-  private static final Pattern PLACEHOLDER = Pattern.compile(
-    "\\b(unnamed|mixed|unassigned|unallocated|unplaced|undetermined|unclassified|uncultured|unknown|unspecified|uncertain|incertae sedis|not assigned|awaiting allocation|temp|dummy)\\b",
-    CASE_INSENSITIVE);
+  private static final String PLACEHOLDER_AUTHOR = "(?:unknown|unspecified|uncertain|\\?)";
+  private static final Pattern REMOVE_PLACEHOLDER_AUTHOR = Pattern.compile("\\b"+PLACEHOLDER_AUTHOR+"[, ] ?(" + YEAR + ")$", CASE_INSENSITIVE);
+  private static final String PLACEHOLDER_NAME = "(?:unnamed|mixed|unassigned|unallocated|unplaced|undetermined|unclassified|uncultured|unknown|unspecified|uncertain|incertae sedis|not assigned|awaiting allocation|temp|dummy)";
+  private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
+  private static final Pattern PLACEHOLDER = Pattern.compile("\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
   private static final Pattern DOUBTFUL = Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + "&*+ ,.()/'`´0-9-]+$");
   private static final Pattern DOUBTFUL2 = Pattern.compile("\\bnull\\b");
   private static final Pattern BAD_NAME_SUFFICES = Pattern.compile(" (author|unknown|unassigned|not_stated)$", CASE_INSENSITIVE);
@@ -522,7 +524,19 @@ public class NameParser {
       LOG.debug("Strain: {}", m.group(2));
     }
 
-    // detect unparsable names
+    // remove placeholders from infragenerics and authors and set type
+    m = REMOVE_PLACEHOLDER_AUTHOR.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst(" $1");
+      pn.setType(NameType.PLACEHOLDER);
+    }
+    m = REMOVE_PLACEHOLDER_INFRAGENERIC.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst("");
+      pn.setType(NameType.PLACEHOLDER);
+    }
+
+    // detect further unparsable names
     if (PLACEHOLDER.matcher(name).find()) {
       throw new UnparsableException(NameType.PLACEHOLDER, scientificName);
     }
