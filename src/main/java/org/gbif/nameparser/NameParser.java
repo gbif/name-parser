@@ -611,19 +611,22 @@ public class NameParser {
       name = m.replaceFirst("");
     }
 
-    // check for indets
-    m = RANK_MARKER_AT_END.matcher(name);
-    // f. is a marker for forms, but more often also found in authorships as "filius" - son of.
-    // so ignore those
-    if (m.find() && !(name.endsWith(" f.") || name.endsWith(" f"))) {
-      pn.setType(NameType.INFORMAL);
-      pn.setRankMarker(m.group(2));
-      name = m.replaceAll("");
-    }
-    m = NORM_INDET.matcher(name);
-    if (m.find()) {
-      pn.setType(NameType.INFORMAL);
-      name = m.replaceAll(" ");
+    // check for indets unless we already have a cultivar
+    if (pn.getType() != NameType.CULTIVAR) {
+      m = RANK_MARKER_AT_END.matcher(name);
+      // f. is a marker for forms, but more often also found in authorships as "filius" - son of.
+      // so ignore those
+      if (m.find() && !(name.endsWith(" f.") || name.endsWith(" f"))) {
+        pn.setType(NameType.INFORMAL);
+        pn.setRankMarker(m.group(2));
+        name = m.replaceAll("");
+      }
+      m = NORM_INDET.matcher(name);
+      if (m.find()) {
+        pn.setType(NameType.INFORMAL);
+        name = m.replaceAll(" ");
+      }
+
     }
 
     name = normalizeStrong(name);

@@ -1439,16 +1439,6 @@ public class NameParserTest {
   }
 
   @Test
-  @Ignore
-  public void testElmisSp() throws Exception {
-    ParsedName pn = parser.parse("Elmis sp. Lv.", null);
-    assertEquals("Elmis", pn.getGenusOrAbove());
-    assertEquals("Lv.", pn.getAuthorship());
-    assertNull(pn.getInfraGeneric());
-    assertNull(pn.getInfraSpecificEpithet());
-  }
-
-  @Test
   public void testAraneae() throws Exception {
     ParsedName pn = parser.parse("Araneae", Rank.ORDER);
     assertEquals("Araneae", pn.getGenusOrAbove());
