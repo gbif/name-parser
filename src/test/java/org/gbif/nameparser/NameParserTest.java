@@ -2278,6 +2278,56 @@ public class NameParserTest {
   }
 
   /**
+   * http://dev.gbif.org/issues/browse/POR-3000
+   */
+  @Test
+  public void parseAdultOrLarva() throws Exception {
+    ParsedName n = parser.parse("Elmis sp. Lv.", Rank.SPECIES);
+    assertEquals("Elmis", n.getGenusOrAbove());
+    assertNull(n.getInfraGeneric());
+    assertNull(n.getSpecificEpithet());
+    assertNull(n.getInfraSpecificEpithet());
+    assertNull(n.getAuthorship());
+    assertNull(n.getYear());
+    assertEquals(NameType.INFORMAL, n.getType());
+    assertEquals(Rank.SPECIES, n.getRank());
+    assertEquals("Elmis spec.", n.canonicalNameComplete());
+
+    n = parser.parse("Elmis sp. Lv", Rank.SPECIES);
+    assertEquals("Elmis", n.getGenusOrAbove());
+    assertNull(n.getInfraGeneric());
+    assertNull(n.getSpecificEpithet());
+    assertNull(n.getInfraSpecificEpithet());
+    assertNull(n.getAuthorship());
+    assertNull(n.getYear());
+    assertEquals(NameType.INFORMAL, n.getType());
+    assertEquals(Rank.SPECIES, n.getRank());
+    assertEquals("Elmis spec.", n.canonicalNameComplete());
+
+    n = parser.parse("Elmis sp. Ad.", null);
+    assertEquals("Elmis", n.getGenusOrAbove());
+    assertNull(n.getInfraGeneric());
+    assertNull(n.getSpecificEpithet());
+    assertNull(n.getInfraSpecificEpithet());
+    assertNull(n.getAuthorship());
+    assertNull(n.getYear());
+    assertEquals(NameType.INFORMAL, n.getType());
+    assertEquals(Rank.SPECIES, n.getRank());
+    assertEquals("Elmis spec.", n.canonicalNameComplete());
+
+    n = parser.parse("Elmis ssp. Ad", null);
+    assertEquals("Elmis", n.getGenusOrAbove());
+    assertNull(n.getInfraGeneric());
+    assertNull(n.getSpecificEpithet());
+    assertNull(n.getInfraSpecificEpithet());
+    assertNull(n.getAuthorship());
+    assertNull(n.getYear());
+    assertEquals(NameType.INFORMAL, n.getType());
+    assertEquals(Rank.SUBSPECIES, n.getRank());
+    assertEquals("Elmis subsp.", n.canonicalNameComplete());
+  }
+
+  /**
    * http://dev.gbif.org/issues/browse/POR-3081
    */
   @Test

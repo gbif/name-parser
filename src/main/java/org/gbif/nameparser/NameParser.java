@@ -64,10 +64,12 @@ public class NameParser {
   private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS, CASE_INSENSITIVE);
   private static final Pattern IS_CANDIDATUS_QUOTE_PATTERN = Pattern.compile("\"" + CANDIDATUS + "(.+)\"", CASE_INSENSITIVE);
   private static final Pattern RANK_MARKER_AT_END = Pattern.compile(" " +
-                                                    RANK_MARKER_ALL.substring(0,RANK_MARKER_ALL.lastIndexOf(')')) +
-                                                    "|" +
-                                                    RANK_MARKER_MICROBIAL.substring(3) +
-                                                    "\\.?$");
+                                  RANK_MARKER_ALL.substring(0,RANK_MARKER_ALL.lastIndexOf(')')) +
+                                  "|" +
+                                  RANK_MARKER_MICROBIAL.substring(3) + "\\.?" +
+                                  // allow for larva/adult life stage indicators: http://dev.gbif.org/issues/browse/POR-3000
+                                  " ?(?:Ad|Lv)?\\.?" +
+                                  "$");
   // name normalising
   private static final String SENSU =
     "(s\\.(?:l\\.|str\\.)|sensu\\s+(?:latu|strictu?)|(sec|sensu|auct|non)((\\.|\\s)(.*))?)";
@@ -616,7 +618,7 @@ public class NameParser {
     if (m.find() && !(name.endsWith(" f.") || name.endsWith(" f"))) {
       pn.setType(NameType.INFORMAL);
       pn.setRankMarker(m.group(2));
-      name = m.replaceAll(" ");
+      name = m.replaceAll("");
     }
     m = NORM_INDET.matcher(name);
     if (m.find()) {
