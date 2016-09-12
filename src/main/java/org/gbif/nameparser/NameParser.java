@@ -2,13 +2,14 @@ package org.gbif.nameparser;
 
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.NameType;
+import org.gbif.api.vocabulary.NomenclaturalCode;
 import org.gbif.api.vocabulary.Rank;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -47,8 +48,9 @@ public class NameParser {
   public static final String EXTINCT_MARKER = "†";
   private static final Pattern EXTINCT_PATTERN = Pattern.compile(EXTINCT_MARKER + "\\s*");
 
-  protected static final Pattern CULTIVAR =
-    Pattern.compile("(?: cv\\.? ?)?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
+  @VisibleForTesting
+  protected static final Pattern CULTIVAR = Pattern.compile("(?: cv\\.? ?)?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
+  private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex)\\b");
 
   private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+ *[0-9]+T?)$");
   // this is only used to detect whether we have a virus name
@@ -125,7 +127,7 @@ public class NameParser {
   private static final Pattern NORM_IN_COMMA = Pattern.compile(", in ", CASE_INSENSITIVE);
   private static final Pattern NORM_IN_BIB = Pattern.compile("( in .+$| ?: ?[0-9]+)", CASE_INSENSITIVE);
   private static final Pattern NORM_PREFIXES = Pattern.compile("^(sub)?(fossil|" +
-      StringUtils.join(Rank.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
+      StringUtils.join(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
   private static final Pattern NORM_SUFFIXES =
     Pattern.compile("[,;:]? (sp|anon|spp|hort|ms|&|[a-zA-Z][0-9])?\\.? *$", CASE_INSENSITIVE);
   // removed not|indetermin[a-z]+
@@ -152,7 +154,7 @@ public class NameParser {
   static {
     StringBuilder sb = new StringBuilder();
     sb.append("\\b(");
-    for (Rank r : Rank.INFRASUBSPECIFIC_MICROBIAL_RANKS) {
+    for (Rank r : RankUtils.INFRASUBSPECIFIC_MICROBIAL_RANKS) {
       if (r.name().endsWith("VAR")) {
         if (sb.length()>4) {
           sb.append("|");
@@ -261,8 +263,15 @@ public class NameParser {
     }
     name = org.gbif.utils.text.StringUtils.unescapeUnicodeChars(name);
 
+    // normalise usage of forma specialis rank marker with 2 dots
+    Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\.sp(?:ec)?\\b");
+    Matcher m = FORM_SPECIALIS.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("fsp");
+    }
+
     // normalise usage of dots after abbreviated genus and rank marker
-    Matcher m = NORM_DOTS.matcher(name);
+    m = NORM_DOTS.matcher(name);
     if (m.find()) {
       name = m.replaceAll("$1. ");
     }
@@ -560,14 +569,28 @@ public class NameParser {
 
     // parse cultivar names first BEFORE we strongly normalize
     // this will potentially remove quotes needed to find cultivar names
+    // this will potentially remove quotes needed to find cultivar group names
+    m = CULTIVAR_GROUP.matcher(name);
+    if (m.find()) {
+      pn.setCultivarEpithet(m.group(1));
+      name = m.replaceFirst(" ");
+      pn.setType(NameType.CULTIVAR);
+      String cgroup = m.group(2);
+      if (cgroup.equalsIgnoreCase("grex")) {
+        pn.setRank(Rank.GREX);
+      } else {
+        pn.setRank(Rank.CULTIVAR_GROUP);
+      }
+    }
     m = CULTIVAR.matcher(name);
     if (m.find()) {
       pn.setCultivarEpithet(m.group(1));
       name = m.replaceFirst(" ");
       pn.setType(NameType.CULTIVAR);
       pn.setRank(Rank.CULTIVAR);
-      LOG.debug("Cultivar: {}", pn.getCultivarEpithet());
     }
+
+
 
     // name without any latin char letter at all?
     if (NO_LETTERS.matcher(name).find()) {
@@ -593,7 +616,7 @@ public class NameParser {
       if (pn.getNomStatus() != null) {
         Matcher rm = NOV_RANK_MARKER.matcher(pn.getNomStatus());
         if (rm.find()) {
-          pn.setRankMarker(rm.group(1).trim());
+          NormalisedNameParser.setRank(pn, rm.group(1));
         }
       }
     }
@@ -618,7 +641,7 @@ public class NameParser {
       // so ignore those
       if (m.find() && !(name.endsWith(" f.") || name.endsWith(" f"))) {
         pn.setType(NameType.INFORMAL);
-        pn.setRankMarker(m.group(2));
+        NormalisedNameParser.setRank(pn, m.group(2));
         name = m.replaceAll("");
       }
       m = NORM_INDET.matcher(name);
@@ -635,7 +658,7 @@ public class NameParser {
     }
 
     // remember current rank for later reuse
-    Rank origRank = pn.getRank();
+    Rank preparsingRank = pn.getRank();
 
     // try regular parsing
     boolean parsed = nnParser.parseNormalisedName(pn, name, rank);
@@ -661,21 +684,35 @@ public class NameParser {
         }
       }
     }
-    if (origRank != null) {
-      pn.setRank(origRank);
+
+    // if we established a rank during preparsing make sure we use this not the parsed one
+    if (preparsingRank != null) {
+      pn.setRank(preparsingRank);
     }
 
     // primarily make sure again we haven't parsed a non name
     postAssertParsing(pn, scientificName, name);
 
     // determine name type if not yet assigned
+    determineNameType(pn, scientificName);
+
+    // determine rank if not yet assigned
+    if (pn.getRank() == null) {
+      pn.setRank(RankUtils.inferRank(pn));
+    }
+
+    LOG.debug("Parsing time: {}", (System.currentTimeMillis() - start));
+    return pn;
+  }
+
+  private void determineNameType(ParsedName pn, String scientificName) {
     if (pn.getType() == null) {
       // a placeholder spithet only?
       if (pn.getGenusOrAbove().equals("?")) {
         pn.setType(NameType.PLACEHOLDER);
       } else {
         // a doubtful name?
-        m = DOUBTFUL.matcher(scientificName);
+        Matcher m = DOUBTFUL.matcher(scientificName);
         if (!m.find()) {
           pn.setType(NameType.DOUBTFUL);
         } else {
@@ -688,9 +725,6 @@ public class NameParser {
         }
       }
     }
-
-    LOG.debug("Parsing time: {}", (System.currentTimeMillis() - start));
-    return pn;
   }
 
   private void postAssertParsing(ParsedName pn, final String rawName, final String normedName) throws UnparsableException {
@@ -700,12 +734,15 @@ public class NameParser {
       throw new UnparsableException(NameType.DOUBTFUL, rawName);
 
     } else if (pn.getRank() != null) {
-      if (pn.getRank().isSpeciesOrBelow() && !pn.isBinomial() && !pn.getRank().equals(Rank.CULTIVAR)) {
+      if (pn.getRank().equals(Rank.CULTIVAR) && pn.getCultivarEpithet() == null) {
         pn.setType(NameType.INFORMAL);
-      } else if (pn.getRank().equals(Rank.CULTIVAR) && pn.getCultivarEpithet() == null) {
+
+      } else if (pn.getRank().isSpeciesOrBelow() && pn.getRank().isRestrictedToCode()!= NomenclaturalCode.CULTIVARS && !pn.isBinomial()) {
         pn.setType(NameType.INFORMAL);
-      } else if (pn.getRank().isInfraspecific() && pn.getInfraSpecificEpithet() == null) {
+
+      } else if (pn.getRank().isInfraspecific() && pn.getRank().isRestrictedToCode()!= NomenclaturalCode.CULTIVARS && pn.getInfraSpecificEpithet() == null) {
         pn.setType(NameType.INFORMAL);
+
       } else if (!pn.getRank().isSpeciesOrBelow() && pn.isBinomial()) {
         pn.setType(NameType.DOUBTFUL);
       }

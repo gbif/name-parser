@@ -8,13 +8,10 @@ import org.gbif.utils.file.FileUtils;
 import org.gbif.utils.file.InputStreamUtils;
 
 import java.io.Reader;
-import java.util.List;
 import java.util.regex.Matcher;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import junit.framework.TestCase;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
@@ -109,18 +106,17 @@ public class NameParserTest {
   // 12nothotype
   // 13nametype
   private ParsedName buildParsedNameFromTabRow(String[] cols) {
-    ParsedName pn = null;
     try {
-      pn = new ParsedName(NameType.fromString(cols[13]), StringUtils.trimToNull(cols[1]),
+      return new ParsedName(NameType.fromString(cols[13]), StringUtils.trimToNull(cols[1]),
           StringUtils.trimToNull(cols[2]), StringUtils.trimToNull(cols[3]), StringUtils.trimToNull(cols[4]),
-          NamePart.fromString(cols[12]), StringUtils.trimToNull(cols[10]), StringUtils.trimToNull(cols[6]),
+          NamePart.fromString(cols[12]), RankUtils.inferRank(StringUtils.trimToNull(cols[10])), StringUtils.trimToNull(cols[6]),
           StringUtils.trimToNull(cols[7]), StringUtils.trimToNull(cols[8]), StringUtils.trimToNull(cols[9]),
           StringUtils.trimToNull(cols[5]), null, null, null, null);
+
     } catch (ArrayIndexOutOfBoundsException e) {
       LOG.error("scientific_names.txt file bogus, too little columns:\n{}", Joiner.on("|").useForNull("").join(cols));
       throw e;
     }
-    return pn;
   }
 
   private String extractNomNote(String name) {
@@ -237,7 +233,7 @@ public class NameParserTest {
     ParsedName pn = parser.parse("Diatrypella favacea var. favacea (Fr.) Ces. & De Not.", null);
     assertEquals("Diatrypella", pn.getGenusOrAbove());
     assertEquals("favacea", pn.getSpecificEpithet());
-    assertEquals("var.", pn.getRankMarker());
+    assertEquals(Rank.VARIETY, pn.getRank());
     assertEquals("favacea", pn.getInfraSpecificEpithet());
     assertEquals("Ces. & De Not.", pn.getAuthorship());
     assertEquals("Fr.", pn.getBracketAuthorship());
@@ -256,10 +252,10 @@ public class NameParserTest {
   @Test
   public void testCanonNameParserSubgenera() throws Exception {
     ParsedName pn = parser.parse("Polygonum subgen. Bistorta (L.) Zernov", null);
-    assertTrue(pn.getNotho() == null);
+    assertNull(pn.getNotho());
     assertEquals("Polygonum", pn.getGenusOrAbove());
     assertEquals("Bistorta", pn.getInfraGeneric());
-    assertEquals("subgen.", pn.getRankMarker());
+    assertEquals(Rank.SUBGENUS, pn.getRank());
     assertEquals("Zernov", pn.getAuthorship());
     assertEquals("L.", pn.getBracketAuthorship());
 
@@ -267,37 +263,36 @@ public class NameParserTest {
     assertEquals("Arrhoges", n.getGenusOrAbove());
     assertEquals("Antarctohoges", n.getBracketAuthorship());
     assertNull(n.getInfraGeneric());
-    assertNull(n.getRankMarker());
+    assertNull(n.getRank());
     assertNull(n.getNotho());
 
     n = parser.parse("Arrhoges (Antarctohoges)", Rank.SUBGENUS);
     assertEquals("Arrhoges", n.getGenusOrAbove());
     assertEquals("Antarctohoges", n.getInfraGeneric());
-    assertTrue(n.getRankMarker() == Rank.SUBGENUS.getMarker());
-    assertTrue(n.getNotho() == null);
+    assertEquals(Rank.SUBGENUS, n.getRank());
+    assertNull(n.getNotho());
 
     pn = parser.parse("Festuca subg. Schedonorus (P. Beauv. ) Peterm.", null);
     assertEquals("Festuca", pn.getGenusOrAbove());
     assertEquals("Schedonorus", pn.getInfraGeneric());
-    assertEquals("subgen.", pn.getRankMarker());
+    assertEquals(Rank.SUBGENUS, pn.getRank());
     assertEquals("Peterm.", pn.getAuthorship());
     assertEquals("P. Beauv.", pn.getBracketAuthorship());
 
     n = parser.parse("Catapodium subg.Agropyropsis  Trab.", null);
     assertEquals("Catapodium", n.getGenusOrAbove());
     assertEquals("Agropyropsis", n.getInfraGeneric());
-    assertEquals("subgen.", n.getRankMarker());
+    assertEquals(Rank.SUBGENUS, n.getRank());
 
     n = parser.parse(" Gnaphalium subg. Laphangium Hilliard & B. L. Burtt", null);
     assertEquals("Gnaphalium", n.getGenusOrAbove());
     assertEquals("Laphangium", n.getInfraGeneric());
-    assertEquals("subgen.", n.getRankMarker());
+    assertEquals(Rank.SUBGENUS, n.getRank());
 
     n = parser.parse("Woodsiaceae (Hooker) Herter", null);
     assertEquals("Woodsiaceae", n.getGenusOrAbove());
-    assertTrue(n.getInfraGeneric() == null);
-    assertTrue(n.getRankMarker() == null);
-
+    assertNull(n.getInfraGeneric());
+    assertEquals(Rank.FAMILY, n.getRank());
   }
 
   @Test
@@ -383,41 +378,72 @@ public class NameParserTest {
   }
 
   @Test
+  //@Ignore("needs a parser update, just added for test first approach")
   public void testCultivarNames() throws Exception {
-    ParsedName pn = parser.parse("Abutilon 'Kentish Belle'", null);
+    ParsedName pn = parser.parse("Verpericola megasoma \"Dall\" Pils.", null);
+
+
+    pn = parser.parse("Abutilon 'Kentish Belle'", null);
     assertEquals("Abutilon", pn.getGenusOrAbove());
+    assertEquals("Kentish Belle", pn.getCultivarEpithet());
     assertEquals(NameType.CULTIVAR, pn.getType());
 
     pn = parser.parse("Abutilon 'Nabob'", null);
     assertEquals("Abutilon", pn.getGenusOrAbove());
+    assertEquals("Nabob", pn.getCultivarEpithet());
     assertEquals(NameType.CULTIVAR, pn.getType());
 
     pn = parser.parse("Verpericola megasoma \"Dall\" Pils.", null);
     assertEquals("Verpericola", pn.getGenusOrAbove());
     assertEquals("megasoma", pn.getSpecificEpithet());
+    assertEquals("Dall", pn.getCultivarEpithet());
+    assertEquals("Pils.", pn.getAuthorship());
     assertEquals(NameType.CULTIVAR, pn.getType());
 
     pn = parser.parse("Sorbus americana Marshall cv. 'Belmonte'", null);
     assertEquals("Sorbus", pn.getGenusOrAbove());
     assertEquals("americana", pn.getSpecificEpithet());
+    assertEquals("Belmonte", pn.getCultivarEpithet());
     assertEquals(NameType.CULTIVAR, pn.getType());
 
     pn = parser.parse("Sorbus hupehensis C.K.Schneid. cv. 'November pink'", null);
     assertEquals("Sorbus", pn.getGenusOrAbove());
     assertEquals("hupehensis", pn.getSpecificEpithet());
+    assertEquals("November pink", pn.getCultivarEpithet());
     assertEquals(NameType.CULTIVAR, pn.getType());
 
     pn = parser.parse("Symphoricarpos albus (L.) S.F.Blake cv. 'Turesson'", null);
     assertEquals("Symphoricarpos", pn.getGenusOrAbove());
     assertEquals("albus", pn.getSpecificEpithet());
+    assertEquals("Turesson", pn.getCultivarEpithet());
     assertEquals(NameType.CULTIVAR, pn.getType());
     assertEquals(Rank.CULTIVAR, pn.getRank());
 
     pn = parser.parse("Symphoricarpos sp. cv. 'mother of pearl'", null);
     assertEquals("Symphoricarpos", pn.getGenusOrAbove());
+    assertEquals("mother of pearl", pn.getCultivarEpithet());
     assertEquals(NameType.CULTIVAR, pn.getType());
     assertEquals(Rank.CULTIVAR, pn.getRank());
 
+    pn = parser.parse("Primula Border Auricula Group", null);
+    assertEquals("Primula", pn.getGenusOrAbove());
+    assertEquals("Border Auricula", pn.getCultivarEpithet());
+    assertEquals(NameType.CULTIVAR, pn.getType());
+    assertEquals(Rank.CULTIVAR_GROUP, pn.getRank());
+
+    pn = parser.parse("Rhododendron boothii Mishmiense Group", null);
+    assertEquals("Rhododendron", pn.getGenusOrAbove());
+    assertEquals("boothii", pn.getSpecificEpithet());
+    assertEquals("Mishmiense", pn.getCultivarEpithet());
+    assertEquals(NameType.CULTIVAR, pn.getType());
+    assertEquals(Rank.CULTIVAR_GROUP, pn.getRank());
+
+    pn = parser.parse("Paphiopedilum Sorel grex", null);
+    assertEquals("Paphiopedilum", pn.getGenusOrAbove());
+    assertNull(pn.getSpecificEpithet());
+    assertEquals("Sorel", pn.getCultivarEpithet());
+    assertEquals(NameType.CULTIVAR, pn.getType());
+    assertEquals(Rank.GREX, pn.getRank());
   }
 
   @Test
@@ -438,7 +464,7 @@ public class NameParserTest {
         parser.normalize("Caloplaca poliotera (Nyl.) J. Steiner\\r\\n\\r\\n"));
 
     ParsedName pn = parser.parse("Caloplaca poliotera (Nyl.) J. Steiner\\r\\n\\r\\n.", null);
-    assertTrue(pn.getNotho() == null);
+    assertNull(pn.getNotho());
     assertEquals("Caloplaca", pn.getGenusOrAbove());
     assertEquals("poliotera", pn.getSpecificEpithet());
     assertEquals("Nyl.", pn.getBracketAuthorship());
@@ -460,8 +486,7 @@ public class NameParserTest {
     assertHybridFormula("Polypodium vulgare subsp. prionodes (Asch.) Rothm. × subsp. vulgare");
     assertHybridFormula("Tilletia caries (Bjerk.) Tul. × T. foetida (Wallr.) Liro.");
 
-    assertEquals("Polypodium vulgare nothosubsp. mantoniae (Rothm.) Schidlay",
-        parser.parse("Polypodium  x vulgare nothosubsp. mantoniae (Rothm.) Schidlay ", null).fullName());
+    assertEquals("Polypodium vulgare nothosubsp. mantoniae (Rothm.) Schidlay", parser.parse("Polypodium  x vulgare nothosubsp. mantoniae (Rothm.) Schidlay ", null).fullName());
     assertHybridName(parser.parse("Arthopyrenia hyalospora x ", null));
   }
 
@@ -495,49 +520,49 @@ public class NameParserTest {
     assertEquals(NamePart.GENERIC, n.getNotho());
     assertEquals("Pyrocrataegus", n.getGenusOrAbove());
     assertEquals("willei", n.getSpecificEpithet());
-    assertTrue(n.getInfraSpecificEpithet() == null);
+    assertNull(n.getInfraSpecificEpithet());
     assertEquals("L.L.Daniel", n.getAuthorship());
 
     n = parser.parse(" × Pyrocrataegus willei L.L.Daniel", null);
     assertEquals(NamePart.GENERIC, n.getNotho());
     assertEquals("Pyrocrataegus", n.getGenusOrAbove());
     assertEquals("willei", n.getSpecificEpithet());
-    assertTrue(n.getInfraSpecificEpithet() == null);
+    assertNull(n.getInfraSpecificEpithet());
     assertEquals("L.L.Daniel", n.getAuthorship());
 
     n = parser.parse(" X Pyrocrataegus willei L.L.Daniel", null);
     assertEquals(NamePart.GENERIC, n.getNotho());
     assertEquals("Pyrocrataegus", n.getGenusOrAbove());
     assertEquals("willei", n.getSpecificEpithet());
-    assertTrue(n.getInfraSpecificEpithet() == null);
+    assertNull(n.getInfraSpecificEpithet());
     assertEquals("L.L.Daniel", n.getAuthorship());
 
     n = parser.parse("Pyrocrataegus ×willei L.L.Daniel", null);
     assertEquals(NamePart.SPECIFIC, n.getNotho());
     assertEquals("Pyrocrataegus", n.getGenusOrAbove());
     assertEquals("willei", n.getSpecificEpithet());
-    assertTrue(n.getInfraSpecificEpithet() == null);
+    assertNull(n.getInfraSpecificEpithet());
     assertEquals("L.L.Daniel", n.getAuthorship());
 
     n = parser.parse("Pyrocrataegus × willei L.L.Daniel", null);
     assertEquals(NamePart.SPECIFIC, n.getNotho());
     assertEquals("Pyrocrataegus", n.getGenusOrAbove());
     assertEquals("willei", n.getSpecificEpithet());
-    assertTrue(n.getInfraSpecificEpithet() == null);
+    assertNull(n.getInfraSpecificEpithet());
     assertEquals("L.L.Daniel", n.getAuthorship());
 
     n = parser.parse("Pyrocrataegus x willei L.L.Daniel", null);
     assertEquals(NamePart.SPECIFIC, n.getNotho());
     assertEquals("Pyrocrataegus", n.getGenusOrAbove());
     assertEquals("willei", n.getSpecificEpithet());
-    assertTrue(n.getInfraSpecificEpithet() == null);
+    assertNull(n.getInfraSpecificEpithet());
     assertEquals("L.L.Daniel", n.getAuthorship());
 
     n = parser.parse("Pyrocrataegus X willei L.L.Daniel", null);
     assertEquals(NamePart.SPECIFIC, n.getNotho());
     assertEquals("Pyrocrataegus", n.getGenusOrAbove());
     assertEquals("willei", n.getSpecificEpithet());
-    assertTrue(n.getInfraSpecificEpithet() == null);
+    assertNull(n.getInfraSpecificEpithet());
     assertEquals("L.L.Daniel", n.getAuthorship());
 
     n = parser.parse("Pyrocrataegus willei ×libidi L.L.Daniel", null);
@@ -700,10 +725,11 @@ public class NameParserTest {
   @Test
   public void testNullNameParts() throws Exception {
     assertParsedParts("Austrorhynchus pectatus null pectatus", NameType.DOUBTFUL, "Austrorhynchus", "pectatus", "pectatus", null, null);
-    assertParsedParts("Poa pratensis kewensis proles", NameType.SCIENTIFIC, "Poa", "pratensis", "proles", "infrasubsp.", null);
+    assertParsedParts("Poa pratensis null proles (L.) Rouy, 1913", NameType.INFORMAL, "Poa", "pratensis", null, Rank.PROLES, "Rouy", "1913", "L.", null);
 
-    assertParsedParts("Poa pratensis null proles (L.) Rouy, 1913", NameType.DOUBTFUL, "Poa", "pratensis", "proles", null, "Rouy", "1913", "L.", null);
-    assertParsedParts("Poa pratensis kewensis proles (L.) Rouy, 1913", NameType.SCIENTIFIC, "Poa", "pratensis", "proles", "infrasubsp.", "Rouy", "1913", "L.", null);
+    // should the infrasubspecific epithet kewensis be removed from the parsed name?
+    //assertParsedParts("Poa pratensis kewensis proles", NameType.INFORMAL, "Poa", "pratensis", "kewensis", Rank.PROLES, null);
+    //assertParsedParts("Poa pratensis kewensis proles (L.) Rouy, 1913", NameType.INFORMAL, "Poa", "pratensis", null, Rank.PROLES, "Rouy", "1913", "L.", null);
   }
 
   /**
@@ -824,7 +850,6 @@ public class NameParserTest {
     assertEquals(NameType.INFORMAL, pn.getType());
   }
 
-
   @Test
   public void testRankMismatch() throws Exception {
     ParsedName pn = parser.parse("Polygonum", Rank.SUBGENUS);
@@ -868,83 +893,3880 @@ public class NameParserTest {
     }
   }
 
+  /**
+   * Tests that were previously hosted in the scientific_name.txt file
+   */
   @Test
-  public void testNameFile() throws Exception {
-    final int CURRENTLY_FAIL = 24;
-    final int CURRENTLY_FAIL_EXCL_AUTHORS = 19;
+  public void testNameFileJava() throws Exception {
+    ParsedName pn = parser.parse("Pseudocercospora ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
 
-    LOG.info("\n\nSTARTING FULL PARSER\n");
-    Reader reader = FileUtils.getInputStreamReader(streamUtils.classpathStream("scientific_names.txt"));
-    LineIterator iter = new LineIterator(reader);
+    pn = parser.parse("Pseudocercospora Speg. ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Speg.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
 
-    int parseFails = 0;
-    int parseNoAuthors = 0;
-    int parseErrors = 0;
-    int cnt = 0;
-    int lineNum = 0;
-    long start = System.currentTimeMillis();
+    pn = parser.parse("Pseudocercospora Speg. 1910 ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Speg.", pn.getAuthorship());
+    assertEquals("1910", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
 
-    Splitter tabSplit = Splitter.on('\t');
-    while (iter.hasNext()) {
-      lineNum++;
-      String line = iter.nextLine();
-      if (lineNum == 1 || line == null || line.startsWith("#") || line.trim().isEmpty()) {
-        continue;
-      }
-      cnt++;
+    pn = parser.parse("Pseudocercospora Spegazzini, 1910 ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Spegazzini", pn.getAuthorship());
+    assertEquals("1910", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
 
-      List<String> cols = tabSplit.splitToList(line);
-      String name = cols.get(0);
-      if (cols.size() < 14) {
-        LOG.warn("Too short line in names test file:");
-        LOG.warn(line);
-      }
-      ParsedName expected = buildParsedNameFromTabRow(cols.toArray(new String[cols.size()]));
-      ParsedName n;
-      try {
-        n = parser.parse(name, null);
-        if (!n.isAuthorsParsed()) {
-          parseNoAuthors++;
-        }
-        // copy scientific name, we dont wanna compare it, it might be slightly different
-        expected.setScientificName(n.getScientificName());
-        // remove SCIENTIFIC nametype as we only like to compare other values
-        if (NameType.SCIENTIFIC == n.getType()) {
-          n.setType(null);
-        }
-        if (!n.equals(expected)) {
-          parseErrors++;
-          LOG.warn("WRONG\t " + name + "\n  EXPECTED: " + expected + "\n  PARSED  : " + n);
-        }
-      } catch (Exception e) {
-        parseFails++;
-        LOG.warn("FAIL\t " + name + "\nEXPECTED: " + expected);
-      }
-    }
-    long end = System.currentTimeMillis();
-    int successfulParses = cnt - parseFails - parseErrors;
-    LOG.info("\n\nNames tested: " + cnt);
-    LOG.info("Names success: " + successfulParses);
-    LOG.info("Names parse fail: " + parseFails);
-    LOG.info("Names parse errors: " + parseErrors);
-    LOG.info("Names ignoring authors: " + parseNoAuthors);
-    LOG.info("Total time: " + (end - start));
-    LOG.info("Average per name: " + (((double) end - start) / cnt));
+    pn = parser.parse("Tridentella tangeroae Bruce, 198? ", null);
+    assertEquals("Tridentella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("tangeroae", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Bruce", pn.getAuthorship());
+    assertEquals("198?", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
 
-    if ((parseFails + parseErrors) > CURRENTLY_FAIL) {
-      TestCase.fail(
-          "We are getting worse, not better. Currently failing: " + (parseFails + parseErrors) + ". We used to fail :"
-              + CURRENTLY_FAIL);
-    } else if (parseFails + parseErrors < CURRENTLY_FAIL) {
-      LOG.info("We are getting better! Used to fail : " + CURRENTLY_FAIL);
-    }
-    if ((parseFails + parseNoAuthors) > CURRENTLY_FAIL_EXCL_AUTHORS) {
-      TestCase.fail(
-          "We are getting worse, not better. Currently failing ignroing authors: " + (parseFails + parseNoAuthors)
-              + ". Was passing:" + CURRENTLY_FAIL_EXCL_AUTHORS);
-    } else if (parseFails + parseNoAuthors < CURRENTLY_FAIL_EXCL_AUTHORS) {
-      LOG.info("We are getting better! Used to fail without authors: " + CURRENTLY_FAIL_EXCL_AUTHORS);
-    }
+    pn = parser.parse("Ca Dyar 1914 ", null);
+    assertEquals("Ca", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Dyar", pn.getAuthorship());
+    assertEquals("1914", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ea Distant 1911 ", null);
+    assertEquals("Ea", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Distant", pn.getAuthorship());
+    assertEquals("1911", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ge Nicéville 1895 ", null);
+    assertEquals("Ge", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Nicéville", pn.getAuthorship());
+    assertEquals("1895", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ia Thomas 1902 ", null);
+    assertEquals("Ia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Thomas", pn.getAuthorship());
+    assertEquals("1902", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Io Lea 1831 ", null);
+    assertEquals("Io", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Lea", pn.getAuthorship());
+    assertEquals("1831", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Io Blanchard 1852 ", null);
+    assertEquals("Io", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Blanchard", pn.getAuthorship());
+    assertEquals("1852", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ix Bergroth 1916 ", null);
+    assertEquals("Ix", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Bergroth", pn.getAuthorship());
+    assertEquals("1916", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Lo Seale 1906 ", null);
+    assertEquals("Lo", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Seale", pn.getAuthorship());
+    assertEquals("1906", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Oa Girault 1929 ", null);
+    assertEquals("Oa", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Girault", pn.getAuthorship());
+    assertEquals("1929", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ra Whitley 1931 ", null);
+    assertEquals("Ra", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Whitley", pn.getAuthorship());
+    assertEquals("1931", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ty Bory de St. Vincent 1827 ", null);
+    assertEquals("Ty", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Bory de St. Vincent", pn.getAuthorship());
+    assertEquals("1827", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ua Girault 1929 ", null);
+    assertEquals("Ua", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Girault", pn.getAuthorship());
+    assertEquals("1929", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Aa Baker 1940 ", null);
+    assertEquals("Aa", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Baker", pn.getAuthorship());
+    assertEquals("1940", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ja Uéno 1955 ", null);
+    assertEquals("Ja", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Uéno", pn.getAuthorship());
+    assertEquals("1955", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Zu Walters & Fitch 1960 ", null);
+    assertEquals("Zu", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Walters & Fitch", pn.getAuthorship());
+    assertEquals("1960", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("La Bleszynski 1966 ", null);
+    assertEquals("La", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Bleszynski", pn.getAuthorship());
+    assertEquals("1966", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Qu Durkoop ", null);
+    assertEquals("Qu", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Durkoop", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("As Slipinski 1982 ", null);
+    assertEquals("As", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Slipinski", pn.getAuthorship());
+    assertEquals("1982", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ba Solem 1983 ", null);
+    assertEquals("Ba", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Solem", pn.getAuthorship());
+    assertEquals("1983", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pseudocercospora     dendrobii ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("dendrobii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Platypus bicaudatulus Schedl 1935 ", null);
+    assertEquals("Platypus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("bicaudatulus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Schedl", pn.getAuthorship());
+    assertEquals("1935", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Platypus bicaudatulus Schedl, 1935h ", null);
+    assertEquals("Platypus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("bicaudatulus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Schedl", pn.getAuthorship());
+    assertEquals("1935h", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Donatia novae zelandiae Hook.f.", null);
+    assertEquals("Donatia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("novae zelandiae", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Hook.f.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Donatia novae-zelandiae Hook.f", null);
+    assertEquals("Donatia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("novae-zelandiae", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Hook.f", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Denticula van heurckii var. angusta Hust.", null);
+    assertEquals("Denticula", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("van heurckii", pn.getSpecificEpithet());
+    assertEquals("angusta", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Hust.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Denticula van heurckii f. ventricosa Hust.", null);
+    assertEquals("Denticula", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("van heurckii", pn.getSpecificEpithet());
+    assertEquals("ventricosa", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Hust.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.FORM, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pseudocercospora dendrobii U. Braun & Crous ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("dendrobii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("U. Braun & Crous", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pseudocercospora dendrobii U. Braun & Crous ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("dendrobii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("U. Braun & Crous", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pseudocercospora dendrobii U. Braun and Crous ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("dendrobii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("U. Braun & Crous", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pseudocercospora dendrobii U. Braun & Crous 2003 ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("dendrobii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("U. Braun & Crous", pn.getAuthorship());
+    assertEquals("2003", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Hegeter (Hegeter) intercedens Lindberg 1950 ", null);
+    assertEquals("Hegeter", pn.getGenusOrAbove());
+    assertEquals("Hegeter", pn.getInfraGeneric());
+    assertEquals("intercedens", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Lindberg", pn.getAuthorship());
+    assertEquals("1950", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ferganoconcha? oblonga ", null);
+    assertEquals("Ferganoconcha", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("oblonga", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Rühlella", null);
+    assertEquals("Rühlella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Sténométope laevissimus Bibron 1855", null);
+    assertEquals("Sténométope", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("laevissimus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Bibron", pn.getAuthorship());
+    assertEquals("1855", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Choriozopella trägårdhi Lawrence, 1947", null);
+    assertEquals("Choriozopella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("trägårdhi", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Lawrence", pn.getAuthorship());
+    assertEquals("1947", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Læptura laetifica Dow, 1913 ", null);
+    assertEquals("Læptura", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("laetifica", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Dow", pn.getAuthorship());
+    assertEquals("1913", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Leptura lætifica Dow, 1913 ", null);
+    assertEquals("Leptura", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("lætifica", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Dow", pn.getAuthorship());
+    assertEquals("1913", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Leptura leætifica Dow, 1913 ", null);
+    assertEquals("Leptura", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("leætifica", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Dow", pn.getAuthorship());
+    assertEquals("1913", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Leæptura laetifica Dow, 1913 ", null);
+    assertEquals("Leæptura", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("laetifica", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Dow", pn.getAuthorship());
+    assertEquals("1913", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Leœptura laetifica Dow, 1913 ", null);
+    assertEquals("Leœptura", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("laetifica", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Dow", pn.getAuthorship());
+    assertEquals("1913", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ærenea cognata Lacordaire, 1872 ", null);
+    assertEquals("Ærenea", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("cognata", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Lacordaire", pn.getAuthorship());
+    assertEquals("1872", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Œdicnemus capensis ", null);
+    assertEquals("Œdicnemus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("capensis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Œnanthe œnanthe ", null);
+    assertEquals("Œnanthe", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("œnanthe", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Zophosis persis (Chatanay, 1914) ", null);
+    assertEquals("Zophosis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("persis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Chatanay", pn.getBracketAuthorship());
+    assertEquals("1914", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Zophosis persis (Chatanay 1914) ", null);
+    assertEquals("Zophosis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("persis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Chatanay", pn.getBracketAuthorship());
+    assertEquals("1914", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pseudocercospora dendrobii(H.C.     Burnett)U. Braun & Crous     2003 ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("dendrobii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("U. Braun & Crous", pn.getAuthorship());
+    assertEquals("2003", pn.getYear());
+    assertEquals("H.C. Burnett", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pseudocercospora dendrobii(H.C.     Burnett, 1873)U. Braun & Crous     2003 ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("dendrobii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("U. Braun & Crous", pn.getAuthorship());
+    assertEquals("2003", pn.getYear());
+    assertEquals("H.C. Burnett", pn.getBracketAuthorship());
+    assertEquals("1873", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pseudocercospora dendrobii(H.C.     Burnett 1873)U. Braun & Crous ,    2003 ", null);
+    assertEquals("Pseudocercospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("dendrobii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("U. Braun & Crous", pn.getAuthorship());
+    assertEquals("2003", pn.getYear());
+    assertEquals("H.C. Burnett", pn.getBracketAuthorship());
+    assertEquals("1873", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Hydnellum scrobiculatum zonatum (Banker) D. Hall & D.E. Stuntz 1972 ", null);
+    assertEquals("Hydnellum", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("scrobiculatum", pn.getSpecificEpithet());
+    assertEquals("zonatum", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("D. Hall & D.E. Stuntz", pn.getAuthorship());
+    assertEquals("1972", pn.getYear());
+    assertEquals("Banker", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Hydnellum (Hydnellum) scrobiculatum zonatum (Banker) D. Hall & D.E. Stuntz 1972 ", null);
+    assertEquals("Hydnellum", pn.getGenusOrAbove());
+    assertEquals("Hydnellum", pn.getInfraGeneric());
+    assertEquals("scrobiculatum", pn.getSpecificEpithet());
+    assertEquals("zonatum", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("D. Hall & D.E. Stuntz", pn.getAuthorship());
+    assertEquals("1972", pn.getYear());
+    assertEquals("Banker", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Hydnellum scrobiculatum zonatum ", null);
+    assertEquals("Hydnellum", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("scrobiculatum", pn.getSpecificEpithet());
+    assertEquals("zonatum", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Aus bus Linn. var. bus ", null);
+    assertEquals("Aus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("bus", pn.getSpecificEpithet());
+    assertEquals("bus", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Agalinis purpurea (L.) Briton var. borealis (Berg.) Peterson 1987 ", null);
+    assertEquals("Agalinis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("purpurea", pn.getSpecificEpithet());
+    assertEquals("borealis", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Peterson", pn.getAuthorship());
+    assertEquals("1987", pn.getYear());
+    assertEquals("Berg.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Callideriphus flavicollis morph. reductus Fuchs 1961 ", null);
+    assertEquals("Callideriphus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("flavicollis", pn.getSpecificEpithet());
+    assertEquals("reductus", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Fuchs", pn.getAuthorship());
+    assertEquals("1961", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.MORPH, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Caulerpa cupressoides forma nuda ", null);
+    assertEquals("Caulerpa", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("cupressoides", pn.getSpecificEpithet());
+    assertEquals("nuda", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.FORM, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Chlorocyperus glaber form. fasciculariforme (Lojac.) Soó ", null);
+    assertEquals("Chlorocyperus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("glaber", pn.getSpecificEpithet());
+    assertEquals("fasciculariforme", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Soó", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Lojac.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.FORM, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Sphaerotheca    fuliginea    f.     dahliae    Movss.     1967 ", null);
+    assertEquals("Sphaerotheca", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("fuliginea", pn.getSpecificEpithet());
+    assertEquals("dahliae", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Movss.", pn.getAuthorship());
+    assertEquals("1967", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.FORM, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Polypodium vulgare nothosubsp. mantoniae (Rothm.) Schidlay ", null);
+    assertEquals("Polypodium", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("vulgare", pn.getSpecificEpithet());
+    assertEquals("mantoniae", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Schidlay", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Rothm.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SUBSPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.INFRASPECIFIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Hydnellum scrobiculatum var. zonatum f. parvum (Banker) D. Hall & D.E. Stuntz 1972 ", null);
+    assertEquals("Hydnellum", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("scrobiculatum", pn.getSpecificEpithet());
+    assertEquals("parvum", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("D. Hall & D.E. Stuntz", pn.getAuthorship());
+    assertEquals("1972", pn.getYear());
+    assertEquals("Banker", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.FORM, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Senecio fuchsii C.C.Gmel. subsp. fuchsii var. expansus (Boiss. & Heldr.) Hayek ", null);
+    assertEquals("Senecio", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("fuchsii", pn.getSpecificEpithet());
+    assertEquals("expansus", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Hayek", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Boiss. & Heldr.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Senecio fuchsii C.C.Gmel. subsp. fuchsii var. fuchsii ", null);
+    assertEquals("Senecio", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("fuchsii", pn.getSpecificEpithet());
+    assertEquals("fuchsii", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Tragacantha leporina (?) Kuntze ", null);
+    assertEquals("Tragacantha", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("leporina", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+//    assertEquals("Kuntze", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Lachenalia tricolor var. nelsonii (auct.) Baker ", null);
+    assertEquals("Lachenalia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("tricolor", pn.getSpecificEpithet());
+    assertEquals("nelsonii", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Baker", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Lachenalia tricolor var. nelsonii (anon.) Baker ", null);
+    assertEquals("Lachenalia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("tricolor", pn.getSpecificEpithet());
+    assertEquals("nelsonii", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+//    assertEquals("Baker", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Lachenalia tricolor var. nelsonii (ht.) Baker ", null);
+    assertEquals("Lachenalia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("tricolor", pn.getSpecificEpithet());
+    assertEquals("nelsonii", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+//    assertEquals("Baker", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Lachenalia tricolor var. nelsonii (hort.) Baker ", null);
+    assertEquals("Lachenalia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("tricolor", pn.getSpecificEpithet());
+    assertEquals("nelsonii", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+//    assertEquals("Baker", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Puya acris ht. ", null);
+    assertEquals("Puya", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("acris", pn.getSpecificEpithet());
+//    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+//    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Puya acris anon. ", null);
+    assertEquals("Puya", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("acris", pn.getSpecificEpithet());
+//    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Puya acris hort. ", null);
+    assertEquals("Puya", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("acris", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+//    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.INFORMAL, pn.getType());
+
+    pn = parser.parse("Puya acris auct.", null);
+    assertEquals("Puya", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("acris", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Anabaena catenula (K?tzing) Bornet & Flahault", null);
+    assertEquals("Anabaena", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("catenula", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Bornet & Flahault", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("K?tzing", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Fagus sylvatica subsp. orientalis (Lipsky) Greuter & Burdet ", null);
+    assertEquals("Fagus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("sylvatica", pn.getSpecificEpithet());
+    assertEquals("orientalis", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Greuter & Burdet", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Lipsky", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SUBSPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Stagonospora polyspora M.T. Lucas & Sousa da Câmara 1934 ", null);
+    assertEquals("Stagonospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("polyspora", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("M.T. Lucas & Sousa da Câmara", pn.getAuthorship());
+    assertEquals("1934", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Stagonospora polyspora M.T. Lucas et Sousa da Câmara 1934 ", null);
+    assertEquals("Stagonospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("polyspora", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("M.T. Lucas & Sousa da Câmara", pn.getAuthorship());
+    assertEquals("1934", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Cladoniicola staurospora Diederich, van den Boom & Aptroot 2001 ", null);
+    assertEquals("Cladoniicola", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("staurospora", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Diederich, van den Boom & Aptroot", pn.getAuthorship());
+    assertEquals("2001", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Yarrowia lipolytica var. lipolytica (Wick., Kurtzman & E.A. Herrm.) Van der Walt & Arx 1981 ", null);
+    assertEquals("Yarrowia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("lipolytica", pn.getSpecificEpithet());
+    assertEquals("lipolytica", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Van der Walt & Arx", pn.getAuthorship());
+    assertEquals("1981", pn.getYear());
+    assertEquals("Wick., Kurtzman & E.A. Herrm.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Physalospora rubiginosa (Fr.) anon. ", null);
+    assertEquals("Physalospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("rubiginosa", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Fr.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pleurotus ëous (Berk.) Sacc. 1887 ", null);
+    assertEquals("Pleurotus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("ëous", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Sacc.", pn.getAuthorship());
+    assertEquals("1887", pn.getYear());
+    assertEquals("Berk.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Lecanora wetmorei Śliwa 2004 ", null);
+    assertEquals("Lecanora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("wetmorei", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Śliwa", pn.getAuthorship());
+    assertEquals("2004", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Calicium furfuraceum * furfuraceum (L.) Pers. 1797 ", null);
+    assertEquals("Calicium", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("furfuraceum", pn.getSpecificEpithet());
+    assertEquals("furfuraceum", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Pers.", pn.getAuthorship());
+    assertEquals("1797", pn.getYear());
+    assertEquals("L.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Exobasidium vaccinii ** andromedae (P. Karst.) P. Karst. 1882 ", null);
+    assertEquals("Exobasidium", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("vaccinii", pn.getSpecificEpithet());
+    assertEquals("andromedae", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("P. Karst.", pn.getAuthorship());
+    assertEquals("1882", pn.getYear());
+    assertEquals("P. Karst.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Urceolaria scruposa **** clausa Flot. 1849 ", null);
+    assertEquals("Urceolaria", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("scruposa", pn.getSpecificEpithet());
+    assertEquals("clausa", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Flot.", pn.getAuthorship());
+    assertEquals("1849", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Cortinarius angulatus B gracilescens Fr. 1838 ", null);
+    assertEquals("Cortinarius", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("angulatus", pn.getSpecificEpithet());
+//    assertEquals("gracilescens", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+//    assertEquals("Fr.", pn.getAuthorship());
+//    assertEquals("1838", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+//    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Cyathicula scelobelonium ", null);
+    assertEquals("Cyathicula", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("scelobelonium", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Tuber liui A S. Xu 1999 ", null);
+    assertEquals("Tuber", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("liui", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("A S. Xu", pn.getAuthorship());
+    assertEquals("1999", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Xylaria potentillae A S. Xu ", null);
+    assertEquals("Xylaria", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("potentillae", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("A S. Xu", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Agaricus squamula Berk. & M.A. Curtis 1860 ", null);
+    assertEquals("Agaricus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("squamula", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Berk. & M.A. Curtis", pn.getAuthorship());
+    assertEquals("1860", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Peltula coriacea Büdel, Henssen & Wessels 1986 ", null);
+    assertEquals("Peltula", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("coriacea", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Büdel, Henssen & Wessels", pn.getAuthorship());
+    assertEquals("1986", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Saccharomyces drosophilae anon. ", null);
+    assertEquals("Saccharomyces", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("drosophilae", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Abacetus laevicollis de Chaudoir, 1869 ", null);
+    assertEquals("Abacetus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("laevicollis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("de Chaudoir", pn.getAuthorship());
+    assertEquals("1869", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Gastrosericus eremorum von Beaumont 1955 ", null);
+    assertEquals("Gastrosericus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("eremorum", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("von Beaumont", pn.getAuthorship());
+    assertEquals("1955", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Cypraeovula (Luponia) amphithales perdentata ", null);
+    assertEquals("Cypraeovula", pn.getGenusOrAbove());
+    assertEquals("Luponia", pn.getInfraGeneric());
+    assertEquals("amphithales", pn.getSpecificEpithet());
+    assertEquals("perdentata", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Polyrhachis orsyllus nat musculus Forel, 1901 ", null);
+    assertEquals("Polyrhachis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("orsyllus", pn.getSpecificEpithet());
+    assertEquals("musculus", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Forel", pn.getAuthorship());
+    assertEquals("1901", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.NATIO, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Latrodectus 13-guttatus Thorell, 1875 ", null);
+    assertEquals("Latrodectus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("13-guttatus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Thorell", pn.getAuthorship());
+    assertEquals("1875", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Latrodectus 3-guttatus Thorell 1875 ", null);
+    assertEquals("Latrodectus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("3-guttatus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Thorell", pn.getAuthorship());
+    assertEquals("1875", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Arthopyrenia hyalospora (Nyl.) R.C. Harris comb. nov. ", null);
+    assertEquals("Arthopyrenia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("hyalospora", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("R.C. Harris", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Nyl.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertEquals("comb. nov.", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Arthopyrenia hyalospora (Nyl. ex Banker) R.C. Harris ", null);
+    assertEquals("Arthopyrenia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("hyalospora", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("R.C. Harris", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Nyl. ex Banker", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Arthopyrenia hyalospora Nyl. ex Banker ", null);
+    assertEquals("Arthopyrenia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("hyalospora", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Nyl. ex Banker", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Glomopsis lonicerae Peck ex C.J. Gould 1945 ", null);
+    assertEquals("Glomopsis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("lonicerae", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Peck ex C.J. Gould", pn.getAuthorship());
+    assertEquals("1945", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Acanthobasidium delicatum (Wakef.) Oberw. ex Jülich 1979 ", null);
+    assertEquals("Acanthobasidium", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("delicatum", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Oberw. ex Jülich", pn.getAuthorship());
+    assertEquals("1979", pn.getYear());
+    assertEquals("Wakef.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Mycosphaerella eryngii (Fr. ex Duby) Johanson ex Oudem. 1897 ", null);
+    assertEquals("Mycosphaerella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("eryngii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Johanson ex Oudem.", pn.getAuthorship());
+    assertEquals("1897", pn.getYear());
+    assertEquals("Fr. ex Duby", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Mycosphaerella eryngii (Fr. Duby) ex Oudem., 1897 ", null);
+    assertEquals("Mycosphaerella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("eryngii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("ex Oudem.", pn.getAuthorship());
+    assertEquals("1897", pn.getYear());
+    assertEquals("Fr. Duby", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Mycosphaerella eryngii (Fr.ex Duby) ex Oudem. 1897 ", null);
+    assertEquals("Mycosphaerella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("eryngii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("ex Oudem.", pn.getAuthorship());
+    assertEquals("1897", pn.getYear());
+    assertEquals("Fr.ex Duby", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Salmonella werahensis (Castellani) Hauduroy and Ehringer in Hauduroy 1937 ", null);
+    assertEquals("Salmonella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("werahensis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Hauduroy & Ehringer in Hauduroy", pn.getAuthorship());
+    assertEquals("1937", pn.getYear());
+    assertEquals("Castellani", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("×Agropogon P. Fourn. 1934 ", null);
+    assertEquals("Agropogon", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("P. Fourn.", pn.getAuthorship());
+    assertEquals("1934", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("xAgropogon P. Fourn. ", null);
+    assertEquals("Agropogon", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("P. Fourn.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("XAgropogon P.Fourn. ", null);
+    assertEquals("Agropogon", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("P.Fourn.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("× Agropogon ", null);
+    assertEquals("Agropogon", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("x Agropogon ", null);
+    assertEquals("Agropogon", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("X Agropogon ", null);
+    assertEquals("Agropogon", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("X Cupressocyparis leylandii ", null);
+    assertEquals("Cupressocyparis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("leylandii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("×Heucherella tiarelloides ", null);
+    assertEquals("Heucherella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("tiarelloides", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("xHeucherella tiarelloides ", null);
+    assertEquals("Heucherella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("tiarelloides", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("x Heucherella tiarelloides ", null);
+    assertEquals("Heucherella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("tiarelloides", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("×Agropogon littoralis (Sm.) C. E. Hubb. 1946 ", null);
+    assertEquals("Agropogon", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("littoralis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("C. E. Hubb.", pn.getAuthorship());
+    assertEquals("1946", pn.getYear());
+    assertEquals("Sm.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Asplenium X inexpectatum (E.L. Braun 1940) Morton 1956 ", null);
+    assertEquals("Asplenium", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("inexpectatum", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Morton", pn.getAuthorship());
+    assertEquals("1956", pn.getYear());
+    assertEquals("E.L. Braun", pn.getBracketAuthorship());
+    assertEquals("1940", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.SPECIFIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Mentha ×smithiana R. A. Graham 1949 ", null);
+    assertEquals("Mentha", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("smithiana", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("R. A. Graham", pn.getAuthorship());
+    assertEquals("1949", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.SPECIFIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Salix ×capreola Andersson (1867) ", null);
+    assertEquals("Salix", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("capreola", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Andersson", pn.getBracketAuthorship());
+    assertEquals("1867", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.SPECIFIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Salix x capreola Andersson ", null);
+    assertEquals("Salix", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("capreola", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Andersson", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.SPECIFIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Senecio jacquinianus sec. Rchb. ", null);
+    assertEquals("Senecio", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("jacquinianus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Senecio legionensis sensu Samp., non Lange", null);
+    assertEquals("Senecio", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("legionensis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pseudomonas methanica (Söhngen 1906) sensu. Dworkin and Foster 1956", null);
+    assertEquals("Pseudomonas", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("methanica", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Söhngen", pn.getBracketAuthorship());
+    assertEquals("1906", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+//    pn = parser.parse("   Asplenium         Xinexpectatum ( E.L.      Braun   1940 )     Morton 1956    ", null);
+//    assertEquals("Asplenium", pn.getGenusOrAbove());
+//    assertNull(pn.getInfraGeneric());
+//    assertEquals("inexpectatum", pn.getSpecificEpithet());
+//    assertNull(pn.getInfraSpecificEpithet());
+//    assertNull(pn.getCultivarEpithet());
+//    assertEquals("Morton", pn.getAuthorship());
+//    assertEquals("1956", pn.getYear());
+//    assertEquals("E.L. Braun", pn.getBracketAuthorship());
+//    assertEquals("1940", pn.getBracketYear());
+//    assertNull(pn.getRank());
+//    assertNull(pn.getNomStatus());
+//    assertEquals(NamePart.SPECIFIC, pn.getNotho());
+//    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Eichornia crassipes ( (Martius) ) Solms-Laub. ", null);
+    assertEquals("Eichornia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("crassipes", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Solms-Laub.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Martius", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Acarospora cratericola 1929 ", null);
+    assertEquals("Acarospora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("cratericola", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertEquals("1929", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Tridentella tangeroae Bruce, 1987-92", null);
+    assertEquals("Tridentella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("tangeroae", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Bruce", pn.getAuthorship());
+    assertEquals("1987-92", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Anthoscopus Cabanis [1851] ", null);
+    assertEquals("Anthoscopus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Cabanis", pn.getAuthorship());
+    assertEquals("1851", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Anthoscopus Cabanis [185?] ", null);
+    assertEquals("Anthoscopus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Cabanis", pn.getAuthorship());
+    assertEquals("185?", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Anthoscopus Cabanis [1851?] ", null);
+    assertEquals("Anthoscopus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Cabanis", pn.getAuthorship());
+    assertEquals("1851?", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Anthoscopus Cabanis [1851] ", null);
+    assertEquals("Anthoscopus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Cabanis", pn.getAuthorship());
+    assertEquals("1851", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Anthoscopus Cabanis [1851?] ", null);
+    assertEquals("Anthoscopus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Cabanis", pn.getAuthorship());
+    assertEquals("1851?", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Zygaena witti Wiegel [1973] ", null);
+    assertEquals("Zygaena", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("witti", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Wiegel", pn.getAuthorship());
+    assertEquals("1973", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Morea (Morea) Burt 2342343242 23424322342 23424234 ", null);
+    assertEquals("Morea", pn.getGenusOrAbove());
+    assertEquals("Morea", pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+//    assertEquals("Burt", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRAGENERIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+//    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+//    pn = parser.parse("Morea ssjjlajajaj324$33 234243242 ", null);
+//    assertEquals("Morea", pn.getGenusOrAbove());
+//    assertNull(pn.getInfraGeneric());
+//    assertNull(pn.getSpecificEpithet());
+//    assertNull(pn.getInfraSpecificEpithet());
+//    assertNull(pn.getCultivarEpithet());
+//    assertNull(pn.getAuthorship());
+//    assertNull(pn.getYear());
+//    assertNull(pn.getBracketAuthorship());
+//    assertNull(pn.getBracketYear());
+//    assertNull(pn.getRank());
+//    assertNull(pn.getNomStatus());
+//    assertNull(pn.getNotho());
+//    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+//    pn = parser.parse("Morea (Morea) burtius 2342343242 23424322342 23424234 ", null);
+//    assertEquals("Morea", pn.getGenusOrAbove());
+//    assertEquals("Morea", pn.getInfraGeneric());
+//    assertEquals("burtius", pn.getSpecificEpithet());
+//    assertNull(pn.getInfraSpecificEpithet());
+//    assertNull(pn.getCultivarEpithet());
+//    assertNull(pn.getAuthorship());
+//    assertNull(pn.getYear());
+//    assertNull(pn.getBracketAuthorship());
+//    assertNull(pn.getBracketYear());
+//    assertNull(pn.getRank());
+//    assertNull(pn.getNomStatus());
+//    assertNull(pn.getNotho());
+//    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+//   pn = parser.parse("Moraea spathulata ( (L. f. Klatt ", null);
+//   assertEquals("Moraea", pn.getGenusOrAbove());
+//   assertNull(pn.getInfraGeneric());
+//   assertEquals("spathulata", pn.getSpecificEpithet());
+//   assertNull(pn.getInfraSpecificEpithet());
+//   assertNull(pn.getCultivarEpithet());
+//   assertNull(pn.getAuthorship());
+//   assertNull(pn.getYear());
+//   assertNull(pn.getBracketAuthorship());
+//   assertNull(pn.getBracketYear());
+//   assertNull(pn.getRank());
+//   assertNull(pn.getNomStatus());
+//   assertNull(pn.getNotho());
+//   assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Verpericola megasoma \"Dall\" Pils. ", null);
+    assertEquals("Verpericola", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("megasoma", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertEquals("Dall", pn.getCultivarEpithet());
+    assertEquals("Pils.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.CULTIVAR, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.CULTIVAR, pn.getType());
+
+    pn = parser.parse("Abelia 'Edward Goucher'", null);
+    assertEquals("Abelia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertEquals("Edward Goucher", pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.CULTIVAR, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.CULTIVAR, pn.getType());
+
+    pn = parser.parse("Geranium exili Standl. in R. Knuth", null);
+    assertEquals("Geranium", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("exili", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Standl. in R. Knuth", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Racosperma spirorbe subsp. solandri (Benth.)Pedley", null);
+    assertEquals("Racosperma", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("spirorbe", pn.getSpecificEpithet());
+    assertEquals("solandri", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Pedley", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Benth.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SUBSPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ctenotus alacer Storr, 1970 [\"1969\"]", null);
+    assertEquals("Ctenotus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("alacer", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Storr", pn.getAuthorship());
+    assertEquals("1970", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Anomalopus truncatus (Peters, 1876 [\"1877\"])", null);
+    assertEquals("Anomalopus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("truncatus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Peters", pn.getBracketAuthorship());
+    assertEquals("1876", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Nostochopis H.C. Wood ex E. Bornet & C. Flahault 1887", null);
+    assertEquals("Nostochopis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("H.C. Wood ex E. Bornet & C. Flahault", pn.getAuthorship());
+    assertEquals("1887", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Nostochopis H.C. Wood ex E. Bornet & C. Flahault 1887 (\"1886-1888\")", null);
+    assertEquals("Nostochopis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+//    assertEquals("H.C. Wood ex E. Bornet & C. Flahault", pn.getAuthorship());
+//    assertEquals("1887", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Protospongia W.S. Kent 1881 (\"1880-1882\")", null);
+    assertEquals("Protospongia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+//    assertEquals("W.S. Kent", pn.getAuthorship());
+//    assertEquals("1881", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Trismegistia monodii Ando, 1973 [1974] ", null);
+    assertEquals("Trismegistia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("monodii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Ando", pn.getAuthorship());
+    assertEquals("1973", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Deyeuxia coarctata Kunth, 1815 [1816] ", null);
+    assertEquals("Deyeuxia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("coarctata", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Kunth", pn.getAuthorship());
+    assertEquals("1815", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.DOUBTFUL, pn.getType());
+
+    pn = parser.parse("Proasellus arnautovici (Remy 1932 1941)", null);
+    assertEquals("Proasellus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("arnautovici", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+//    assertEquals("Remy", pn.getBracketAuthorship());
+//    assertEquals("1932", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Lestodiplosis cryphali Kieffer 1894 1901", null);
+    assertEquals("Lestodiplosis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("cryphali", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+//    assertEquals("Kieffer", pn.getAuthorship());
+//    assertEquals("1894", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Microrape simplex 1927 1930", null);
+    assertEquals("Microrape", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("simplex", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+//    assertEquals("1927", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Matricaria chamomilla L. 1755 1763, non 1753", null);
+    assertEquals("Matricaria", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("chamomilla", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+//    assertEquals("L.", pn.getAuthorship());
+//    assertEquals("1755", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Hymenoscyphus lutisedus (P. Karst.) anon. ined.", null);
+    assertEquals("Hymenoscyphus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("lutisedus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("P. Karst.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertEquals("ined.", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Menegazzia wilsonii (Räsänen) anon.", null);
+    assertEquals("Menegazzia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("wilsonii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Räsänen", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Sao hispanica R. & E. Richter nom. nud. in Sampelayo 1935", null);
+    assertEquals("Sao", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("hispanica", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("R. & E. Richter in Sampelayo", pn.getAuthorship());
+    assertEquals("1935", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertEquals("nom. nud.", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Vaucheria longicaulis var. bengalensis Islam, nom. illeg.", null);
+    assertEquals("Vaucheria", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("longicaulis", pn.getSpecificEpithet());
+    assertEquals("bengalensis", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Islam", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertEquals("nom. illeg.", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Dorataspidae nom. correct", null);
+    assertEquals("Dorataspidae", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.FAMILY, pn.getRank());
+    assertEquals("nom. correct", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ethmosphaeridae nom. transf.", null);
+    assertEquals("Ethmosphaeridae", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.FAMILY, pn.getRank());
+    assertEquals("nom. transf.", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Fucus vesiculosus forma volubilis (Goodenough & Woodward) H.T. Powell, nom. inval", null);
+    assertEquals("Fucus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("vesiculosus", pn.getSpecificEpithet());
+    assertEquals("volubilis", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("H.T. Powell", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Goodenough & Woodward", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.FORM, pn.getRank());
+    assertEquals("nom. inval", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Fucus ramosissimus Oeder, nom. ambig.", null);
+    assertEquals("Fucus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("ramosissimus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Oeder", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertEquals("nom. ambig.", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Myrionema majus Foslie, nom. nov.", null);
+    assertEquals("Myrionema", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("majus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Foslie", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertEquals("nom. nov.", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pithecellobium montanum var. subfalcatum (Zoll. & Moritzi)Miq., nom.rejic.", null);
+    assertEquals("Pithecellobium", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("montanum", pn.getSpecificEpithet());
+    assertEquals("subfalcatum", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Miq.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Zoll. & Moritzi", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertEquals("nom. rejic.", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Lithothamnion glaciale forma verrucosum (Foslie) Foslie, nom. superfl.", null);
+    assertEquals("Lithothamnion", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("glaciale", pn.getSpecificEpithet());
+    assertEquals("verrucosum", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Foslie", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Foslie", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.FORM, pn.getRank());
+    assertEquals("nom. superfl.", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Anthoceros agrestis var. agrestis Paton nom. cons. prop.", null);
+    assertEquals("Anthoceros", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("agrestis", pn.getSpecificEpithet());
+    assertEquals("agrestis", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Paton", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertEquals("nom. cons. prop.", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Corydalis bulbosa (L.) DC., nom. utique rej.", null);
+    assertEquals("Corydalis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("bulbosa", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("DC.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("L.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertEquals("nom. utique rej.", pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Lithobius chibenus Ishii & Tamura (1994)", null);
+    assertEquals("Lithobius", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("chibenus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Ishii & Tamura", pn.getBracketAuthorship());
+    assertEquals("1994", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Lithobius elongipes Chamberlin (1952)", null);
+    assertEquals("Lithobius", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("elongipes", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Chamberlin", pn.getBracketAuthorship());
+    assertEquals("1952", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Rubus rhodanthus W.C.R.Watson (1933)", null);
+    assertEquals("Rubus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("rhodanthus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("W.C.R.Watson", pn.getBracketAuthorship());
+    assertEquals("1933", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Platypus bicaudatulus Schedl (1935h) ", null);
+    assertEquals("Platypus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("bicaudatulus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Schedl", pn.getBracketAuthorship());
+    assertEquals("1935h", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Platypus bicaudatulus Schedl (1935) ", null);
+    assertEquals("Platypus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("bicaudatulus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Schedl", pn.getBracketAuthorship());
+    assertEquals("1935", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Sorbus poteriifolia Hand.-Mazz (1933)", null);
+    assertEquals("Sorbus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("poteriifolia", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Hand.-Mazz", pn.getBracketAuthorship());
+    assertEquals("1933", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Zophosis persis (Chatanay), 1914 ", null);
+    assertEquals("Zophosis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("persis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Chatanay", pn.getBracketAuthorship());
+    assertEquals("1914", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Malacocarpus schumannianus (Nicolai (1893)) Britton & Rose", null);
+    assertEquals("Malacocarpus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("schumannianus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Britton & Rose", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Nicolai", pn.getBracketAuthorship());
+    assertEquals("1893", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Agropyron x acutum auct. non (DC.) Roem. & Schult.", null);
+    assertEquals("Agropyron", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("acutum", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertEquals(NamePart.SPECIFIC, pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Carex leporina auct. non L. 1753", null);
+    assertEquals("Carex", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("leporina", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Salicornia annua auct. auct. Sm., ex descr. non Sm. 1796", null);
+    assertEquals("Salicornia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("annua", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Rubus gremli auct. non Focke", null);
+    assertEquals("Rubus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("gremli", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Rubus carpinifolius auct. auct. non Weihe 1824", null);
+    assertEquals("Rubus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("carpinifolius", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Leucobryum glaucum var. albidum auct. eur. non (P. Beauv. ) Cardot", null);
+    assertEquals("Leucobryum", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("glaucum", pn.getSpecificEpithet());
+    assertEquals("albidum", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Corynoptera inexpectata auct.", null);
+    assertEquals("Corynoptera", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("inexpectata", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Coccinella (Coccinella) divaricata auct.", null);
+    assertEquals("Coccinella", pn.getGenusOrAbove());
+    assertEquals("Coccinella", pn.getInfraGeneric());
+    assertEquals("divaricata", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Rebutia haagei Frič, Schelle, Fric sec.Backeb. & F.M.Knuth", null);
+    assertEquals("Rebutia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("haagei", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Frič, Schelle, Fric", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Trox haroldi Fisch., sec. Kraatz & Bedel", null);
+    assertEquals("Trox", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("haroldi", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Fisch.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Trophon sarsi S. Wood, sec. Jeffreys", null);
+    assertEquals("Trophon", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("sarsi", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("S. Wood", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Frustulia aff pararhomboides sec. Metzeltin & Lange-Bertalot", null);
+    assertEquals("Frustulia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("pararhomboides", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.INFORMAL, pn.getType());
+
+    pn = parser.parse("Anabaena affinis Lemmermann", null);
+    assertEquals("Anabaena", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("affinis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Lemmermann", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Anabaena sp.", null);
+    assertEquals("Anabaena", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.INFORMAL, pn.getType());
+
+    pn = parser.parse("Anabaena spec", null);
+    assertEquals("Anabaena", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.INFORMAL, pn.getType());
+
+    pn = parser.parse("Anabaena specularia", null);
+    assertEquals("Anabaena", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("specularia", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Rasbora cf. elegans", null);
+    assertEquals("Rasbora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("elegans", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.INFORMAL, pn.getType());
+
+    pn = parser.parse("Rasbora aff. elegans", null);
+    assertEquals("Rasbora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("elegans", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.INFORMAL, pn.getType());
+
+    pn = parser.parse("Cathormiocerus inflatiscapus Escalera, M.M. de la 1918", null);
+    assertEquals("Cathormiocerus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("inflatiscapus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+//    assertEquals("Escalera, M.M. de la", pn.getAuthorship());
+//    assertEquals("1918", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Hypnum rutabulum var. campestre Müll. Hal.", null);
+    assertEquals("Hypnum", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("rutabulum", pn.getSpecificEpithet());
+    assertEquals("campestre", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Müll. Hal.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Leptophascum leptophyllum (Müll. Hal.) J. Guerra & Cano", null);
+    assertEquals("Leptophascum", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("leptophyllum", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("J. Guerra & Cano", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Müll. Hal.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pompeja psorica Herrich-Schöffer", null);
+    assertEquals("Pompeja", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("psorica", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Herrich-Schöffer", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Gloveria sphingiformis Barnes & McDunnough, 1910", null);
+    assertEquals("Gloveria", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("sphingiformis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Barnes & McDunnough", pn.getAuthorship());
+    assertEquals("1910", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Gastromega badia Saalmüller, 1877/78", null);
+    assertEquals("Gastromega", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("badia", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Saalmüller", pn.getAuthorship());
+    assertEquals("1877/78", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Hasora coulteri Wood-Mason & de Nicóville, 1886", null);
+    assertEquals("Hasora", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("coulteri", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Wood-Mason & de Nicóville", pn.getAuthorship());
+    assertEquals("1886", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pithauria uma De Nicóville, 1888", null);
+    assertEquals("Pithauria", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("uma", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("De Nicóville", pn.getAuthorship());
+    assertEquals("1888", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Lepidostoma quila Bueno-Soria & Padilla-Ramirez, 1981", null);
+    assertEquals("Lepidostoma", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("quila", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Bueno-Soria & Padilla-Ramirez", pn.getAuthorship());
+    assertEquals("1981", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Dinarthrum inerme McLachlan, 1878", null);
+    assertEquals("Dinarthrum", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("inerme", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("McLachlan", pn.getAuthorship());
+    assertEquals("1878", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Triplectides tambina Mosely, 1953", null);
+    assertEquals("Triplectides", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("tambina", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Mosely", pn.getAuthorship());
+    assertEquals("1953", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Oxyothespis sudanensis Giglio-Tos, 1916", null);
+    assertEquals("Oxyothespis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("sudanensis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Giglio-Tos", pn.getAuthorship());
+    assertEquals("1916", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Parastagmatoptera theresopolitana (Giglio-Tos, 1914)", null);
+    assertEquals("Parastagmatoptera", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("theresopolitana", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Giglio-Tos", pn.getBracketAuthorship());
+    assertEquals("1914", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Oxyothespis nilotica nilotica Giglio-Tos, 1916", null);
+    assertEquals("Oxyothespis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("nilotica", pn.getSpecificEpithet());
+    assertEquals("nilotica", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Giglio-Tos", pn.getAuthorship());
+    assertEquals("1916", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Photina (Cardioptera) burmeisteri (Westwood, 1889)", null);
+    assertEquals("Photina", pn.getGenusOrAbove());
+    assertEquals("Cardioptera", pn.getInfraGeneric());
+    assertEquals("burmeisteri", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Westwood", pn.getBracketAuthorship());
+    assertEquals("1889", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Syngenes inquinatus (Gerstaecker)", null);
+    assertEquals("Syngenes", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("inquinatus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Gerstaecker", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Myrmeleon libelloides var. nigriventris A. Costa", null);
+    assertEquals("Myrmeleon", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("libelloides", pn.getSpecificEpithet());
+    assertEquals("nigriventris", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("A. Costa", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.VARIETY, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ascalaphus nigripes (van der Weele)", null);
+    assertEquals("Ascalaphus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("nigripes", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("van der Weele", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ascalaphus guttulatus A. Costa", null);
+    assertEquals("Ascalaphus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("guttulatus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("A. Costa", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Dichochrysa medogana (C.-K. Yang et al., 1988)", null);
+    assertEquals("Dichochrysa", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("medogana", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("C.-K. Yang et al.", pn.getBracketAuthorship());
+    assertEquals("1988", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Dichochrysa vitticlypea (C.-K. Yang & X.-X. Wang, 1990)", null);
+    assertEquals("Dichochrysa", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("vitticlypea", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("C.-K. Yang & X.-X. Wang", pn.getBracketAuthorship());
+    assertEquals("1990", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Dichochrysa qingchengshana (C.-K. Yang et al., 1992)", null);
+    assertEquals("Dichochrysa", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("qingchengshana", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("C.-K. Yang et al.", pn.getBracketAuthorship());
+    assertEquals("1992", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Colomastix tridentata LeCroy, 1995", null);
+    assertEquals("Colomastix", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("tridentata", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("LeCroy", pn.getAuthorship());
+    assertEquals("1995", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Sunamphitoe pelagica (H. Milne Edwards, 1830)", null);
+    assertEquals("Sunamphitoe", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("pelagica", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("H. Milne Edwards", pn.getBracketAuthorship());
+    assertEquals("1830", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Brotogeris jugularis (Statius Muller, 1776)", null);
+    assertEquals("Brotogeris", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("jugularis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Statius Muller", pn.getBracketAuthorship());
+    assertEquals("1776", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Coracopsis nigra sibilans Milne-Edwards & OuStalet, 1885", null);
+    assertEquals("Coracopsis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("nigra", pn.getSpecificEpithet());
+    assertEquals("sibilans", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Milne-Edwards & OuStalet", pn.getAuthorship());
+    assertEquals("1885", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Trichoglossus haematodus deplanchii J. Verreaux & Des Murs, 1860", null);
+    assertEquals("Trichoglossus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("haematodus", pn.getSpecificEpithet());
+    assertEquals("deplanchii", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("J. Verreaux & Des Murs", pn.getAuthorship());
+    assertEquals("1860", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Nannopsittaca dachilleae O'Neill, Munn & Franke, 1991", null);
+    assertEquals("Nannopsittaca", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("dachilleae", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("O'Neill, Munn & Franke", pn.getAuthorship());
+    assertEquals("1991", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ramphastos brevis Meyer de Schauensee, 1945", null);
+    assertEquals("Ramphastos", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("brevis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Meyer de Schauensee", pn.getAuthorship());
+    assertEquals("1945", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Touit melanonota (Wied-Neuwied, 1820)", null);
+    assertEquals("Touit", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("melanonota", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Wied-Neuwied", pn.getBracketAuthorship());
+    assertEquals("1820", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Trachyphonus darnaudii (Prevost & Des Murs, 1847)", null);
+    assertEquals("Trachyphonus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("darnaudii", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Prevost & Des Murs", pn.getBracketAuthorship());
+    assertEquals("1847", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Anolis porcatus aracelyae Perez-Beato, 1996", null);
+    assertEquals("Anolis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("porcatus", pn.getSpecificEpithet());
+    assertEquals("aracelyae", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Perez-Beato", pn.getAuthorship());
+    assertEquals("1996", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Anolis gundlachi Peters, 1877", null);
+    assertEquals("Anolis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("gundlachi", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Peters", pn.getAuthorship());
+    assertEquals("1877", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Anolis marmoratus girafus Lazell, 1964", null);
+    assertEquals("Anolis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("marmoratus", pn.getSpecificEpithet());
+    assertEquals("girafus", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Lazell", pn.getAuthorship());
+    assertEquals("1964", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Chorististium maculatum (non Bloch 1790)", null);
+    assertEquals("Chorististium", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("maculatum", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pikea lunulata (non Guichenot 1864)", null);
+    assertEquals("Pikea", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("lunulata", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Luzonichthys taeniatus Randall & McCosker, 1992", null);
+    assertEquals("Luzonichthys", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("taeniatus", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Randall & McCosker", pn.getAuthorship());
+    assertEquals("1992", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Puntius stoliczkae", null);
+    assertEquals("Puntius", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("stoliczkae", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Puntius arulius subsp. tambraparniei", null);
+    assertEquals("Puntius", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("arulius", pn.getSpecificEpithet());
+    assertEquals("tambraparniei", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SUBSPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Actinia stellula Hemprich and Ehrenberg 1834", null);
+    assertEquals("Actinia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("stellula", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Hemprich & Ehrenberg", pn.getAuthorship());
+    assertEquals("1834", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Anemonia vagans (Less.) Milne Edw.", null);
+    assertEquals("Anemonia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("vagans", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Milne Edw.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Less.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Epiactis fecunda (Verrill, 1899b)", null);
+    assertEquals("Epiactis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("fecunda", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Verrill", pn.getBracketAuthorship());
+    assertEquals("1899b", pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Leptodictyum (Schimp.) Warnst.", null);
+    assertEquals("Leptodictyum", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Warnst.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals("Schimp.", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pseudocurimata Fernandez-Yepez, 1948", null);
+    assertEquals("Pseudocurimata", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Fernandez-Yepez", pn.getAuthorship());
+    assertEquals("1948", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Pseudophorellia da Costa Lima, 1934", null);
+    assertEquals("Pseudophorellia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("da Costa Lima", pn.getAuthorship());
+    assertEquals("1934", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Hershkovitzia Guimarães & d'Andretta, 1957", null);
+    assertEquals("Hershkovitzia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Guimarães & d'Andretta", pn.getAuthorship());
+    assertEquals("1957", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Plectocolea (Mitten) Mitten, 1873", null);
+    assertEquals("Plectocolea", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Mitten", pn.getAuthorship());
+    assertEquals("1873", pn.getYear());
+    assertEquals("Mitten", pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Discoporella d'Orbigny, 1852", null);
+    assertEquals("Discoporella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("d'Orbigny", pn.getAuthorship());
+    assertEquals("1852", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Acripeza Guérin-Ménéville, 1838", null);
+    assertEquals("Acripeza", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Guérin-Ménéville", pn.getAuthorship());
+    assertEquals("1838", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Subpeltonotus Swaraj Ghai, Kailash Chandra & Ramamurthy, 1988", null);
+    assertEquals("Subpeltonotus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Swaraj Ghai, Kailash Chandra & Ramamurthy", pn.getAuthorship());
+    assertEquals("1988", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Boettcherimima De Souza Lopes, 1950", null);
+    assertEquals("Boettcherimima", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("De Souza Lopes", pn.getAuthorship());
+    assertEquals("1950", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Surnicou Des Murs, 1853", null);
+    assertEquals("Surnicou", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Des Murs", pn.getAuthorship());
+    assertEquals("1853", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Cristocypridea Hou MS., 1977", null);
+    assertEquals("Cristocypridea", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Hou MS.", pn.getAuthorship());
+    assertEquals("1977", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Lecythis coriacea DC.", null);
+    assertEquals("Lecythis", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("coriacea", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("DC.", pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Anhuiphyllum Yu Xueguang, 1991", null);
+    assertEquals("Anhuiphyllum", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Yu Xueguang", pn.getAuthorship());
+    assertEquals("1991", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Zonosphaeridium minor Tian Chuanrong, 1983", null);
+    assertEquals("Zonosphaeridium", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("minor", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Tian Chuanrong", pn.getAuthorship());
+    assertEquals("1983", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Oscarella microlobata Muricy, Boury-Esnault, Bézac & Vacelet, 1996", null);
+    assertEquals("Oscarella", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("microlobata", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Muricy, Boury-Esnault, Bézac & Vacelet", pn.getAuthorship());
+    assertEquals("1996", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Neoarctus primigenius Grimaldi de Zio, D'Abbabbo Gallo & Morone de Lucia, 1992", null);
+    assertEquals("Neoarctus", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("primigenius", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Grimaldi de Zio, D'Abbabbo Gallo & Morone de Lucia", pn.getAuthorship());
+    assertEquals("1992", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Phaonia wenshuiensis Zhang, Zhao Bin & Wu, 1985", null);
+    assertEquals("Phaonia", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("wenshuiensis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Zhang, Zhao Bin & Wu", pn.getAuthorship());
+    assertEquals("1985", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Heteronychia (Eupierretia) helanshanensis Han, Zhao-Gan & Ye, 1985", null);
+    assertEquals("Heteronychia", pn.getGenusOrAbove());
+    assertEquals("Eupierretia", pn.getInfraGeneric());
+    assertEquals("helanshanensis", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Han, Zhao-Gan & Ye", pn.getAuthorship());
+    assertEquals("1985", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Solanophila karisimbica ab. fulvicollis Mader, 1941", null);
+    assertEquals("Solanophila", pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertEquals("karisimbica", pn.getSpecificEpithet());
+    assertEquals("fulvicollis", pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Mader", pn.getAuthorship());
+    assertEquals("1941", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.ABERRATION, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Tortrix (Heterognomon) aglossana Kennel, 1899", null);
+    assertEquals("Tortrix", pn.getGenusOrAbove());
+    assertEquals("Heterognomon", pn.getInfraGeneric());
+    assertEquals("aglossana", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Kennel", pn.getAuthorship());
+    assertEquals("1899", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Leptochilus (Neoleptochilus) beaumonti Giordani Soika, 1953", null);
+    assertEquals("Leptochilus", pn.getGenusOrAbove());
+    assertEquals("Neoleptochilus", pn.getInfraGeneric());
+    assertEquals("beaumonti", pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getCultivarEpithet());
+    assertEquals("Giordani Soika", pn.getAuthorship());
+    assertEquals("1953", pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getNomStatus());
+    assertNull(pn.getNotho());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
 
   }
 
@@ -993,10 +4815,10 @@ public class NameParserTest {
    */
   @Test
   public void testAuthorTroubles() throws Exception {
-    assertParsedParts("Cribbia pendula la Croix & P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, null, "la Croix & P.J.Cribb", null);
-    assertParsedParts("Cribbia pendula le Croix & P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, null, "le Croix & P.J.Cribb", null);
-    assertParsedParts("Cribbia pendula de la Croix & le P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, null, "de la Croix & le P.J.Cribb", null);
-    assertParsedParts("Cribbia pendula Croix & de le P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, null, "Croix & de le P.J.Cribb", null);
+    assertParsedParts("Cribbia pendula la Croix & P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, Rank.SPECIES, "la Croix & P.J.Cribb", null);
+    assertParsedParts("Cribbia pendula le Croix & P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, Rank.SPECIES, "le Croix & P.J.Cribb", null);
+    assertParsedParts("Cribbia pendula de la Croix & le P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, Rank.SPECIES, "de la Croix & le P.J.Cribb", null);
+    assertParsedParts("Cribbia pendula Croix & de le P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, Rank.SPECIES, "Croix & de le P.J.Cribb", null);
   }
 
   @Test
@@ -1096,9 +4918,8 @@ public class NameParserTest {
 
   @Test
   public void testAutonyms() throws Exception {
-    assertParsedParts("Panthera leo leo (Linnaeus, 1758)", NameType.SCIENTIFIC, "Panthera", "leo", "leo", null, null, null, "Linnaeus",
-        "1758");
-    assertParsedParts("Abies alba subsp. alba L.", NameType.SCIENTIFIC, "Abies", "alba", "alba", "subsp.", "L.");
+    assertParsedParts("Panthera leo leo (Linnaeus, 1758)", NameType.SCIENTIFIC, "Panthera", "leo", "leo", Rank.INFRASPECIFIC_NAME, null, null, "Linnaeus", "1758");
+    assertParsedParts("Abies alba subsp. alba L.", NameType.SCIENTIFIC, "Abies", "alba", "alba", Rank.SUBSPECIES, "L.");
     //TODO: improve nameparser to extract autonym authors, http://dev.gbif.org/issues/browse/GBIFCOM-10
     //    assertParsedParts("Abies alba L. subsp. alba", "Abies", "alba", "alba", "subsp.", "L.");
     // this is a wrong name! autonym authors are the species authors, so if both are given they must be the same!
@@ -1108,18 +4929,18 @@ public class NameParserTest {
   @Test
   public void testNameParserFull() throws Exception {
     assertParsedParts("Abies alba L.", NameType.SCIENTIFIC, "Abies", "alba", null, null, "L.");
-    assertParsedParts("Abies alba var. kosovo", "Abies", "alba", "kosovo", "var.");
-    assertParsedParts("Abies alba subsp. parafil", "Abies", "alba", "parafil", "subsp.");
-    assertParsedParts("Abies   alba L. ssp. parafil DC.", "Abies", "alba", "parafil", "subsp.", "DC.");
+    assertParsedParts("Abies alba var. kosovo", "Abies", "alba", "kosovo", Rank.VARIETY);
+    assertParsedParts("Abies alba subsp. parafil", "Abies", "alba", "parafil", Rank.SUBSPECIES);
+    assertParsedParts("Abies   alba L. ssp. parafil DC.", "Abies", "alba", "parafil", Rank.SUBSPECIES, "DC.");
 
     assertParsedParts("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", NameType.DOUBTFUL, "Nuculoidea", "behrens",
-        "christoph", "var.", "Williams & Breger", "1916");
+        "christoph", Rank.VARIETY, "Williams & Breger", "1916");
     assertParsedParts(" Nuculoidea Williams et  Breger 1916  ", NameType.SCIENTIFIC, "Nuculoidea", null, null, null, "Williams & Breger", "1916");
 
     assertParsedParts("Nuculoidea behrens v.christoph Williams & Breger [1916]  ", NameType.DOUBTFUL, "Nuculoidea", "behrens", "christoph",
-        "var.", "Williams & Breger", "1916");
+        Rank.VARIETY, "Williams & Breger", "1916");
     assertParsedParts("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", NameType.DOUBTFUL, "Nuculoidea", "behrens",
-        "christoph", "var.", "Williams & Breger", "1916");
+        "christoph", Rank.VARIETY, "Williams & Breger", "1916");
     assertParsedParts(" Megacardita hornii  calafia", "Megacardita", "hornii", "calafia", null);
     assertParsedParts(" Megacardita hornii  calafia", "Megacardita", "hornii", "calafia", null);
     assertParsedParts(" A. anthophora acervorum", "A.", "anthophora", "acervorum", null);
@@ -1135,9 +4956,9 @@ public class NameParserTest {
     assertParsedParts("Œdicnemus capensis", "Œdicnemus", "capensis", null, null, null);
     assertParsedParts("Zophosis persis (Chatanay, 1914)", null, "Zophosis", "persis", null, null, null, null, "Chatanay",
         "1914");
-    assertParsedParts("Caulerpa cupressoides forma nuda", "Caulerpa", "cupressoides", "nuda", "f.", null);
+    assertParsedParts("Caulerpa cupressoides forma nuda", "Caulerpa", "cupressoides", "nuda", Rank.FORM, null);
     assertParsedParts("Agalinis purpurea (L.) Briton var. borealis (Berg.) Peterson 1987", null, "Agalinis", "purpurea",
-        "borealis", "var.", "Peterson", "1987", "Berg.", null);
+        "borealis", Rank.VARIETY, "Peterson", "1987", "Berg.", null);
     assertParsedParts("Agaricus squamula Berk. & M. A. Curtis 1860", null, "Agaricus", "squamula", null, null,
         "Berk. & M. A. Curtis", "1860", null, null);
     assertParsedParts("Agaricus squamula Berk. & M.A. Curtis 1860", null, "Agaricus", "squamula", null, null,
@@ -1170,7 +4991,7 @@ public class NameParserTest {
     assertParsedParts(" Syngenes inquinatus (Gerstaecker, [1885])", null, "Syngenes", "inquinatus", null, null, null, null,
         "Gerstaecker", "1885");
     assertParsedParts(" Myrmeleon libelloides var. nigriventris A. Costa, [1855]", "Myrmeleon", "libelloides",
-        "nigriventris", "var.", "A. Costa", "1855");
+        "nigriventris", Rank.VARIETY, "A. Costa", "1855");
     assertParsedParts("Ascalaphus nigripes (van der Weele, [1909])", null, "Ascalaphus", "nigripes", null, null, null, null,
         "van der Weele", "1909");
     assertParsedParts(" Ascalaphus guttulatus A. Costa, [1855]", "Ascalaphus", "guttulatus", null, null, "A. Costa",
@@ -1237,7 +5058,7 @@ public class NameParserTest {
     assertParsedParts(" Heteronychia helanshanensis Han, Zhao-Gan & Ye 1985", "Heteronychia", "helanshanensis", null,
         null, "Han, Zhao-Gan & Ye", "1985");
     assertParsedParts(" Solanophila karisimbica ab. fulvicollis Mader 1941", "Solanophila", "karisimbica",
-        "fulvicollis", "ab.", "Mader", "1941");
+        "fulvicollis", Rank.ABERRATION, "Mader", "1941");
     assertParsedParts(" Tortrix Heterognomon aglossana Kennel 1899", NameType.SCIENTIFIC, "Tortrix", "Heterognomon", "aglossana", null, null, "Kennel",
         "1899", null, null);
     assertParsedParts(" Leptochilus (Neoleptochilus) beaumonti Giordani Soika 1953", NameType.SCIENTIFIC, "Leptochilus", "Neoleptochilus", "beaumonti", null,
@@ -1248,7 +5069,7 @@ public class NameParserTest {
         "1979");
     assertParsedParts("Lithobius elongipes Chamberlin (1952)", null, "Lithobius", "elongipes", null, null, null, null,
         "Chamberlin", "1952");
-    assertParsedInfrageneric("Maxillaria sect. Multiflorae Christenson", null, "Maxillaria", "Multiflorae", "sect.", "Christenson", null, null, null);
+    assertParsedInfrageneric("Maxillaria sect. Multiflorae Christenson", null, "Maxillaria", "Multiflorae", Rank.SECTION, "Christenson", null, null, null);
 
     assertParsedParts("Maxillaria allenii L.O.Williams in Woodson & Schery", "Maxillaria", "allenii", null, null,
         "L.O.Williams in Woodson & Schery");
@@ -1256,10 +5077,10 @@ public class NameParserTest {
         "P.Ortiz & E.Calderón");
     assertParsedParts("Neobisium (Neobisium) carcinoides balcanicum Hadži 1937", NameType.SCIENTIFIC, "Neobisium", "Neobisium",
         "carcinoides", "balcanicum", null, "Hadži", "1937", null, null);
-    assertParsedParts("Nomascus concolor subsp. lu Delacour, 1951", "Nomascus", "concolor", "lu", "subsp.", "Delacour",
+    assertParsedParts("Nomascus concolor subsp. lu Delacour, 1951", "Nomascus", "concolor", "lu", Rank.SUBSPECIES, "Delacour",
         "1951");
     assertParsedParts("Polygonum subgen. Bistorta (L.) Zernov", NameType.SCIENTIFIC, "Polygonum", "Bistorta",
-        null, null, "subgen.", "Zernov", null, "L.", null);
+        null, null, Rank.SUBGENUS, "Zernov", null, "L.", null);
     assertParsedParts("Stagonospora polyspora M.T. Lucas & Sousa da Câmara, 1934", "Stagonospora", "polyspora", null,
         null, "M.T. Lucas & Sousa da Câmara", "1934");
 
@@ -1364,8 +5185,7 @@ public class NameParserTest {
     assertParsedParts(" Chorististium maculatum (non Bloch 1790)", "Chorististium", "maculatum", null, null);
     assertParsedParts(" Pikea lunulata (non Guichenot 1864)", "Pikea", "lunulata", null, null);
     assertParsedParts(" Puntius stoliczkae (non Day 1871)", "Puntius", "stoliczkae", null, null);
-    assertParsedParts(" Puntius arulius subsp. tambraparniei (non Silas 1954)", "Puntius", "arulius", "tambraparniei",
-        "subsp.", null);
+    assertParsedParts(" Puntius arulius subsp. tambraparniei (non Silas 1954)", "Puntius", "arulius", "tambraparniei", Rank.SUBSPECIES, null);
   }
 
   /**
@@ -1388,27 +5208,27 @@ public class NameParserTest {
   @Test
   public void testStrainNames() throws Exception {
     assertStrain("Candidatus Liberibacter solanacearum", NameType.CANDIDATUS, "Liberibacter", "solanacearum", null, null, null);
-    assertStrain("Methylocystis sp. M6", NameType.INFORMAL, "Methylocystis", null, null, "sp.", "M6");
+    assertStrain("Methylocystis sp. M6", NameType.INFORMAL, "Methylocystis", null, null, Rank.SPECIES, "M6");
     assertStrain("Advenella kashmirensis W13003", NameType.INFORMAL, "Advenella", "kashmirensis", null, null, "W13003");
     assertStrain("Garra cf. dampaensis M23", NameType.INFORMAL, "Garra", "dampaensis", null, null, "M23");
     assertStrain("Sphingobium lucknowense F2", NameType.INFORMAL, "Sphingobium", "lucknowense", null, null, "F2");
-    assertStrain("Pseudomonas syringae pv. atrofaciens LMG 5095T", NameType.INFORMAL, "Pseudomonas", "syringae", "atrofaciens", "pv.", "LMG 5095T");
+    assertStrain("Pseudomonas syringae pv. atrofaciens LMG 5095T", NameType.INFORMAL, "Pseudomonas", "syringae", "atrofaciens", Rank.PATHOVAR, "LMG 5095T");
   }
 
   @Test
   public void testPathovars() throws Exception {
-    assertParsedParts("Xanthomonas campestris pv. citri (ex Hasse 1915) Dye 1978", NameType.SCIENTIFIC, "Xanthomonas", "campestris", "citri", "pv.", "Dye", "1978", "ex Hasse", "1915");
-    assertParsedParts("Xanthomonas campestris pv. oryzae (Xco)", NameType.SCIENTIFIC, "Xanthomonas", "campestris", "oryzae", "pv.", null, null, "Xco", null);
+    assertParsedParts("Xanthomonas campestris pv. citri (ex Hasse 1915) Dye 1978", NameType.SCIENTIFIC, "Xanthomonas", "campestris", "citri", Rank.PATHOVAR, "Dye", "1978", "ex Hasse", "1915");
+    assertParsedParts("Xanthomonas campestris pv. oryzae (Xco)", NameType.SCIENTIFIC, "Xanthomonas", "campestris", "oryzae", Rank.PATHOVAR, null, null, "Xco", null);
     assertParsedParts("Streptococcus dysgalactiae (ex Diernhofer 1932) Garvie et al. 1983", NameType.SCIENTIFIC, "Streptococcus", "dysgalactiae", null, null, "Garvie et al.", "1983", "ex Diernhofer", "1932");
   }
 
   @Test
   public void testImprintYear() throws Exception {
-    assertParsedParts(" Pompeja psorica Herrich-Schöffer [1854]", NameType.DOUBTFUL, "Pompeja", "psorica", null, null, "Herrich-Schöffer", "1854", null, null);
-    assertParsedParts(" Syngenes inquinatus (Gerstaecker, [1885])", NameType.DOUBTFUL, "Syngenes", "inquinatus", null, null, null, null, "Gerstaecker", "1885");
-    assertParsedParts(" Myrmeleon libelloides var. nigriventris A. Costa, [1855]", NameType.DOUBTFUL, "Myrmeleon", "libelloides", "nigriventris", "var.", "A. Costa", "1855");
-    assertParsedParts("Ascalaphus nigripes (van der Weele, [1909])", NameType.DOUBTFUL, "Ascalaphus", "nigripes", null, null, null, null, "van der Weele", "1909");
-    assertParsedParts(" Ascalaphus guttulatus A. Costa, [1855]", NameType.DOUBTFUL, "Ascalaphus", "guttulatus", null, null, "A. Costa", "1855");
+    assertParsedParts(" Pompeja psorica Herrich-Schöffer [1854]", NameType.DOUBTFUL, "Pompeja", "psorica", null, Rank.SPECIES, "Herrich-Schöffer", "1854", null, null);
+    assertParsedParts(" Syngenes inquinatus (Gerstaecker, [1885])", NameType.DOUBTFUL, "Syngenes", "inquinatus", null, Rank.SPECIES, null, null, "Gerstaecker", "1885");
+    assertParsedParts(" Myrmeleon libelloides var. nigriventris A. Costa, [1855]", NameType.DOUBTFUL, "Myrmeleon", "libelloides", "nigriventris", Rank.VARIETY, "A. Costa", "1855");
+    assertParsedParts("Ascalaphus nigripes (van der Weele, [1909])", NameType.DOUBTFUL, "Ascalaphus", "nigripes", null, Rank.SPECIES, null, null, "van der Weele", "1909");
+    assertParsedParts(" Ascalaphus guttulatus A. Costa, [1855]", NameType.DOUBTFUL, "Ascalaphus", "guttulatus", null, Rank.SPECIES, "A. Costa", "1855");
   }
 
   @Test
@@ -1422,8 +5242,8 @@ public class NameParserTest {
     // issue50
     pn = parser.parse("Deinococcus-Thermus", null);
     assertEquals("Deinococcus-Thermus", pn.canonicalNameWithMarker());
-    assertTrue(pn.getAuthorship() == null);
-    assertTrue(pn.getYear() == null);
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
     // issue51
     pn = parser.parse("Alectis alexandrinus (Geoffroy St. Hilaire, 1817)", null);
     assertEquals("Alectis alexandrinus", pn.canonicalNameWithMarker());
@@ -1500,15 +5320,12 @@ public class NameParserTest {
 
     ParsedName cn = parser.parse("Asteraceae spec.", null);
     assertEquals(Rank.SPECIES, cn.getRank());
-    assertEquals("sp.", cn.getRankMarker());
 
     cn = parser.parse("Callideriphus flavicollis morph. reductus Fuchs 1961", null);
-    assertEquals(Rank.INFRASUBSPECIFIC_NAME, cn.getRank());
-    assertEquals("morph.", cn.getRankMarker());
+    assertEquals(Rank.MORPH, cn.getRank());
 
     ParsedName pn = parser.parse("Euphrasia rostkoviana Hayne subvar. campestris (Jord.) Hartl", null);
-    assertEquals(Rank.INFRASUBSPECIFIC_NAME, cn.getRank());
-    assertEquals("subvar.", pn.getRankMarker());
+    assertEquals(Rank.SUBVARIETY, pn.getRank());
     assertEquals("Euphrasia", pn.getGenusOrAbove());
     assertEquals("rostkoviana", pn.getSpecificEpithet());
     assertEquals("campestris", pn.getInfraSpecificEpithet());
@@ -1528,23 +5345,23 @@ public class NameParserTest {
     assertEquals("Fatshedera lizei", parser.parse("fatshedera lizei ", null).canonicalNameWithMarker());
   }
 
-  private ParsedName assertParsedInfrageneric(String name, Rank rank, String genus, String infrageneric, String rankMarker, String basAuthor, String basYear) throws UnparsableException {
-    return assertParsedParts(name, rank, null, genus, infrageneric, null, null, rankMarker, null, null, null, basAuthor, basYear, null, null);
+  private ParsedName assertParsedInfrageneric(String name, Rank inputRank, String genus, String infrageneric, Rank rankMarker, String basAuthor, String basYear) throws UnparsableException {
+    return assertParsedParts(name, inputRank, null, genus, infrageneric, null, null, rankMarker, null, null, null, basAuthor, basYear, null, null);
   }
 
-  private ParsedName assertParsedInfrageneric(String name, Rank rank, String genus, String infrageneric, String rankMarker, String author, String year, String basAuthor, String basYear) throws UnparsableException {
-    return assertParsedParts(name, rank, null, genus, infrageneric, null, null, rankMarker, null, author, year, basAuthor, basYear, null, null);
+  private ParsedName assertParsedInfrageneric(String name, Rank inputRank, String genus, String infrageneric, Rank rankMarker, String author, String year, String basAuthor, String basYear) throws UnparsableException {
+    return assertParsedParts(name, inputRank, null, genus, infrageneric, null, null, rankMarker, null, author, year, basAuthor, basYear, null, null);
   }
 
   private ParsedName assertParsedParts(String name, String genus, String infrageneric, String epithet, String infraepithet,
-                                       String rank, NamePart notho, String author, String year, String basAuthor, String basYear, String nomStatus) throws UnparsableException {
+                                       Rank rank, NamePart notho, String author, String year, String basAuthor, String basYear, String nomStatus) throws UnparsableException {
     return assertParsedParts(name, null, null, genus, infrageneric, epithet, infraepithet, rank, notho, author, year, basAuthor, basYear, nomStatus, null);
   }
 
-  private ParsedName assertParsedParts(String name, Rank rank, NameType type, String genus, String infrageneric, String epithet, String infraepithet,
-                                       String rankMarker, NamePart notho, String author, String year, String basAuthor, String basYear, String nomStatus, String strain)
+  private ParsedName assertParsedParts(String name, Rank inputRank, NameType type, String genus, String infrageneric, String epithet, String infraepithet,
+                                       Rank rank, NamePart notho, String author, String year, String basAuthor, String basYear, String nomStatus, String strain)
       throws UnparsableException {
-    ParsedName pn = parser.parse(name, rank);
+    ParsedName pn = parser.parse(name, inputRank);
     if (type != null) {
       assertEquals(type, pn.getType());
     }
@@ -1552,7 +5369,9 @@ public class NameParserTest {
     assertEquals(infrageneric, pn.getInfraGeneric());
     assertEquals(epithet, pn.getSpecificEpithet());
     assertEquals(infraepithet, pn.getInfraSpecificEpithet());
-    assertEquals(rankMarker, pn.getRankMarker());
+    if (rank != null) {
+      assertEquals(rank, pn.getRank());
+    }
     assertEquals(notho, pn.getNotho());
     assertEquals(author, pn.getAuthorship());
     assertEquals(year, pn.getYear());
@@ -1595,7 +5414,7 @@ public class NameParserTest {
     return pn;
   }
 
-  private ParsedName assertParsedName(String name, NameType type, String genus, String epithet, String infraepithet, String rank) {
+  private ParsedName assertParsedName(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank) {
     ParsedName pn = null;
     try {
       pn = assertParsedParts(name, null, type, genus, null, epithet, infraepithet, rank, null, null, null, null, null, null, null);
@@ -1639,65 +5458,65 @@ public class NameParserTest {
     return pn;
   }
 
-  private void assertParsedParts(String name, NameType type, String genus, String infrageneric, String epithet, String infraepithet, String rank, String author, String year, String basAuthor, String basYear) throws UnparsableException {
+  private void assertParsedParts(String name, NameType type, String genus, String infrageneric, String epithet, String infraepithet, Rank rank, String author, String year, String basAuthor, String basYear) throws UnparsableException {
     assertParsedParts(name, null, type, genus, infrageneric, epithet, infraepithet, rank, null, author, year, basAuthor, basYear, null, null);
   }
 
-  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, String rank, String author, String year, String basAuthor, String basYear) throws UnparsableException {
+  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String author, String year, String basAuthor, String basYear) throws UnparsableException {
     assertParsedParts(name, null, type, genus, null, epithet, infraepithet, rank, null, author, year, basAuthor, basYear, null, null);
   }
 
-  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, String rank)
+  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, Rank rank)
       throws UnparsableException {
     assertParsedParts(name, null, genus, null, epithet, infraepithet, rank, null, null, null, null);
   }
 
-  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, String rank, String author) throws UnparsableException {
+  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, Rank rank, String author) throws UnparsableException {
     assertParsedParts(name, null, genus, null, epithet, infraepithet, rank, author, null, null, null);
   }
 
-  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, String rank, String author) throws UnparsableException {
+  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String author) throws UnparsableException {
     assertParsedParts(name, type, genus, null, epithet, infraepithet, rank, author, null, null, null);
   }
 
-  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, String rank, String author, String year) throws UnparsableException {
+  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, Rank rank, String author, String year) throws UnparsableException {
     assertParsedParts(name, null, genus, null, epithet, infraepithet, rank, author, year, null, null);
   }
 
-  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, NamePart notho, String rank, String author, String year) throws UnparsableException {
+  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, NamePart notho, Rank rank, String author, String year) throws UnparsableException {
     assertParsedParts(name, null, null, genus, null, epithet, infraepithet, rank, notho, author, year, null, null, null, null);
   }
 
-  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, String rank, String author, String year) throws UnparsableException {
+  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String author, String year) throws UnparsableException {
     assertParsedParts(name, type, genus, null, epithet, infraepithet, rank, author, year, null, null);
   }
 
-  private void assertStrain(String name, NameType type, String genus, String epithet, String infraepithet, String rank, String strain) throws UnparsableException {
+  private void assertStrain(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String strain) throws UnparsableException {
     assertParsedParts(name, null, type, genus, null, epithet, infraepithet, rank, null, null, null, null, null, null, strain);
   }
 
   @Test
   public void testInfragenericRanks() throws Exception {
-    assertParsedInfrageneric("Bodotria (Vertebrata)", Rank.SUBGENUS, "Bodotria", "Vertebrata", "subgen.", null, null);
+    assertParsedInfrageneric("Bodotria (Vertebrata)", Rank.SUBGENUS, "Bodotria", "Vertebrata", Rank.SUBGENUS, null, null);
 
     assertParsedInfrageneric("Bodotria (Goodsir)", null, "Bodotria", null, null, "Goodsir", null);
-    assertParsedInfrageneric("Bodotria (Goodsir)", Rank.SUBGENUS, "Bodotria", "Goodsir", "subgen.", null, null);
-    assertParsedInfrageneric("Bodotria (J.Goodsir)", Rank.SUBGENUS, "Bodotria", null, "subgen.", "J.Goodsir", null);
+    assertParsedInfrageneric("Bodotria (Goodsir)", Rank.SUBGENUS, "Bodotria", "Goodsir", Rank.SUBGENUS, null, null);
+    assertParsedInfrageneric("Bodotria (J.Goodsir)", Rank.SUBGENUS, "Bodotria", null, Rank.SUBGENUS, "J.Goodsir", null);
 
-    assertParsedInfrageneric("Latrunculia (Biannulata)", Rank.SUBGENUS, "Latrunculia", "Biannulata", "subgen.", null, null);
+    assertParsedInfrageneric("Latrunculia (Biannulata)", Rank.SUBGENUS, "Latrunculia", "Biannulata", Rank.SUBGENUS, null, null);
 
     assertParsedParts("Saperda (Saperda) candida m. bipunctata Breuning, 1952", null, NameType.SCIENTIFIC, "Saperda", "Saperda", "candida",
-        "bipunctata", "m.", null, "Breuning", "1952", null, null, null, null);
+        "bipunctata", Rank.MORPH, null, "Breuning", "1952", null, null, null, null);
 
-    assertParsedParts("Carex section Acrocystis", null, NameType.SCIENTIFIC, "Carex", "Acrocystis", null, null, "sect.", null, null, null, null, null, null, null);
+    assertParsedParts("Carex section Acrocystis", null, NameType.SCIENTIFIC, "Carex", "Acrocystis", null, null, Rank.SECTION, null, null, null, null, null, null, null);
 
-    assertParsedParts("Juncus subgenus Alpini", null, NameType.SCIENTIFIC, "Juncus", "Alpini", null, null, "subgen.", null, null, null, null, null, null, null);
+    assertParsedParts("Juncus subgenus Alpini", null, NameType.SCIENTIFIC, "Juncus", "Alpini", null, null, Rank.SUBGENUS, null, null, null, null, null, null, null);
 
-    assertParsedParts("Solidago subsection Triplinervae", null, NameType.SCIENTIFIC, "Solidago", "Triplinervae", null, null, "subsect.", null, null, null, null, null, null, null);
+    assertParsedParts("Solidago subsection Triplinervae", null, NameType.SCIENTIFIC, "Solidago", "Triplinervae", null, null, Rank.SUBSECTION, null, null, null, null, null, null, null);
 
-    assertParsedParts("Eleocharis series Maculosae", null, NameType.SCIENTIFIC, "Eleocharis", "Maculosae", null, null, "ser.", null, null, null, null, null, null, null);
+    assertParsedParts("Eleocharis series Maculosae", null, NameType.SCIENTIFIC, "Eleocharis", "Maculosae", null, null, Rank.SERIES, null, null, null, null, null, null, null);
 
-    assertParsedParts("Hylaeus (Alfkenylaeus) Snelling, 1985", Rank.SECTION, NameType.SCIENTIFIC, "Hylaeus", "Alfkenylaeus", null, null, "sect.", null, "Snelling", "1985", null, null, null, null);
+    assertParsedParts("Hylaeus (Alfkenylaeus) Snelling, 1985", Rank.SECTION, NameType.SCIENTIFIC, "Hylaeus", "Alfkenylaeus", null, null, Rank.SECTION, null, "Snelling", "1985", null, null, null, null);
   }
 
   @Test
@@ -1710,15 +5529,15 @@ public class NameParserTest {
     assertParsedInfrageneric("Latrunculia (Biannulata)", null, "Latrunculia", "Biannulata", null, null, null);
 
     assertParsedParts("Saperda (Saperda) candida m. bipunctata Breuning, 1952", null, NameType.SCIENTIFIC, "Saperda", "Saperda", "candida",
-        "bipunctata", "m.", null, "Breuning", "1952", null, null, null, null);
+        "bipunctata", Rank.MORPH, null, "Breuning", "1952", null, null, null, null);
 
-    assertParsedParts("Carex section Acrocystis", null, NameType.SCIENTIFIC, "Carex", "Acrocystis", null, null, "sect.", null, null, null, null, null, null, null);
+    assertParsedParts("Carex section Acrocystis", null, NameType.SCIENTIFIC, "Carex", "Acrocystis", null, null, Rank.SECTION, null, null, null, null, null, null, null);
 
-    assertParsedParts("Juncus subgenus Alpini", null, NameType.SCIENTIFIC, "Juncus", "Alpini", null, null, "subgen.", null, null, null, null, null, null, null);
+    assertParsedParts("Juncus subgenus Alpini", null, NameType.SCIENTIFIC, "Juncus", "Alpini", null, null, Rank.SUBGENUS, null, null, null, null, null, null, null);
 
-    assertParsedParts("Solidago subsection Triplinervae", null, NameType.SCIENTIFIC, "Solidago", "Triplinervae", null, null, "subsect.", null, null, null, null, null, null, null);
+    assertParsedParts("Solidago subsection Triplinervae", null, NameType.SCIENTIFIC, "Solidago", "Triplinervae", null, null, Rank.SUBSECTION, null, null, null, null, null, null, null);
 
-    assertParsedParts("Eleocharis series Maculosae", null, NameType.SCIENTIFIC, "Eleocharis", "Maculosae", null, null, "ser.", null, null, null, null, null, null, null);
+    assertParsedParts("Eleocharis series Maculosae", null, NameType.SCIENTIFIC, "Eleocharis", "Maculosae", null, null, Rank.SERIES, null, null, null, null, null, null, null);
 
     assertParsedParts("Hylaeus (Alfkenylaeus) Snelling, 1985", null, NameType.SCIENTIFIC, "Hylaeus", "Alfkenylaeus", null, null, null, null, "Snelling", "1985", null, null, null, null);
   }
@@ -1745,10 +5564,10 @@ public class NameParserTest {
    */
   @Test
   public void testBadAmpersands() throws Exception {
-    assertParsedParts("Celtis sinensis var. nervosa (Hemsl.) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp; Y.H.Tseng", null, "Celtis", "sinensis", "nervosa", "var.", "F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng", null, "Hemsl.", null);
-    assertParsedParts("Salix taiwanalpina var. chingshuishanensis (S.S.Ying) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng ", null, "Salix", "taiwanalpina", "chingshuishanensis", "var.", "F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng", null, "S.S.Ying", null);
-    assertParsedParts("Salix taiwanalpina var. chingshuishanensis (S.S.Ying) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp  Y.H.Tseng ", null, "Salix", "taiwanalpina", "chingshuishanensis", "var.", "F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng", null, "S.S.Ying", null);
-    assertParsedParts("Salix morrisonicola var. takasagoalpina (Koidz.) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp; Y.H.Tseng", null, "Salix", "morrisonicola", "takasagoalpina", "var.", "F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng", null, "Koidz.", null);
+    assertParsedParts("Celtis sinensis var. nervosa (Hemsl.) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp; Y.H.Tseng", null, "Celtis", "sinensis", "nervosa", Rank.VARIETY, "F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng", null, "Hemsl.", null);
+    assertParsedParts("Salix taiwanalpina var. chingshuishanensis (S.S.Ying) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng ", null, "Salix", "taiwanalpina", "chingshuishanensis", Rank.VARIETY, "F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng", null, "S.S.Ying", null);
+    assertParsedParts("Salix taiwanalpina var. chingshuishanensis (S.S.Ying) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp  Y.H.Tseng ", null, "Salix", "taiwanalpina", "chingshuishanensis", Rank.VARIETY, "F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng", null, "S.S.Ying", null);
+    assertParsedParts("Salix morrisonicola var. takasagoalpina (Koidz.) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp; Y.H.Tseng", null, "Salix", "morrisonicola", "takasagoalpina", Rank.VARIETY, "F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng", null, "Koidz.", null);
     assertParsedParts("Ficus ernanii Carauta, Pederneir., P.P.Souza, A.F.P.Machado, M.D.M.Vianna & amp; Romaniuc", "Ficus", "ernanii", null, null, "Carauta, Pederneir., P.P.Souza, A.F.P.Machado, M.D.M.Vianna & Romaniuc");
   }
 
@@ -1771,7 +5590,7 @@ public class NameParserTest {
     ParsedName pn = parser.parse("Navicula var. fasciata", null);
     assertEquals("Navicula", pn.getGenusOrAbove());
     assertEquals("fasciata", pn.getInfraSpecificEpithet());
-    assertEquals("var.", pn.getRankMarker());
+    assertEquals(Rank.VARIETY, pn.getRank());
     assertNull(pn.getSpecificEpithet());
   }
 
@@ -1907,7 +5726,7 @@ public class NameParserTest {
     assertEquals("Steinmann", pn.getAuthorship());
     assertEquals("1899", pn.getYear());
     assertEquals("var. nov.", pn.getNomStatus());
-    assertEquals("var.", pn.getRankMarker());
+    assertEquals(Rank.VARIETY, pn.getRank());
 
     pn = parser.parse("Ipomopsis tridactyla (Rydb.) Wilken, comb. nov. ined.", null);
     assertEquals("Ipomopsis", pn.getGenusOrAbove());
@@ -1924,7 +5743,7 @@ public class NameParserTest {
     assertNull(pn.getInfraSpecificEpithet());
     assertEquals("Collins", pn.getAuthorship());
     assertNull(pn.getYear());
-    assertEquals("sp.", pn.getRankMarker());
+    assertEquals(Rank.SPECIES, pn.getRank());
     assertEquals("sp. nov. ined.", pn.getNomStatus());
 
     pn = parser.parse("Stebbinsoseris gen. nov.", null);
@@ -1933,7 +5752,7 @@ public class NameParserTest {
     assertNull(pn.getInfraSpecificEpithet());
     assertNull(pn.getAuthorship());
     assertNull(pn.getYear());
-    assertEquals("gen.", pn.getRankMarker());
+    assertEquals(Rank.GENUS, pn.getRank());
     assertEquals("gen. nov.", pn.getNomStatus());
 
     pn = parser.parse("Astelia alpina var. novae-hollandiae", null);
@@ -1942,7 +5761,7 @@ public class NameParserTest {
     assertEquals("novae-hollandiae", pn.getInfraSpecificEpithet());
     assertNull(pn.getAuthorship());
     assertNull(pn.getYear());
-    assertEquals("var.", pn.getRankMarker());
+    assertEquals(Rank.VARIETY, pn.getRank());
     assertNull(pn.getNomStatus());
 
     pn = parser.parse("Astelia alpina var. november ", null);
@@ -1951,7 +5770,7 @@ public class NameParserTest {
     assertEquals("november", pn.getInfraSpecificEpithet());
     assertNull(pn.getAuthorship());
     assertNull(pn.getYear());
-    assertEquals("var.", pn.getRankMarker());
+    assertEquals(Rank.VARIETY, pn.getRank());
     assertNull(pn.getNomStatus());
 
     pn = parser.parse("Astelia alpina subsp. november ", null);
@@ -1960,7 +5779,7 @@ public class NameParserTest {
     assertEquals("november", pn.getInfraSpecificEpithet());
     assertNull(pn.getAuthorship());
     assertNull(pn.getYear());
-    assertEquals("subsp.", pn.getRankMarker());
+    assertEquals(Rank.SUBSPECIES, pn.getRank());
     assertNull(pn.getNomStatus());
 
     pn = parser.parse("Astelia alpina november ", null);
@@ -1969,7 +5788,7 @@ public class NameParserTest {
     assertEquals("november", pn.getInfraSpecificEpithet());
     assertNull(pn.getAuthorship());
     assertNull(pn.getYear());
-    assertNull(pn.getRankMarker());
+    assertEquals(Rank.INFRASPECIFIC_NAME, pn.getRank());
     assertNull(pn.getNomStatus());
 
     pn = parser.parse("Myrionema majus Foslie, nom. nov.", null);
@@ -1978,7 +5797,7 @@ public class NameParserTest {
     assertNull(pn.getInfraSpecificEpithet());
     assertEquals("Foslie", pn.getAuthorship());
     assertNull(pn.getYear());
-    assertNull(pn.getRankMarker());
+    assertEquals(Rank.SPECIES, pn.getRank());
     assertEquals("nom. nov.", pn.getNomStatus());
 
   }
@@ -2098,9 +5917,9 @@ public class NameParserTest {
    */
   @Test
   public void testSlowNames() throws Exception {
-    assertParsedParts("\"Acetobacter aceti var. muciparum\" (sic) (Hoyer) Frateur, 1950", "Acetobacter", "aceti", "muciparum", "var.");
-    assertParsedParts("\"Acetobacter melanogenum (sic) var. malto-saccharovorans\" Frateur, 1950", "Acetobacter", "melanogenum", "malto-saccharovorans", "var.");
-    assertParsedParts("\"Acetobacter melanogenum (sic) var. maltovorans\" Frateur, 1950", "Acetobacter", "melanogenum", "maltovorans", "var.");
+    assertParsedParts("\"Acetobacter aceti var. muciparum\" (sic) (Hoyer) Frateur, 1950", "Acetobacter", "aceti", "muciparum", Rank.VARIETY);
+    assertParsedParts("\"Acetobacter melanogenum (sic) var. malto-saccharovorans\" Frateur, 1950", "Acetobacter", "melanogenum", "malto-saccharovorans", Rank.VARIETY);
+    assertParsedParts("\"Acetobacter melanogenum (sic) var. maltovorans\" Frateur, 1950", "Acetobacter", "melanogenum", "maltovorans", Rank.VARIETY);
     assertParsedParts("'Abelmoschus esculentus' bunchy top phytoplasma", "Abelmoschus", "esculentus", null, null);
     assertParsedParts("Argyropelecus d'Urvillei Valenciennes, 1849", "Argyropelecus", null, null, null, "d'Urvillei Valenciennes", "1849");
     assertParsedParts("Batillipes africanus Morone De Lucia, D'Addabbo Gallo and Grimaldi de Zio, 1988", "Batillipes", "africanus", null, null, "Morone De Lucia, D'Addabbo Gallo & Grimaldi de Zio", "1988");
@@ -2117,7 +5936,7 @@ public class NameParserTest {
     assertParsedParts("Equicapillimyces hongkongensis S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, G.K.Y. Choi, R.W.S. Poon, J.J.Y. Hui, F.J. Low, Luk", "Equicapillimyces", "hongkongensis", null, null, "S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, G.K.Y. Choi, R.W.S. Poon, J.J.Y. Hui, F.J. Low, Luk");
 
     // these timeout so no author is parsed! Make sure canonical parsing works!
-    assertParsedParts("Oreocharis aurea var. cordato-ovata (C.Y. Wu ex H.W. Li) K.Y. Pan, A.L. Weitzman, & L.E. Skog", "Oreocharis", "aurea", "cordato-ovata", "var.", null);
+    assertParsedParts("Oreocharis aurea var. cordato-ovata (C.Y. Wu ex H.W. Li) K.Y. Pan, A.L. Weitzman, & L.E. Skog", "Oreocharis", "aurea", "cordato-ovata", Rank.VARIETY, null);
     assertParsedParts("Candida mesorugosa G.M. Chaves, G.R. Terçarioli, A.C.B. Padovan, R. Rosas, R.C. Ferreira, A.S.A. Melo & A.L. Colombo 20", "Candida", "mesorugosa", null, null);
     assertParsedParts("Torulopsis deparaffina H.T. Gao, C.J. Mu, R.H. Li, L.G. Wei, W.Y. Tan, Yue Y. Li, Zhong Q. Li, X.Z. Zhang & J.E. Wang 1979", "Torulopsis", "deparaffina", null, null);
     assertParsedParts("Ophiocordyceps mrciensis (Aung, J.C. Kang, Z.Q. Liang, Soytong & K.D. Hyde) G.H. Sung, J.M. Sung, Hywel-Jones & Spatafora 200", "Ophiocordyceps", "mrciensis", null, null);
@@ -2128,6 +5947,111 @@ public class NameParserTest {
     // unparsables
     assertUnparsableType(NameType.DOUBTFUL, "'38/89' designation is probably a typo");
     assertUnparsableType(NameType.VIRUS, "Blainville's beaked whale gammaherpesvirus");
+  }
+
+  @Test
+  public void testLegacyInfraspecificRanks() throws Exception {
+    ParsedName pn = parser.parse("Potamon (Potamon) potamios setiger natio sendschirili Pretzmann, 1984", null);
+    assertEquals("Potamon", pn.getGenusOrAbove());
+    assertEquals("potamios", pn.getSpecificEpithet());
+    assertEquals("sendschirili", pn.getInfraSpecificEpithet());
+    assertEquals("Pretzmann", pn.getAuthorship());
+    assertEquals("1984", pn.getYear());
+    assertEquals(Rank.NATIO, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Acipenser gueldenstaedti colchicus natio danubicus Movchan, 1967", null);
+    assertEquals("Acipenser", pn.getGenusOrAbove());
+    assertEquals("gueldenstaedti", pn.getSpecificEpithet());
+    assertEquals("danubicus", pn.getInfraSpecificEpithet());
+    assertEquals("Movchan", pn.getAuthorship());
+    assertEquals("1967", pn.getYear());
+    assertEquals(Rank.NATIO, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Achillea millefolium prol. ceretanica Sennen", null);
+    assertEquals("Achillea", pn.getGenusOrAbove());
+    assertEquals("millefolium", pn.getSpecificEpithet());
+    assertEquals("ceretanica", pn.getInfraSpecificEpithet());
+    assertEquals("Sennen", pn.getAuthorship());
+    assertEquals(Rank.PROLES, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Luzula erecta prol. nigricans (Gaudin) Rouy", null);
+    assertEquals("Luzula", pn.getGenusOrAbove());
+    assertEquals("erecta", pn.getSpecificEpithet());
+    assertEquals("nigricans", pn.getInfraSpecificEpithet());
+    assertEquals("Rouy", pn.getAuthorship());
+    assertEquals("Gaudin", pn.getBracketAuthorship());
+    assertEquals(Rank.PROLES, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Gymnadenia conopsea race alpina (Turcz. ex Rchb. f.) Rouy", null);
+    assertEquals("Gymnadenia", pn.getGenusOrAbove());
+    assertEquals("conopsea", pn.getSpecificEpithet());
+    assertEquals("alpina", pn.getInfraSpecificEpithet());
+    assertEquals("Rouy", pn.getAuthorship());
+    assertEquals("Turcz. ex Rchb. f.", pn.getBracketAuthorship());
+    assertEquals(Rank.RACE, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Ajuga vulgaris race candolleana Rouy", null);
+    assertEquals("Ajuga", pn.getGenusOrAbove());
+    assertEquals("vulgaris", pn.getSpecificEpithet());
+    assertEquals("candolleana", pn.getInfraSpecificEpithet());
+    assertEquals("Rouy", pn.getAuthorship());
+    assertEquals(Rank.RACE, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Convallaria majalis convar. latifolia (Mill.) Ponert", null);
+    assertEquals("Convallaria", pn.getGenusOrAbove());
+    assertEquals("majalis", pn.getSpecificEpithet());
+    assertEquals("latifolia", pn.getInfraSpecificEpithet());
+    assertEquals("Ponert", pn.getAuthorship());
+    assertEquals("Mill.", pn.getBracketAuthorship());
+    assertEquals(Rank.CONVARIETY, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Curvularia trifolii f.sp. gladioli Parmelee & Luttr.", null);
+    assertEquals("Curvularia", pn.getGenusOrAbove());
+    assertEquals("trifolii", pn.getSpecificEpithet());
+    assertEquals("gladioli", pn.getInfraSpecificEpithet());
+    assertEquals("Parmelee & Luttr.", pn.getAuthorship());
+    assertEquals(Rank.FORMA_SPECIALIS, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Fusarium oxysporum f.spec. tulipae W.C. Snyder & H.N. Hansen", null);
+    assertEquals("Fusarium", pn.getGenusOrAbove());
+    assertEquals("oxysporum", pn.getSpecificEpithet());
+    assertEquals("tulipae", pn.getInfraSpecificEpithet());
+    assertEquals("W.C. Snyder & H.N. Hansen", pn.getAuthorship());
+    assertEquals(Rank.FORMA_SPECIALIS, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Hieracium aphyllum grex singulare Zahn", null);
+    assertEquals("Hieracium", pn.getGenusOrAbove());
+    assertEquals("aphyllum", pn.getSpecificEpithet());
+    assertEquals("singulare", pn.getInfraSpecificEpithet());
+    assertEquals("Zahn", pn.getAuthorship());
+    assertEquals(Rank.GREX, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Corvus corax varius morpha leucophaeus", null);
+    assertEquals("Corvus", pn.getGenusOrAbove());
+    assertEquals("corax", pn.getSpecificEpithet());
+    assertEquals("leucophaeus", pn.getInfraSpecificEpithet());
+    assertEquals(Rank.MORPH, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+    pn = parser.parse("Arvicola amphibius ab. pallasi Ognev 1913", null);
+    assertEquals("Arvicola", pn.getGenusOrAbove());
+    assertEquals("amphibius", pn.getSpecificEpithet());
+    assertEquals("pallasi", pn.getInfraSpecificEpithet());
+    assertEquals("Ognev", pn.getAuthorship());
+    assertEquals("1913", pn.getYear());
+    assertEquals(Rank.ABERRATION, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
   }
 
   @Test
@@ -2244,9 +6168,9 @@ public class NameParserTest {
   public void backboneBasionymPlaceholder() throws Exception {
     ParsedName n = parser.parse("? attenuata Hincks, 1866", null);
     assertEquals("?", n.getGenusOrAbove());
-    assertTrue(n.getInfraGeneric() == null);
+    assertNull(n.getInfraGeneric());
     assertEquals("attenuata", n.getSpecificEpithet());
-    assertTrue(n.getInfraSpecificEpithet() == null);
+    assertNull(n.getInfraSpecificEpithet());
     assertEquals("Hincks", n.getAuthorship());
     assertEquals("1866", n.getYear());
     assertEquals(NameType.PLACEHOLDER, n.getType());
@@ -2341,7 +6265,7 @@ public class NameParserTest {
 
     n = parser.parse("Tabanus 4punctatus Fabricius, 1805", Rank.SPECIES);
     assertEquals("Tabanus", n.getGenusOrAbove());
-    assertTrue(n.getInfraGeneric() == null);
+    assertNull(n.getInfraGeneric());
     assertEquals("4punctatus", n.getSpecificEpithet());
     assertNull(n.getInfraSpecificEpithet());
     assertEquals("Fabricius", n.getAuthorship());
@@ -2369,50 +6293,50 @@ public class NameParserTest {
   public void testWhitespaceEpitheta() throws Exception {
     ParsedName n = parser.parse("Nupserha van rooni usambarica", null);
     assertEquals("Nupserha", n.getGenusOrAbove());
-    assertTrue(n.getInfraGeneric() == null);
+    assertNull(n.getInfraGeneric());
     assertEquals("van rooni", n.getSpecificEpithet());
     assertEquals("usambarica", n.getInfraSpecificEpithet());
 
     n = parser.parse("Sargassum flavicans van pervillei", null);
     assertEquals("Sargassum", n.getGenusOrAbove());
-    assertTrue(n.getInfraGeneric() == null);
+    assertNull(n.getInfraGeneric());
     assertEquals("flavicans", n.getSpecificEpithet());
     assertEquals("van pervillei", n.getInfraSpecificEpithet());
 
     n = parser.parse("Salix novae angliae lingulata ", null);
     assertEquals("Salix", n.getGenusOrAbove());
-    assertTrue(n.getInfraGeneric() == null);
+    assertNull(n.getInfraGeneric());
     assertEquals("novae angliae", n.getSpecificEpithet());
     assertEquals("lingulata", n.getInfraSpecificEpithet());
 
     n = parser.parse("Ilex collina van trompii", null);
     assertEquals("Ilex", n.getGenusOrAbove());
-    assertTrue(n.getInfraGeneric() == null);
+    assertNull(n.getInfraGeneric());
     assertEquals("collina", n.getSpecificEpithet());
     assertEquals("van trompii", n.getInfraSpecificEpithet());
 
     n = parser.parse("Gaultheria depressa novae zealandiae", null);
     assertEquals("Gaultheria", n.getGenusOrAbove());
-    assertTrue(n.getInfraGeneric() == null);
+    assertNull(n.getInfraGeneric());
     assertEquals("depressa", n.getSpecificEpithet());
     assertEquals("novae zealandiae", n.getInfraSpecificEpithet());
 
     n = parser.parse("Caraguata van volxemi gracilior", null);
     assertEquals("Caraguata", n.getGenusOrAbove());
-    assertTrue(n.getInfraGeneric() == null);
+    assertNull(n.getInfraGeneric());
     assertEquals("van volxemi", n.getSpecificEpithet());
     assertEquals("gracilior", n.getInfraSpecificEpithet());
 
     n = parser.parse("Ancistrocerus agilis novae guineae", null);
     assertEquals("Ancistrocerus", n.getGenusOrAbove());
-    assertTrue(n.getInfraGeneric() == null);
+    assertNull(n.getInfraGeneric());
     assertEquals("agilis", n.getSpecificEpithet());
     assertEquals("novae guineae", n.getInfraSpecificEpithet());
 
     // also test the authorless parsing
     n = parser.parse("Ancistrocerus agilis novae guineae", null);
     assertEquals("Ancistrocerus", n.getGenusOrAbove());
-    assertTrue(n.getInfraGeneric() == null);
+    assertNull(n.getInfraGeneric());
     assertEquals("agilis", n.getSpecificEpithet());
     assertEquals("novae guineae", n.getInfraSpecificEpithet());
   }
@@ -2420,13 +6344,7 @@ public class NameParserTest {
   @Test
   @Ignore
   public void manuallyTestProblematicName() throws Exception {
-    for (String n : new String[]{
-        "Severinia turcomaniae amplialata Unknown, 1921",
-        "Tipula (Unplaced) fumipennis Alexander, 1912",
-    }) {
-      System.out.println(parser.parse(n, null));
-    }
-
+    System.out.println(parser.parse("Polypodium  x vulgare nothosubsp. antoniae (Rothm.) Schidlaym ", null));
   }
 
 }

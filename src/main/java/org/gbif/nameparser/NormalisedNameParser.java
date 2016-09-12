@@ -1,6 +1,7 @@
 package org.gbif.nameparser;
 
 import org.gbif.api.model.checklistbank.ParsedName;
+import org.gbif.api.vocabulary.NamePart;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.utils.file.FileUtils;
 
@@ -71,8 +72,9 @@ public class NormalisedNameParser {
   protected static final String YEAR = "[12][0-9][0-9][0-9?][abcdh?]?(?:[/-][0-9]{1,4})?";
   // protected static final String YEAR_RANGE = YEAR+"(?: ?-? ?"+YEAR+")?";
 
+  private static final String NOTHO = "notho";
   protected static final String RANK_MARKER_SPECIES =
-    "(?:notho)?(?:" + StringUtils.join(Rank.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") + "|agg)\\.?";
+    "(?:"+NOTHO+")?(?:" + StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") + ")\\.?";
 
   private static final Function<Rank,String> REMOVE_RANK_MARKER = new Function<Rank, String>() {
     @Override
@@ -83,7 +85,7 @@ public class NormalisedNameParser {
 
   protected static final String RANK_MARKER_MICROBIAL =
     "(?:bv\\.|ct\\.|f\\. ?sp\\.|"
-    + StringUtils.join(Lists.transform(Lists.newArrayList(Rank.INFRASUBSPECIFIC_MICROBIAL_RANKS), REMOVE_RANK_MARKER
+    + StringUtils.join(Lists.transform(Lists.newArrayList(RankUtils.INFRASUBSPECIFIC_MICROBIAL_RANKS), REMOVE_RANK_MARKER
     ), "|") + ")";
 
   protected static final String EPHITHET_PREFIXES = "van|novae";
@@ -107,10 +109,10 @@ public class NormalisedNameParser {
   }
   protected static final String INFRAGENERIC =
     "(?:" + "\\( ?([" + NAME_LETTERS + "][" + name_letters + "-]+) ?\\)" + "|" + "(" + StringUtils
-      .join(Rank.RANK_MARKER_MAP_INFRAGENERIC.keySet(), "|") + ")\\.? ?([" + NAME_LETTERS + "][" + name_letters + "-]+)"
+      .join(RankUtils.RANK_MARKER_MAP_INFRAGENERIC.keySet(), "|") + ")\\.? ?([" + NAME_LETTERS + "][" + name_letters + "-]+)"
     + ")";
 
-  protected static final String RANK_MARKER_ALL = "(notho)? *(" + StringUtils.join(Rank.RANK_MARKER_MAP.keySet(), "|") + ")\\.?";
+  protected static final String RANK_MARKER_ALL = "("+NOTHO+")? *(" + StringUtils.join(RankUtils.RANK_MARKER_MAP.keySet(), "|") + ")\\.?";
   private static final Pattern RANK_MARKER_ONLY = Pattern.compile("^" + RANK_MARKER_ALL + "$");
 
   // main name matcher
@@ -232,11 +234,7 @@ public class NormalisedNameParser {
           bracketSubrankFound = true;
           cn.setInfraGeneric(StringUtils.trimToNull(matcher.group(2)));
         } else if (matcher.group(4) != null) {
-          String rankMarker = StringUtils.trimToNull(matcher.group(3));
-          if (!rankMarker.endsWith(".")) {
-              rankMarker = rankMarker + ".";
-          }
-          cn.setRankMarker(rankMarker);
+          setRank(cn, matcher.group(3));
           cn.setInfraGeneric(StringUtils.trimToNull(matcher.group(4)));
         }
         cn.setSpecificEpithet(StringUtils.trimToNull(matcher.group(5)));
@@ -245,13 +243,13 @@ public class NormalisedNameParser {
           cn.setRank(Rank.INFRASUBSPECIFIC_NAME);
         }
         if (matcher.group(7) != null && matcher.group(7).length() > 1) {
-          cn.setRankMarker(StringUtils.trimToNull(matcher.group(7)));
+          setRank(cn, matcher.group(7));
         }
         cn.setInfraSpecificEpithet(StringUtils.trimToNull(matcher.group(8)));
 
         // microbial ranks
         if (matcher.group(9) != null) {
-          cn.setRankMarker(matcher.group(9));
+          setRank(cn, matcher.group(9));
           cn.setInfraSpecificEpithet(matcher.group(10));
         }
 
@@ -279,7 +277,7 @@ public class NormalisedNameParser {
         checkEpithetVsAuthorPrefx(cn);
 
         // if no rank was parsed but given externally use it!
-        if (cn.getRankMarker() == null && rank != null) {
+        if (cn.getRank() == null && rank != null) {
             cn.setRank(rank);
         }
         return true;
@@ -297,6 +295,29 @@ public class NormalisedNameParser {
     }
 
     return false;
+  }
+
+  /**
+   * Sets the parsed names rank based on a found rank marker
+   * Potentially also sets the notho field in case the rank marker indicates a hybrid
+   * @param pn
+   * @param rankMarker
+   */
+  protected static void setRank(ParsedName pn, String rankMarker) {
+    rankMarker = StringUtils.trimToNull(rankMarker);
+    Rank rank = RankUtils.inferRank(rankMarker);
+    pn.setRank(rank);
+    if (rank != null && rankMarker.startsWith(NOTHO)) {
+      if (rank.isInfraspecific()) {
+        pn.setNotho(NamePart.INFRASPECIFIC);
+      } else if (rank == Rank.SPECIES) {
+        pn.setNotho(NamePart.SPECIFIC);
+      } else if (rank.isInfrageneric()) {
+        pn.setNotho(NamePart.INFRAGENERIC);
+      } else if (rank == Rank.GENUS) {
+        pn.setNotho(NamePart.GENERIC);
+      }
+    }
   }
 
     private static boolean infragenericIsAuthor(ParsedName pn, Rank rank) {
@@ -334,8 +355,7 @@ public class NormalisedNameParser {
         }
       } else if (matcher.group(4) != null) {
         // infrageneric with rank indicator given
-        String rankMarker = StringUtils.trimToNull(matcher.group(3));
-        cn.setRankMarker(rankMarker);
+        setRank(cn, matcher.group(3));
         cn.setInfraGeneric(StringUtils.trimToNull(matcher.group(4)));
       }
       cn.setSpecificEpithet(StringUtils.trimToNull(matcher.group(5)));
@@ -344,13 +364,13 @@ public class NormalisedNameParser {
         cn.setRank(Rank.INFRASUBSPECIFIC_NAME);
       }
       if (matcher.group(7) != null && matcher.group(7).length() > 1) {
-        cn.setRankMarker(matcher.group(7));
+        setRank(cn, matcher.group(7));
       }
       if (matcher.group(8) != null && matcher.group(8).length() >= 2) {
         setCanonicalInfraSpecies(cn, matcher.group(8));
       }
       if (matcher.group(9) != null) {
-        cn.setRankMarker(matcher.group(9));
+        setRank(cn, matcher.group(9));
         cn.setInfraSpecificEpithet(matcher.group(10));
       }
 
@@ -376,19 +396,19 @@ public class NormalisedNameParser {
    * @param cn the already parsed name
    */
   private void lookForIrregularRankMarker(ParsedName cn) {
-    if (cn.getRankMarker() == null) {
+    if (cn.getRank() == null) {
       if (cn.getInfraSpecificEpithet() != null) {
         Matcher m = RANK_MARKER_ONLY.matcher(cn.getInfraSpecificEpithet());
-          if (m.find()) {
-              // we found a rank marker, make it one
-          cn.setRankMarker(cn.getInfraSpecificEpithet());
+        if (m.find()) {
+          // we found a rank marker, make it one
+          setRank(cn, cn.getInfraSpecificEpithet());
           cn.setInfraSpecificEpithet(null);
         }
       } else if (cn.getSpecificEpithet() != null) {
         Matcher m = RANK_MARKER_ONLY.matcher(cn.getSpecificEpithet());
         if (m.find()) {
           // we found a rank marker, make it one
-          cn.setRankMarker(cn.getSpecificEpithet());
+          setRank(cn, cn.getSpecificEpithet());
           cn.setSpecificEpithet(null);
         }
       }
@@ -399,7 +419,7 @@ public class NormalisedNameParser {
    * 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
    */
   private void checkEpithetVsAuthorPrefx(ParsedName cn) {
-    if (cn.getRankMarker() == null) {
+    if (cn.getRank() == null) {
       if (cn.getInfraSpecificEpithet() != null) {
         // might be subspecies without rank marker
         // or short authorship prefix in epithet. test
