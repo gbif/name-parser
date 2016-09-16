@@ -94,7 +94,6 @@ public class RankUtils {
     ranks.put("ib", SUPRAGENERIC_NAME);
     ranks.put("sect", SECTION);
     ranks.put("supersubtrib", SUPRAGENERIC_NAME);
-    ranks.put("supertrib", SUPRAGENERIC_NAME);
     ranks.put("trib", TRIBE);
 
     RANK_MARKER_MAP_SUPRAGENERIC = ImmutableMap.copyOf(ranks);

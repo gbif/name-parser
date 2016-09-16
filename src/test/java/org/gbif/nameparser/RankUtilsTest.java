@@ -55,8 +55,8 @@ public class RankUtilsTest {
   public void testInferRank2() {
     for (Rank r : Rank.values()) {
       if (r.getMarker() != null) {
-        assertEquals(r, RankUtils.inferRank(r.getMarker()));
-        assertEquals(r, RankUtils.inferRank("Gagga", null, null, r.getMarker(), null));
+        assertEquals(r.getMarker(), r, RankUtils.inferRank(r.getMarker()));
+        assertEquals(r.getMarker(), r, RankUtils.inferRank("Gagga", null, null, r.getMarker(), null));
       }
     }
   }
