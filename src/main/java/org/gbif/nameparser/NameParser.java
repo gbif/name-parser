@@ -148,6 +148,8 @@ public class NameParser {
   private static final Pattern FIRST_WORD = Pattern.compile("^([×xX]\\s+)?([×x][A-Z])?([a-zA-Z])([a-zA-Z]+) ");
   private static final String WEIRD_CHARS = "[§$%/#+!;:_|\"=*]";
   private static final Pattern NORM_WEIRD_CHARS = Pattern.compile(WEIRD_CHARS);
+  private static final Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\.sp(?:ec)?\\b");
+  private static final Pattern SENSU_LATU = Pattern.compile("\\bs\\.l\\.\\b");
 
   // many names still use outdated xxxtype rank marker, e.g. serotype instead of serovar
   private static final Pattern TYPE_TO_VAR;
@@ -263,11 +265,14 @@ public class NameParser {
     }
     name = org.gbif.utils.text.StringUtils.unescapeUnicodeChars(name);
 
-    // normalise usage of forma specialis rank marker with 2 dots
-    Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\.sp(?:ec)?\\b");
+    // normalise usage of rank marker with 2 dots, i.e. forma specialis and sensu latu
     Matcher m = FORM_SPECIALIS.matcher(name);
     if (m.find()) {
       name = m.replaceAll("fsp");
+    }
+    m = SENSU_LATU.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("sl");
     }
 
     // normalise usage of dots after abbreviated genus and rank marker

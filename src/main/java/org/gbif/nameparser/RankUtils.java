@@ -39,6 +39,7 @@ import static org.gbif.api.vocabulary.Rank.PROLES;
 import static org.gbif.api.vocabulary.Rank.SECTION;
 import static org.gbif.api.vocabulary.Rank.SERIES;
 import static org.gbif.api.vocabulary.Rank.SPECIES;
+import static org.gbif.api.vocabulary.Rank.SPECIES_AGGREGATE;
 import static org.gbif.api.vocabulary.Rank.STRAIN;
 import static org.gbif.api.vocabulary.Rank.SUBCLASS;
 import static org.gbif.api.vocabulary.Rank.SUBFAMILY;
@@ -110,6 +111,8 @@ public class RankUtils {
         ranks.put(r.getMarker().replaceAll("\\.", ""), r);
       }
     }
+    ranks.put("sl", SPECIES_AGGREGATE); // sensu latu
+    ranks.put("aggr", SPECIES_AGGREGATE);
     ranks.put("sect", SECTION);
     ranks.put("section", SECTION);
     ranks.put("ser", SERIES);

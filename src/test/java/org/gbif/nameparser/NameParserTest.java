@@ -5301,6 +5301,29 @@ public class NameParserTest {
   }
 
   @Test
+  public void testAggregates() throws Exception {
+    ParsedName pn = parser.parse("Taraxacum erythrospermum agg.", Rank.SECTION);
+    assertEquals("Taraxacum", pn.getGenusOrAbove());
+    assertEquals("erythrospermum", pn.getSpecificEpithet());
+    assertNull(pn.getInfraGeneric());
+      assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals(Rank.SPECIES_AGGREGATE, pn.getRank());
+
+    pn = parser.parse("Taraxacum erythrospermum s.l.", Rank.SPECIES);
+    assertEquals("Taraxacum", pn.getGenusOrAbove());
+    assertEquals("erythrospermum", pn.getSpecificEpithet());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    //TODO: decide if we want this as an aggregate or in the senus field
+    assertEquals("s.l.", pn.getSensu());
+    //assertEquals(Rank.SPECIES_AGGREGATE, pn.getRank());
+  }
+
+  @Test
   public void testFormAlikes() throws Exception {
     ParsedName pn = parser.parse("Abacosa pallida Alef.", null);
     assertEquals("Abacosa", pn.getGenusOrAbove());
