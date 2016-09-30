@@ -24,8 +24,7 @@
   </scm>
 
   <properties>
-    <!-- The IPT depends on this project and so this must stay at java 6 until IPT is upgraded -->
-    <jdkLevel>1.6</jdkLevel>
+    <jdkLevel>1.8</jdkLevel>
 
     <!-- Dependency versions -->
     <gbif-common.version> 0.28</gbif-common.version>

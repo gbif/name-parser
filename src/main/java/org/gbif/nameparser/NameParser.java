@@ -194,302 +194,6 @@ public class NameParser {
   }
 
   /**
-   * A very optimistic cleaning intended for names potentially very very dirty
-   *
-   * @param name To normalize
-   *
-   * @return The normalized name
-   */
-  protected static String cleanStrong(String name) {
-    if (name != null) {
-      // remove final & which causes long parse times
-
-      // test for known bad suffixes like in Palythoa texaensis author unknown
-      Matcher m = BAD_NAME_SUFFICES.matcher(name);
-      if (m.find()) {
-        name = m.replaceAll("");
-      }
-
-      // replace weird chars
-      name = NORM_WEIRD_CHARS.matcher(name).replaceAll(" ");
-      // swap comb and basionym authors if comb authorship is clearly identified by a &
-
-      // TODO: improve regex - some names take minutes to parse, so we cant use it as it is !
-      // Matcher m = COMB_BAS_AUTHOR_SWAP.matcher(name);
-      // if (m.find() && m.group(1)!=null && m.group(1).contains("&") && m.group(3)!=null ){
-      // System.out.println("SWAP:"+m.group(1)+"|"+m.group(2)+"|"+m.group(3)+"|"+m.group(4));
-      // name = m.replaceFirst(StringUtils.defaultString("("+m.group(3))+StringUtils.trimToEmpty(m.group(4))+")" +
-      // m.group(1)+StringUtils.trimToEmpty(m.group(2)));
-      // }
-      // uppercase the first letter, lowercase the rest of the first word
-      m = FIRST_WORD.matcher(name);
-      if (m.find() && m.group(2) == null) {
-        // System.out.println(m.group(1)+"|"+m.group(2)+"|"+m.group(3)+"|"+m.group(4));
-        name = m.replaceFirst(
-          StringUtils.defaultString(m.group(1)) + m.group(3).toUpperCase() + m.group(4).toLowerCase() + " ");
-      }
-
-      // normalize genus hybrid marker again
-      m = NORM_HYBRIDS_GENUS.matcher(name);
-      if (m.find()) {
-        name = m.replaceFirst("×$1");
-      }
-    }
-
-    return name;
-  }
-
-  /**
-   * Carefully normalizes a scientific name trying to maintain the original as close as possible.
-   * In particular the string is normalized by:
-   * - adding commas in front of years
-   * - trims whitespace around hyphens
-   * - unescapes unicode chars \\uhhhh, \\nnn, \xhh
-   * - pads whitespace around &
-   * - adds whitespace after dots following a genus abbreviation or rank marker
-   * - keeps whitespace before opening and after closing brackets
-   * - removes whitespace inside brackets
-   * - removes whitespace before commas
-   * - normalized hybrid marker to be the ascii multiplication sign
-   * - removes whitespace between hybrid marker and following name part in case it is NOT a hybrid formula
-   * - trims the string and replaces multi whitespace with single space
-   * - capitalizes all only uppercase words (authors are often found in upper case only)
-   *
-   * @param name To normalize
-   *
-   * @return The normalized name
-   */
-  public static String normalize(String name) {
-    if (name == null) {
-      return null;
-    }
-    name = org.gbif.utils.text.StringUtils.unescapeUnicodeChars(name);
-
-    // normalise usage of rank marker with 2 dots, i.e. forma specialis and sensu latu
-    Matcher m = FORM_SPECIALIS.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll("fsp");
-    }
-    m = SENSU_LATU.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll("sl");
-    }
-
-    // normalise usage of dots after abbreviated genus and rank marker
-    m = NORM_DOTS.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll("$1. ");
-    }
-    // use commas before years
-    // ICZN §22A.2 http://www.iczn.org/iczn/includes/page.jsp?article=22&nfv=
-    m = COMMA_BEFORE_YEAR.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll("$1, $2");
-    }
-    // no whitespace around hyphens
-    name = NORM_HYPHENS.matcher(name).replaceAll("-");
-    // use whitespace with &
-    name = NORM_AMPERSAND_WS.matcher(name).replaceAll(" & ");
-
-    // whitespace before and after brackets, keeping the bracket style
-    m = NORM_BRACKETS_OPEN.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll(" $1");
-    }
-    m = NORM_BRACKETS_CLOSE.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll("$1 ");
-    }
-    // remove whitespace before commas and replace double commas with one
-    m = NORM_COMMAS.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll(", ");
-    }
-    // normalize hybrid markers
-    m = NORM_HYBRIDS_GENUS.matcher(name);
-    if (m.find()) {
-      name = m.replaceFirst("×$1");
-    }
-    m = NORM_HYBRIDS_EPITH.matcher(name);
-    if (m.find()) {
-      name = m.replaceFirst("$1 ×$2");
-    }
-    m = NORM_HYBRIDS_FORM.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll(" × ");
-    }
-    // capitalize all entire upper case words
-    m = NORM_UPPERCASE_WORDS.matcher(name);
-    while (m.find()) {
-      name = name.replaceFirst(m.group(0), m.group(1) + m.group(2).toLowerCase());
-    }
-
-    // finally whitespace and trimming
-    name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
-    return StringUtils.trimToEmpty(name);
-  }
-
-  /**
-   * Does the same as a normalize and additionally removes all ( ) and "und" etc
-   * Checks if a name starts with a blacklisted name part like "Undetermined" or "Uncertain" and only returns the
-   * blacklisted word in that case
-   * so its easy to catch names with blacklisted name parts.
-   *
-   * @param name To normalize
-   *
-   * @return The normalized name
-   */
-  protected static String normalizeStrong(String name) {
-    if (name == null) {
-      return null;
-    }
-    // normalize all quotes to single "
-    name = NORM_QUOTES.matcher(name).replaceAll("'");
-    // enclosing quotes
-    name = REPLACE_QUOTES.matcher(name).replaceAll("");
-    // no question marks after words (after years they should remain!)
-    Matcher m = NO_Q_MARKS.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll("$1");
-    }
-
-    // remove prefixes
-    name = NORM_PREFIXES.matcher(name).replaceAll("");
-
-    // remove brackets inside the genus, the kind taxon finder produces
-    m = NORM_TF_GENUS.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll("$1$2 ");
-    }
-    // replace imprint years. See ICZN §22A.2.3 http://www.iczn.org/iczn/index.jsp?nfv=&article=22
-    // Ctenotus alacer Storr, 1970 ["1969"] -> Ctenotus alacer Storr, 1970
-    // C. Flahault 1887 ("1886-1888") -> C. Flahault 1887
-    m = NORM_IMPRINT_YEAR.matcher(name);
-    if (m.find()) {
-      // System.out.println(m.group(0));
-      // System.out.println(m.group(1));
-      name = m.replaceAll("$1");
-    }
-
-    // replace bibliographic in authorship
-    name = NORM_IN_COMMA.matcher(name).replaceFirst(" in ");
-    /*
-     * m = NORM_IN_BIB.matcher(name);
-     * if (m.find()) {
-     * // keep year if it only exists in IN reference
-     * Matcher mIN = EXTRACT_YEAR.matcher(m.group(0));
-     * name = m.replaceAll("");
-     * Matcher mNAME = EXTRACT_YEAR.matcher(name);
-     * if (mIN.find() && !mNAME.find()) {
-     * name = name + ", " + mIN.group(1);
-     * }
-     * }
-     */
-
-    // This is redundant, as it is done in the regular normalize function already
-    // BUT somehow all upper case authors slow down parsing so much that it can even come to an hold in the next step
-    // so we pay the price and do it twice
-    // capitalize all entire upper case words
-    m = NORM_UPPERCASE_WORDS.matcher(name);
-    while (m.find()) {
-      name = name.replaceFirst(m.group(0), m.group(1) + m.group(2).toLowerCase());
-    }
-
-    /*
-     * ICBN §46.2, Note 1.
-     * When authorship of a name differs from authorship of the publication in which it was validly published, both are
-     * sometimes cited,
-     * connected by the word "in". In such a case, "in" and what follows are part of a bibliographic citation and are
-     * better omitted
-     * unless the place of publication is being cited.
-     */
-
-    // normalise original name authorship, putting author AND year in brackets
-    // with long authorships this gets slow. Test if year exists first:
-    m = EXTRACT_YEAR.matcher(name);
-    if (m.find() && name.length() < 80) {
-      m = NORM_ORIG_AUTH.matcher(name);
-      if (m.find()) {
-        name = m.replaceAll("($1 $2)");
-      }
-      m = NORM_ORIG_AUTH2.matcher(name);
-      if (m.find()) {
-        name = m.replaceAll("($1 $2)");
-      }
-    }
-
-    // replace square brackets, keeping content (or better remove all within?)
-    name = NORM_NO_SQUARE_BRACKETS.matcher(name).replaceAll(" $1 ");
-    // replace different kind of brackets with ()
-    name = NORM_BRACKETS_OPEN_STRONG.matcher(name).replaceAll(" (");
-    name = NORM_BRACKETS_CLOSE_STRONG.matcher(name).replaceAll(") ");
-    // normalise different usages of ampersand, and, et &amp;
-    name = NORM_AND.matcher(name).replaceAll(" & ");
-    // but keep "et al." instead of "& al."
-    name = NORM_ET_AL.matcher(name).replaceAll(" et al.");
-
-    // // add commas between authors in space delimited list
-    // m = NORM_AUTH_DELIMIT.matcher(name);
-    // if (m.find()){
-    // name = m.replaceAll("$1, $2");
-    // }
-    // Bryozoan indet. 1
-    // Bryozoa sp. 2
-    // Bryozoa sp. E
-
-    name = NORM_SUFFIXES.matcher(name).replaceAll("");
-
-    // add parenthesis around subgenus if missing
-    m = NORM_SUBGENUS.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll("$1 ($2) $3");
-    }
-
-    // finally whitespace and trimming
-    name = normalize(name);
-    // name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
-    return StringUtils.trimToEmpty(name);
-  }
-
-  /**
-   * basic careful cleaning, trying to preserve all parsable name parts
-   */
-  protected static String preClean(String name) {
-    // unescape unicode
-    name = org.gbif.utils.text.StringUtils.unescapeUnicodeChars(name);
-    // remove bad whitespace in html entities
-    Matcher m = XML_ENTITY_STRIP.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll("&$1;");
-    }
-    // unescape html entities
-    name = StringEscapeUtils.unescapeHtml4(name);
-    // finally remove still existing bad ampersands missing the closing ;
-    name = AMPERSAND_ENTITY.matcher(name).replaceAll("& ");
-    // replace xml tags
-    name = XML_TAGS.matcher(name).replaceAll("");
-    // trim
-    name = name.trim();
-    // remove quotes in beginning and matching ones at the end
-    for (char c : QUOTES) {
-      int idx = 0;
-      while (idx < name.length() && (c == name.charAt(idx) || Character.isWhitespace(name.charAt(idx)))) {
-        idx++;
-      }
-      if (idx > 0) {
-        // check if we also find this char at the end
-        int end = 0;
-        while (c == name.charAt(name.length() - 1 - end) && (name.length() - idx - end) > 0) {
-          end++;
-        }
-        name = name.substring(idx, name.length() - end);
-      }
-    }
-    name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
-    return StringUtils.trimToEmpty(name);
-  }
-
-  /**
    * Fully parse the supplied name also trying to extract authorships, a conceptual sec reference, remarks or notes
    * on the nomenclatural status. In some cases the authorship parsing proves impossible and this nameparser will
    * return null.
@@ -710,6 +414,364 @@ public class NameParser {
     return pn;
   }
 
+  /**
+   * Fully parses a name using #parse(String, Rank) but converts names that throw a UnparsableException
+   * into ParsedName objects with the scientific name, rank and name type given.
+   */
+  public ParsedName parseQuietly(final String scientificName, @Nullable Rank rank) {
+    ParsedName p;
+    try {
+      p = parse(scientificName, rank);
+
+    } catch (UnparsableException e) {
+      p = new ParsedName();
+      p.setScientificName(scientificName);
+      p.setRank(rank);
+      p.setType(e.type);
+      p.setParsed(false);
+      p.setAuthorsParsed(false);
+    }
+
+    return p;
+  }
+
+  /**
+   * parses the name without authorship and returns the ParsedName.canonicalName() string
+   * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
+   */
+  public String parseToCanonical(String scientificName, @Nullable Rank rank) {
+    if (Strings.isNullOrEmpty(scientificName)) {
+      return null;
+    }
+    try {
+      ParsedName pn = parse(scientificName, rank);
+      if (pn != null) {
+        return pn.canonicalName();
+      }
+    } catch (UnparsableException e) {
+      LOG.warn("Unparsable name " + scientificName + " >>> " + e.getMessage());
+    }
+    return null;
+  }
+
+  /**
+   * Tries to parses the name without authorship and returns the ParsedName.canonicalName() string
+   * For unparsable types and other UnparsableExceptions the original scientific name is returned.
+   * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
+   */
+  public String parseToCanonicalOrScientificName(String scientificName, @Nullable Rank rank) {
+    if (Strings.isNullOrEmpty(scientificName)) {
+      return null;
+    }
+    try {
+      ParsedName pn = parse(scientificName, rank);
+      if (pn != null) {
+        return pn.canonicalName();
+      }
+    } catch (UnparsableException e) {
+      LOG.warn("Unparsable name " + scientificName + " >>> " + e.getMessage());
+    }
+    return StringUtils.normalizeSpace(scientificName.trim());
+  }
+
+  /**
+   * A very optimistic cleaning intended for names potentially very very dirty
+   *
+   * @param name To normalize
+   *
+   * @return The normalized name
+   */
+  protected static String cleanStrong(String name) {
+    if (name != null) {
+      // remove final & which causes long parse times
+
+      // test for known bad suffixes like in Palythoa texaensis author unknown
+      Matcher m = BAD_NAME_SUFFICES.matcher(name);
+      if (m.find()) {
+        name = m.replaceAll("");
+      }
+
+      // replace weird chars
+      name = NORM_WEIRD_CHARS.matcher(name).replaceAll(" ");
+      // swap comb and basionym authors if comb authorship is clearly identified by a &
+
+      // TODO: improve regex - some names take minutes to parse, so we cant use it as it is !
+      // Matcher m = COMB_BAS_AUTHOR_SWAP.matcher(name);
+      // if (m.find() && m.group(1)!=null && m.group(1).contains("&") && m.group(3)!=null ){
+      // System.out.println("SWAP:"+m.group(1)+"|"+m.group(2)+"|"+m.group(3)+"|"+m.group(4));
+      // name = m.replaceFirst(StringUtils.defaultString("("+m.group(3))+StringUtils.trimToEmpty(m.group(4))+")" +
+      // m.group(1)+StringUtils.trimToEmpty(m.group(2)));
+      // }
+      // uppercase the first letter, lowercase the rest of the first word
+      m = FIRST_WORD.matcher(name);
+      if (m.find() && m.group(2) == null) {
+        // System.out.println(m.group(1)+"|"+m.group(2)+"|"+m.group(3)+"|"+m.group(4));
+        name = m.replaceFirst(
+          StringUtils.defaultString(m.group(1)) + m.group(3).toUpperCase() + m.group(4).toLowerCase() + " ");
+      }
+
+      // normalize genus hybrid marker again
+      m = NORM_HYBRIDS_GENUS.matcher(name);
+      if (m.find()) {
+        name = m.replaceFirst("×$1");
+      }
+    }
+
+    return name;
+  }
+
+  /**
+   * Carefully normalizes a scientific name trying to maintain the original as close as possible.
+   * In particular the string is normalized by:
+   * - adding commas in front of years
+   * - trims whitespace around hyphens
+   * - unescapes unicode chars \\uhhhh, \\nnn, \xhh
+   * - pads whitespace around &
+   * - adds whitespace after dots following a genus abbreviation or rank marker
+   * - keeps whitespace before opening and after closing brackets
+   * - removes whitespace inside brackets
+   * - removes whitespace before commas
+   * - normalized hybrid marker to be the ascii multiplication sign
+   * - removes whitespace between hybrid marker and following name part in case it is NOT a hybrid formula
+   * - trims the string and replaces multi whitespace with single space
+   * - capitalizes all only uppercase words (authors are often found in upper case only)
+   *
+   * @param name To normalize
+   *
+   * @return The normalized name
+   */
+  public static String normalize(String name) {
+    if (name == null) {
+      return null;
+    }
+    name = org.gbif.utils.text.StringUtils.unescapeUnicodeChars(name);
+
+    // normalise usage of rank marker with 2 dots, i.e. forma specialis and sensu latu
+    Matcher m = FORM_SPECIALIS.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("fsp");
+    }
+    m = SENSU_LATU.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("sl");
+    }
+
+    // normalise usage of dots after abbreviated genus and rank marker
+    m = NORM_DOTS.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("$1. ");
+    }
+    // use commas before years
+    // ICZN §22A.2 http://www.iczn.org/iczn/includes/page.jsp?article=22&nfv=
+    m = COMMA_BEFORE_YEAR.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("$1, $2");
+    }
+    // no whitespace around hyphens
+    name = NORM_HYPHENS.matcher(name).replaceAll("-");
+    // use whitespace with &
+    name = NORM_AMPERSAND_WS.matcher(name).replaceAll(" & ");
+
+    // whitespace before and after brackets, keeping the bracket style
+    m = NORM_BRACKETS_OPEN.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll(" $1");
+    }
+    m = NORM_BRACKETS_CLOSE.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("$1 ");
+    }
+    // remove whitespace before commas and replace double commas with one
+    m = NORM_COMMAS.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll(", ");
+    }
+    // normalize hybrid markers
+    m = NORM_HYBRIDS_GENUS.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst("×$1");
+    }
+    m = NORM_HYBRIDS_EPITH.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst("$1 ×$2");
+    }
+    m = NORM_HYBRIDS_FORM.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll(" × ");
+    }
+    // capitalize all entire upper case words
+    m = NORM_UPPERCASE_WORDS.matcher(name);
+    while (m.find()) {
+      name = name.replaceFirst(m.group(0), m.group(1) + m.group(2).toLowerCase());
+    }
+
+    // finally whitespace and trimming
+    name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
+    return StringUtils.trimToEmpty(name);
+  }
+
+  /**
+   * Does the same as a normalize and additionally removes all ( ) and "und" etc
+   * Checks if a name starts with a blacklisted name part like "Undetermined" or "Uncertain" and only returns the
+   * blacklisted word in that case
+   * so its easy to catch names with blacklisted name parts.
+   *
+   * @param name To normalize
+   *
+   * @return The normalized name
+   */
+  @VisibleForTesting
+  static String normalizeStrong(String name) {
+    if (name == null) {
+      return null;
+    }
+    // normalize all quotes to single "
+    name = NORM_QUOTES.matcher(name).replaceAll("'");
+    // enclosing quotes
+    name = REPLACE_QUOTES.matcher(name).replaceAll("");
+    // no question marks after words (after years they should remain!)
+    Matcher m = NO_Q_MARKS.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("$1");
+    }
+
+    // remove prefixes
+    name = NORM_PREFIXES.matcher(name).replaceAll("");
+
+    // remove brackets inside the genus, the kind taxon finder produces
+    m = NORM_TF_GENUS.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("$1$2 ");
+    }
+    // replace imprint years. See ICZN §22A.2.3 http://www.iczn.org/iczn/index.jsp?nfv=&article=22
+    // Ctenotus alacer Storr, 1970 ["1969"] -> Ctenotus alacer Storr, 1970
+    // C. Flahault 1887 ("1886-1888") -> C. Flahault 1887
+    m = NORM_IMPRINT_YEAR.matcher(name);
+    if (m.find()) {
+      // System.out.println(m.group(0));
+      // System.out.println(m.group(1));
+      name = m.replaceAll("$1");
+    }
+
+    // replace bibliographic in authorship
+    name = NORM_IN_COMMA.matcher(name).replaceFirst(" in ");
+    /*
+     * m = NORM_IN_BIB.matcher(name);
+     * if (m.find()) {
+     * // keep year if it only exists in IN reference
+     * Matcher mIN = EXTRACT_YEAR.matcher(m.group(0));
+     * name = m.replaceAll("");
+     * Matcher mNAME = EXTRACT_YEAR.matcher(name);
+     * if (mIN.find() && !mNAME.find()) {
+     * name = name + ", " + mIN.group(1);
+     * }
+     * }
+     */
+
+    // This is redundant, as it is done in the regular normalize function already
+    // BUT somehow all upper case authors slow down parsing so much that it can even come to an hold in the next step
+    // so we pay the price and do it twice
+    // capitalize all entire upper case words
+    m = NORM_UPPERCASE_WORDS.matcher(name);
+    while (m.find()) {
+      name = name.replaceFirst(m.group(0), m.group(1) + m.group(2).toLowerCase());
+    }
+
+    /*
+     * ICBN §46.2, Note 1.
+     * When authorship of a name differs from authorship of the publication in which it was validly published, both are
+     * sometimes cited,
+     * connected by the word "in". In such a case, "in" and what follows are part of a bibliographic citation and are
+     * better omitted
+     * unless the place of publication is being cited.
+     */
+
+    // normalise original name authorship, putting author AND year in brackets
+    // with long authorships this gets slow. Test if year exists first:
+    m = EXTRACT_YEAR.matcher(name);
+    if (m.find() && name.length() < 80) {
+      m = NORM_ORIG_AUTH.matcher(name);
+      if (m.find()) {
+        name = m.replaceAll("($1 $2)");
+      }
+      m = NORM_ORIG_AUTH2.matcher(name);
+      if (m.find()) {
+        name = m.replaceAll("($1 $2)");
+      }
+    }
+
+    // replace square brackets, keeping content (or better remove all within?)
+    name = NORM_NO_SQUARE_BRACKETS.matcher(name).replaceAll(" $1 ");
+    // replace different kind of brackets with ()
+    name = NORM_BRACKETS_OPEN_STRONG.matcher(name).replaceAll(" (");
+    name = NORM_BRACKETS_CLOSE_STRONG.matcher(name).replaceAll(") ");
+    // normalise different usages of ampersand, and, et &amp;
+    name = NORM_AND.matcher(name).replaceAll(" & ");
+    // but keep "et al." instead of "& al."
+    name = NORM_ET_AL.matcher(name).replaceAll(" et al.");
+
+    // // add commas between authors in space delimited list
+    // m = NORM_AUTH_DELIMIT.matcher(name);
+    // if (m.find()){
+    // name = m.replaceAll("$1, $2");
+    // }
+    // Bryozoan indet. 1
+    // Bryozoa sp. 2
+    // Bryozoa sp. E
+
+    name = NORM_SUFFIXES.matcher(name).replaceAll("");
+
+    // add parenthesis around subgenus if missing
+    m = NORM_SUBGENUS.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("$1 ($2) $3");
+    }
+
+    // finally whitespace and trimming
+    name = normalize(name);
+    // name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
+    return StringUtils.trimToEmpty(name);
+  }
+
+  /**
+   * basic careful cleaning, trying to preserve all parsable name parts
+   */
+  @VisibleForTesting
+  static String preClean(String name) {
+    // unescape unicode
+    name = org.gbif.utils.text.StringUtils.unescapeUnicodeChars(name);
+    // remove bad whitespace in html entities
+    Matcher m = XML_ENTITY_STRIP.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("&$1;");
+    }
+    // unescape html entities
+    name = StringEscapeUtils.unescapeHtml4(name);
+    // finally remove still existing bad ampersands missing the closing ;
+    name = AMPERSAND_ENTITY.matcher(name).replaceAll("& ");
+    // replace xml tags
+    name = XML_TAGS.matcher(name).replaceAll("");
+    // trim
+    name = name.trim();
+    // remove quotes in beginning and matching ones at the end
+    for (char c : QUOTES) {
+      int idx = 0;
+      while (idx < name.length() && (c == name.charAt(idx) || Character.isWhitespace(name.charAt(idx)))) {
+        idx++;
+      }
+      if (idx > 0) {
+        // check if we also find this char at the end
+        int end = 0;
+        while (c == name.charAt(name.length() - 1 - end) && (name.length() - idx - end) > 0) {
+          end++;
+        }
+        name = name.substring(idx, name.length() - end);
+      }
+    }
+    name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
+    return StringUtils.trimToEmpty(name);
+  }
+
   private void determineNameType(ParsedName pn, String scientificName) {
     if (pn.getType() == null) {
       // a placeholder spithet only?
@@ -752,45 +814,6 @@ public class NameParser {
         pn.setType(NameType.DOUBTFUL);
       }
     }
-  }
-
-  /**
-   * parses the name without authorship and returns the ParsedName.canonicalName() string
-   * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
-   */
-  public String parseToCanonical(String scientificName, @Nullable Rank rank) {
-    if (Strings.isNullOrEmpty(scientificName)) {
-      return null;
-    }
-    try {
-      ParsedName pn = parse(scientificName, rank);
-      if (pn != null) {
-        return pn.canonicalName();
-      }
-    } catch (UnparsableException e) {
-      LOG.warn("Unparsable name " + scientificName + " >>> " + e.getMessage());
-    }
-    return null;
-  }
-
-  /**
-   * Tries to parses the name without authorship and returns the ParsedName.canonicalName() string
-   * For unparsable types and other UnparsableExceptions the original scientific name is returned.
-   * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
-   */
-  public String parseToCanonicalOrScientificName(String scientificName, @Nullable Rank rank) {
-    if (Strings.isNullOrEmpty(scientificName)) {
-      return null;
-    }
-    try {
-      ParsedName pn = parse(scientificName, rank);
-      if (pn != null) {
-        return pn.canonicalName();
-      }
-    } catch (UnparsableException e) {
-      LOG.warn("Unparsable name " + scientificName + " >>> " + e.getMessage());
-    }
-    return StringUtils.normalizeSpace(scientificName.trim());
   }
 
   public NormalisedNameParser getNormalisedNameParser() {
