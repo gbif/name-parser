@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
@@ -5843,6 +5844,20 @@ public class NameParserTest {
 
     assertEquals("Huaiyuanella Xing, Yan & Yin, 1984", NameParser.normalize("Huaiyuanella Xing, Yan&Yin, 1984"));
 
+  }
+
+  @Test
+  public void testScientificNameStaysVerbatim() {
+    for (String name : Lists.newArrayList(
+        "Huaiyuanella Xing, Yan&Yin, 1984",
+        "Abies alba agg.",
+        "Trechus (Trechus) mogul Belousov & Kabak, 2001",
+        "Trechus (Trechus) merditanus Apfelbeck, 1906"
+    )) {
+      assertEquals(name, parser.parseQuietly(name, null).getScientificName());
+      assertEquals(name, parser.parseQuietly(name, Rank.SPECIES).getScientificName());
+      assertEquals(name, parser.parseQuietly(name, Rank.INFRASPECIFIC_NAME).getScientificName());
+    }
   }
 
   @Test
