@@ -1,6 +1,8 @@
 package org.gbif.nameparser;
 
+import org.gbif.api.exception.UnparsableException;
 import org.gbif.api.model.checklistbank.ParsedName;
+import org.gbif.api.service.checklistbank.NameParser;
 import org.gbif.api.vocabulary.NameType;
 import org.gbif.api.vocabulary.NomenclaturalCode;
 import org.gbif.api.vocabulary.Rank;
@@ -29,9 +31,9 @@ import static org.gbif.nameparser.NormalisedNameParser.name_letters;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
-public class NameParser {
+public class GBIFNameParser implements NameParser {
 
-  private static Logger LOG = LoggerFactory.getLogger(NameParser.class);
+  private static Logger LOG = LoggerFactory.getLogger(GBIFNameParser.class);
   private final NormalisedNameParser nnParser;
   private static char[] QUOTES = new char[4];
 
@@ -182,14 +184,14 @@ public class NameParser {
   /**
    * The default name parser without an explicit monomials list using the default timeout of 1s for parsing.
    */
-  public NameParser() {
+  public GBIFNameParser() {
     this.nnParser= new NormalisedNameParser(500);  // max default parsing time is one second;
   }
 
   /**
    * The default name parser without an explicit monomials list using the given timeout in milliseconds for parsing.
    */
-  public NameParser(long timeout) {
+  public GBIFNameParser(long timeout) {
     this.nnParser= new NormalisedNameParser(timeout / 2);
   }
 
@@ -205,7 +207,7 @@ public class NameParser {
    * @param scientificName the full scientific name to parse
    * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
    *
-   * @throws org.gbif.nameparser.UnparsableException
+   * @throws UnparsableException
    */
   public ParsedName parse(final String scientificName, @Nullable Rank rank) throws UnparsableException {
     if (Strings.isNullOrEmpty(scientificName)) {
@@ -414,6 +416,11 @@ public class NameParser {
     return pn;
   }
 
+  @Override
+  public ParsedName parse(String scientificName) throws UnparsableException {
+    return parse(scientificName, null);
+  }
+
   /**
    * Fully parses a name using #parse(String, Rank) but converts names that throw a UnparsableException
    * into ParsedName objects with the scientific name, rank and name type given.
@@ -435,6 +442,11 @@ public class NameParser {
     return p;
   }
 
+  @Override
+  public ParsedName parseQuietly(String scientificName) {
+    return parseQuietly(scientificName, null);
+  }
+
   /**
    * parses the name without authorship and returns the ParsedName.canonicalName() string
    * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
@@ -452,6 +464,11 @@ public class NameParser {
       LOG.warn("Unparsable name " + scientificName + " >>> " + e.getMessage());
     }
     return null;
+  }
+
+  @Override
+  public String parseToCanonical(String scientificName) {
+    return parseToCanonical(scientificName, null);
   }
 
   /**

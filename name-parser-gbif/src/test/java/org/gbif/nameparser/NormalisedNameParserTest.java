@@ -1,6 +1,7 @@
 package org.gbif.nameparser;
 
 import org.gbif.api.model.checklistbank.ParsedName;
+import org.gbif.nameparser.NormalisedNameParser;
 
 import java.util.regex.Pattern;
 
@@ -13,7 +14,7 @@ public class NormalisedNameParserTest {
 
   @Test
   public void testEpithetPattern() throws Exception {
-    Pattern epi = Pattern.compile("^"+NormalisedNameParser.EPHITHET+"$");
+    Pattern epi = Pattern.compile("^"+ NormalisedNameParser.EPHITHET+"$");
     assertTrue(epi.matcher("alba").find());
     assertTrue(epi.matcher("biovas").find());
     assertTrue(epi.matcher("serovat").find());

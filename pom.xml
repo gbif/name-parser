@@ -8,12 +8,12 @@
     <version>37</version>
   </parent>
 
-  <artifactId>name-parser</artifactId>
+  <artifactId>name-parser-motherpom</artifactId>
   <version>2.21-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
 
-  <name>GBIF Name Parser</name>
-  <description>GBIF Name Parser</description>
+  <name>GBIF Name Parser Motherpom</name>
+  <description>GBIF Name Parser Motherpom</description>
   <url>http://github.org/gbif/name-parser</url>
 
   <scm>
@@ -23,16 +23,22 @@
     <tag>HEAD</tag>
   </scm>
 
+  <modules>
+    <module>name-parser-gna</module>
+    <module>name-parser-gbif</module>
+  </modules>
+
   <properties>
     <jdkLevel>1.8</jdkLevel>
 
     <!-- Dependency versions -->
     <gbif-common.version> 0.28</gbif-common.version>
-    <gbif-api.version>0.46</gbif-api.version>
+    <gbif-api.version>0.48-SNAPSHOT</gbif-api.version>
     <!-- non gbif -->
     <commons-io.version>2.5</commons-io.version>
     <commons-lang.version>3.4</commons-lang.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
+    <gnaparser.version>0.3.3</gnaparser.version>
     <guava.version>18.0</guava.version>
     <guice.version>4.0</guice.version>
     <junit.version>4.12</junit.version>
@@ -48,33 +54,6 @@
     </developer>
   </developers>
 
-  <build>
-    <defaultGoal>install</defaultGoal>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <excludes>
-          <exclude>*.txt</exclude>
-        </excludes>
-        <filtering>true</filtering>
-      </testResource>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <includes>
-          <include>*.txt</include>
-        </includes>
-        <filtering>false</filtering>
-      </testResource>
-    </testResources>
-
-  </build>
-
   <repositories>
     <repository>
       <id>gbif-all</id>
@@ -86,56 +65,63 @@
     </repository>
   </repositories>
 
-  <dependencies>
-    <!-- GBIF -->
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-api</artifactId>
-      <version>${gbif-api.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-common</artifactId>
-      <version>${gbif-common.version}</version>
-    </dependency>
+  <dependencyManagement>
+    <dependencies>
+      <!-- GBIF -->
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-api</artifactId>
+        <version>${gbif-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-common</artifactId>
+        <version>${gbif-common.version}</version>
+      </dependency>
 
-    <!-- Logging -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>${slf4j.version}</version>
-    </dependency>
+      <!-- Logging -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
 
-    <!-- Other -->
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>${commons-io.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>${commons-lang.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>${guava.version}</version>
-    </dependency>
+      <!-- Other -->
+      <dependency>
+        <groupId>org.globalnames</groupId>
+        <artifactId>gnparser_2.11</artifactId>
+        <version>${gnaparser.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
 
-    <!-- Test -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+      <!-- Test -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
 </project>

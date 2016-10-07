@@ -1,6 +1,7 @@
 package org.gbif.nameparser;
 
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.nameparser.RankUtils;
 
 import java.util.HashMap;
 import java.util.Map;

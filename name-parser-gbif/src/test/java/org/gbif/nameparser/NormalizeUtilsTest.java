@@ -1,5 +1,7 @@
 package org.gbif.nameparser;
 
+import org.gbif.nameparser.NormalizeUtils;
+
 import java.util.regex.Pattern;
 
 import org.junit.Assert;

@@ -1,5 +1,6 @@
 package org.gbif.nameparser;
 
+import org.gbif.api.exception.UnparsableException;
 import org.gbif.api.model.checklistbank.ParsedName;
 
 import java.io.File;
@@ -13,7 +14,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.nameparser.NameParser.normalize;
+import static org.gbif.nameparser.GBIFNameParser.normalize;
 
 /**
  * A test class for manually debugging name parsing.
@@ -22,7 +23,7 @@ import static org.gbif.nameparser.NameParser.normalize;
 @Ignore("This test class is for manual use only")
 public class ParseNames {
   private static Logger LOG = LoggerFactory.getLogger(ParseNames.class);
-  private static NameParser parser = new NameParser();
+  private static GBIFNameParser parser = new GBIFNameParser();
 
   @Test
   public void testFile() throws Exception {

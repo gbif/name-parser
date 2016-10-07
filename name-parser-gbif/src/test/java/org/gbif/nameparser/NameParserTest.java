@@ -1,5 +1,6 @@
 package org.gbif.nameparser;
 
+import org.gbif.api.exception.UnparsableException;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.NamePart;
 import org.gbif.api.vocabulary.NameType;
@@ -48,7 +49,7 @@ public class NameParserTest {
 
   private static Logger LOG = LoggerFactory.getLogger(NameParserTest.class);
   private static final InputStreamUtils streamUtils = new InputStreamUtils();
-  private NameParser parser = new NameParser(50);
+  private GBIFNameParser parser = new GBIFNameParser(50);
 
   private void assertHybridFormula(String name) {
     try {
@@ -122,7 +123,7 @@ public class NameParserTest {
 
   private String extractNomNote(String name) {
     String nomNote = null;
-    Matcher matcher = NameParser.EXTRACT_NOMSTATUS.matcher(name);
+    Matcher matcher = GBIFNameParser.EXTRACT_NOMSTATUS.matcher(name);
     if (matcher.find()) {
       nomNote = (StringUtils.trimToNull(matcher.group(1)));
     }
@@ -298,14 +299,14 @@ public class NameParserTest {
 
   @Test
   public void testClean1() throws Exception {
-    assertEquals("", NameParser.preClean(""));
-    assertEquals("Hallo Spencer", NameParser.preClean("Hallo Spencer "));
-    assertEquals("Hallo Spencer", NameParser.preClean("' 'Hallo Spencer"));
-    assertEquals("Hallo Spencer 1982", NameParser.preClean("'\" Hallo  Spencer 1982'"));
+    assertEquals("", GBIFNameParser.preClean(""));
+    assertEquals("Hallo Spencer", GBIFNameParser.preClean("Hallo Spencer "));
+    assertEquals("Hallo Spencer", GBIFNameParser.preClean("' 'Hallo Spencer"));
+    assertEquals("Hallo Spencer 1982", GBIFNameParser.preClean("'\" Hallo  Spencer 1982'"));
   }
 
   private boolean testCultivar(String cultivar) {
-    Matcher m = NameParser.CULTIVAR.matcher(cultivar);
+    Matcher m = GBIFNameParser.CULTIVAR.matcher(cultivar);
     if (m.find()) {
       return true;
     } else {
@@ -5828,21 +5829,21 @@ public class NameParserTest {
 
   @Test
   public void testNormalizeName() {
-    assertEquals("Nuculoidea Williams et Breger, 1916", NameParser.normalize("Nuculoidea Williams et  Breger 1916  "));
+    assertEquals("Nuculoidea Williams et Breger, 1916", GBIFNameParser.normalize("Nuculoidea Williams et  Breger 1916  "));
     assertEquals("Nuculoidea behrens var. christoph Williams & Breger [1916]",
-        NameParser.normalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
+        GBIFNameParser.normalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
     assertEquals("Nuculoidea behrens var. christoph Williams & Breger [1916]",
-        NameParser.normalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
-    assertEquals(NameParser.normalize("Nuculoidea Williams & Breger, 1916  "),
-        NameParser.normalize("Nuculoidea   Williams& Breger, 1916"));
+        GBIFNameParser.normalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
+    assertEquals(GBIFNameParser.normalize("Nuculoidea Williams & Breger, 1916  "),
+        GBIFNameParser.normalize("Nuculoidea   Williams& Breger, 1916"));
     assertEquals("Asplenium ×inexpectatum (E.L. Braun, 1940) Morton (1956)",
-        NameParser.normalize("Asplenium X inexpectatum (E.L. Braun 1940)Morton (1956) "));
-    assertEquals("×Agropogon", NameParser.normalize(" × Agropogon"));
-    assertEquals("Salix ×capreola Andersson", NameParser.normalize("Salix × capreola Andersson"));
+        GBIFNameParser.normalize("Asplenium X inexpectatum (E.L. Braun 1940)Morton (1956) "));
+    assertEquals("×Agropogon", GBIFNameParser.normalize(" × Agropogon"));
+    assertEquals("Salix ×capreola Andersson", GBIFNameParser.normalize("Salix × capreola Andersson"));
     assertEquals("Leucanitis roda Herrich-Schäffer (1851), 1845",
-        NameParser.normalize("Leucanitis roda Herrich-Schäffer (1851) 1845"));
+        GBIFNameParser.normalize("Leucanitis roda Herrich-Schäffer (1851) 1845"));
 
-    assertEquals("Huaiyuanella Xing, Yan & Yin, 1984", NameParser.normalize("Huaiyuanella Xing, Yan&Yin, 1984"));
+    assertEquals("Huaiyuanella Xing, Yan & Yin, 1984", GBIFNameParser.normalize("Huaiyuanella Xing, Yan&Yin, 1984"));
 
   }
 
@@ -5863,29 +5864,29 @@ public class NameParserTest {
   @Test
   public void testNormalizeStrongName() {
     assertEquals("Nuculoidea Williams & Breger, 1916",
-        NameParser.normalizeStrong("Nuculoidea Williams et  Breger 1916  "));
+        GBIFNameParser.normalizeStrong("Nuculoidea Williams et  Breger 1916  "));
     assertEquals("Nuculoidea behrens var. christoph Williams & Breger, 1916",
-        NameParser.normalizeStrong("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
+        GBIFNameParser.normalizeStrong("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
     assertEquals("Nuculoidea Williams & Breger, 1916",
-        NameParser.normalizeStrong(" 'Nuculoidea Williams & Breger, 1916'"));
+        GBIFNameParser.normalizeStrong(" 'Nuculoidea Williams & Breger, 1916'"));
     assertEquals("Malacocarpus schumannianus (Nicolai, 1893) Britton & Rose",
-        NameParser.normalizeStrong("Malacocarpus schumannianus (Nicolai (1893)) Britton & Rose"));
+        GBIFNameParser.normalizeStrong("Malacocarpus schumannianus (Nicolai (1893)) Britton & Rose"));
     assertEquals("Photina (Cardioptera) burmeisteri (Westwood, 1889)",
-        NameParser.normalizeStrong("Photina Cardioptera burmeisteri (Westwood 1889)"));
+        GBIFNameParser.normalizeStrong("Photina Cardioptera burmeisteri (Westwood 1889)"));
     assertEquals("Suaeda forsskahlei Schweinf.",
-        NameParser.normalizeStrong("Suaeda forsskahlei Schweinf. ms."));
-    assertEquals("Acacia bicolor Bojer", NameParser.normalizeStrong("Acacia bicolor Bojer ms."));
+        GBIFNameParser.normalizeStrong("Suaeda forsskahlei Schweinf. ms."));
+    assertEquals("Acacia bicolor Bojer", GBIFNameParser.normalizeStrong("Acacia bicolor Bojer ms."));
     assertEquals("Leucanitis roda (Herrich-Schäffer, 1851), 1845",
-        NameParser.normalizeStrong("Leucanitis roda Herrich-Schäffer (1851) 1845"));
+        GBIFNameParser.normalizeStrong("Leucanitis roda Herrich-Schäffer (1851) 1845"));
     assertEquals("Astelia alpina var. novae-hollandiae",
-        NameParser.normalizeStrong("Astelia alpina var. novae-hollandiae"));
+        GBIFNameParser.normalizeStrong("Astelia alpina var. novae-hollandiae"));
     // ampersand entities are handled as part of the regular html entity escaping:
     assertEquals("N. behrens Williams & amp; Breger, 1916",
-        NameParser.normalizeStrong("  N.behrens Williams &amp;  Breger , 1916  "));
+        GBIFNameParser.normalizeStrong("  N.behrens Williams &amp;  Breger , 1916  "));
     assertEquals("N.behrens Williams & Breger , 1916",
-        NameParser.preClean("  N.behrens Williams &amp;  Breger , 1916  "));
+        GBIFNameParser.preClean("  N.behrens Williams &amp;  Breger , 1916  "));
     assertEquals("N. behrens Williams & Breger, 1916",
-        NameParser.normalizeStrong(NameParser.preClean("  N.behrens Williams &amp;  Breger , 1916  ")));
+        GBIFNameParser.normalizeStrong(GBIFNameParser.preClean("  N.behrens Williams &amp;  Breger , 1916  ")));
   }
 
   @Test
