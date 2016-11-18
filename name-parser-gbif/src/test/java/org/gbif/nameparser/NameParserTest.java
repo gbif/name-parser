@@ -6008,6 +6008,17 @@ public class NameParserTest {
     assertEquals(Rank.NATIO, pn.getRank());
     assertEquals(NameType.SCIENTIFIC, pn.getType());
 
+    pn = parser.parse("Potamon (Potamon) potamios setiger natio sendschirili", null);
+    assertEquals("Potamon", pn.getGenusOrAbove());
+    assertEquals("Potamon", pn.getInfraGeneric());
+    assertEquals("potamios", pn.getSpecificEpithet());
+    assertEquals("sendschirili", pn.getInfraSpecificEpithet());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertEquals(Rank.NATIO, pn.getRank());
+    assertEquals(NameType.SCIENTIFIC, pn.getType());
+
+
     pn = parser.parse("Achillea millefolium prol. ceretanica Sennen", null);
     assertEquals("Achillea", pn.getGenusOrAbove());
     assertEquals("millefolium", pn.getSpecificEpithet());
