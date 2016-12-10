@@ -31,6 +31,13 @@ import static org.gbif.nameparser.NormalisedNameParser.name_letters;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
+/**
+ * The default GBIF name parser build on regular expressions.
+ * In order to avoid long running regex matches it runs the core parsing in a background threadpool
+ * which is shared across all instances of the parser.
+ *
+ * Make sure to reuse the instance as much as possible and don't forget to close it for the threads to shutdown properly.
+ */
 public class GBIFNameParser implements NameParser {
 
   private static Logger LOG = LoggerFactory.getLogger(GBIFNameParser.class);

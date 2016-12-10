@@ -3,6 +3,7 @@ package org.gbif.nameparser;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.NamePart;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.utils.concurrent.NamedThreadFactory;
 import org.gbif.utils.file.FileUtils;
 
 import java.io.IOException;
@@ -10,8 +11,9 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
@@ -31,7 +33,17 @@ import org.slf4j.LoggerFactory;
  */
 public class NormalisedNameParser {
   private static Logger LOG = LoggerFactory.getLogger(NormalisedNameParser.class);
-  private static final ExecutorService THREAD_POOL = Executors.newCachedThreadPool();
+
+  /**
+   * We use a cached threadpool to run the normalised parsing in the background so we can control
+   * timeouts. If idle the pool shrinks to no threads after 10 seconds.
+   */
+  private static final ExecutorService EXEC = new ThreadPoolExecutor(0, 100,
+      10L, TimeUnit.SECONDS,
+      new SynchronousQueue<Runnable>(),
+      new NamedThreadFactory("NormalisedNameParser", Thread.MAX_PRIORITY, true),
+      new ThreadPoolExecutor.CallerRunsPolicy());
+
   private final long timeout;  // max parsing time in milliseconds
 
   public NormalisedNameParser(long timeout) {
@@ -219,7 +231,7 @@ public class NormalisedNameParser {
   public boolean parseNormalisedName(ParsedName cn, String scientificName, @Nullable Rank rank) {
     LOG.debug("Parse normed name string: {}", scientificName);
     FutureTask<Matcher> task = new FutureTask<Matcher>(new MatcherCallable(scientificName));
-    THREAD_POOL.execute(task);
+    EXEC.execute(task);
 
     try {
       Matcher matcher = task.get(timeout, TimeUnit.MILLISECONDS);
@@ -284,11 +296,15 @@ public class NormalisedNameParser {
       }
 
     } catch (InterruptedException e) {
-      LOG.warn("InterruptedException for name: {}", scientificName, e);
+      LOG.warn("Thread got interrupted, shutdown executor", e);
+      EXEC.shutdown();
+
     } catch (ExecutionException e) {
       LOG.warn("ExecutionException for name: {}", scientificName, e);
+
     } catch (IllegalStateException e) {
       // we simply had no match
+
     } catch (TimeoutException e) {
       // timeout
       LOG.info("Parsing timeout for name: {}", scientificName);

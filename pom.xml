@@ -32,7 +32,7 @@
     <jdkLevel>1.8</jdkLevel>
 
     <!-- Dependency versions -->
-    <gbif-common.version>0.28</gbif-common.version>
+    <gbif-common.version>0.31</gbif-common.version>
     <gbif-api.version>0.48-SNAPSHOT</gbif-api.version>
     <!-- non gbif -->
     <commons-io.version>2.5</commons-io.version>
