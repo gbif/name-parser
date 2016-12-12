@@ -5848,16 +5848,17 @@ public class NameParserTest {
   }
 
   @Test
-  public void testScientificNameStaysVerbatim() {
+  public void testScientificNameStaysVerbatim() throws UnparsableException {
     for (String name : Lists.newArrayList(
         "Huaiyuanella Xing, Yan&Yin, 1984",
         "Abies alba agg.",
         "Trechus (Trechus) mogul Belousov & Kabak, 2001",
         "Trechus (Trechus) merditanus Apfelbeck, 1906"
     )) {
-      assertEquals(name, parser.parseQuietly(name, null).getScientificName());
+      assertEquals(name, parser.parseQuietly(name).getScientificName());
       assertEquals(name, parser.parseQuietly(name, Rank.SPECIES).getScientificName());
       assertEquals(name, parser.parseQuietly(name, Rank.INFRASPECIFIC_NAME).getScientificName());
+      assertEquals(name, parser.parse(name).getScientificName());
     }
   }
 
