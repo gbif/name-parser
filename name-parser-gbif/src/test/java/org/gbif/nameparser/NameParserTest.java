@@ -1,5 +1,10 @@
 package org.gbif.nameparser;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.exception.UnparsableException;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.NamePart;
@@ -7,26 +12,15 @@ import org.gbif.api.vocabulary.NameType;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.utils.file.InputStreamUtils;
-
-import java.io.Reader;
-import java.util.regex.Matcher;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.io.Reader;
+import java.util.regex.Matcher;
+
+import static org.junit.Assert.*;
 
 /**
  * Test various scientific and non scientific names to parse.
@@ -5215,6 +5209,35 @@ public class NameParserTest {
     assertStrain("Garra cf. dampaensis M23", NameType.INFORMAL, "Garra", "dampaensis", null, null, "M23");
     assertStrain("Sphingobium lucknowense F2", NameType.INFORMAL, "Sphingobium", "lucknowense", null, null, "F2");
     assertStrain("Pseudomonas syringae pv. atrofaciens LMG 5095T", NameType.INFORMAL, "Pseudomonas", "syringae", "atrofaciens", Rank.PATHOVAR, "LMG 5095T");
+  }
+
+  /**
+   * Detect BIN and SH numbers
+   */
+  @Test
+  public void testOTUNames() throws Exception {
+    assertOTU("SH460441.07FU");
+    assertOTU("sh502517.07fu");
+    assertOTU("BOLD:AAA1244");
+    assertOTU("BOLD:AAA0001");
+    assertOTU("BOLDAAA0001");
+  }
+
+  private void assertOTU(String name) throws UnparsableException {
+    ParsedName pn = parser.parse(name, null);
+    assertEquals(name, pn.getScientificName());
+    assertEquals(NameType.OTU, pn.getType());
+    assertNull(pn.canonicalNameWithMarker());
+    assertNull(pn.getRank());
+    assertNull(pn.getAuthorship());
+    assertNull(pn.getYear());
+    assertNull(pn.getBracketAuthorship());
+    assertNull(pn.getBracketYear());
+    assertNull(pn.getGenusOrAbove());
+    assertNull(pn.getInfraGeneric());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getInfraSpecificEpithet());
+    assertNull(pn.getStrain());
   }
 
   @Test

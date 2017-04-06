@@ -1,35 +1,24 @@
 package org.gbif.nameparser;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.exception.UnparsableException;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.service.checklistbank.NameParser;
 import org.gbif.api.vocabulary.NameType;
 import org.gbif.api.vocabulary.NomenclaturalCode;
 import org.gbif.api.vocabulary.Rank;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.annotation.Nullable;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.nameparser.NormalisedNameParser.AUTHOR_LETTERS;
-import static org.gbif.nameparser.NormalisedNameParser.AUTHOR_TEAM;
-import static org.gbif.nameparser.NormalisedNameParser.EPHITHET;
-import static org.gbif.nameparser.NormalisedNameParser.MONOMIAL;
-import static org.gbif.nameparser.NormalisedNameParser.NAME_LETTERS;
-import static org.gbif.nameparser.NormalisedNameParser.RANK_MARKER_ALL;
-import static org.gbif.nameparser.NormalisedNameParser.RANK_MARKER_MICROBIAL;
-import static org.gbif.nameparser.NormalisedNameParser.YEAR;
-import static org.gbif.nameparser.NormalisedNameParser.author_letters;
-import static org.gbif.nameparser.NormalisedNameParser.name_letters;
+import javax.annotation.Nullable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static org.gbif.nameparser.NormalisedNameParser.*;
 
 /**
  * The default GBIF name parser build on regular expressions.
@@ -70,6 +59,8 @@ public class GBIFNameParser implements NameParser {
   private static final Pattern IS_VIRUS_PATTERN_POSTFAIL = Pattern.compile("(\\b(vector)\\b)", CASE_INSENSITIVE);
   // RNA or other gene markers
   public static final Pattern IS_GENE = Pattern.compile("(RNA|DNA)[0-9]*(?:\\b|_)");
+  // detect known OTU name formats
+  private static final Pattern IS_OTU_PATTERN = Pattern.compile("^(BOLD:?[0-9A-Z]+$|SH[0-9]+\\.[0-9]+FU)", CASE_INSENSITIVE);
   // spots a Candidatus bacterial name
   private static final String CANDIDATUS = "(Candidatus\\s|Ca\\.)\\s*";
   private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS, CASE_INSENSITIVE);
@@ -231,11 +222,19 @@ public class GBIFNameParser implements NameParser {
     // clean name, removing seriously wrong things
     String name = preClean(scientificName);
 
+    // before any cleaning try if we have known OTU formats, i.e. BIN or SH numbers
+    Matcher m = IS_OTU_PATTERN.matcher(scientificName);
+    if (m.find()) {
+      pn.setType(NameType.OTU);
+      // we're done - no need for further parsing!
+      return pn;
+    }
+
     // remove extinct markers
     name = EXTINCT_PATTERN.matcher(name).replaceFirst("");
 
     // before any cleaning test for properly quoted candidate names
-    Matcher m = IS_CANDIDATUS_QUOTE_PATTERN.matcher(scientificName);
+    m = IS_CANDIDATUS_QUOTE_PATTERN.matcher(scientificName);
     if (m.find()) {
       pn.setType(NameType.CANDIDATUS);
       name = m.replaceFirst(m.group(2));
