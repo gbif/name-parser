@@ -223,18 +223,15 @@ public class GBIFNameParser implements NameParser {
     String name = preClean(scientificName);
 
     // before any cleaning try if we have known OTU formats, i.e. BIN or SH numbers
-    Matcher m = IS_OTU_PATTERN.matcher(scientificName);
-    if (m.find()) {
-      pn.setType(NameType.OTU);
-      // we're done - no need for further parsing!
-      return pn;
+    if (IS_OTU_PATTERN.matcher(name).find()) {
+      throw new UnparsableException(NameType.OTU, scientificName);
     }
 
     // remove extinct markers
     name = EXTINCT_PATTERN.matcher(name).replaceFirst("");
 
     // before any cleaning test for properly quoted candidate names
-    m = IS_CANDIDATUS_QUOTE_PATTERN.matcher(scientificName);
+    Matcher m = IS_CANDIDATUS_QUOTE_PATTERN.matcher(scientificName);
     if (m.find()) {
       pn.setType(NameType.CANDIDATUS);
       name = m.replaceFirst(m.group(2));

@@ -5224,7 +5224,14 @@ public class NameParserTest {
   }
 
   private void assertOTU(String name) throws UnparsableException {
-    ParsedName pn = parser.parse(name, null);
+    try {
+      parser.parse(name, null);
+      fail("OTU parsing should throw UnparsableException ");
+    } catch (UnparsableException e) {
+      assertEquals(NameType.OTU, e.type);
+    }
+
+    ParsedName pn = parser.parseQuietly(name, null);
     assertEquals(name, pn.getScientificName());
     assertEquals(NameType.OTU, pn.getType());
     assertNull(pn.canonicalNameWithMarker());
