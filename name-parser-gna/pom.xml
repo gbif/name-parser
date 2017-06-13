@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>name-parser-motherpom</artifactId>
-    <version>2.24-SNAPSHOT</version>
+    <version>2.24</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
