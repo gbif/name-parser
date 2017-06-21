@@ -1,6 +1,5 @@
 package org.gbif.nameparser;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.apache.commons.io.LineIterator;
@@ -84,34 +83,6 @@ public class NameParserTest {
     try {
       parser.parse(name, null);
     } catch (UnparsableException e) {
-    }
-  }
-
-  // 0scientificName
-  // 1genusOrAbove
-  // 2infraGeneric
-  // 3specificEpithet
-  // 4infraSpecificEpithet
-  // 5 cultivarEpithet
-  // 6authorship
-  // 7year
-  // 8bracketAuthorship
-  // 9bracketYear
-  // 10rank
-  // 11nomcode
-  // 12nothotype
-  // 13nametype
-  private ParsedName buildParsedNameFromTabRow(String[] cols) {
-    try {
-      return new ParsedName(NameType.fromString(cols[13]), StringUtils.trimToNull(cols[1]),
-          StringUtils.trimToNull(cols[2]), StringUtils.trimToNull(cols[3]), StringUtils.trimToNull(cols[4]),
-          NamePart.fromString(cols[12]), RankUtils.inferRank(StringUtils.trimToNull(cols[10])), StringUtils.trimToNull(cols[6]),
-          StringUtils.trimToNull(cols[7]), StringUtils.trimToNull(cols[8]), StringUtils.trimToNull(cols[9]),
-          StringUtils.trimToNull(cols[5]), null, null, null, null);
-
-    } catch (ArrayIndexOutOfBoundsException e) {
-      LOG.error("scientific_names.txt file bogus, too little columns:\n{}", Joiner.on("|").useForNull("").join(cols));
-      throw e;
     }
   }
 
@@ -5247,6 +5218,17 @@ public class NameParserTest {
     assertNull(pn.getStrain());
   }
 
+  /**
+   * Test names highlighted in the GNParser paper:
+   * https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-1663-3
+   */
+  @Test
+  public void testGnparserPaper() throws Exception {
+    assertParsedParts("Myosorex muricauda (Miller, 1900).", NameType.SCIENTIFIC, "Myosorex", "muricauda", null, Rank.SPECIES, null, null, "Miller", "1900");
+    assertParsedParts("Campylium gollanii C. M?ller ex Vohra 1970 [1972] ", NameType.DOUBTFUL, "Campylium", "gollanii", null, Rank.SPECIES, "C. M?ller ex Vohra", "1970", null, null);
+    assertParsedParts("Hieracium nobile subsp. perclusum (Arv. -Touv. ) O. Bolòs & Vigo", NameType.SCIENTIFIC, "Hieracium", "nobile", "perclusum", Rank.SUBSPECIES, "O. Bolòs & Vigo", null, "Arv.-Touv.", null);
+  }
+
   @Test
   public void testPathovars() throws Exception {
     assertParsedParts("Xanthomonas campestris pv. citri (ex Hasse 1915) Dye 1978", NameType.SCIENTIFIC, "Xanthomonas", "campestris", "citri", Rank.PATHOVAR, "Dye", "1978", "ex Hasse", "1915");
@@ -5513,41 +5495,40 @@ public class NameParserTest {
     return pn;
   }
 
-  private void assertParsedParts(String name, NameType type, String genus, String infrageneric, String epithet, String infraepithet, Rank rank, String author, String year, String basAuthor, String basYear) throws UnparsableException {
-    assertParsedParts(name, null, type, genus, infrageneric, epithet, infraepithet, rank, null, author, year, basAuthor, basYear, null, null);
+  private ParsedName assertParsedParts(String name, NameType type, String genus, String infrageneric, String epithet, String infraepithet, Rank rank, String author, String year, String basAuthor, String basYear) throws UnparsableException {
+    return assertParsedParts(name, null, type, genus, infrageneric, epithet, infraepithet, rank, null, author, year, basAuthor, basYear, null, null);
   }
 
-  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String author, String year, String basAuthor, String basYear) throws UnparsableException {
-    assertParsedParts(name, null, type, genus, null, epithet, infraepithet, rank, null, author, year, basAuthor, basYear, null, null);
+  private ParsedName assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String author, String year, String basAuthor, String basYear) throws UnparsableException {
+    return assertParsedParts(name, null, type, genus, null, epithet, infraepithet, rank, null, author, year, basAuthor, basYear, null, null);
   }
 
-  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, Rank rank)
-      throws UnparsableException {
-    assertParsedParts(name, null, genus, null, epithet, infraepithet, rank, null, null, null, null);
+  private ParsedName assertParsedParts(String name, String genus, String epithet, String infraepithet, Rank rank) throws UnparsableException {
+    return assertParsedParts(name, null, genus, null, epithet, infraepithet, rank, null, null, null, null);
   }
 
-  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, Rank rank, String author) throws UnparsableException {
-    assertParsedParts(name, null, genus, null, epithet, infraepithet, rank, author, null, null, null);
+  private ParsedName assertParsedParts(String name, String genus, String epithet, String infraepithet, Rank rank, String author) throws UnparsableException {
+    return assertParsedParts(name, null, genus, null, epithet, infraepithet, rank, author, null, null, null);
   }
 
-  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String author) throws UnparsableException {
-    assertParsedParts(name, type, genus, null, epithet, infraepithet, rank, author, null, null, null);
+  private ParsedName assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String author) throws UnparsableException {
+    return assertParsedParts(name, type, genus, null, epithet, infraepithet, rank, author, null, null, null);
   }
 
-  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, Rank rank, String author, String year) throws UnparsableException {
-    assertParsedParts(name, null, genus, null, epithet, infraepithet, rank, author, year, null, null);
+  private ParsedName assertParsedParts(String name, String genus, String epithet, String infraepithet, Rank rank, String author, String year) throws UnparsableException {
+    return assertParsedParts(name, null, genus, null, epithet, infraepithet, rank, author, year, null, null);
   }
 
-  private void assertParsedParts(String name, String genus, String epithet, String infraepithet, NamePart notho, Rank rank, String author, String year) throws UnparsableException {
-    assertParsedParts(name, null, null, genus, null, epithet, infraepithet, rank, notho, author, year, null, null, null, null);
+  private ParsedName assertParsedParts(String name, String genus, String epithet, String infraepithet, NamePart notho, Rank rank, String author, String year) throws UnparsableException {
+    return assertParsedParts(name, null, null, genus, null, epithet, infraepithet, rank, notho, author, year, null, null, null, null);
   }
 
-  private void assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String author, String year) throws UnparsableException {
-    assertParsedParts(name, type, genus, null, epithet, infraepithet, rank, author, year, null, null);
+  private ParsedName assertParsedParts(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String author, String year) throws UnparsableException {
+    return assertParsedParts(name, type, genus, null, epithet, infraepithet, rank, author, year, null, null);
   }
 
-  private void assertStrain(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String strain) throws UnparsableException {
-    assertParsedParts(name, null, type, genus, null, epithet, infraepithet, rank, null, null, null, null, null, null, strain);
+  private ParsedName assertStrain(String name, NameType type, String genus, String epithet, String infraepithet, Rank rank, String strain) throws UnparsableException {
+    return assertParsedParts(name, null, type, genus, null, epithet, infraepithet, rank, null, null, null, null, null, null, strain);
   }
 
   @Test

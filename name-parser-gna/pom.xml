@@ -12,13 +12,6 @@
   <name>GNA Name Parser</name>
   <description>The Global Names Architecture Name Parser wrapped to implement the GBIF API.</description>
 
-  <distributionManagement>
-    <site>
-      <id>gh-pages</id>
-      <url>http://gbif.github.io/name-parser/${project.artifactId}/</url>
-    </site>
-  </distributionManagement>
-
   <dependencies>
     <!-- GBIF -->
     <dependency>

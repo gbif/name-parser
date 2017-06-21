@@ -26,6 +26,7 @@
   <modules>
     <module>name-parser-gna</module>
     <module>name-parser-gbif</module>
+    <module>name-parser-comparison</module>
   </modules>
 
   <properties>
@@ -38,7 +39,7 @@
     <commons-io.version>2.5</commons-io.version>
     <commons-lang.version>3.4</commons-lang.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
-    <gnaparser.version>0.3.3</gnaparser.version>
+    <gnaparser.version>0.4.0</gnaparser.version>
     <guava.version>18.0</guava.version>
     <guice.version>4.0</guice.version>
     <junit.version>4.12</junit.version>
@@ -77,6 +78,16 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common</artifactId>
         <version>${gbif-common.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>name-parser</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>name-parser-gna</artifactId>
+          <version>${project.version}</version>
       </dependency>
 
       <!-- Logging -->
