@@ -4788,6 +4788,14 @@ public class NameParserTest {
     assertParsedParts("Cribbia pendula Croix & de le P.J.Cribb", NameType.SCIENTIFIC, "Cribbia", "pendula", null, Rank.SPECIES, "Croix & de le P.J.Cribb", null);
   }
 
+  /**
+   * https://github.com/gbif/name-parser/issues/5
+   */
+  @Test
+  public void testVulpes() throws Exception {
+    assertParsedParts("Vulpes vulpes sp. silaceus Miller, 1907", NameType.SCIENTIFIC, "Vulpes", "vulpes", "silaceus", Rank.SUBSPECIES, "Miller", "1907");
+  }
+
   @Test
   public void testChineseAuthors() throws Exception {
     assertParsedParts("Abaxisotima acuminata (Wang & Liu, 1996)", NameType.SCIENTIFIC, "Abaxisotima", "acuminata", null, null, null, null, "Wang & Liu", "1996");
@@ -4795,6 +4803,13 @@ public class NameParserTest {
 
     assertParsedParts("Abaxisotima bicolor (Liu, Zheng & Xi, 1991)", NameType.SCIENTIFIC, "Abaxisotima", "bicolor", null, null, null, null, "Liu, Zheng & Xi", "1991");
     assertParsedParts("Abaxisotima bicolor (Liu, Xian-wei, Z. Zheng & G. Xi, 1991)", NameType.SCIENTIFIC, "Abaxisotima", "bicolor", null, null, null, null, "Liu, Xian-wei, Z. Zheng & G. Xi", "1991");
+  }
+
+  @Test
+  public void testMicrobialRanks2() throws Exception {
+    assertParsedMicrobial("Puccinia graminis f. sp. avenae",
+                          NameType.SCIENTIFIC, "Puccinia", "graminis", "avenae", Rank.FORMA_SPECIALIS);
+
   }
 
   /**

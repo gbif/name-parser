@@ -1,31 +1,23 @@
 package org.gbif.nameparser;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.NamePart;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.utils.concurrent.NamedThreadFactory;
 import org.gbif.utils.file.FileUtils;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.annotation.Nullable;
-
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Core parser class of the name parser that tries to take a clean name into its pieces by using regular expressions.
@@ -86,7 +78,7 @@ public class NormalisedNameParser {
 
   private static final String NOTHO = "notho";
   protected static final String RANK_MARKER_SPECIES =
-    "(?:"+NOTHO+")?(?:" + StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") + ")\\.?";
+    "(?:"+NOTHO+")?(?:(?<!f[ .] ?)sp|" + StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") + ")\\.?";
 
   private static final Function<Rank,String> REMOVE_RANK_MARKER = new Function<Rank, String>() {
     @Override
@@ -406,7 +398,7 @@ public class NormalisedNameParser {
   }
 
   /**
-   * if no rank marker is set yet inspect epitheta for wrongly placed rank markers and modify parsed name accordingly.
+   * if no rank marker is set, inspect epitheta for wrongly placed rank markers and modify parsed name accordingly.
    * This is sometimes the case for informal names like: Coccyzus americanus ssp.
    *
    * @param cn the already parsed name
@@ -428,6 +420,9 @@ public class NormalisedNameParser {
           cn.setSpecificEpithet(null);
         }
       }
+    } else if(cn.getRank() == Rank.SPECIES && cn.getInfraSpecificEpithet() != null) {
+      // sometimes sp. is wrongly used as a subspecies rankmarker
+      cn.setRank(Rank.SUBSPECIES);
     }
   }
 
