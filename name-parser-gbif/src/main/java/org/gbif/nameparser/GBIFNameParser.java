@@ -63,7 +63,7 @@ public class GBIFNameParser implements NameParser {
   private static final Pattern IS_OTU_PATTERN = Pattern.compile("^(BOLD:?[0-9A-Z]+$|SH[0-9]+\\.[0-9]+FU)", CASE_INSENSITIVE);
   // spots a Candidatus bacterial name
   private static final String CANDIDATUS = "(Candidatus\\s|Ca\\.)\\s*";
-  private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS, CASE_INSENSITIVE);
+  private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS);
   private static final Pattern IS_CANDIDATUS_QUOTE_PATTERN = Pattern.compile("\"" + CANDIDATUS + "(.+)\"", CASE_INSENSITIVE);
   private static final Pattern RANK_MARKER_AT_END = Pattern.compile(" " +
                                   RANK_MARKER_ALL.substring(0,RANK_MARKER_ALL.lastIndexOf(')')) +

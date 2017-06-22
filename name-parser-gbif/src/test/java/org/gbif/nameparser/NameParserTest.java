@@ -297,19 +297,27 @@ public class NameParserTest {
     assertEquals("Anderson & Haygood", pn.getAuthorship());
     assertEquals("2007", pn.getYear());
 
-    pn = parseCandidatus("Candidatus Phytoplasma allocasuarinae", "Phytoplasma", "allocasuarinae", null);
+    parseCandidatus("Candidatus Phytoplasma allocasuarinae", "Phytoplasma", "allocasuarinae", null);
 
-    pn = parseCandidatus("Ca. Phytoplasma allocasuarinae", "Phytoplasma", "allocasuarinae", null);
+    parseCandidatus("Ca. Phytoplasma allocasuarinae", "Phytoplasma", "allocasuarinae", null);
 
-    pn = parseCandidatus("Candidatus Phytoplasma", "Phytoplasma", null, null);
-    pn = parseCandidatus("Ca. Phytoplasma", "Phytoplasma", null, null);
+    parseCandidatus("Candidatus Phytoplasma", "Phytoplasma", null, null);
+    parseCandidatus("Ca. Phytoplasma", "Phytoplasma", null, null);
 
-    pn = parseCandidatus("'Candidatus Nicolleia'", "Nicolleia", null, null);
+    parseCandidatus("'Candidatus Nicolleia'", "Nicolleia", null, null);
 
 
     pn = parseCandidatus("\"Candidatus Riegeria\" Gruber-Vodicka et al., 2011", "Riegeria", null, null);
     assertEquals("Gruber-Vodicka et al.", pn.getAuthorship());
     assertEquals("2011", pn.getYear());
+
+    pn = parseCandidatus("Candidatus Protochlamydia amoebophila Collingro et al., 2005", "Protochlamydia", "amoebophila", null);
+    assertEquals("Collingro et al.", pn.getAuthorship());
+    assertEquals("2005", pn.getYear());
+
+    assertParsedParts("Centropogon candidatus Lammers", NameType.SCIENTIFIC, "Centropogon", "candidatus", null, Rank.SPECIES, "Lammers", null);
+    assertParsedParts("Parathalassius candidatus Melander", NameType.SCIENTIFIC, "Parathalassius", "candidatus", null, Rank.SPECIES, "Melander", null);
+
 
     //TODO: parse strains
     //pn = parseCandidatus("Candidatus Midichloria sp. ixholo1", "Midichloria", "ixholo1",null);
