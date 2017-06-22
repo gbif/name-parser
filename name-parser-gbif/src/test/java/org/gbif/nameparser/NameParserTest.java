@@ -4793,7 +4793,7 @@ public class NameParserTest {
    */
   @Test
   public void testVulpes() throws Exception {
-    assertParsedParts("Vulpes vulpes sp. silaceus Miller, 1907", NameType.SCIENTIFIC, "Vulpes", "vulpes", "silaceus", Rank.SUBSPECIES, "Miller", "1907");
+    assertParsedParts("Vulpes vulpes sp. silaceus Miller, 1907", NameType.DOUBTFUL, "Vulpes", "vulpes", "silaceus", Rank.SUBSPECIES, "Miller", "1907");
   }
 
   @Test

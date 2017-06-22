@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.NamePart;
+import org.gbif.api.vocabulary.NameType;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.utils.concurrent.NamedThreadFactory;
 import org.gbif.utils.file.FileUtils;
@@ -423,6 +424,7 @@ public class NormalisedNameParser {
     } else if(cn.getRank() == Rank.SPECIES && cn.getInfraSpecificEpithet() != null) {
       // sometimes sp. is wrongly used as a subspecies rankmarker
       cn.setRank(Rank.SUBSPECIES);
+      cn.setType(NameType.DOUBTFUL);
     }
   }
 
