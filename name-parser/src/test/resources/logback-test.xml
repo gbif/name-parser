@@ -10,7 +10,7 @@
 
 
   <logger name="org.gbif" level="INFO"/>
-  <logger name="org.gbif.nameparser" level="INFO"/>
+  <logger name="org.gbif.nameparser" level="DBEUG"/>
 
   <root level="WARN">
     <appender-ref ref="CONSOLE"/>

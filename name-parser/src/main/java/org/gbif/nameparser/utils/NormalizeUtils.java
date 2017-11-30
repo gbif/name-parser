@@ -1,9 +1,9 @@
-package org.gbif.nameparser;
+package org.gbif.nameparser.utils;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Kind of deprecated class, for scientific name normalising please.

@@ -1,138 +1,151 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.gbif</groupId>
-    <artifactId>motherpom</artifactId>
-    <version>37</version>
-  </parent>
-
-  <artifactId>name-parser-motherpom</artifactId>
-  <version>2.25-SNAPSHOT</version>
-  <packaging>pom</packaging>
-
-  <name>GBIF Name Parser Motherpom</name>
-  <description>GBIF Name Parser Motherpom</description>
-  <url>http://github.org/gbif/name-parser</url>
-
-  <scm>
-    <connection>scm:git:git@github.com:gbif/name-parser.git</connection>
-    <url>https://github.com/gbif/name-parser</url>
-    <developerConnection>scm:git:git@github.com:gbif/name-parser.git</developerConnection>
-    <tag>HEAD</tag>
-  </scm>
-
-  <modules>
-    <module>name-parser-gna</module>
-    <module>name-parser-gbif</module>
-    <module>name-parser-comparison</module>
-  </modules>
-
-  <properties>
-    <jdkLevel>1.8</jdkLevel>
-
-    <!-- Dependency versions -->
-    <gbif-common.version>0.32</gbif-common.version>
-    <gbif-api.version>0.55-SNAPSHOT</gbif-api.version>
-    <!-- non gbif -->
-    <commons-io.version>2.5</commons-io.version>
-    <commons-lang.version>3.4</commons-lang.version>
-    <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
-    <gnaparser.version>0.4.0</gnaparser.version>
-    <guava.version>18.0</guava.version>
-    <guice.version>4.0</guice.version>
-    <junit.version>4.12</junit.version>
-    <logback.version>1.1.7</logback.version>
-    <mockito.version>1.9.5</mockito.version>
-    <slf4j.version>1.7.21</slf4j.version>
-  </properties>
-
-  <developers>
-    <developer>
-      <name>Markus Döring</name>
-      <email>mdoering@gbif.org</email>
-    </developer>
-  </developers>
-
-  <repositories>
-    <repository>
-      <id>gbif-all</id>
-      <url>http://repository.gbif.org/content/groups/gbif</url>
-    </repository>
-    <repository>
-      <id>gbif-thirdparty</id>
-      <url>http://repository.gbif.org/content/repositories/thirdparty/</url>
-    </repository>
-  </repositories>
-
-  <dependencyManagement>
-    <dependencies>
-      <!-- GBIF -->
-      <dependency>
+    <parent>
         <groupId>org.gbif</groupId>
-        <artifactId>gbif-api</artifactId>
-        <version>${gbif-api.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-common</artifactId>
-        <version>${gbif-common.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>name-parser</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>name-parser-gna</artifactId>
-          <version>${project.version}</version>
-      </dependency>
+        <artifactId>motherpom</artifactId>
+        <version>37</version>
+    </parent>
 
-      <!-- Logging -->
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>${slf4j.version}</version>
-      </dependency>
+    <artifactId>name-parser-motherpom</artifactId>
+    <version>3.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
-      <!-- Other -->
-      <dependency>
-        <groupId>org.globalnames</groupId>
-        <artifactId>gnparser_2.11</artifactId>
-        <version>${gnaparser.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>${commons-io.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-        <version>${commons-lang.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>${guava.version}</version>
-      </dependency>
+    <name>GBIF Name Parser Motherpom</name>
+    <description>GBIF Name Parser Motherpom</description>
+    <url>http://github.org/gbif/name-parser</url>
 
-      <!-- Test -->
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-classic</artifactId>
-        <version>${logback.version}</version>
-        <scope>test</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
+    <scm>
+        <connection>scm:git:git@github.com:gbif/name-parser.git</connection>
+        <url>https://github.com/gbif/name-parser</url>
+        <developerConnection>scm:git:git@github.com:gbif/name-parser.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <modules>
+        <module>name-parser</module>
+        <module>name-parser-api</module>
+        <module>name-parser-gbif</module>
+        <module>name-parser-gna</module>
+        <module>name-parser-comparison</module>
+    </modules>
+
+    <properties>
+        <jdkLevel>1.8</jdkLevel>
+
+        <!-- Dependency versions -->
+        <gbif-common.version>0.32</gbif-common.version>
+        <gbif-api.version>0.55-SNAPSHOT</gbif-api.version>
+        <!-- non gbif -->
+        <commons-io.version>2.5</commons-io.version>
+        <commons-lang.version>3.4</commons-lang.version>
+        <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
+        <gnaparser.version>0.4.0</gnaparser.version>
+        <guava.version>18.0</guava.version>
+        <guice.version>4.0</guice.version>
+        <junit.version>4.12</junit.version>
+        <logback.version>1.1.7</logback.version>
+        <slf4j.version>1.7.21</slf4j.version>
+    </properties>
+
+    <developers>
+        <developer>
+            <name>Markus Döring</name>
+            <email>mdoering@gbif.org</email>
+        </developer>
+    </developers>
+
+    <repositories>
+        <repository>
+            <id>gbif-all</id>
+            <url>http://repository.gbif.org/content/groups/gbif</url>
+        </repository>
+        <repository>
+            <id>gbif-thirdparty</id>
+            <url>http://repository.gbif.org/content/repositories/thirdparty/</url>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- GBIF -->
+            <dependency>
+                <groupId>org.gbif</groupId>
+                <artifactId>gbif-api</artifactId>
+                <version>${gbif-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.gbif</groupId>
+                <artifactId>gbif-common</artifactId>
+                <version>${gbif-common.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.gbif</groupId>
+                <artifactId>name-parser</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.gbif</groupId>
+                <artifactId>name-parser-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.gbif</groupId>
+                <artifactId>name-parser-gna</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.gbif</groupId>
+                <artifactId>name-parser-gbif</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Logging -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+
+            <!-- Other -->
+            <dependency>
+                <groupId>org.globalnames</groupId>
+                <artifactId>gnparser_2.11</artifactId>
+                <version>${gnaparser.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+
+            <!-- Test -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 </project>

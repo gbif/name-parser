@@ -1,14 +1,11 @@
-package org.gbif.nameparser;
+package org.gbif.nameparser.utils;
 
-import org.gbif.nameparser.NormalizeUtils;
+import org.junit.Test;
 
 import java.util.regex.Pattern;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 public class NormalizeUtilsTest {
 
@@ -51,7 +48,7 @@ public class NormalizeUtilsTest {
     assertEquals("Markus & Pia ; ", NormalizeUtils.replaceUnicodeEntities("Markus & Pia ; "));
     assertEquals("&#pia;", NormalizeUtils.replaceUnicodeEntities("&#pia;"));
     assertEquals("&#12pia;", NormalizeUtils.replaceUnicodeEntities("&#12pia;"));
-    Assert.assertTrue(NormalizeUtils.replaceUnicodeEntities(null) == null);
+    assertTrue(NormalizeUtils.replaceUnicodeEntities(null) == null);
     assertEquals("лобан", NormalizeUtils.replaceUnicodeEntities("&#1083;&#1086;&#1073;&#1072;&#1085;"));
     assertEquals("лобан", NormalizeUtils.replaceUnicodeEntities("&#x43b;&#x43e;&#x431;&#x430;&#x43d;"));
     assertEquals("лобан", NormalizeUtils.replaceUnicodeEntities("&#x43B;&#x043e;&#x0431;&#x430;&#x43D;"));

@@ -1,63 +1,17 @@
 package org.gbif.nameparser;
 
-import org.gbif.api.model.checklistbank.ParsedName;
-import org.gbif.api.vocabulary.NomenclaturalCode;
-import org.gbif.api.vocabulary.Rank;
+import com.google.common.collect.*;
+import org.gbif.nameparser.api.NomCode;
+import org.gbif.nameparser.api.ParsedName;
+import org.gbif.nameparser.api.Rank;
 
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
+import static org.gbif.nameparser.api.Rank.*;
 
-import static org.gbif.api.vocabulary.Rank.ABERRATION;
-import static org.gbif.api.vocabulary.Rank.BIOVAR;
-import static org.gbif.api.vocabulary.Rank.CHEMOFORM;
-import static org.gbif.api.vocabulary.Rank.CLASS;
-import static org.gbif.api.vocabulary.Rank.CONVARIETY;
-import static org.gbif.api.vocabulary.Rank.CULTIVAR;
-import static org.gbif.api.vocabulary.Rank.FAMILY;
-import static org.gbif.api.vocabulary.Rank.FORM;
-import static org.gbif.api.vocabulary.Rank.FORMA_SPECIALIS;
-import static org.gbif.api.vocabulary.Rank.GENUS;
-import static org.gbif.api.vocabulary.Rank.GREX;
-import static org.gbif.api.vocabulary.Rank.INFRAGENERIC_NAME;
-import static org.gbif.api.vocabulary.Rank.INFRASPECIFIC_NAME;
-import static org.gbif.api.vocabulary.Rank.MORPH;
-import static org.gbif.api.vocabulary.Rank.NATIO;
-import static org.gbif.api.vocabulary.Rank.ORDER;
-import static org.gbif.api.vocabulary.Rank.PATHOVAR;
-import static org.gbif.api.vocabulary.Rank.PHYLUM;
-import static org.gbif.api.vocabulary.Rank.PROLES;
-import static org.gbif.api.vocabulary.Rank.SECTION;
-import static org.gbif.api.vocabulary.Rank.SERIES;
-import static org.gbif.api.vocabulary.Rank.SPECIES;
-import static org.gbif.api.vocabulary.Rank.SPECIES_AGGREGATE;
-import static org.gbif.api.vocabulary.Rank.STRAIN;
-import static org.gbif.api.vocabulary.Rank.SUBCLASS;
-import static org.gbif.api.vocabulary.Rank.SUBFAMILY;
-import static org.gbif.api.vocabulary.Rank.SUBFORM;
-import static org.gbif.api.vocabulary.Rank.SUBGENUS;
-import static org.gbif.api.vocabulary.Rank.SUBORDER;
-import static org.gbif.api.vocabulary.Rank.SUBPHYLUM;
-import static org.gbif.api.vocabulary.Rank.SUBSECTION;
-import static org.gbif.api.vocabulary.Rank.SUBSERIES;
-import static org.gbif.api.vocabulary.Rank.SUBSPECIES;
-import static org.gbif.api.vocabulary.Rank.SUBTRIBE;
-import static org.gbif.api.vocabulary.Rank.SUBVARIETY;
-import static org.gbif.api.vocabulary.Rank.SUPERFAMILY;
-import static org.gbif.api.vocabulary.Rank.SUPERORDER;
-import static org.gbif.api.vocabulary.Rank.SUPRAGENERIC_NAME;
-import static org.gbif.api.vocabulary.Rank.TRIBE;
-import static org.gbif.api.vocabulary.Rank.UNRANKED;
-import static org.gbif.api.vocabulary.Rank.VARIETY;
 
 /**
  *
@@ -72,7 +26,7 @@ public class RankUtils {
   static {
     List<Rank> microbialRanks = Lists.newArrayList();
     for (Rank r : Rank.values()) {
-      if (r.isRestrictedToCode()== NomenclaturalCode.BACTERIAL && r.isInfraspecific()) {
+      if (r.isRestrictedToCode()== NomCode.BACTERIAL && r.isInfraspecific()) {
         microbialRanks.add(r);
       }
     }
@@ -90,10 +44,7 @@ public class RankUtils {
         ranks.put(r.getMarker().replaceAll("\\.", ""), r);
       }
     }
-    ranks.put("fam", FAMILY);
-    ranks.put("gen", GENUS);
     ranks.put("ib", SUPRAGENERIC_NAME);
-    ranks.put("sect", SECTION);
     ranks.put("supersubtrib", SUPRAGENERIC_NAME);
     ranks.put("trib", TRIBE);
 
@@ -111,16 +62,10 @@ public class RankUtils {
         ranks.put(r.getMarker().replaceAll("\\.", ""), r);
       }
     }
-    ranks.put("sl", SPECIES_AGGREGATE); // sensu latu
-    ranks.put("aggr", SPECIES_AGGREGATE);
     ranks.put("sect", SECTION);
     ranks.put("section", SECTION);
     ranks.put("ser", SERIES);
     ranks.put("series", SERIES);
-    ranks.put("sp", SPECIES);
-    ranks.put("spec", SPECIES);
-    ranks.put("species", SPECIES);
-    ranks.put("spp", SPECIES);
     ranks.put("subg", SUBGENUS);
     ranks.put("subgen", SUBGENUS);
     ranks.put("subgenus", SUBGENUS);
@@ -129,6 +74,22 @@ public class RankUtils {
     ranks.put("subser", SUBSERIES);
     ranks.put("subseries", SUBSERIES);
     RANK_MARKER_MAP_INFRAGENERIC = ImmutableMap.copyOf(ranks);
+  }
+
+  /**
+   * Map of species rank markers.
+   */
+  protected static final Map<String, Rank> RANK_MARKER_MAP_SPECIFIC;
+  static {
+    Map<String, Rank> ranks = Maps.newHashMap();
+    ranks.put("sl", SPECIES_AGGREGATE); // sensu latu
+    ranks.put("agg", SPECIES_AGGREGATE);
+    ranks.put("aggr", SPECIES_AGGREGATE);
+    ranks.put("sp", SPECIES);
+    ranks.put("spec", SPECIES);
+    ranks.put("species", SPECIES);
+    ranks.put("spp", SPECIES);
+    RANK_MARKER_MAP_SPECIFIC = ImmutableMap.copyOf(ranks);
   }
 
   /**
@@ -188,6 +149,7 @@ public class RankUtils {
     }
     ranks.putAll(RANK_MARKER_MAP_SUPRAGENERIC);
     ranks.putAll(RANK_MARKER_MAP_INFRAGENERIC);
+    ranks.putAll(RANK_MARKER_MAP_SPECIFIC);
     ranks.putAll(RANK_MARKER_MAP_INFRASPECIFIC);
     ranks.put("subser", SUBSERIES);
     RANK_MARKER_MAP = ImmutableMap.copyOf(ranks);
@@ -229,7 +191,7 @@ public class RankUtils {
    *
    * @return the inferred rank or null
    */
-  public static Rank inferRank(@Nullable String rankMarker) {
+  public static Rank inferRank(String rankMarker) {
     if (rankMarker != null) {
       return RANK_MARKER_MAP.get(NORMALIZE_RANK_MARKER.matcher(rankMarker.toLowerCase()).replaceAll(""));
     }
@@ -241,46 +203,26 @@ public class RankUtils {
    * As a final resort for higher monomials the suffices are inspected, but no attempt is made to disambiguate
    * the 2 known homonym suffices -idae and -inae, but instead the far more widespread zoological versions are
    * interpreted.
-   * @return the inferred rank or null if it cant be found.
+   * @return the inferred rank or UNRANKED if it cant be found.
    */
 
   public static Rank inferRank(ParsedName pn) {
-    Rank inferred = inferRank(pn.getGenusOrAbove(), pn.getInfraGeneric(), pn.getSpecificEpithet(), null, pn.getInfraSpecificEpithet());
-    if (inferred != null && inferred.notOtherOrUnknown()) {
-      return inferred;
-    }
-    return null;
-  }
-
-  public static Rank inferRank(
-      @Nullable String genusOrAbove,
-      @Nullable String infraGeneric,
-      @Nullable String specificEpithet,
-      @Nullable String rankMarker,
-      @Nullable String infraSpecificEpithet
-  ) {
-    // first try rank marker
-    Rank markerRank = inferRank(rankMarker);
-    if (markerRank != null) {
-      return markerRank;
-    }
-
     // default if we cant find anything else
     Rank rank = UNRANKED;
     // detect rank based on parsed name
-    if (infraSpecificEpithet != null) {
+    if (pn.getInfraspecificEpithet() != null) {
       // some infraspecific name
       rank = INFRASPECIFIC_NAME;
-    } else if (specificEpithet != null) {
+    } else if (pn.getSpecificEpithet() != null) {
       // a species
       rank = SPECIES;
-    } else if (infraGeneric != null) {
+    } else if (pn.getInfragenericEpithet() != null) {
       // some infrageneric name
       rank = INFRAGENERIC_NAME;
-    } else if (genusOrAbove != null) {
+    } else if (pn.getUninomial() != null) {
       // a suprageneric name, check suffices
       for (String suffix : SUFFICES_RANK_MAP.keySet()) {
-        if (genusOrAbove.endsWith(suffix)) {
+        if (pn.getUninomial().endsWith(suffix)) {
           rank = SUFFICES_RANK_MAP.get(suffix);
           break;
         }

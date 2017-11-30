@@ -1,8 +1,13 @@
 package org.gbif.nameparser;
 
-import org.gbif.api.model.checklistbank.ParsedName;
-import org.gbif.api.service.checklistbank.NameParser;
-import org.gbif.utils.concurrent.NamedThreadFactory;
+
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
+import org.gbif.nameparser.api.ParsedName;
+import org.gbif.nameparser.api.UnparsableNameException;
+import org.gbif.nameparser.utils.NamedThreadFactory;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -10,14 +15,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import org.junit.Ignore;
-import org.junit.Test;
 
-
-@Ignore("Manual tests to debug thread use and shutdowns")
-public class GBIFNameParserTest {
+@Ignore("Manual longer runnng test to test parse in multithreaded environmen")
+public class NameParserThreadTest {
   static final String NAME = "Oreocharis aurea var. cordato-ovata K.Y. Pan, A.L. Weitzman & Skog, ";
   static final int REPEAT = 10;
 
@@ -27,17 +27,17 @@ public class GBIFNameParserTest {
 
     Stopwatch watch = Stopwatch.createStarted();
     for (int i = 0; i < REPEAT; i++) {
-      GBIFNameParser parser = new GBIFNameParser();
+      NameParserGBIF parser = new NameParserGBIF();
       for (int year = 1800; year < 2016; year++) {
-        ParsedName pn = parser.parseQuietly(NAME+year);
+        ParsedName pn = parser.parse(NAME+year);
       }
     }
     System.out.println(watch.elapsed(TimeUnit.MILLISECONDS));
   }
 
-  private void warm() {
-    GBIFNameParser parser = new GBIFNameParser();
-    ParsedName pn = parser.parseQuietly(NAME);
+  private void warm() throws UnparsableNameException {
+    NameParserGBIF parser = new NameParserGBIF();
+    ParsedName pn = parser.parse(NAME);
   }
 
   @Test
@@ -79,7 +79,7 @@ public class GBIFNameParserTest {
   }
 
   class ParseMe implements Callable<ParsedName> {
-    NameParser parser = new GBIFNameParser();
+    NameParserGBIF parser = new NameParserGBIF();
     final int i;
 
     ParseMe(int i) {
@@ -93,7 +93,7 @@ public class GBIFNameParserTest {
   }
 
   static class ParseMeStatic implements Callable<ParsedName> {
-    static final NameParser parser = new GBIFNameParser();
+    static final NameParserGBIF parser = new NameParserGBIF();
     final int i;
 
     ParseMeStatic(int i) {
