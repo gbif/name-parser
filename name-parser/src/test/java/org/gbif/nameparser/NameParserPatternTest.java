@@ -80,8 +80,8 @@ public class NameParserPatternTest {
         NameParserGBIF.normalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
     assertEquals(NameParserGBIF.normalize("Nuculoidea Williams & Breger, 1916  "),
         NameParserGBIF.normalize("Nuculoidea   Williams& Breger, 1916"));
-    assertEquals("Asplenium ×inexpectatum (E.L. Braun, 1940) Morton (1956)",
-        NameParserGBIF.normalize("Asplenium X inexpectatum (E.L. Braun 1940)Morton (1956) "));
+    assertEquals("Asplenium ×inexpectatum (E. L. Braun, 1940) Morton (1956)",
+        NameParserGBIF.normalize("Asplenium X inexpectatum (E. L. Braun 1940)Morton (1956) "));
     assertEquals("×Agropogon", NameParserGBIF.normalize(" × Agropogon"));
     assertEquals("Salix ×capreola Andersson", NameParserGBIF.normalize("Salix × capreola Andersson"));
     assertEquals("Leucanitis roda Herrich-Schäffer (1851), 1845",
@@ -93,6 +93,8 @@ public class NameParserPatternTest {
 
   @Test
   public void testNormalizeStrongName() {
+    assertEquals("Alstonia vieillardii Van Heurck & Müll. Arg.",
+        NameParserGBIF.normalizeStrong("Alstonia vieillardii Van Heurck & Müll.Arg."));
     assertEquals("Nuculoidea Williams & Breger, 1916",
         NameParserGBIF.normalizeStrong("Nuculoidea Williams et  Breger 1916  "));
     assertEquals("Nuculoidea behrens var. christoph Williams & Breger, 1916",
