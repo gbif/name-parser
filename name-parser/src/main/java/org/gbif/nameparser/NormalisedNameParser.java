@@ -60,27 +60,32 @@ class NormalisedNameParser {
   static final String name_letters = "a-zïëöüäåéèčáàæœ";
   static final String AUTHOR_LETTERS = NAME_LETTERS + "\\p{Lu}"; // upper case unicode letter, not numerical
   // (\W is alphanum)
-  static final String author_letters = name_letters + "\\p{Ll}-"; // lower case unicode letter, not numerical
+  static final String author_letters = name_letters + "\\p{Ll}-?"; // lower case unicode letter, not numerical
   // (\W is alphanum)
   private static final String AUTHOR_PREFIXES =
     "(?:[vV](?:an)(?:[ -](?:den|der) )? ?|von[ -](?:den |der |dem )?|(?:del|de|di|da)[`' _]|(?:Des|De|Di|N)[`' _]?|(?:de )?(?:la|le) |d'|D'|Mac|Mc|Le|St\\.? ?|Ou|O')";
+  static final String AUTHOR_CAP = "[" + AUTHOR_LETTERS + "]+[" + author_letters + "]";
+  private static final String AUTHOR_TOKEN_DOT  = AUTHOR_CAP + "*\\.?";
+  private static final String AUTHOR_TOKEN_LONG = AUTHOR_CAP + "{3,}";
   private static final String AUTHOR = "(?:" +
-                                         // author initials
-                                         "(?:" + "(?:[" + AUTHOR_LETTERS + "]{1,3}\\.?[ -]?){0,3}" +
-                                         // or full first name
-                                         "|[" + AUTHOR_LETTERS + "][" + author_letters + "?]{3,}" + " )?" +
-                                         // common prefixes
-                                         AUTHOR_PREFIXES + "?" +
-                                         // only allow v. in front of Capital Authornames - if included in AUTHOR_PREFIXES parseIgnoreAuthors fails
-                                         "(?:v\\. )?" +
-                                         // regular author name
-                                         "[" + AUTHOR_LETTERS + "]+[" + author_letters + "?]*\\.?" +
-                                         // potential double names, e.g. Solms-Laub.
-                                         "(?:(?:[- ](?:de|da|du)?[- ]?)[" + AUTHOR_LETTERS + "]+[" + author_letters
-                                         + "?]*\\.?)?" +
-                                         // common name suffices (ms=manuscript, not yet published)
-                                         "(?: ?(?:f|fil|j|jr|jun|junior|sr|sen|senior|ms)\\.?)?" +
-                                         ")";
+      // author initials
+      "(?:" + "(?:[" + AUTHOR_LETTERS + "]{1,3}\\.?[ -]?){0,3}" +
+      // or full first name
+      "|" + AUTHOR_TOKEN_LONG + " )?" +
+      // common prefixes
+      AUTHOR_PREFIXES + "?" +
+      // only allow v. in front of Capital Authornames
+      // if included in AUTHOR_PREFIXES parseIgnoreAuthors fails
+      "(?:v\\. )?" +
+      // regular author name
+      AUTHOR_TOKEN_DOT +
+      // potential double names, e.g. Solms-Laub.
+      // space will be added to dots preceding a capital letter like in Müll.Arg. -> Müll. Arg.
+      // otherwise the AUTHOR_TEAM regex will become 10 times slower!!!
+      "(?:(?:[- ](?:de|da|du)?[- ]?)" + AUTHOR_TOKEN_DOT + ")?" +
+      // common name suffices (ms=manuscript, not yet published)
+      "(?: ?(?:f|fil|j|jr|jun|junior|sr|sen|senior|ms)\\.?)?" +
+      ")";
   private static final String AUTHOR_TEAM = AUTHOR +
       "(?: ?(?:&| et |,|;) ?" + AUTHOR + ")*" +
       "(?:(?: ?& ?| et )al\\.?)?";

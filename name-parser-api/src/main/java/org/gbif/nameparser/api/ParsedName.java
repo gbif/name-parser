@@ -13,7 +13,7 @@ import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
  */
 public class ParsedName {
 
-	/**
+  /**
 	 * Authorship with years of the name, but excluding any basionym authorship.
    * For binomials the combination authors.
 	 */

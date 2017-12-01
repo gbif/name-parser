@@ -35,7 +35,7 @@ public class NameParserTest {
         .combAuthors(null, "Mill.")
         .nothingElse();
 
-    assertName("Alstonia vieillardii Van Heurck & Müll. Arg.", "Alstonia vieillardii")
+    assertName("Alstonia vieillardii Van Heurck & Müll.Arg.", "Alstonia vieillardii")
         .species("Alstonia", "vieillardii")
         .combAuthors(null, "Van Heurck", "Müll.Arg.")
         .nothingElse();
@@ -217,7 +217,6 @@ public class NameParserTest {
   public void parsePlaceholder() throws Exception {
     assertName("\"? gryphoidis", "? gryphoidis", NameType.PLACEHOLDER)
         .species("?", "gryphoidis")
-        .doubtful()
         .nothingElse();
 
     assertUnparsable("[unassigned] Cladobranchia", NameType.PLACEHOLDER);

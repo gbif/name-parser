@@ -123,7 +123,7 @@ public class NameParserGBIF implements NameParser {
   private static final Pattern NORM_HYBRIDS_EPITH = Pattern.compile("^\\s*(×?" + MONOMIAL + ")\\s+(?:×|√ó|[xX]\\s)\\s*(" + EPHITHET + ")");
   private static final Pattern NORM_HYBRIDS_FORM = Pattern.compile(" ([×xX]|√ó) ");
   private static final Pattern NORM_INDET = Pattern.compile("((^| )(undet|indet|aff|cf)[#!?\\.]?)+(?![a-z])");
-  private static final Pattern NORM_DOTS = Pattern.compile("(^\\s*[" + NAME_LETTERS + "]|" + RANK_MARKER_ALL + ")\\.");
+  private static final Pattern NORM_DOTS = Pattern.compile("(^\\s*[" + NAME_LETTERS + "]|" + RANK_MARKER_ALL + "|"+AUTHOR_CAP+"*)\\.");
   private static final Pattern NORM_TF_GENUS =
     Pattern.compile("^([" + NAME_LETTERS + "])\\(([" + name_letters + "-]+)\\)\\.? ");
   private static final Pattern NORM_IN_COMMA = Pattern.compile(", in ", CASE_INSENSITIVE);
@@ -170,22 +170,11 @@ public class NameParserGBIF implements NameParser {
     TYPE_TO_VAR = Pattern.compile(sb.toString());
   }
 
-  private static final Pattern COMB_BAS_AUTHOR_SWAP = Pattern.compile(
-    // #1 comb authorteam
-    "( " + AUTHORSHIP + ")" +
-    // #2 comb year
-    "(?:( ?,? ?" + YEAR + "))?" +
-    // #3 basionym authors
-    " ?\\(( ?" + AUTHORSHIP + ")" +
-    // #4 basionym year
-    "( ?,? ?" + YEAR + ")?" + "\\)");
-
-
   /**
    * The default name parser without an explicit monomials list using the default timeout of 1s for parsing.
    */
   public NameParserGBIF() {
-    this.nnParser= new NormalisedNameParser(500);  // max default parsing time is one second;
+    this.nnParser= new NormalisedNameParser(1000);  // max default parsing time is one second;
   }
 
   /**
@@ -489,7 +478,7 @@ public class NameParserGBIF implements NameParser {
    * - adding commas in front of years
    * - trims whitespace around hyphens
    * - pads whitespace around &
-   * - adds whitespace after dots following a genus abbreviation or rank marker
+   * - adds whitespace after dots following a genus abbreviation, rank marker or author name
    * - keeps whitespace before opening and after closing brackets
    * - removes whitespace inside brackets
    * - removes whitespace before commas
