@@ -129,7 +129,7 @@ public class NameParserGbifApi implements NameParser {
     ParsedName gbif = new ParsedName();
 
     gbif.setType(toGbif(pn.getType()));
-    gbif.setScientificName(pn.getScientificName());
+    gbif.setScientificName(pn.canonicalNameComplete());
 
     gbif.setGenusOrAbove(MoreObjects.firstNonNull(pn.getGenus(), pn.getUninomial()));
     gbif.setInfraGeneric(pn.getInfragenericEpithet());

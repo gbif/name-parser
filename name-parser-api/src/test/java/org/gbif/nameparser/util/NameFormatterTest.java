@@ -74,8 +74,8 @@ public class NameFormatterTest {
 
   @Test
   public void testUnparsableCanonical() throws Exception {
-    pn.setScientificName("? hostilis Gravenhorst, 1829");
     pn.setType(NameType.PLACEHOLDER);
+    pn.setParsed(false);
     assertNameNull();
   }
 

@@ -15,7 +15,7 @@ public class ParsedNameTest {
     ParsedName n = new ParsedName();
     assertTrue(n.isConsistent());
 
-    n.setScientificName("Asteraceae");
+    n.setUninomial("Asteraceae");
     n.setRank(Rank.FAMILY);
     assertTrue(n.isConsistent());
     for (Rank r : Rank.values()) {
@@ -28,7 +28,7 @@ public class ParsedNameTest {
     n.setRank(Rank.GENUS);
     assertTrue(n.isConsistent());
 
-    n.setScientificName("Abies");
+    n.setUninomial("Abies");
     assertTrue(n.isConsistent());
 
     n.getAuthorship().getAuthors().add("Mill.");

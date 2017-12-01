@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
+import org.gbif.nameparser.util.RankUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -14,12 +14,6 @@ import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
 public class ParsedName {
 
 	/**
-	 * Entire scientific name string unparsed but gently normalized (e.g. whitespace).
-   * For unparsable names like virus this is the only place name information is kept.
-	 */
-	private String scientificName;
-
-	/**
 	 * Authorship with years of the name, but excluding any basionym authorship.
    * For binomials the combination authors.
 	 */
@@ -122,14 +116,6 @@ public class ParsedName {
   private List<String> warnings = Lists.newArrayList();
 
 
-
-  public String getScientificName() {
-    return scientificName;
-  }
-
-  public void setScientificName(String scientificName) {
-    this.scientificName = scientificName;
-  }
 
   public Authorship getAuthorship() {
     return authorship;
@@ -390,7 +376,7 @@ public class ParsedName {
 		// verify ranks
 		if (rank != null && rank.notOtherOrUnranked()) {
 			if (rank.isGenusOrSuprageneric()) {
-				if (genus != null || scientificName == null)
+				if (genus != null || uninomial == null)
 					return false;
 
 			} else if (rank.isInfrageneric() && rank.isSupraspecific()) {
@@ -452,12 +438,16 @@ public class ParsedName {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     ParsedName that = (ParsedName) o;
-    return Objects.equals(scientificName, that.scientificName) &&
+    return candidatus == that.candidatus &&
+        doubtful == that.doubtful &&
+        parsed == that.parsed &&
+        authorsParsed == that.authorsParsed &&
         Objects.equals(authorship, that.authorship) &&
         Objects.equals(basionymAuthorship, that.basionymAuthorship) &&
         Objects.equals(sanctioningAuthor, that.sanctioningAuthor) &&
         rank == that.rank &&
         code == that.code &&
+        Objects.equals(uninomial, that.uninomial) &&
         Objects.equals(genus, that.genus) &&
         Objects.equals(infragenericEpithet, that.infragenericEpithet) &&
         Objects.equals(specificEpithet, that.specificEpithet) &&
@@ -465,57 +455,55 @@ public class ParsedName {
         Objects.equals(cultivarEpithet, that.cultivarEpithet) &&
         Objects.equals(strain, that.strain) &&
         notho == that.notho &&
+        Objects.equals(sensu, that.sensu) &&
         Objects.equals(nomenclaturalNotes, that.nomenclaturalNotes) &&
-        type == that.type;
+        Objects.equals(remarks, that.remarks) &&
+        type == that.type &&
+        Objects.equals(warnings, that.warnings);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(scientificName, authorship, basionymAuthorship, sanctioningAuthor, rank, code, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, notho, nomenclaturalNotes, type);
+    return Objects.hash(authorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, sensu, nomenclaturalNotes, remarks, type, doubtful, parsed, authorsParsed, warnings);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    if (type != null && type.isParsable()) {
-      if (uninomial != null) {
-        sb.append(" U:").append(uninomial);
-      }
-      if (genus!= null) {
-        sb.append(" G:").append(genus);
-      }
-      if (infragenericEpithet != null) {
-        sb.append(" IG:").append(infragenericEpithet);
-      }
-      if (specificEpithet != null) {
-        sb.append(" S:").append(specificEpithet);
-      }
-      if (rank != null) {
-        sb.append(" R:").append(rank);
-      }
-      if (infraspecificEpithet != null) {
-        sb.append(" IS:").append(infraspecificEpithet);
-      }
-      if (cultivarEpithet != null) {
-        sb.append(" CV:").append(cultivarEpithet);
-      }
-      if (strain != null) {
-        sb.append(" STR:").append(strain);
-      }
-      if (authorship != null) {
-        sb.append(" A:").append(authorship);
-      }
-      if (basionymAuthorship != null) {
-        sb.append(" BA:").append(basionymAuthorship);
-      }
-    } else {
-      sb.append(scientificName);
-
-    }
     if (type != null) {
-      sb.append(" [");
+      sb.append("[");
       sb.append(type);
-      sb.append("]");
+      sb.append("] ");
+    }
+    if (uninomial != null) {
+      sb.append(" U:").append(uninomial);
+    }
+    if (genus!= null) {
+      sb.append(" G:").append(genus);
+    }
+    if (infragenericEpithet != null) {
+      sb.append(" IG:").append(infragenericEpithet);
+    }
+    if (specificEpithet != null) {
+      sb.append(" S:").append(specificEpithet);
+    }
+    if (rank != null) {
+      sb.append(" R:").append(rank);
+    }
+    if (infraspecificEpithet != null) {
+      sb.append(" IS:").append(infraspecificEpithet);
+    }
+    if (cultivarEpithet != null) {
+      sb.append(" CV:").append(cultivarEpithet);
+    }
+    if (strain != null) {
+      sb.append(" STR:").append(strain);
+    }
+    if (authorship != null) {
+      sb.append(" A:").append(authorship);
+    }
+    if (basionymAuthorship != null) {
+      sb.append(" BA:").append(basionymAuthorship);
     }
     return sb.toString();
   }

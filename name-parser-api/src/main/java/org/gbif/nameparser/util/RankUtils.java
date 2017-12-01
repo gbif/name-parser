@@ -1,4 +1,4 @@
-package org.gbif.nameparser;
+package org.gbif.nameparser.util;
 
 import com.google.common.collect.*;
 import org.gbif.nameparser.api.NomCode;
@@ -22,7 +22,7 @@ public class RankUtils {
    */
   private static final Pattern NORMALIZE_RANK_MARKER = Pattern.compile("(?:[._ -]+|\\bnotho)");
 
-  protected static final List<Rank> INFRASUBSPECIFIC_MICROBIAL_RANKS;
+  public static final List<Rank> INFRASUBSPECIFIC_MICROBIAL_RANKS;
   static {
     List<Rank> microbialRanks = Lists.newArrayList();
     for (Rank r : Rank.values()) {
@@ -36,7 +36,7 @@ public class RankUtils {
   /**
    * Map of only suprageneric rank markers to their respective rank enum.
    */
-  protected static final Map<String, Rank> RANK_MARKER_MAP_SUPRAGENERIC;
+  public static final Map<String, Rank> RANK_MARKER_MAP_SUPRAGENERIC;
   static {
     Map<String, Rank> ranks = Maps.newHashMap();
     for (Rank r : Rank.values()) {
@@ -54,7 +54,7 @@ public class RankUtils {
   /**
    * Map of only infrageneric rank markers to their respective rank enum.
    */
-  protected static final Map<String, Rank> RANK_MARKER_MAP_INFRAGENERIC;
+  public static final Map<String, Rank> RANK_MARKER_MAP_INFRAGENERIC;
   static {
     Map<String, Rank> ranks = Maps.newHashMap();
     for (Rank r : Rank.values()) {
@@ -79,7 +79,7 @@ public class RankUtils {
   /**
    * Map of species rank markers.
    */
-  protected static final Map<String, Rank> RANK_MARKER_MAP_SPECIFIC;
+  public static final Map<String, Rank> RANK_MARKER_MAP_SPECIFIC;
   static {
     Map<String, Rank> ranks = Maps.newHashMap();
     ranks.put("sl", SPECIES_AGGREGATE); // sensu latu
@@ -95,7 +95,7 @@ public class RankUtils {
   /**
    * Map of only infraspecific rank markers to their respective rank enum.
    */
-  protected static final Map<String, Rank> RANK_MARKER_MAP_INFRASPECIFIC;
+  public static final Map<String, Rank> RANK_MARKER_MAP_INFRASPECIFIC;
   static {
     Map<String, Rank> ranks = Maps.newHashMap();
     for (Rank r : Rank.values()) {
@@ -139,7 +139,7 @@ public class RankUtils {
   /**
    * Map of rank markers to their respective rank enum.
    */
-  protected static final Map<String, Rank> RANK_MARKER_MAP;
+  public static final Map<String, Rank> RANK_MARKER_MAP;
   static {
     Map<String, Rank> ranks = Maps.newHashMap();
     for (Rank r : Rank.values()) {
@@ -161,7 +161,7 @@ public class RankUtils {
    * therefore most accurate matches.
    * See http://www.nhm.ac.uk/hosted-sites/iczn/code/index.jsp?nfv=true&article=29
    */
-  protected static final SortedMap<String, Rank> SUFFICES_RANK_MAP =
+  public static final SortedMap<String, Rank> SUFFICES_RANK_MAP =
       new ImmutableSortedMap.Builder<String, Rank>(Ordering.natural())
           .put("mycetidae", SUBCLASS)
           .put("phycidae", SUBCLASS)

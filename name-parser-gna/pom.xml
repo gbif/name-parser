@@ -10,18 +10,27 @@
   <artifactId>name-parser-gna</artifactId>
 
   <name>GNA Name Parser</name>
-  <description>The Global Names Architecture Name Parser wrapped to implement the GBIF API.</description>
+  <description>The Global Names Architecture Parser wrapped to implement the name parser API.</description>
 
   <dependencies>
-    <!-- GBIF -->
     <dependency>
       <groupId>org.gbif</groupId>
-      <artifactId>gbif-api</artifactId>
+      <artifactId>name-parser-api</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.globalnames</groupId>
-      <artifactId>gnparser_2.11</artifactId>
-    </dependency>
+
+      <!-- GNA name parser in Scala using AST 2.11 libs -->
+      <dependency>
+          <groupId>org.globalnames</groupId>
+          <artifactId>gnparser_2.11</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>org.json4s</groupId>
+          <artifactId>json4s-ast_2.11</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-library</artifactId>
+      </dependency>
 
     <!-- Logging -->
     <dependency>

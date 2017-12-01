@@ -1,8 +1,10 @@
 package org.gbif.nameparser;
 
 import com.google.common.base.Stopwatch;
-import org.gbif.api.model.checklistbank.ParsedName;
-import org.gbif.api.service.checklistbank.NameParser;
+import org.gbif.nameparser.api.NameParser;
+import org.gbif.nameparser.api.ParsedName;
+import org.gbif.nameparser.api.UnparsableNameException;
+import org.gbif.nameparser.gna.NameParserGNA;
 import org.gbif.utils.file.csv.CSVReader;
 import org.gbif.utils.file.csv.CSVReaderFactory;
 import org.gbif.utils.text.StringUtils;
@@ -15,8 +17,8 @@ import java.util.concurrent.TimeUnit;
 public class ParserComparison implements Runnable {
     private Stopwatch watch = Stopwatch.createUnstarted();
 
-    private NameParser gbif = new GNANameParser();
-    private NameParser gna = new GNANameParser();
+    private NameParser gbif = new NameParserGBIF();
+    private NameParser gna = new NameParserGNA();
 
     private int counter;
     private long gbifTime;
@@ -65,15 +67,20 @@ public class ParserComparison implements Runnable {
         NameParser parser = isGbif ? gbif : gna;
         watch.reset();
         try {
-            watch.start();
-            ParsedName pn = parser.parseQuietly(name);
-            long time = watch.elapsed(TimeUnit.MICROSECONDS);
+          watch.start();
+          try {
+            ParsedName pn = parser.parse(name);
             //System.out.println(String.format("  %s %5s %12s: %s", (isGbif ? "GBIF" : "GNA "), time, pn.getType(), pn.canonicalNameComplete()));
-            if (isGbif) {
-                gbifTime += time;
-            } else {
-                gnaTime += time;
-            }
+          } catch (UnparsableNameException e) {
+            System.err.println(String.format("UNPARSABLE %s: %s", (isGbif ? "GBIF" : "GNA "), name));
+            e.printStackTrace();
+          }
+          long time = watch.elapsed(TimeUnit.MICROSECONDS);
+          if (isGbif) {
+              gbifTime += time;
+          } else {
+              gnaTime += time;
+          }
         } catch (Exception e) {
             e.printStackTrace();
         }

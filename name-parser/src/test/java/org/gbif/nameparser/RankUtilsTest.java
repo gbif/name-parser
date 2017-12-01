@@ -2,6 +2,7 @@ package org.gbif.nameparser;
 
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
+import org.gbif.nameparser.util.RankUtils;
 import org.junit.Test;
 
 import java.util.HashMap;

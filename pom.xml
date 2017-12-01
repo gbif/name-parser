@@ -37,18 +37,18 @@
         <jdkLevel>1.8</jdkLevel>
 
         <!-- Dependency versions -->
-        <gbif-common.version>0.32</gbif-common.version>
-        <gbif-api.version>0.55-SNAPSHOT</gbif-api.version>
-        <!-- non gbif -->
         <commons-io.version>2.5</commons-io.version>
         <commons-lang.version>3.4</commons-lang.version>
         <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
-        <gnaparser.version>0.4.0</gnaparser.version>
-        <guava.version>18.0</guava.version>
-        <guice.version>4.0</guice.version>
+        <gbif-api.version>0.55-SNAPSHOT</gbif-api.version>
+        <guava.version>21.0</guava.version>
         <junit.version>4.12</junit.version>
         <logback.version>1.1.7</logback.version>
         <slf4j.version>1.7.21</slf4j.version>
+        <!-- GNA Parser deps -->
+        <gnparser.version>0.4.2</gnparser.version>
+        <json4s.version>3.5.2</json4s.version>
+        <scala.version>2.11.8</scala.version>
     </properties>
 
     <developers>
@@ -71,17 +71,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- GBIF -->
-            <dependency>
-                <groupId>org.gbif</groupId>
-                <artifactId>gbif-api</artifactId>
-                <version>${gbif-api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.gbif</groupId>
-                <artifactId>gbif-common</artifactId>
-                <version>${gbif-common.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.gbif</groupId>
                 <artifactId>name-parser</artifactId>
@@ -103,6 +92,30 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- GBIF -->
+            <dependency>
+                <groupId>org.gbif</groupId>
+                <artifactId>gbif-api</artifactId>
+                <version>${gbif-api.version}</version>
+            </dependency>
+
+            <!-- GNA -->
+            <dependency>
+                <groupId>org.globalnames</groupId>
+                <artifactId>gnparser_2.11</artifactId>
+                <version>${gnparser.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.json4s</groupId>
+                <artifactId>json4s-ast_2.11</artifactId>
+                <version>${json4s.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>${scala.version}</version>
+            </dependency>
+
             <!-- Logging -->
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -111,11 +124,6 @@
             </dependency>
 
             <!-- Other -->
-            <dependency>
-                <groupId>org.globalnames</groupId>
-                <artifactId>gnparser_2.11</artifactId>
-                <version>${gnaparser.version}</version>
-            </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
