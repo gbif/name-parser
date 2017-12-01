@@ -46,7 +46,7 @@ public class NameParserGBIF implements NameParser {
   protected static final Pattern CULTIVAR = Pattern.compile("(?: cv\\.? ?)?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
   private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex)\\b");
 
-  private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+ *[0-9]+T?)$");
+  private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+[ -]?(?!"+YEAR+")[0-9]+T?)$");
   // this is only used to detect whether we have a virus name
   public static final Pattern IS_VIRUS_PATTERN = Pattern.compile("virus(es)?\\b|\\b(viroid|(bacterio|viro)?phage(in|s)?|(alpha|beta) ?satellites?|particles?|ictv$)\\b", CASE_INSENSITIVE);
   // NPV=Nuclear Polyhedrosis Virus
@@ -92,7 +92,7 @@ public class NameParserGBIF implements NameParser {
                                                                    + ")"
                                                                  + "\\)?");
   private static final Pattern EXTRACT_REMARKS = Pattern.compile("\\s+(anon\\.?)(\\s.+)?$");
-  private static final Pattern EXTRACT_YEAR = Pattern.compile("(" + YEAR + "\\s*\\)?)");
+  private static final Pattern EXTRACT_YEAR = Pattern.compile("(" + YEAR_LOOSE + "\\s*\\)?)");
 
   private static final Pattern COMMA_BEFORE_YEAR = Pattern.compile("(,+|[^0-9\\(\\[\"])\\s*(\\d{3})");
   private static final Pattern REPLACE_QUOTES = Pattern.compile("(^\\s*[\"',]+)|([\"',]+\\s*$)");
@@ -114,10 +114,10 @@ public class NameParserGBIF implements NameParser {
   private static final Pattern NORM_COMMAS = Pattern.compile("\\s*,+");
   // TODO: this next regex gets real slow with long list of authors - needs fixing !!!
   private static final Pattern NORM_ORIG_AUTH =
-    Pattern.compile("(?<=[ \\(])(" + AUTHORSHIP + ") ?\\( ?(" + YEAR + ")\\)");
-  private static final Pattern NORM_ORIG_AUTH2 = Pattern.compile("\\((" + AUTHORSHIP + ")\\) ?,? ?(" + YEAR + ")");
+    Pattern.compile("(?<=[ \\(])(" + AUTHORSHIP + ") ?\\( ?(" + YEAR_LOOSE + ")\\)");
+  private static final Pattern NORM_ORIG_AUTH2 = Pattern.compile("\\((" + AUTHORSHIP + ")\\) ?,? ?(" + YEAR_LOOSE + ")");
   private static final Pattern NORM_IMPRINT_YEAR =
-    Pattern.compile("(" + YEAR + ")\\s*(?:\\(\"?[\\s0-9-_,?]+\"?\\)|\\[\"?[0-9 -,]+\"?\\]|\"[0-9 -,]+\")");
+    Pattern.compile("(" + YEAR_LOOSE + ")\\s*(?:\\(\"?[\\s0-9-_,?]+\"?\\)|\\[\"?[0-9 -,]+\"?\\]|\"[0-9 -,]+\")");
   // √ó is an utf garbaged version of the hybrid cross found in IPNI. See http://dev.gbif.org/issues/browse/POR-3081
   private static final Pattern NORM_HYBRIDS_GENUS = Pattern.compile("^\\s*(?:[+×xX]|√ó)\\s*([" + NAME_LETTERS + "])");
   private static final Pattern NORM_HYBRIDS_EPITH = Pattern.compile("^\\s*(×?" + MONOMIAL + ")\\s+(?:×|√ó|[xX]\\s)\\s*(" + EPHITHET + ")");
@@ -135,7 +135,7 @@ public class NameParserGBIF implements NameParser {
   // removed not|indetermin[a-z]+
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
   private static final String PLACEHOLDER_AUTHOR = "(?:unknown|unspecified|uncertain|\\?)";
-  private static final Pattern REMOVE_PLACEHOLDER_AUTHOR = Pattern.compile("\\b"+PLACEHOLDER_AUTHOR+"[, ] ?(" + YEAR + ")$", CASE_INSENSITIVE);
+  private static final Pattern REMOVE_PLACEHOLDER_AUTHOR = Pattern.compile("\\b"+PLACEHOLDER_AUTHOR+"[, ] ?(" + YEAR_LOOSE + ")$", CASE_INSENSITIVE);
   private static final String PLACEHOLDER_NAME = "(?:unnamed|mixed|unassigned|unallocated|unplaced|undetermined|unclassified|uncultured|unknown|unspecified|uncertain|incertae sedis|not assigned|awaiting allocation|temp|dummy)";
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
   private static final Pattern PLACEHOLDER = Pattern.compile("\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);

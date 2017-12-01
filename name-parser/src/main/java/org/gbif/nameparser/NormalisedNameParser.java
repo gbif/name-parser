@@ -103,7 +103,8 @@ class NormalisedNameParser {
       AUTHOR_TEAM +
       ")?";
   static final Pattern AUTHORSHIP_PATTERN = Pattern.compile("^" + AUTHORSHIP + "$");
-  static final String YEAR = "[12][0-9][0-9][0-9?][abcdh?]?(?:[/-][0-9]{1,4})?";
+  static final String YEAR = "[12][0-9][0-9][0-9?]";
+  static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/-][0-9]{1,4})?";
   // protected static final String YEAR_RANGE = YEAR+"(?: ?-? ?"+YEAR+")?";
 
   private static final String NOTHO = "notho";
@@ -217,13 +218,13 @@ class NormalisedNameParser {
                  // #12/13/14 basionym authorship (ex/auth/sanct)
                  "(?:" + AUTHORSHIP + ")?" +
                  // #15 basionym year
-                 ",?( ?" + YEAR + ")?" +
+                 ",?( ?" + YEAR_LOOSE + ")?" +
                "\\))?" +
 
                // #16/17/18 authorship (ex/auth/sanct)
                "(?: " + AUTHORSHIP + ")?" +
                // #19 year with or without brackets
-               "(?: ?\\(?,? ?(" + YEAR + ")\\)?)?" +
+               "(?: ?\\(?,? ?(" + YEAR_LOOSE + ")\\)?)?" +
              ")" +
              "$");
 

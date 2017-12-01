@@ -73,6 +73,7 @@ public class NameParserPatternTest {
 
   @Test
   public void testNormalizeName() {
+    assertEquals("Anniella nigra Fischer, 1885", NameParserGBIF.normalize("Anniella nigra FISCHER 1885"));
     assertEquals("Nuculoidea Williams et Breger, 1916", NameParserGBIF.normalize("Nuculoidea Williams et  Breger 1916  "));
     assertEquals("Nuculoidea behrens var. christoph Williams & Breger [1916]",
         NameParserGBIF.normalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));

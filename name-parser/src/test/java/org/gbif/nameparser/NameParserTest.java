@@ -47,6 +47,14 @@ public class NameParserTest {
   }
 
   @Test
+  public void parseCapitalAuthors() throws Exception {
+    assertName("Anniella nigra FISCHER 1885", "Anniella nigra")
+        .species("Anniella", "nigra")
+        .combAuthors("1885", "Fischer")
+        .nothingElse();
+  }
+
+  @Test
   public void parseInfraSpecies() throws Exception {
 
     assertName("Abies alba ssp. alpina Mill.", "Abies alba subsp. alpina")
@@ -318,6 +326,12 @@ public class NameParserTest {
     assertName("Endobugula sp. JYr4", "Endobugula sp. JYr4")
         .species("Endobugula", null)
         .strain("sp. JYr4")
+        .nothingElse();
+
+    // avoid author & year to be accepted as strain
+    assertName("Anniella nigra FISCHER 1885", "Anniella nigra")
+        .species("Anniella", "nigra")
+        .combAuthors("1885", "Fischer")
         .nothingElse();
   }
 
