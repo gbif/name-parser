@@ -40,6 +40,7 @@ public class NormalisedNameParserTest {
 
   @Test
   public void testAuthorship() throws Exception {
+    assertAuthorTeamPattern("Britton, Sterns, & Poggenb.", null, "Britton", "Sterns", "Poggenb.");
     assertAuthorTeamPattern("Van Heurck & Müll. Arg.", null, "Van Heurck", "Müll.Arg.");
     assertAuthorTeamPattern("Gruber-Vodicka et al.", null, "Gruber-Vodicka", "al.");
     assertAuthorTeamPattern("L.");

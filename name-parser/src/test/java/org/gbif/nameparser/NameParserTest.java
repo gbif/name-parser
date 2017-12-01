@@ -44,6 +44,12 @@ public class NameParserTest {
         .species("Angiopteris", "d'urvilleana")
         .combAuthors(null, "de Vriese")
         .nothingElse();
+
+    assertName("Agrostis hyemalis (Walter) Britton, Sterns, & Poggenb.", "Agrostis hyemalis")
+        .species("Agrostis", "hyemalis")
+        .combAuthors(null, "Britton", "Sterns", "Poggenb.")
+        .basAuthors(null, "Walter")
+        .nothingElse();
   }
 
   @Test

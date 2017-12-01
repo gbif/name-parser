@@ -1,10 +1,7 @@
 package org.gbif.nameparser;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
+import com.google.common.base.*;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.Authorship;
@@ -50,8 +47,8 @@ class NormalisedNameParser {
   }
 
   private static final Pattern ET_PATTERN = Pattern.compile(" et ", Pattern.CASE_INSENSITIVE);
-  private static final Splitter AUTHORTEAM_SPLITTER = Splitter.on(CharMatcher.anyOf(",&")).trimResults();
-  private static final Splitter AUTHORTEAM_SEMI_SPLITTER = Splitter.on(";").trimResults();
+  private static final Splitter AUTHORTEAM_SPLITTER = Splitter.on(CharMatcher.anyOf(",&")).trimResults().omitEmptyStrings();
+  private static final Splitter AUTHORTEAM_SEMI_SPLITTER = Splitter.on(";").trimResults().omitEmptyStrings();
   private static final Pattern AUTHOR_INITIAL_SWAP = Pattern.compile("^([^,]+) *, *([^,]+)$");
   private static final Pattern NORM_PUNCT = Pattern.compile("\\. +");
 
@@ -87,7 +84,7 @@ class NormalisedNameParser {
       "(?: ?(?:f|fil|j|jr|jun|junior|sr|sen|senior|ms)\\.?)?" +
       ")";
   private static final String AUTHOR_TEAM = AUTHOR +
-      "(?: ?(?:&| et |,|;) ?" + AUTHOR + ")*" +
+      "(?:(?: ?(?:&| et |,|;) ?)+" + AUTHOR + ")*" +
       "(?:(?: ?& ?| et )al\\.?)?";
   static final String AUTHORSHIP =
       // ex authors
@@ -563,7 +560,7 @@ class NormalisedNameParser {
    * See IPNI author standard form recommendations: http://www.ipni.org/standard_forms_author.html
    */
   private static String normAuthor(String authors) {
-    return NORM_PUNCT.matcher(authors).replaceAll("\\.");
+    return StringUtils.trimToNull(NORM_PUNCT.matcher(authors).replaceAll("\\."));
   }
 
   static void logMatcher(Matcher matcher) {
