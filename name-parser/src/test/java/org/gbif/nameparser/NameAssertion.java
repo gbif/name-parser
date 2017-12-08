@@ -3,15 +3,13 @@ package org.gbif.nameparser;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gbif.nameparser.api.NamePart;
+import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
 
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 /**
  * Convenience class to assert equality of parts of a ParsedName for test assertions.
@@ -20,7 +18,7 @@ public class NameAssertion {
   private final ParsedName n;
   private Set<NP> tested = Sets.newHashSet();
 
-  private enum NP {EPITHETS, STRAIN, CULTIVAR, CANDIDATE, NOTHO,
+  private enum NP {TYPE, EPITHETS, STRAIN, CULTIVAR, CANDIDATE, NOTHO,
     AUTH, EXAUTH, BAS, EXBAS, SANCT, RANK,
     SENSU, NOMNOTE, REMARK, DOUBTFUL
   }
@@ -83,6 +81,10 @@ public class NameAssertion {
           case DOUBTFUL:
             assertFalse(n.isDoubtful());
             break;
+          case TYPE:
+            assertEquals(NameType.SCIENTIFIC, n.getType());
+            break;
+
         }
       }
     }
@@ -152,6 +154,11 @@ public class NameAssertion {
   NameAssertion autonym() {
     assertTrue(n.isAutonym());
     return this;
+  }
+
+  NameAssertion type(NameType type) {
+    assertEquals(type, n.getType());
+    return add(NP.TYPE);
   }
 
   NameAssertion notho(NamePart notho) {

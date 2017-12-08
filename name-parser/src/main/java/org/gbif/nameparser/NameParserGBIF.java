@@ -56,7 +56,9 @@ public class NameParserGBIF implements NameParser {
   // RNA or other gene markers
   public static final Pattern IS_GENE = Pattern.compile("(RNA|DNA)[0-9]*(?:\\b|_)");
   // detect known OTU name formats
-  private static final Pattern IS_OTU_PATTERN = Pattern.compile("^(BOLD:?[0-9A-Z]+$|SH[0-9]+\\.[0-9]+FU)", CASE_INSENSITIVE);
+  // SH  = SH000003.07FU
+  // BIN = BOLD:AAA0003
+  private static final Pattern OTU_PATTERN = Pattern.compile("(BOLD:[0-9A-Z]{7}$|SH[0-9]{6}\\.[0-9]{2}FU)", CASE_INSENSITIVE);
   // spots a Candidatus bacterial name
   private static final String CANDIDATUS = "(Candidatus\\s|Ca\\.)\\s*";
   private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS);
@@ -215,15 +217,30 @@ public class NameParserGBIF implements NameParser {
       start = System.currentTimeMillis();
     }
 
-    ParsedName pn = new ParsedName();
-
     // clean name, removing seriously wrong things
     String name = preClean(scientificName);
+    ParsedName pn;
 
-    // before any cleaning try if we have known OTU formats, i.e. BIN or SH numbers
-    if (IS_OTU_PATTERN.matcher(name).find()) {
-      unparsable(NameType.OTU, scientificName);
+    // before further cleaning/parsing try if we have known OTU formats, i.e. BIN or SH numbers
+    Matcher m = OTU_PATTERN.matcher(name);
+    if (m.find()) {
+      pn =  new ParsedName();
+      pn.setUninomial(m.group(1));
+      pn.setType(NameType.OTU);
+      pn.setRank(rank == null || rank.otherOrUnranked() ? Rank.SPECIES : rank);
+
+    } else {
+      // do the main incremental parsing
+      pn = parse(scientificName, name, rank);
     }
+
+    LOG.debug("Parsing time: {}", (System.currentTimeMillis() - start));
+    // build canonical name
+    return pn;
+  }
+
+  private ParsedName parse(final String scientificName, String name, Rank rank) throws UnparsableNameException {
+    ParsedName pn = new ParsedName();
 
     // remove extinct markers
     name = EXTINCT_PATTERN.matcher(name).replaceFirst("");
@@ -421,8 +438,6 @@ public class NameParserGBIF implements NameParser {
     // determine code if not yet assigned
     determineCode(pn);
 
-    LOG.debug("Parsing time: {}", (System.currentTimeMillis() - start));
-    // build canonical name
     return pn;
   }
 

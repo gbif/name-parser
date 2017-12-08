@@ -95,6 +95,18 @@ public class NameFormatterTest {
   }
 
   @Test
+  public void testOTU() throws Exception {
+    pn.setUninomial("BOLD:AAA0001");
+    assertEquals("BOLD:AAA0001", pn.canonicalName());
+    assertEquals("BOLD:AAA0001", pn.canonicalNameComplete());
+
+    pn.setType(NameType.OTU);
+    pn.setRank(Rank.SPECIES);
+    assertEquals("BOLD:AAA0001", pn.canonicalName());
+    assertEquals("BOLD:AAA0001", pn.canonicalNameComplete());
+  }
+
+  @Test
   public void testCanonicalNames() throws Exception {
     pn.setGenus("Abies");
     assertEquals("Abies", pn.canonicalName());

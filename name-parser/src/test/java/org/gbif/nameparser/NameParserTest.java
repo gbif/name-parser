@@ -13,6 +13,9 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
 
+import static org.gbif.nameparser.api.NamePart.INFRASPECIFIC;
+import static org.gbif.nameparser.api.NameType.*;
+import static org.gbif.nameparser.api.Rank.*;
 import static org.junit.Assert.*;
 
 
@@ -65,28 +68,28 @@ public class NameParserTest {
   public void parseInfraSpecies() throws Exception {
 
     assertName("Abies alba ssp. alpina Mill.", "Abies alba subsp. alpina")
-        .infraSpecies("Abies", "alba", Rank.SUBSPECIES, "alpina")
+        .infraSpecies("Abies", "alba", SUBSPECIES, "alpina")
         .combAuthors(null, "Mill.")
         .nothingElse();
 
     assertName("Festuca ovina L. subvar. gracilis Hackel", "Festuca ovina subvar. gracilis")
-        .infraSpecies("Festuca", "ovina", Rank.SUBVARIETY, "gracilis")
+        .infraSpecies("Festuca", "ovina", SUBVARIETY, "gracilis")
         .combAuthors(null, "Hackel")
         .nothingElse();
 
     assertName("Pseudomonas syringae pv. aceris (Ark, 1939) Young, Dye & Wilkie, 1978", "Pseudomonas syringae pv. aceris")
-        .infraSpecies("Pseudomonas", "syringae", Rank.PATHOVAR, "aceris")
+        .infraSpecies("Pseudomonas", "syringae", PATHOVAR, "aceris")
         .combAuthors("1978", "Young", "Dye", "Wilkie")
         .basAuthors("1939", "Ark");
 
     assertName("Agaricus compactus sarcocephalus (Fr.) Fr. ", "Agaricus compactus sarcocephalus")
-        .infraSpecies("Agaricus", "compactus", Rank.INFRASPECIFIC_NAME, "sarcocephalus")
+        .infraSpecies("Agaricus", "compactus", INFRASPECIFIC_NAME, "sarcocephalus")
         .combAuthors(null, "Fr.")
         .basAuthors(null, "Fr.")
         .nothingElse();
 
     assertName("Baccharis microphylla Kunth var. rhomboidea Wedd. ex Sch. Bip. (nom. nud.)", "Baccharis microphylla var. rhomboidea")
-        .infraSpecies("Baccharis", "microphylla", Rank.VARIETY, "rhomboidea")
+        .infraSpecies("Baccharis", "microphylla", VARIETY, "rhomboidea")
         .combAuthors(null, "Sch.Bip.")
         .combExAuthors("Wedd.")
         .nomNote("nom. nud.")
@@ -98,7 +101,7 @@ public class NameParserTest {
   public void testExAuthors() throws Exception {
     // In botany (99% of ex author use) the ex author comes first, see https://en.wikipedia.org/wiki/Author_citation_(botany)#Usage_of_the_term_.22ex.22
     assertName("Baccharis microphylla Kunth var. rhomboidea Wedd. ex Sch. Bip. (nom. nud.)", "Baccharis microphylla var. rhomboidea")
-        .infraSpecies("Baccharis", "microphylla", Rank.VARIETY, "rhomboidea")
+        .infraSpecies("Baccharis", "microphylla", VARIETY, "rhomboidea")
         .combAuthors(null, "Sch.Bip.")
         .combExAuthors("Wedd.")
         .nomNote("nom. nud.")
@@ -128,17 +131,17 @@ public class NameParserTest {
   @Test
   public void test4PartedNames() throws Exception {
     assertName("Bombus sichelii alticola latofasciatus", "Bombus sichelii latofasciatus")
-        .infraSpecies("Bombus", "sichelii", Rank.INFRASUBSPECIFIC_NAME, "latofasciatus")
+        .infraSpecies("Bombus", "sichelii", INFRASUBSPECIFIC_NAME, "latofasciatus")
         .nothingElse();
 
     assertName("Poa pratensis kewensis primula (L.) Rouy, 1913", "Poa pratensis primula")
-        .infraSpecies("Poa", "pratensis", Rank.INFRASUBSPECIFIC_NAME, "primula")
+        .infraSpecies("Poa", "pratensis", INFRASUBSPECIFIC_NAME, "primula")
         .combAuthors("1913", "Rouy")
         .basAuthors(null, "L.")
         .nothingElse();
 
     assertName("Acipenser gueldenstaedti colchicus natio danubicus Movchan, 1967", "Acipenser gueldenstaedti natio danubicus")
-        .infraSpecies("Acipenser", "gueldenstaedti", Rank.NATIO, "danubicus")
+        .infraSpecies("Acipenser", "gueldenstaedti", NATIO, "danubicus")
         .combAuthors("1967", "Movchan")
         .nothingElse();
   }
@@ -156,22 +159,22 @@ public class NameParserTest {
   @Test
   public void parseInfraGeneric() throws Exception {
     assertName("Echinocereus sect. Triglochidiata Bravo", "Echinocereus sect. Triglochidiata")
-        .infraGeneric("Echinocereus", Rank.SECTION, "Triglochidiata")
+        .infraGeneric("Echinocereus", SECTION, "Triglochidiata")
         .combAuthors(null, "Bravo")
         .nothingElse();
 
     assertName("Zignoella subgen. Trematostoma Sacc.", "Zignoella subgen. Trematostoma")
-        .infraGeneric("Zignoella", Rank.SUBGENUS, "Trematostoma")
+        .infraGeneric("Zignoella", SUBGENUS, "Trematostoma")
         .combAuthors(null, "Sacc.")
         .nothingElse();
 
     assertName("subgen. Trematostoma Sacc.", "Trematostoma")
-        .monomial("Trematostoma", Rank.SUBGENUS)
+        .monomial("Trematostoma", SUBGENUS)
         .combAuthors(null, "Sacc.")
         .nothingElse();
 
     assertName("Polygonum subgen. Bistorta (L.) Zernov", "Polygonum subgen. Bistorta")
-        .infraGeneric("Polygonum", Rank.SUBGENUS, "Bistorta")
+        .infraGeneric("Polygonum", SUBGENUS, "Bistorta")
         .combAuthors(null, "Zernov")
         .basAuthors(null, "L.")
         .nothingElse();
@@ -181,28 +184,28 @@ public class NameParserTest {
         .basAuthors(null, "Antarctohoges")
         .nothingElse();
 
-    assertName("Arrhoges (Antarctohoges)", Rank.SUBGENUS,"Arrhoges subgen. Antarctohoges")
-        .infraGeneric("Arrhoges", Rank.SUBGENUS, "Antarctohoges")
+    assertName("Arrhoges (Antarctohoges)", SUBGENUS,"Arrhoges subgen. Antarctohoges")
+        .infraGeneric("Arrhoges", SUBGENUS, "Antarctohoges")
         .nothingElse();
 
     assertName("Festuca subg. Schedonorus (P. Beauv. ) Peterm.","Festuca subgen. Schedonorus")
-        .infraGeneric("Festuca", Rank.SUBGENUS, "Schedonorus")
+        .infraGeneric("Festuca", SUBGENUS, "Schedonorus")
         .combAuthors(null, "Peterm.")
         .basAuthors(null, "P.Beauv.")
         .nothingElse();
 
     assertName("Catapodium subg.Agropyropsis  Trab.", "Catapodium subgen. Agropyropsis")
-        .infraGeneric("Catapodium", Rank.SUBGENUS, "Agropyropsis")
+        .infraGeneric("Catapodium", SUBGENUS, "Agropyropsis")
         .combAuthors(null, "Trab.")
         .nothingElse();
 
     assertName(" Gnaphalium subg. Laphangium Hilliard & B. L. Burtt", "Gnaphalium subgen. Laphangium")
-        .infraGeneric("Gnaphalium", Rank.SUBGENUS, "Laphangium")
+        .infraGeneric("Gnaphalium", SUBGENUS, "Laphangium")
         .combAuthors(null, "Hilliard", "B.L.Burtt")
         .nothingElse();
 
     assertName("Woodsiaceae (Hooker) Herter", "Woodsiaceae")
-        .monomial("Woodsiaceae", Rank.FAMILY)
+        .monomial("Woodsiaceae", FAMILY)
         .combAuthors(null, "Herter")
         .basAuthors(null, "Hooker")
         .nothingElse();
@@ -211,7 +214,7 @@ public class NameParserTest {
   @Test
   public void testNotNames() throws Exception {
     assertName("Diatrypella favacea var. favacea (Fr.) Ces. & De Not.", "Diatrypella favacea var. favacea")
-        .infraSpecies("Diatrypella", "favacea", Rank.VARIETY, "favacea")
+        .infraSpecies("Diatrypella", "favacea", VARIETY, "favacea")
         .combAuthors(null, "Ces.", "De Not.")
         .basAuthors(null, "Fr.")
         .nothingElse();
@@ -230,17 +233,18 @@ public class NameParserTest {
 
   @Test
   public void parsePlaceholder() throws Exception {
-    assertName("\"? gryphoidis", "? gryphoidis", NameType.PLACEHOLDER)
+    assertName("\"? gryphoidis", "? gryphoidis")
         .species("?", "gryphoidis")
+        .type(PLACEHOLDER)
         .nothingElse();
 
-    assertUnparsable("[unassigned] Cladobranchia", NameType.PLACEHOLDER);
+    assertUnparsable("[unassigned] Cladobranchia", PLACEHOLDER);
 
-    assertUnparsable("Biota incertae sedis", NameType.PLACEHOLDER);
+    assertUnparsable("Biota incertae sedis", PLACEHOLDER);
 
-    assertUnparsable("Mollusca not assigned", NameType.PLACEHOLDER);
+    assertUnparsable("Mollusca not assigned", PLACEHOLDER);
 
-    assertUnparsable("Unaccepted", NameType.PLACEHOLDER);
+    assertUnparsable("Unaccepted", PLACEHOLDER);
   }
 
   @Test
@@ -254,13 +258,13 @@ public class NameParserTest {
         .nothingElse();
 
     assertName("Agaricus compactus sarcocephalus (Fr. : Fr.) Fr. ", "Agaricus compactus sarcocephalus")
-        .infraSpecies("Agaricus", "compactus", Rank.INFRASPECIFIC_NAME, "sarcocephalus")
+        .infraSpecies("Agaricus", "compactus", INFRASPECIFIC_NAME, "sarcocephalus")
         .combAuthors(null, "Fr.")
         .basAuthors(null, "Fr.")
         .nothingElse();
 
     assertName("Agaricus compactus sarcocephalus (Fr. : Fr.) Fr. ", "Agaricus compactus sarcocephalus")
-        .infraSpecies("Agaricus", "compactus", Rank.INFRASPECIFIC_NAME, "sarcocephalus")
+        .infraSpecies("Agaricus", "compactus", INFRASPECIFIC_NAME, "sarcocephalus")
         .combAuthors(null, "Fr.")
         .basAuthors(null, "Fr.")
         .nothingElse();
@@ -270,13 +274,13 @@ public class NameParserTest {
   public void parseNothotaxa() throws Exception {
     // https://github.com/GlobalNamesArchitecture/gnparser/issues/410
     assertName("Iris germanica nothovar. florentina", "Iris germanica nothovar. florentina")
-        .infraSpecies("Iris", "germanica", Rank.VARIETY, "florentina")
-        .notho(NamePart.INFRASPECIFIC)
+        .infraSpecies("Iris", "germanica", VARIETY, "florentina")
+        .notho(INFRASPECIFIC)
         .nothingElse();
 
     assertName("Abies alba var. ×alpina L.", "Abies alba nothovar. alpina")
-        .infraSpecies("Abies", "alba", Rank.VARIETY, "alpina")
-        .notho(NamePart.INFRASPECIFIC)
+        .infraSpecies("Abies", "alba", VARIETY, "alpina")
+        .notho(INFRASPECIFIC)
         .combAuthors(null, "L.")
         .nothingElse();
   }
@@ -368,8 +372,8 @@ public class NameParserTest {
   @Test
   public void parseCultivars() throws Exception {
     // fix cultivar names
-    assertName("Acer campestre L. cv. 'nanum'", "Acer campestre 'nanum'", NameType.SCIENTIFIC)
-        .infraSpecies("Acer", "campestre", Rank.CULTIVAR, null)
+    assertName("Acer campestre L. cv. 'nanum'", "Acer campestre 'nanum'")
+        .infraSpecies("Acer", "campestre", CULTIVAR, null)
         .cultivar("nanum")
         .combAuthors(null, "L.")
         .nothingElse();
@@ -422,15 +426,45 @@ public class NameParserTest {
     assertHybridFormula("Tilletia caries (Bjerk.) Tul. × T. foetida (Wallr.) Liro.");
 
     assertName("Polypodium  x vulgare nothosubsp. mantoniae (Rothm.) Schidlay", "Polypodium vulgare nothosubsp. mantoniae")
-        .infraSpecies("Polypodium", "vulgare", Rank.SUBSPECIES, "mantoniae")
+        .infraSpecies("Polypodium", "vulgare", SUBSPECIES, "mantoniae")
         .basAuthors(null, "Rothm.")
         .combAuthors(null, "Schidlay")
-        .notho(NamePart.INFRASPECIFIC)
+        .notho(INFRASPECIFIC)
         .nothingElse();
   }
 
   private void assertHybridFormula(String name) {
-    assertUnparsable(name, NameType.HYBRID_FORMULA);
+    assertUnparsable(name, HYBRID_FORMULA);
+  }
+
+  @Test
+  public void testOTU() throws Exception {
+    assertName("BOLD:ACW2100", "BOLD:ACW2100")
+        .monomial("BOLD:ACW2100", Rank.SPECIES)
+        .type(OTU)
+        .nothingElse();
+
+    assertName("Festuca sp. BOLD:ACW2100", "BOLD:ACW2100")
+        .monomial("BOLD:ACW2100", Rank.SPECIES)
+        .type(OTU)
+        .nothingElse();
+
+    // no OTU names
+    assertName("Boldenaria", "Boldenaria")
+        .monomial("Boldenaria")
+        .nothingElse();
+
+    assertName("Boldea", "Boldea")
+        .monomial("Boldea")
+        .nothingElse();
+
+    assertName("Boldiaceae", "Boldiaceae")
+        .monomial("Boldiaceae", Rank.FAMILY)
+        .nothingElse();
+
+    assertName("Boldea vulgaris", "Boldea vulgaris")
+        .species("Boldea", "vulgaris")
+        .nothingElse();
   }
 
   @Test
@@ -517,28 +551,28 @@ public class NameParserTest {
         .nothingElse();
 
     assertName("Pyrocrataegus willei ×libidi  L.L.Daniel", "Pyrocrataegus willei × libidi")
-        .infraSpecies("Pyrocrataegus", "willei", Rank.INFRASPECIFIC_NAME, "libidi")
+        .infraSpecies("Pyrocrataegus", "willei", INFRASPECIFIC_NAME, "libidi")
         .combAuthors(null, "L.L.Daniel")
-        .notho(NamePart.INFRASPECIFIC)
+        .notho(INFRASPECIFIC)
         .nothingElse();
 
     assertName("Pyrocrataegus willei nothosubsp. libidi  L.L.Daniel", "Pyrocrataegus willei nothosubsp. libidi")
-        .infraSpecies("Pyrocrataegus", "willei", Rank.SUBSPECIES, "libidi")
+        .infraSpecies("Pyrocrataegus", "willei", SUBSPECIES, "libidi")
         .combAuthors(null, "L.L.Daniel")
-        .notho(NamePart.INFRASPECIFIC)
+        .notho(INFRASPECIFIC)
         .nothingElse();
 
     assertName("+ Pyrocrataegus willei nothosubsp. libidi  L.L.Daniel", "Pyrocrataegus willei nothosubsp. libidi")
-        .infraSpecies("Pyrocrataegus", "willei", Rank.SUBSPECIES, "libidi")
+        .infraSpecies("Pyrocrataegus", "willei", SUBSPECIES, "libidi")
         .combAuthors(null, "L.L.Daniel")
-        .notho(NamePart.INFRASPECIFIC)
+        .notho(INFRASPECIFIC)
         .nothingElse();
 
     //TODO: impossible name. should this not be a generic hybrid as its the highest rank crossed?
     assertName("×Pyrocrataegus ×willei ×libidi L.L.Daniel", "Pyrocrataegus willei × libidi")
-        .infraSpecies("Pyrocrataegus", "willei", Rank.INFRASPECIFIC_NAME, "libidi")
+        .infraSpecies("Pyrocrataegus", "willei", INFRASPECIFIC_NAME, "libidi")
         .combAuthors(null, "L.L.Daniel")
-        .notho(NamePart.INFRASPECIFIC)
+        .notho(INFRASPECIFIC)
         .nothingElse();
 
   }
@@ -552,7 +586,7 @@ public class NameParserTest {
 
     // TODO: autonym authors are the species authors !!!
     assertName("Cirsium creticum d'Urv. subsp. creticum", "Cirsium creticum subsp. creticum")
-        .infraSpecies("Cirsium", "creticum", Rank.SUBSPECIES, "creticum")
+        .infraSpecies("Cirsium", "creticum", SUBSPECIES, "creticum")
         //.combAuthors(null, "d'Urv.")
         .autonym()
         .nothingElse();
@@ -717,7 +751,7 @@ public class NameParserTest {
       ParsedName pn = parser.parse(name, null);
     } catch (UnparsableNameException e) {
       // swallow
-      if (NameType.VIRUS == e.getType()) {
+      if (VIRUS == e.getType()) {
         return true;
       }
     }
@@ -732,11 +766,11 @@ public class NameParserTest {
 
 
   private void assertEmptyName(String name) {
-    assertUnparsableName(name, NameType.NO_NAME, null);
+    assertUnparsableName(name, NO_NAME, null);
   }
 
   private void assertNoName(String name) {
-    assertUnparsable(name, NameType.NO_NAME);
+    assertUnparsable(name, NO_NAME);
   }
 
   private void assertUnparsable(String name, NameType type) {
@@ -755,21 +789,12 @@ public class NameParserTest {
   }
 
   static NameAssertion assertName(String rawName, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
-    return assertName(rawName, null, expectedCanonicalWithoutAuthors, NameType.SCIENTIFIC);
+    return assertName(rawName, null, expectedCanonicalWithoutAuthors);
   }
 
   static NameAssertion assertName(String rawName, Rank rank, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
-    return assertName(rawName, rank, expectedCanonicalWithoutAuthors, NameType.SCIENTIFIC);
-  }
-
-  static NameAssertion assertName(String rawName, String expectedCanonicalWithoutAuthors, NameType type) throws UnparsableNameException {
-    return assertName(rawName, null, expectedCanonicalWithoutAuthors, type);
-  }
-
-  static NameAssertion assertName(String rawName, Rank rank, String expectedCanonicalWithoutAuthors, NameType type) throws UnparsableNameException {
     ParsedName n = parser.parse(rawName, rank);
     assertEquals(expectedCanonicalWithoutAuthors, n.canonicalNameWithoutAuthorship());
-    assertEquals(type, n.getType());
     return new NameAssertion(n);
   }
 
