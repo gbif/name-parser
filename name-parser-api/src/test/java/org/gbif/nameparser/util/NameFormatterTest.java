@@ -25,14 +25,14 @@ public class NameFormatterTest {
   public void testFullAuthorship() throws Exception {
     assertNull(pn.authorshipComplete());
 
-    pn.getAuthorship().getAuthors().add("L.");
+    pn.getCombinationAuthorship().getAuthors().add("L.");
     assertEquals("L.", pn.authorshipComplete());
 
     pn.getBasionymAuthorship().getAuthors().add("Bassier");
     assertEquals("(Bassier) L.", pn.authorshipComplete());
     assertEquals("(Bassier) L.", pn.authorshipComplete());
 
-    pn.getAuthorship().getAuthors().add("Rohe");
+    pn.getCombinationAuthorship().getAuthors().add("Rohe");
     assertEquals("(Bassier) L. & Rohe", pn.authorshipComplete());
     assertEquals("(Bassier) L. & Rohe", pn.authorshipComplete());
 
@@ -42,7 +42,7 @@ public class NameFormatterTest {
 
   @Test
   public void testFullAuthorshipSanctioning() throws Exception {
-    pn.getAuthorship().getAuthors().add("L.");
+    pn.getCombinationAuthorship().getAuthors().add("L.");
     pn.setSanctioningAuthor("Pers.");
     assertEquals("L. : Pers.", pn.authorshipComplete());
   }
@@ -57,8 +57,8 @@ public class NameFormatterTest {
     pn.setGenus("Protochlamydia");
     pn.setSpecificEpithet("amoebophila");
     pn.setCandidatus(true);
-    pn.getAuthorship().getAuthors().add("Collingro");
-    pn.getAuthorship().setYear("2005");
+    pn.getCombinationAuthorship().getAuthors().add("Collingro");
+    pn.getCombinationAuthorship().setYear("2005");
     assertEquals("\"Candidatus Protochlamydia amoebophila\" Collingro, 2005", pn.canonicalName());
   }
 
@@ -84,10 +84,10 @@ public class NameFormatterTest {
     pn.setUninomial("Abies");
     assertEquals("Abies", pn.canonicalName());
 
-    pn.getAuthorship().setYear("1877");
+    pn.getCombinationAuthorship().setYear("1877");
     assertEquals("Abies 1877", pn.canonicalName());
 
-    pn.getAuthorship().getAuthors().add("Mill.");
+    pn.getCombinationAuthorship().getAuthors().add("Mill.");
     assertEquals("Abies Mill., 1877", pn.canonicalName());
 
     pn.setNotho(NamePart.GENERIC);
@@ -106,8 +106,8 @@ public class NameFormatterTest {
     pn.setGenus("Abies");
     pn.setSpecificEpithet("alba");
     pn.setRank(Rank.VARIETY);
-    pn.getAuthorship().getAuthors().add("Mill.");
-    pn.getAuthorship().setYear("1887");
+    pn.getCombinationAuthorship().getAuthors().add("Mill.");
+    pn.getCombinationAuthorship().setYear("1887");
     pn.getBasionymAuthorship().getAuthors().add("Carl.");
     pn.setNotho(NamePart.GENERIC);
     pn.setInfraspecificEpithet("alpina");
@@ -131,7 +131,7 @@ public class NameFormatterTest {
 
     pn.setUninomial("Abies");
     pn.setRank(Rank.GENUS);
-    pn.getAuthorship().getAuthors().add("Mill.");
+    pn.getCombinationAuthorship().getAuthors().add("Mill.");
     assertEquals("Abies Mill.", pn.canonicalName());
 
     pn.setRank(Rank.UNRANKED);
@@ -192,7 +192,7 @@ public class NameFormatterTest {
     // Brachyhypopomus (Odontohypopomus) Sullivan, Zuanon & Cox Fernandes, 2013
     pn.setGenus("Brachyhypopomus");
     pn.setInfragenericEpithet("Odontohypopomus");
-    pn.setAuthorship(authorship("2013","Sullivan", "Zuanon", "Cox Fernandes"));
+    pn.setCombinationAuthorship(authorship("2013","Sullivan", "Zuanon", "Cox Fernandes"));
     assertName(
         "Odontohypopomus",
         "Brachyhypopomus Odontohypopomus Sullivan, Zuanon & Cox Fernandes, 2013"
@@ -223,7 +223,7 @@ public class NameFormatterTest {
     pn.setCode(NomCode.BOTANICAL);
     pn.setGenus("Achillea");
     pn.setInfragenericEpithet("Ptarmica");
-    pn.getAuthorship().getAuthors().add("W.D.J.Koch");
+    pn.getCombinationAuthorship().getAuthors().add("W.D.J.Koch");
     pn.getBasionymAuthorship().getAuthors().add("Mill.");
     assertName(
         "Ptarmica",
@@ -247,10 +247,10 @@ public class NameFormatterTest {
     pn.setSpecificEpithet("syringae");
     assertName("Pseudomonas syringae");
 
-    pn.getAuthorship().getAuthors().add("Van Hall");
+    pn.getCombinationAuthorship().getAuthors().add("Van Hall");
     assertName("Pseudomonas syringae", "Pseudomonas syringae Van Hall");
 
-    pn.getAuthorship().setYear("1904");
+    pn.getCombinationAuthorship().setYear("1904");
     assertName("Pseudomonas syringae", "Pseudomonas syringae Van Hall, 1904");
 
     pn.getBasionymAuthorship().getAuthors().add("Carl.");
@@ -264,8 +264,8 @@ public class NameFormatterTest {
     pn.setStrain("CFBP 2339");
     assertName("Pseudomonas syringae aceris", "Pseudomonas syringae pv. aceris Van Hall, 1904 CFBP 2339");
 
-    pn.getAuthorship().setYear(null);
-    pn.getAuthorship().getAuthors().clear();
+    pn.getCombinationAuthorship().setYear(null);
+    pn.getCombinationAuthorship().getAuthors().clear();
     assertName("Pseudomonas syringae aceris", "Pseudomonas syringae pv. aceris CFBP 2339");
 
 
@@ -299,7 +299,7 @@ public class NameFormatterTest {
     pn.setSpecificEpithet("vulgare");
     pn.setInfraspecificEpithet("mantoniae");
     pn.getBasionymAuthorship().getAuthors().add("Rothm.");
-    pn.getAuthorship().getAuthors().add("Schidlay");
+    pn.getCombinationAuthorship().getAuthors().add("Schidlay");
     pn.setRank(Rank.SUBSPECIES);
     pn.setNotho(NamePart.INFRASPECIFIC);
     assertName(

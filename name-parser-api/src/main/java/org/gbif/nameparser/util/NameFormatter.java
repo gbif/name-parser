@@ -346,8 +346,8 @@ public class NameFormatter {
       appendAuthorship(sb, n.getBasionymAuthorship(), true);
       sb.append(") ");
     }
-    if (n.getAuthorship().exists()) {
-      appendAuthorship(sb, n.getAuthorship(), true);
+    if (n.getCombinationAuthorship().exists()) {
+      appendAuthorship(sb, n.getCombinationAuthorship(), true);
       // Render sanctioning author via colon:
       // http://www.iapt-taxon.org/nomen/main.php?page=r50E
       //TODO: remove rendering of sanctioning author according to Paul Kirk!

@@ -142,8 +142,8 @@ public class NameParserGbifApi implements NameParser {
     gbif.setSensu(pn.getSensu());
 
     gbif.setAuthorsParsed(pn.isAuthorsParsed());
-    gbif.setAuthorship(NameFormatter.authorString(pn.getAuthorship(), false));
-    gbif.setYear(pn.getAuthorship().getYear());
+    gbif.setAuthorship(NameFormatter.authorString(pn.getCombinationAuthorship(), false));
+    gbif.setYear(pn.getCombinationAuthorship().getYear());
     gbif.setBracketAuthorship(NameFormatter.authorString(pn.getBasionymAuthorship(), false));
     gbif.setBracketYear(pn.getBasionymAuthorship().getYear());
 

@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.util.regex.Matcher;
 
 import static org.junit.Assert.*;
 
@@ -238,8 +239,9 @@ public class NameParserTest {
     assertUnparsable("Biota incertae sedis", NameType.PLACEHOLDER);
 
     assertUnparsable("Mollusca not assigned", NameType.PLACEHOLDER);
-  }
 
+    assertUnparsable("Unaccepted", NameType.PLACEHOLDER);
+  }
 
   @Test
   public void parseSanctioned() throws Exception {
@@ -374,8 +376,198 @@ public class NameParserTest {
   }
 
   @Test
-  public void parseHybridFormulas() throws Exception {
-    assertUnparsable("Asplenium rhizophyllum DC. x ruta-muraria E.L. Braun 1939", NameType.HYBRID_FORMULA);
+  public void testCultivarPattern() throws Exception {
+    testCultivar("'Kentish Belle'");
+    testCultivar("'Nabob'");
+    testCultivar("\"Dall\"");
+    testCultivar(" cv. 'Belmonte'");
+    testCultivar("Sorbus hupehensis C.K.Schneid. cv. 'November pink'");
+    testCultivar("Symphoricarpos albus (L.) S.F.Blake cv. 'Turesson'");
+    testCultivar("Symphoricarpos sp. cv. 'mother of pearl'");
+  }
+
+  private void testCultivar(String cultivar) {
+    Matcher m = NameParserGBIF.CULTIVAR.matcher(cultivar);
+    assertTrue (m.find());
+  }
+
+  @Test
+  public void testEscaping() throws Exception {
+    assertEquals("Caloplaca poliotera (Nyl.) J. Steiner",
+        NameParserGBIF.normalize("Caloplaca poliotera (Nyl.) J. Steiner\r\n\r\n"));
+    assertEquals("Caloplaca poliotera (Nyl.) J. Steiner",
+        NameParserGBIF.normalize("Caloplaca poliotera (Nyl.) J. Steiner\\r\\n\\r\\r"));
+
+    assertName("Caloplaca poliotera (Nyl.) J. Steiner\r\n\r\n", "Caloplaca poliotera")
+        .species("Caloplaca", "poliotera")
+        .basAuthors(null, "Nyl.")
+        .combAuthors(null, "J.Steiner")
+        .nothingElse();
+  }
+
+  @Test
+  public void testHybridFormulas() throws Exception {
+    assertHybridFormula("Asplenium rhizophyllum DC. x ruta-muraria E.L. Braun 1939");
+    assertHybridFormula("Arthopyrenia hyalospora X Hydnellum scrobiculatum");
+    assertHybridFormula("Arthopyrenia hyalospora (Banker) D. Hall X Hydnellum scrobiculatum D.E. Stuntz");
+    assertHybridFormula("Arthopyrenia hyalospora × ? ");
+    assertHybridFormula("Agrostis L. × Polypogon Desf. ");
+    assertHybridFormula("Agrostis stolonifera L. × Polypogon monspeliensis (L.) Desf. ");
+    assertHybridFormula("Asplenium rhizophyllum X A. ruta-muraria E.L. Braun 1939");
+    assertHybridFormula("Asplenium rhizophyllum DC. x ruta-muraria E.L. Braun 1939");
+    assertHybridFormula("Asplenium rhizophyllum x ruta-muraria");
+    assertHybridFormula("Salix aurita L. × S. caprea L.");
+    assertHybridFormula("Mentha aquatica L. × M. arvensis L. × M. spicata L.");
+    assertHybridFormula("Polypodium vulgare subsp. prionodes (Asch.) Rothm. × subsp. vulgare");
+    assertHybridFormula("Tilletia caries (Bjerk.) Tul. × T. foetida (Wallr.) Liro.");
+
+    assertName("Polypodium  x vulgare nothosubsp. mantoniae (Rothm.) Schidlay", "Polypodium vulgare nothosubsp. mantoniae")
+        .infraSpecies("Polypodium", "vulgare", Rank.SUBSPECIES, "mantoniae")
+        .basAuthors(null, "Rothm.")
+        .combAuthors(null, "Schidlay")
+        .notho(NamePart.INFRASPECIFIC)
+        .nothingElse();
+  }
+
+  private void assertHybridFormula(String name) {
+    assertUnparsable(name, NameType.HYBRID_FORMULA);
+  }
+
+  @Test
+  public void testHybridAlikeNames() throws Exception {
+    assertName("Huaiyuanella Xing, Yan & Yin, 1984", "Huaiyuanella")
+        .monomial("Huaiyuanella")
+        .combAuthors("1984", "Xing", "Yan", "Yin")
+        .nothingElse();
+
+    assertName("Caveasphaera Xiao & Knoll, 2000", "Caveasphaera")
+        .monomial("Caveasphaera")
+        .combAuthors("2000", "Xiao", "Knoll")
+        .nothingElse();
+  }
+
+  @Test
+  @Ignore("Need to evaluate and implement these alpha/beta/gamme/theta names. Comes from cladistics?")
+  public void testAlphaBetaThetaNames() {
+    // 11383509 | VARIETY | Trianosperma ficifolia var. βrigida Cogn.
+    // 11599666 |         | U. caerulea var. β
+    // 12142976 | CLASS   | γ Proteobacteria
+    // 12142978 | CLASS   | γ-proteobacteria
+    // 16220269 |         | U. caerulea var. β
+    // 1297218  | SPECIES | Bacteriophage Qβ
+    // 307122   | SPECIES | Agaricus collinitus β mucosus (Bull.) Fr.
+    // 313460   | SPECIES | Agaricus muscarius β regalis Fr. (1821)
+    // 315162   | SPECIES | Agaricus personatus β saevus
+    // 1774875  | VARIETY | Caesarea albiflora var. βramosa Cambess.
+    // 3164679  | VARIETY | Cyclotus amethystinus var. α Guppy, 1868 (in part)
+    // 3164681  | VARIETY | Cyclotus amethystinus var. β Guppy, 1868
+    // 6531344  | SPECIES | Lycoperdon pyriforme β tessellatum Pers. (1801)
+    // 7487686  | VARIETY | Nephilengys malabarensis var. β
+    // 9665391  | VARIETY | Ranunculus purshii Hook. var. repens(-δ) Hook.
+  }
+
+  @Test
+  public void testHybridNames() throws Exception {
+    assertName("+ Pyrocrataegus willei L.L.Daniel", "× Pyrocrataegus willei")
+        .species("Pyrocrataegus", "willei")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.GENERIC)
+        .nothingElse();
+
+    assertName("×Pyrocrataegus willei L.L. Daniel", "× Pyrocrataegus willei")
+        .species("Pyrocrataegus", "willei")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.GENERIC)
+        .nothingElse();
+
+    assertName(" × Pyrocrataegus willei  L. L. Daniel", "× Pyrocrataegus willei")
+        .species("Pyrocrataegus", "willei")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.GENERIC)
+        .nothingElse();
+
+    assertName(" X Pyrocrataegus willei L. L. Daniel", "× Pyrocrataegus willei")
+        .species("Pyrocrataegus", "willei")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.GENERIC)
+        .nothingElse();
+
+    assertName("Pyrocrataegus ×willei L. L. Daniel", "Pyrocrataegus × willei")
+        .species("Pyrocrataegus", "willei")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.SPECIFIC)
+        .nothingElse();
+
+    assertName("Pyrocrataegus × willei L. L. Daniel", "Pyrocrataegus × willei")
+        .species("Pyrocrataegus", "willei")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.SPECIFIC)
+        .nothingElse();
+
+    assertName("Pyrocrataegus x willei L. L. Daniel", "Pyrocrataegus × willei")
+        .species("Pyrocrataegus", "willei")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.SPECIFIC)
+        .nothingElse();
+
+    assertName("Pyrocrataegus X willei L. L. Daniel", "Pyrocrataegus × willei")
+        .species("Pyrocrataegus", "willei")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.SPECIFIC)
+        .nothingElse();
+
+    assertName("Pyrocrataegus willei ×libidi  L.L.Daniel", "Pyrocrataegus willei × libidi")
+        .infraSpecies("Pyrocrataegus", "willei", Rank.INFRASPECIFIC_NAME, "libidi")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.INFRASPECIFIC)
+        .nothingElse();
+
+    assertName("Pyrocrataegus willei nothosubsp. libidi  L.L.Daniel", "Pyrocrataegus willei nothosubsp. libidi")
+        .infraSpecies("Pyrocrataegus", "willei", Rank.SUBSPECIES, "libidi")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.INFRASPECIFIC)
+        .nothingElse();
+
+    assertName("+ Pyrocrataegus willei nothosubsp. libidi  L.L.Daniel", "Pyrocrataegus willei nothosubsp. libidi")
+        .infraSpecies("Pyrocrataegus", "willei", Rank.SUBSPECIES, "libidi")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.INFRASPECIFIC)
+        .nothingElse();
+
+    //TODO: impossible name. should this not be a generic hybrid as its the highest rank crossed?
+    assertName("×Pyrocrataegus ×willei ×libidi L.L.Daniel", "Pyrocrataegus willei × libidi")
+        .infraSpecies("Pyrocrataegus", "willei", Rank.INFRASPECIFIC_NAME, "libidi")
+        .combAuthors(null, "L.L.Daniel")
+        .notho(NamePart.INFRASPECIFIC)
+        .nothingElse();
+
+  }
+
+  @Test
+  public void testApostropheAuthors() throws Exception {
+    assertName("Cirsium creticum d'Urv.", "Cirsium creticum")
+        .species("Cirsium", "creticum")
+        .combAuthors(null, "d'Urv.")
+        .nothingElse();
+
+    // TODO: autonym authors are the species authors !!!
+    assertName("Cirsium creticum d'Urv. subsp. creticum", "Cirsium creticum subsp. creticum")
+        .infraSpecies("Cirsium", "creticum", Rank.SUBSPECIES, "creticum")
+        //.combAuthors(null, "d'Urv.")
+        .autonym()
+        .nothingElse();
+  }
+
+  @Test
+  public void testExtinctNames() throws Exception {
+    assertName("†Titanoptera", "Titanoptera")
+        .monomial("Titanoptera")
+        .nothingElse();
+
+    assertName("† Tuarangiida MacKinnon, 1982", "Tuarangiida")
+        .monomial("Tuarangiida")
+        .combAuthors("1982", "MacKinnon")
+        .nothingElse();
   }
 
   @Test

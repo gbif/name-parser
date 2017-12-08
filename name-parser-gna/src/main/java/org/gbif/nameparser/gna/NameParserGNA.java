@@ -169,7 +169,7 @@ public class NameParserGNA implements NameParser {
   private void setFullAuthorship(ParsedName n, Option<Epithet> epi) {
     if (epi.isDefined() && epi.get().hasAuthorship()) {
       Authorship auth = epi.get().getAuthorship();
-      setAuthorship(n.getAuthorship(), auth.combination);
+      setAuthorship(n.getCombinationAuthorship(), auth.combination);
       setAuthorship(n.getBasionymAuthorship(), auth.basionym);
     }
   }

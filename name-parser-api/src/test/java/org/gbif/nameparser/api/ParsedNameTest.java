@@ -31,7 +31,7 @@ public class ParsedNameTest {
     n.setUninomial("Abies");
     assertTrue(n.isConsistent());
 
-    n.getAuthorship().getAuthors().add("Mill.");
+    n.getCombinationAuthorship().getAuthors().add("Mill.");
     assertTrue(n.isConsistent());
 
     n.setRank(Rank.SPECIES);

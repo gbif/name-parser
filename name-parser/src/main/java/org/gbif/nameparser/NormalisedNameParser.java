@@ -308,7 +308,7 @@ class NormalisedNameParser {
           }
 
           // #16/17/18/19 authorship (ex/auth/sanct/year)
-          cn.setAuthorship(parseAuthorship(matcher.group(16), matcher.group(17), matcher.group(19)));
+          cn.setCombinationAuthorship(parseAuthorship(matcher.group(16), matcher.group(17), matcher.group(19)));
           // sanctioning author
           if (matcher.group(18) != null) {
             cn.setSanctioningAuthor(matcher.group(18));
@@ -494,7 +494,7 @@ class NormalisedNameParser {
       if (cn.getInfraspecificEpithet() != null) {
         // might be subspecies without rank marker
         // or short authorship prefix in epithet. test
-        String extendedAuthor = cn.getInfraspecificEpithet() + " " + cn.getAuthorship();
+        String extendedAuthor = cn.getInfraspecificEpithet() + " " + cn.getCombinationAuthorship();
         Matcher m = AUTHORSHIP_PATTERN.matcher(extendedAuthor);
         if (m.find()) {
           // matches author. Prefer that
@@ -505,7 +505,7 @@ class NormalisedNameParser {
         }
       } else {
         // might be monomial with the author prefix erroneously taken as the species epithet
-        String extendedAuthor = cn.getSpecificEpithet() + " " + cn.getAuthorship();
+        String extendedAuthor = cn.getSpecificEpithet() + " " + cn.getCombinationAuthorship();
         Matcher m = AUTHORSHIP_PATTERN.matcher(extendedAuthor);
         if (m.find()) {
           // matches author. Prefer that

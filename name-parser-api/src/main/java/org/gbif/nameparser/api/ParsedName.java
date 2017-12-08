@@ -17,7 +17,7 @@ public class ParsedName {
 	 * Authorship with years of the name, but excluding any basionym authorship.
    * For binomials the combination authors.
 	 */
-	private Authorship authorship = new Authorship();
+	private Authorship combinationAuthorship = new Authorship();
 
   /**
    * Basionym authorship with years of the name
@@ -117,12 +117,12 @@ public class ParsedName {
 
 
 
-  public Authorship getAuthorship() {
-    return authorship;
+  public Authorship getCombinationAuthorship() {
+    return combinationAuthorship;
   }
 
-  public void setAuthorship(Authorship authorship) {
-    this.authorship = authorship;
+  public void setCombinationAuthorship(Authorship combinationAuthorship) {
+    this.combinationAuthorship = combinationAuthorship;
   }
 
   public Authorship getBasionymAuthorship() {
@@ -332,7 +332,7 @@ public class ParsedName {
    * @return true if any kind of authorship exists
    */
   public boolean hasAuthorship() {
-    return authorship.exists() || basionymAuthorship.exists();
+    return combinationAuthorship.exists() || basionymAuthorship.exists();
   }
 
   public boolean isAutonym() {
@@ -442,7 +442,7 @@ public class ParsedName {
         doubtful == that.doubtful &&
         parsed == that.parsed &&
         authorsParsed == that.authorsParsed &&
-        Objects.equals(authorship, that.authorship) &&
+        Objects.equals(combinationAuthorship, that.combinationAuthorship) &&
         Objects.equals(basionymAuthorship, that.basionymAuthorship) &&
         Objects.equals(sanctioningAuthor, that.sanctioningAuthor) &&
         rank == that.rank &&
@@ -464,7 +464,7 @@ public class ParsedName {
 
   @Override
   public int hashCode() {
-    return Objects.hash(authorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, sensu, nomenclaturalNotes, remarks, type, doubtful, parsed, authorsParsed, warnings);
+    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, sensu, nomenclaturalNotes, remarks, type, doubtful, parsed, authorsParsed, warnings);
   }
 
   @Override
@@ -499,8 +499,8 @@ public class ParsedName {
     if (strain != null) {
       sb.append(" STR:").append(strain);
     }
-    if (authorship != null) {
-      sb.append(" A:").append(authorship);
+    if (combinationAuthorship != null) {
+      sb.append(" A:").append(combinationAuthorship);
     }
     if (basionymAuthorship != null) {
       sb.append(" BA:").append(basionymAuthorship);
