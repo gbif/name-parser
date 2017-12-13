@@ -232,12 +232,7 @@ public class NameParserTest {
   }
 
   @Test
-  public void parsePlaceholder() throws Exception {
-    assertName("\"? gryphoidis", "? gryphoidis")
-        .species("?", "gryphoidis")
-        .type(PLACEHOLDER)
-        .nothingElse();
-
+  public void unparsablePlaceholder() throws Exception {
     assertUnparsable("[unassigned] Cladobranchia", PLACEHOLDER);
 
     assertUnparsable("Biota incertae sedis", PLACEHOLDER);
@@ -245,6 +240,27 @@ public class NameParserTest {
     assertUnparsable("Mollusca not assigned", PLACEHOLDER);
 
     assertUnparsable("Unaccepted", PLACEHOLDER);
+  }
+
+  @Test
+  public void parsePlaceholder() throws Exception {
+    assertName("\"? gryphoidis", "? gryphoidis")
+        .species("?", "gryphoidis")
+        .type(PLACEHOLDER)
+        .nothingElse();
+
+    assertName("\"? gryphoidis (Bourguignat 1870) Schoepf. 1909", "? gryphoidis")
+        .species("?", "gryphoidis")
+        .basAuthors("1870", "Bourguignat")
+        .combAuthors("1909", "Schoepf.")
+        .type(PLACEHOLDER)
+        .nothingElse();
+
+    assertName("Missing penchinati Bourguignat, 1870", "? penchinati")
+        .species("?", "penchinati")
+        .combAuthors("1870", "Bourguignat")
+        .type(PLACEHOLDER)
+        .nothingElse();
   }
 
   @Test

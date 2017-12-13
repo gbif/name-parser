@@ -138,6 +138,7 @@ public class NameParserGBIF implements NameParser {
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
   private static final String PLACEHOLDER_AUTHOR = "(?:unknown|unspecified|uncertain|\\?)";
   private static final Pattern REMOVE_PLACEHOLDER_AUTHOR = Pattern.compile("\\b"+PLACEHOLDER_AUTHOR+"[, ] ?(" + YEAR_LOOSE + ")$", CASE_INSENSITIVE);
+  private static final Pattern PLACEHOLDER_GENUS = Pattern.compile("^(Missing|Dummy|Temp|Unknown|Unplaced|Unspecified) (?=[a-z]+)\\b");
   private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|dummy|incertae sedis|mixed|not assigned|temp|unaccepted|unallocated|unassigned|uncertain|unclassified|uncultured|undetermined|unknown|unnamed|unplaced|unspecified)";
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
   private static final Pattern PLACEHOLDER = Pattern.compile("\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
@@ -273,6 +274,13 @@ public class NameParserGBIF implements NameParser {
     m = REMOVE_PLACEHOLDER_INFRAGENERIC.matcher(name);
     if (m.find()) {
       name = m.replaceFirst("");
+      pn.setType(NameType.PLACEHOLDER);
+    }
+
+    // resolve parsable names with a placeholder genus only
+    m = PLACEHOLDER_GENUS.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst("? ");
       pn.setType(NameType.PLACEHOLDER);
     }
 
