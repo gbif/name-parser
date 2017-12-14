@@ -20,18 +20,18 @@ import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
- * A name parser wrapped to return ParsedName objects from the main GBIF API.
+ * A name parser wrapped to return classic ParsedName objects from the GBIF API v1.
  */
-public class NameParserGbifApi implements NameParser {
+public class NameParserGbifV1 implements NameParser {
 
-  private static Logger LOG = LoggerFactory.getLogger(NameParserGbifApi.class);
+  private static Logger LOG = LoggerFactory.getLogger(NameParserGbifV1.class);
 
   private final org.gbif.nameparser.api.NameParser parser;
 
   /**
    * Using the default GBIF RegEx Name Parser.
    */
-  public NameParserGbifApi() {
+  public NameParserGbifV1() {
     this.parser = new NameParserGBIF();
   }
 
@@ -39,11 +39,11 @@ public class NameParserGbifApi implements NameParser {
    * Using the default GBIF RegEx Name Parser with a given timeout for parsing a single name.
    * @param timeout in milliseconds before returning an Unparsable name
    */
-  public NameParserGbifApi(long timeout) {
+  public NameParserGbifV1(long timeout) {
     this.parser = new NameParserGBIF(timeout);
   }
 
-  public NameParserGbifApi(org.gbif.nameparser.api.NameParser parser) {
+  public NameParserGbifV1(org.gbif.nameparser.api.NameParser parser) {
     this.parser = parser;
   }
 

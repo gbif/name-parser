@@ -10,13 +10,13 @@ import static org.junit.Assert.*;
 /**
  *
  */
-public class NameParserGbifApiTest {
-  NameParserGbifApi parser = new NameParserGbifApi();
+public class NameParserGbifV1Test {
+  NameParserGbifV1 parser = new NameParserGbifV1();
 
   @Test
   public void convertNameType() throws Exception {
     for (org.gbif.nameparser.api.NameType t : org.gbif.nameparser.api.NameType.values()) {
-      assertNotNull(NameParserGbifApi.toGbif(t));
+      assertNotNull(NameParserGbifV1.toGbif(t));
     }
   }
 
@@ -24,21 +24,21 @@ public class NameParserGbifApiTest {
   public void convertNamePart() throws Exception {
     for (org.gbif.nameparser.api.NamePart t : org.gbif.nameparser.api.NamePart.values()) {
       System.out.println(t.name());
-      assertNotNull(NameParserGbifApi.toGbif(t));
+      assertNotNull(NameParserGbifV1.toGbif(t));
     }
   }
 
   @Test
   public void convertRank() throws Exception {
     for (org.gbif.nameparser.api.Rank t : org.gbif.nameparser.api.Rank.values()) {
-      assertNotNull(NameParserGbifApi.toGbif(t));
+      assertNotNull(NameParserGbifV1.toGbif(t));
     }
   }
 
   @Test
   public void convertRankReverse() throws Exception {
     for (org.gbif.api.vocabulary.Rank t : org.gbif.api.vocabulary.Rank.values()) {
-      assertNotNull(NameParserGbifApi.fromGbif(t));
+      assertNotNull(NameParserGbifV1.fromGbif(t));
     }
   }
 
