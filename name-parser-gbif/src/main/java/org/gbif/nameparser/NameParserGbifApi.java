@@ -35,6 +35,14 @@ public class NameParserGbifApi implements NameParser {
     this.parser = new NameParserGBIF();
   }
 
+  /**
+   * Using the default GBIF RegEx Name Parser with a given timeout for parsing a single name.
+   * @param timeout in milliseconds before returning an Unparsable name
+   */
+  public NameParserGbifApi(long timeout) {
+    this.parser = new NameParserGBIF(timeout);
+  }
+
   public NameParserGbifApi(org.gbif.nameparser.api.NameParser parser) {
     this.parser = parser;
   }
