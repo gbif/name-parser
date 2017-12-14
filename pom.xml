@@ -28,7 +28,7 @@
     <modules>
         <module>name-parser</module>
         <module>name-parser-api</module>
-        <module>name-parser-gbif</module>
+        <module>name-parser-v1</module>
         <module>name-parser-gna</module>
         <module>name-parser-comparison</module>
     </modules>

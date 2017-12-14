@@ -9,10 +9,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>name-parser-gbif</artifactId>
+    <artifactId>name-parser-v1</artifactId>
 
-    <name>GBIF API Name Parser</name>
-    <description>The GBIF Name Parser implementing the GBIF API</description>
+    <name>GBIF Name Parser - API v1</name>
+    <description>The GBIF Name Parser implementing the GBIF API version 1</description>
 
     <dependencies>
         <!-- GBIF -->
