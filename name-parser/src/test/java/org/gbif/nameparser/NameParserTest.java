@@ -396,6 +396,43 @@ public class NameParserTest {
   }
 
   @Test
+  public void parseNorwegianRadiolaria() throws Exception {
+    assertName("Actinomma leptodermum longispinum Cortese & Bjørklund 1998", "Actinomma leptodermum longispinum")
+        .infraSpecies("Actinomma", "leptodermum", INFRASPECIFIC_NAME, "longispinum")
+        .combAuthors("1998", "Cortese", "Bjørklund")
+        .nothingElse();
+
+    assertName("Arachnosphaera dichotoma  Jørgensen, 1900", "Arachnosphaera dichotoma")
+        .species("Arachnosphaera", "dichotoma")
+        .combAuthors("1900", "Jørgensen")
+        .nothingElse();
+
+    assertName("Hexaconthium pachydermum forma legitime Cortese & Bjørklund 1998","Hexaconthium pachydermum f. legitime")
+        .infraSpecies("Hexaconthium", "pachydermum", FORM, "legitime")
+        .combAuthors("1998", "Cortese", "Bjørklund")
+        .nothingElse();
+
+    assertName("Hexaconthium pachydermum form A Cortese & Bjørklund 1998","Hexaconthium pachydermum f. A")
+        .infraSpecies("Hexaconthium", "pachydermum", FORM, "A")
+        .combAuthors("1998", "Cortese", "Bjørklund")
+        .type(INFORMAL)
+        .nothingElse();
+
+    assertName("Trisulcus aff. nana  (Popofsky, 1913), Petrushevskaya, 1971", "Trisulcus nana")
+        .species("Trisulcus", "nana")
+        .basAuthors("1913", "Popofsky")
+        .combAuthors("1971", "Petrushevskaya")
+        .type(INFORMAL)
+        .nothingElse();
+
+    assertName("Tripodiscium gephyristes  (Hülseman, 1963) BJ&KR-Atsdatabanken", "Tripodiscium gephyristes")
+        .species("Tripodiscium", "gephyristes")
+        .basAuthors("1963", "Hülseman")
+        .combAuthors(null, "BJ", "KR-Atsdatabanken")
+        .nothingElse();
+  }
+
+  @Test
   public void testCultivarPattern() throws Exception {
     testCultivar("'Kentish Belle'");
     testCultivar("'Nabob'");

@@ -46,6 +46,8 @@ public class NameParserGBIF implements NameParser {
   protected static final Pattern CULTIVAR = Pattern.compile("(?: cv\\.? ?)?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
   private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex)\\b");
 
+  // TODO: replace with more generic manuscript name parsing: https://github.com/gbif/name-parser/issues/8
+  private static final Pattern INFRASPEC_UPPER = Pattern.compile("(?<=forma? )([A-Z])\\b");
   private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+[ -]?(?!"+YEAR+")[0-9]+T?)$");
   // this is only used to detect whether we have a virus name
   public static final Pattern IS_VIRUS_PATTERN = Pattern.compile("virus(es)?\\b|\\b(viroid|(bacterio|viro)?phage(in|s)?|(alpha|beta) ?satellites?|particles?|ictv$)\\b", CASE_INSENSITIVE);
@@ -97,6 +99,7 @@ public class NameParserGBIF implements NameParser {
   private static final Pattern EXTRACT_YEAR = Pattern.compile("(" + YEAR_LOOSE + "\\s*\\)?)");
 
   private static final Pattern COMMA_BEFORE_YEAR = Pattern.compile("(,+|[^0-9\\(\\[\"])\\s*(\\d{3})");
+  private static final Pattern COMMA_AFTER_BASYEAR = Pattern.compile("("+YEAR+")\\s*\\)\\s*,");
   private static final Pattern REPLACE_QUOTES = Pattern.compile("(^\\s*[\"',]+)|([\"',]+\\s*$)");
 
   private static final Pattern NORM_QUOTES = Pattern.compile("([\"'`´]+)");
@@ -256,6 +259,16 @@ public class NameParserGBIF implements NameParser {
 
     // normalize bacterial rank markers
     name = TYPE_TO_VAR.matcher(name).replaceAll("$1var");
+
+    // TODO: parse manuscript names properly
+    m = INFRASPEC_UPPER.matcher(name);
+    String infraspecEpithet = null;
+    if (m.find()) {
+      // we will replace the infraspecific one later!
+      name = m.replaceFirst("vulgaris");
+      infraspecEpithet = m.group(1);
+      pn.setType(NameType.INFORMAL);
+    }
 
     // parse out species/strain names with numbers found in Genebank/EBI names, e.g. Advenella kashmirensis W13003
     m = STRAIN.matcher(name);
@@ -425,6 +438,10 @@ public class NameParserGBIF implements NameParser {
       }
     }
 
+    // did we parse a infraspecic manuscript name?
+    if (infraspecEpithet != null) {
+      pn.setInfraspecificEpithet(infraspecEpithet);
+    }
     // if we established a rank during preparsing make sure we use this not the parsed one
     if (preparsingRank != null && preparsingRank.notOtherOrUnranked()) {
       pn.setRank(preparsingRank);
@@ -533,6 +550,12 @@ public class NameParserGBIF implements NameParser {
     if (m.find()) {
       name = m.replaceAll("$1. ");
     }
+    // remove commans after basionym brackets
+    m = COMMA_AFTER_BASYEAR.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst("$1)");
+    }
+
     // use commas before years
     // ICZN §22A.2 http://www.iczn.org/iczn/includes/page.jsp?article=22&nfv=
     m = COMMA_BEFORE_YEAR.matcher(name);
