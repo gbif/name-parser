@@ -2,6 +2,7 @@ package org.gbif.nameparser;
 
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.NameType;
+import org.gbif.api.vocabulary.Rank;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -49,6 +50,9 @@ public class NameParserGbifV1Test {
     assertEquals("Abies alba x Pinus graecus L.", pn.getScientificName());
     assertEquals(NameType.HYBRID, pn.getType());
     assertNull(pn.getGenusOrAbove());
+
+    assertTrue(parser.parseQuietly("Protoscenium simplex  (Cleve, 1899), Jørgensen, 1905 ", Rank.SPECIES).isAuthorsParsed());
+    assertTrue(parser.parseQuietly("Plagiacanthidae", Rank.SPECIES).isAuthorsParsed());
   }
 
   @Test

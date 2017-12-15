@@ -430,6 +430,18 @@ public class NameParserTest {
         .basAuthors("1963", "Hülseman")
         .combAuthors(null, "BJ", "KR-Atsdatabanken")
         .nothingElse();
+
+    assertName("Protocystis xiphodon  (Haeckel, 1887), Borgert, 1901", "Protocystis xiphodon")
+        .species("Protocystis", "xiphodon")
+        .basAuthors("1887", "Haeckel")
+        .combAuthors("1901", "Borgert")
+        .nothingElse();
+
+    assertName("Acrosphaera lappacea  (Haeckel, 1887) Takahashi, 1991", "Acrosphaera lappacea")
+        .species("Acrosphaera", "lappacea")
+        .basAuthors("1887", "Haeckel")
+        .combAuthors("1991", "Takahashi")
+        .nothingElse();
   }
 
   @Test
