@@ -20,7 +20,7 @@ public class NameAssertion {
 
   private enum NP {TYPE, EPITHETS, STRAIN, CULTIVAR, CANDIDATE, NOTHO,
     AUTH, EXAUTH, BAS, EXBAS, SANCT, RANK,
-    SENSU, NOMNOTE, REMARK, DOUBTFUL
+    SENSU, NOMNOTE, REMARK, DOUBTFUL, STATE
   }
 
   public NameAssertion(ParsedName n) {
@@ -80,6 +80,9 @@ public class NameAssertion {
             break;
           case DOUBTFUL:
             assertFalse(n.isDoubtful());
+            break;
+          case STATE:
+            assertEquals(ParsedName.State.COMPLETE, n.getState());
             break;
           case TYPE:
             assertEquals(NameType.SCIENTIFIC, n.getType());
@@ -194,6 +197,11 @@ public class NameAssertion {
   NameAssertion doubtful() {
     assertTrue(n.isDoubtful());
     return add(NP.DOUBTFUL);
+  }
+
+  NameAssertion state(ParsedName.State state) {
+    assertEquals(state, n.getState());
+    return add(NP.STATE);
   }
 
   NameAssertion sanctAuthor(String author) {

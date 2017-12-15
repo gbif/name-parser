@@ -260,8 +260,10 @@ class NormalisedNameParser {
       // if there was no match in the callable, this can yield an IllegalStateException
       if (!matcher.group(0).equals(scientificName)) {
         LOG.info("{} - matched only part of the name: {}", matcher.group(0), scientificName);
+        cn.setState(ParsedName.State.NAME_AND_AUTHOR);
 
       } else {
+        cn.setState(ParsedName.State.COMPLETE);
         if (LOG.isDebugEnabled()) {
           logMatcher(matcher);
         }
@@ -408,6 +410,7 @@ class NormalisedNameParser {
     Matcher matcher = CANON_NAME_IGNORE_AUTHORS.matcher(scientificName);
     boolean matchFound = matcher.find();
     if (matchFound) {
+      cn.setState(ParsedName.State.NAME_ONLY);
       if (LOG.isDebugEnabled()) {
         logMatcher(matcher);
       }

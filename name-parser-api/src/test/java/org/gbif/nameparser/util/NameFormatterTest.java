@@ -75,7 +75,7 @@ public class NameFormatterTest {
   @Test
   public void testUnparsableCanonical() throws Exception {
     pn.setType(NameType.PLACEHOLDER);
-    pn.setParsed(false);
+    pn.setState(ParsedName.State.NONE);
     assertNameNull();
   }
 

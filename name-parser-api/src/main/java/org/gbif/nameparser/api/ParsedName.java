@@ -14,6 +14,46 @@ import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
 public class ParsedName {
 
   /**
+   * Degree of parsing this instance reflects.
+   */
+  public enum State {
+    /**
+     * The entire string was parsed to the very end.
+     **/
+    COMPLETE,
+
+    /**
+     * The name epithets and the authorship have been successfully parsed,
+     * but some more characters were found at the end of the name string that have been ignored.
+     */
+    NAME_AND_AUTHOR,
+
+    /**
+     * Only the name was parsed, ignoring any authorship
+     **/
+    NAME_ONLY,
+
+    /**
+     * An unparsable name
+     **/
+    NONE;
+
+    /**
+     * @return true if the name epithets, rank and notho property have been parsed
+     */
+    public boolean isNameParsed() {
+      return this != NONE;
+    }
+
+    /**
+     * @return true if in addition to the name also the authorship has been parsed
+     */
+    public boolean isAuthorshipParsed() {
+      return this == COMPLETE || this == NAME_AND_AUTHOR;
+    }
+  }
+
+  /**
 	 * Authorship with years of the name, but excluding any basionym authorship.
    * For binomials the combination authors.
 	 */
@@ -110,8 +150,8 @@ public class ParsedName {
    * Usually indicates the existance of unusual characters not normally found in scientific names.
    */
   private boolean doubtful;
-  private boolean parsed = true;
-  private boolean authorsParsed;
+
+  private State state = State.NONE;
 
   private List<String> warnings = Lists.newArrayList();
 
@@ -278,20 +318,12 @@ public class ParsedName {
     this.remarks = remarks;
   }
 
-  public boolean isParsed() {
-    return parsed;
+  public State getState() {
+    return state;
   }
 
-  public void setParsed(boolean parsed) {
-    this.parsed = parsed;
-  }
-
-  public boolean isAuthorsParsed() {
-    return authorsParsed;
-  }
-
-  public void setAuthorsParsed(boolean authorsParsed) {
-    this.authorsParsed = authorsParsed;
+  public void setState(State state) {
+    this.state = state;
   }
 
   public NameType getType() {
@@ -440,8 +472,7 @@ public class ParsedName {
     ParsedName that = (ParsedName) o;
     return candidatus == that.candidatus &&
         doubtful == that.doubtful &&
-        parsed == that.parsed &&
-        authorsParsed == that.authorsParsed &&
+        state == that.state &&
         Objects.equals(combinationAuthorship, that.combinationAuthorship) &&
         Objects.equals(basionymAuthorship, that.basionymAuthorship) &&
         Objects.equals(sanctioningAuthor, that.sanctioningAuthor) &&
@@ -464,7 +495,7 @@ public class ParsedName {
 
   @Override
   public int hashCode() {
-    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, sensu, nomenclaturalNotes, remarks, type, doubtful, parsed, authorsParsed, warnings);
+    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, sensu, nomenclaturalNotes, remarks, type, doubtful, state, warnings);
   }
 
   @Override

@@ -229,6 +229,7 @@ public class NameParserGBIF implements NameParser {
       pn.setUninomial(m.group(1));
       pn.setType(NameType.OTU);
       pn.setRank(rank == null || rank.otherOrUnranked() ? Rank.SPECIES : rank);
+      pn.setState(ParsedName.State.NAME_ONLY);
 
     } else {
       // do the main incremental parsing
@@ -332,8 +333,6 @@ public class NameParserGBIF implements NameParser {
       pn.setRank(Rank.CULTIVAR);
     }
 
-
-
     // name without any latin char letter at all?
     if (NO_LETTERS.matcher(name).find()) {
       unparsable(NameType.NO_NAME, scientificName);
@@ -413,7 +412,6 @@ public class NameParserGBIF implements NameParser {
         LOG.debug("Still can't parse, try to ignore authors");
         // try to parse canonical alone ignoring authorship as last resort
         parsed = nnParser.parseNormalisedNameIgnoreAuthors(pn, deDirtedName, rank);
-        pn.setAuthorsParsed(false);
         if (!parsed) {
           // we just cant parse this one
           // try to spot a virus name once we know its not a scientific name

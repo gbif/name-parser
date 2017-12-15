@@ -25,6 +25,15 @@ import java.util.Map;
 public class NameParserGbifV1 implements NameParser {
 
   private static Logger LOG = LoggerFactory.getLogger(NameParserGbifV1.class);
+  private static final Map<org.gbif.nameparser.api.NameType, NameType> NAME_TYPE_MAP = ImmutableMap.<org.gbif.nameparser.api.NameType, NameType>builder()
+      .put(org.gbif.nameparser.api.NameType.SCIENTIFIC, NameType.SCIENTIFIC)
+      .put(org.gbif.nameparser.api.NameType.VIRUS, NameType.VIRUS)
+      .put(org.gbif.nameparser.api.NameType.HYBRID_FORMULA, NameType.HYBRID)
+      .put(org.gbif.nameparser.api.NameType.INFORMAL, NameType.INFORMAL)
+      .put(org.gbif.nameparser.api.NameType.OTU, NameType.OTU)
+      .put(org.gbif.nameparser.api.NameType.PLACEHOLDER, NameType.PLACEHOLDER)
+      .put(org.gbif.nameparser.api.NameType.NO_NAME, NameType.NO_NAME)
+      .build();
 
   private final org.gbif.nameparser.api.NameParser parser;
 
@@ -149,7 +158,6 @@ public class NameParserGbifV1 implements NameParser {
     gbif.setStrain(pn.getStrain());
     gbif.setSensu(pn.getSensu());
 
-    gbif.setAuthorsParsed(pn.isAuthorsParsed());
     gbif.setAuthorship(NameFormatter.authorString(pn.getCombinationAuthorship(), false));
     gbif.setYear(pn.getCombinationAuthorship().getYear());
     gbif.setBracketAuthorship(NameFormatter.authorString(pn.getBasionymAuthorship(), false));
@@ -158,26 +166,20 @@ public class NameParserGbifV1 implements NameParser {
     gbif.setNomStatus(pn.getNomenclaturalNotes());
     gbif.setRemarks(pn.getRemarks());
 
+    gbif.setParsed(pn.getState().isNameParsed());
+    gbif.setAuthorsParsed(pn.getState().isAuthorshipParsed());
+
     return gbif;
   }
 
   @VisibleForTesting
   static NameType toGbif(org.gbif.nameparser.api.NameType type) {
-    Map<org.gbif.nameparser.api.NameType, NameType> nameTypeMap = ImmutableMap.<org.gbif.nameparser.api.NameType, NameType>builder()
-        .put(org.gbif.nameparser.api.NameType.SCIENTIFIC, NameType.SCIENTIFIC)
-        .put(org.gbif.nameparser.api.NameType.VIRUS, NameType.VIRUS)
-        .put(org.gbif.nameparser.api.NameType.HYBRID_FORMULA, NameType.HYBRID)
-        .put(org.gbif.nameparser.api.NameType.INFORMAL, NameType.INFORMAL)
-        .put(org.gbif.nameparser.api.NameType.OTU, NameType.OTU)
-        .put(org.gbif.nameparser.api.NameType.PLACEHOLDER, NameType.PLACEHOLDER)
-        .put(org.gbif.nameparser.api.NameType.NO_NAME, NameType.NO_NAME)
-        .build();
-    return nameTypeMap.get(type);
+    return NAME_TYPE_MAP.getOrDefault(type, NameType.DOUBTFUL);
   }
 
   @VisibleForTesting
   static org.gbif.api.vocabulary.NamePart toGbif(NamePart notho) {
-    return convertEnum(org.gbif.api.vocabulary.NamePart.class, notho);
+    return convertEnum(org.gbif.api.vocabulary.NamePart.class, notho, null);
   }
 
   @VisibleForTesting
@@ -187,7 +189,7 @@ public class NameParserGbifV1 implements NameParser {
       case SUPERSECTION: return Rank.INFRAGENERIC_NAME;
       case SUPERSERIES: return Rank.INFRAGENERIC_NAME;
     }
-    return convertEnum(Rank.class, rank);
+    return convertEnum(Rank.class, rank, Rank.UNRANKED);
   }
 
   @VisibleForTesting
@@ -196,7 +198,7 @@ public class NameParserGbifV1 implements NameParser {
     switch (rank) {
       case RACE: return org.gbif.nameparser.api.Rank.PROLES;
     }
-    return convertEnum(org.gbif.nameparser.api.Rank.class, rank);
+    return convertEnum(org.gbif.nameparser.api.Rank.class, rank, org.gbif.nameparser.api.Rank.UNRANKED);
   }
 
   /**
@@ -205,9 +207,15 @@ public class NameParserGbifV1 implements NameParser {
    *
    * @param targetClass class of the target enumeration
    * @param value
+   * @param defaultValue value to use in case enums cannot be translated (e.g. version mismatches which should be resolved)
    * @throws IllegalArgumentException in case the enumeration name does not exist in the target class
    */
-  private static <G extends Enum<G>> G convertEnum(Class<G> targetClass, Enum<?> value) {
-    return value == null ? null : Enum.valueOf(targetClass, value.name());
+  private static <G extends Enum<G>> G convertEnum(Class<G> targetClass, Enum<?> value, G defaultValue) {
+    try {
+      return value == null ? null : Enum.valueOf(targetClass, value.name());
+    } catch (IllegalArgumentException e) {
+      LOG.warn("Unable to convert {} into {}", value, targetClass);
+      return defaultValue;
+    }
   }
 }

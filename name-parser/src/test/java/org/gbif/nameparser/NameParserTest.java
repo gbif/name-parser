@@ -2,6 +2,7 @@ package org.gbif.nameparser;
 
 import org.apache.commons.io.LineIterator;
 import org.gbif.nameparser.api.*;
+import org.gbif.nameparser.api.ParsedName.State;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -17,7 +18,6 @@ import static org.gbif.nameparser.api.NamePart.INFRASPECIFIC;
 import static org.gbif.nameparser.api.NameType.*;
 import static org.gbif.nameparser.api.Rank.*;
 import static org.junit.Assert.*;
-
 
 /**
  *
@@ -458,11 +458,13 @@ public class NameParserTest {
     assertName("BOLD:ACW2100", "BOLD:ACW2100")
         .monomial("BOLD:ACW2100", Rank.SPECIES)
         .type(OTU)
+        .state(State.NAME_ONLY)
         .nothingElse();
 
     assertName("Festuca sp. BOLD:ACW2100", "BOLD:ACW2100")
         .monomial("BOLD:ACW2100", Rank.SPECIES)
         .type(OTU)
+        .state(State.NAME_ONLY)
         .nothingElse();
 
     // no OTU names
@@ -700,7 +702,7 @@ public class NameParserTest {
       ParsedName n;
       try {
         n = parser.parse(name, null);
-        if (!n.isAuthorsParsed()) {
+        if (!n.getState().isAuthorshipParsed()) {
           parseAuthorless++;
           LOG.warn("NO AUTHORS\t " + name);
         }
