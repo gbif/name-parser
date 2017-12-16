@@ -1,6 +1,7 @@
 package org.gbif.nameparser;
 
 import org.gbif.api.model.checklistbank.ParsedName;
+import org.gbif.api.vocabulary.NamePart;
 import org.gbif.api.vocabulary.NameType;
 import org.gbif.api.vocabulary.Rank;
 import org.junit.Test;
@@ -53,6 +54,31 @@ public class NameParserGbifV1Test {
 
     assertTrue(parser.parseQuietly("Protoscenium simplex  (Cleve, 1899), Jørgensen, 1905 ", Rank.SPECIES).isAuthorsParsed());
     assertTrue(parser.parseQuietly("Plagiacanthidae", Rank.SPECIES).isAuthorsParsed());
+  }
+
+  @Test
+  public void assertScientificName() throws Exception {
+    ParsedName pn = parser.parseQuietly("Abies sp.");
+    assertEquals("Abies sp.", pn.getScientificName());
+    assertEquals("Abies spec.", pn.canonicalName());
+    assertEquals("Abies", pn.getGenusOrAbove());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertNull(pn.getSpecificEpithet());
+
+    pn = parser.parseQuietly("×Abies Mill.");
+    assertEquals("×Abies Mill.", pn.getScientificName());
+    assertEquals("Abies", pn.canonicalName());
+    assertEquals("Abies", pn.getGenusOrAbove());
+    assertNull(pn.getRank());
+    assertNull(pn.getSpecificEpithet());
+    assertEquals(NamePart.GENERIC, pn.getNotho());
+
+    pn = parser.parseQuietly("? hostilis Gravenhorst, 1829");
+    assertEquals("? hostilis Gravenhorst, 1829", pn.getScientificName());
+    assertEquals("? hostilis", pn.canonicalName());
+    assertEquals("?", pn.getGenusOrAbove());
+    assertEquals(Rank.SPECIES, pn.getRank());
+    assertEquals("hostilis", pn.getSpecificEpithet());
   }
 
   @Test

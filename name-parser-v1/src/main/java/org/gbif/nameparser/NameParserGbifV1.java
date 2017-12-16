@@ -59,7 +59,7 @@ public class NameParserGbifV1 implements NameParser {
   @Override
   public ParsedName parse(String s, @Nullable Rank rank) throws UnparsableException {
     try {
-      return convert(parser.parse(s, fromGbif(rank)));
+      return convert(s, rank, parser.parse(s, fromGbif(rank)));
 
     } catch (UnparsableNameException e) {
       throw new UnparsableException(toGbif(e.getType()), e.getName());
@@ -142,11 +142,11 @@ public class NameParserGbifV1 implements NameParser {
 
 
 
-  private ParsedName convert(org.gbif.nameparser.api.ParsedName pn) {
+  private ParsedName convert(String scientificName, Rank rank, org.gbif.nameparser.api.ParsedName pn) {
     ParsedName gbif = new ParsedName();
 
     gbif.setType(toGbif(pn.getType()));
-    gbif.setScientificName(pn.canonicalNameComplete());
+    gbif.setScientificName(scientificName);
 
     gbif.setGenusOrAbove(MoreObjects.firstNonNull(pn.getGenus(), pn.getUninomial()));
     gbif.setInfraGeneric(pn.getInfragenericEpithet());
@@ -155,6 +155,10 @@ public class NameParserGbifV1 implements NameParser {
     gbif.setCultivarEpithet(pn.getCultivarEpithet());
     gbif.setNotho(toGbif(pn.getNotho()));
     gbif.setRank(toGbif(pn.getRank()));
+    // in the old API we used null instead of unranked
+    if (gbif.getRank() == rank.UNRANKED && rank.UNRANKED != rank) {
+      gbif.setRank(null);
+    }
     gbif.setStrain(pn.getStrain());
     gbif.setSensu(pn.getSensu());
 
@@ -179,7 +183,7 @@ public class NameParserGbifV1 implements NameParser {
 
   @VisibleForTesting
   static org.gbif.api.vocabulary.NamePart toGbif(NamePart notho) {
-    return convertEnum(org.gbif.api.vocabulary.NamePart.class, notho, null);
+    return convertEnum(org.gbif.api.vocabulary.NamePart.class, notho);
   }
 
   @VisibleForTesting
@@ -189,7 +193,7 @@ public class NameParserGbifV1 implements NameParser {
       case SUPERSECTION: return Rank.INFRAGENERIC_NAME;
       case SUPERSERIES: return Rank.INFRAGENERIC_NAME;
     }
-    return convertEnum(Rank.class, rank, Rank.UNRANKED);
+    return convertEnum(Rank.class, rank);
   }
 
   @VisibleForTesting
@@ -198,7 +202,7 @@ public class NameParserGbifV1 implements NameParser {
     switch (rank) {
       case RACE: return org.gbif.nameparser.api.Rank.PROLES;
     }
-    return convertEnum(org.gbif.nameparser.api.Rank.class, rank, org.gbif.nameparser.api.Rank.UNRANKED);
+    return convertEnum(org.gbif.nameparser.api.Rank.class, rank);
   }
 
   /**
@@ -207,15 +211,14 @@ public class NameParserGbifV1 implements NameParser {
    *
    * @param targetClass class of the target enumeration
    * @param value
-   * @param defaultValue value to use in case enums cannot be translated (e.g. version mismatches which should be resolved)
    * @throws IllegalArgumentException in case the enumeration name does not exist in the target class
    */
-  private static <G extends Enum<G>> G convertEnum(Class<G> targetClass, Enum<?> value, G defaultValue) {
+  private static <G extends Enum<G>> G convertEnum(Class<G> targetClass, Enum<?> value) {
     try {
       return value == null ? null : Enum.valueOf(targetClass, value.name());
     } catch (IllegalArgumentException e) {
       LOG.warn("Unable to convert {} into {}", value, targetClass);
-      return defaultValue;
+      return null;
     }
   }
 }
