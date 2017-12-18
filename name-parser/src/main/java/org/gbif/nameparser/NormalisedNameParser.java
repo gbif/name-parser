@@ -323,7 +323,7 @@ class NormalisedNameParser {
         checkEpithetVsAuthorPrefx(cn);
 
         // if no rank was parsed but given externally use it!
-        if (cn.getRank().otherOrUnranked() && rank != null) {
+        if (rank != null && cn.getRank().otherOrUnranked()) {
             cn.setRank(rank);
         }
         return true;
