@@ -17,6 +17,8 @@ import java.util.regex.Matcher;
 import static org.gbif.nameparser.api.NamePart.INFRASPECIFIC;
 import static org.gbif.nameparser.api.NameType.*;
 import static org.gbif.nameparser.api.Rank.*;
+import static org.gbif.nameparser.api.NomCode.*;
+
 import static org.junit.Assert.*;
 
 /**
@@ -143,6 +145,7 @@ public class NameParserTest {
     assertName("Acipenser gueldenstaedti colchicus natio danubicus Movchan, 1967", "Acipenser gueldenstaedti natio danubicus")
         .infraSpecies("Acipenser", "gueldenstaedti", NATIO, "danubicus")
         .combAuthors("1967", "Movchan")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -161,6 +164,7 @@ public class NameParserTest {
     assertName("Echinocereus sect. Triglochidiata Bravo", "Echinocereus sect. Triglochidiata")
         .infraGeneric("Echinocereus", SECTION, "Triglochidiata")
         .combAuthors(null, "Bravo")
+        .code(BOTANICAL)
         .nothingElse();
 
     assertName("Zignoella subgen. Trematostoma Sacc.", "Zignoella subgen. Trematostoma")
@@ -384,16 +388,6 @@ public class NameParserTest {
     // "Hadrolaelia sect. Sophronitis ex Chiron & V.P.Castro"
     // "Abutilon ×hybridum cv. ex Voss"
   }
-  
-  @Test
-  public void parseCultivars() throws Exception {
-    // fix cultivar names
-    assertName("Acer campestre L. cv. 'nanum'", "Acer campestre 'nanum'")
-        .infraSpecies("Acer", "campestre", CULTIVAR, null)
-        .cultivar("nanum")
-        .combAuthors(null, "L.")
-        .nothingElse();
-  }
 
   @Test
   public void parseNorwegianRadiolaria() throws Exception {
@@ -441,6 +435,64 @@ public class NameParserTest {
         .species("Acrosphaera", "lappacea")
         .basAuthors("1887", "Haeckel")
         .combAuthors("1991", "Takahashi")
+        .nothingElse();
+  }
+
+  @Test
+  public void parseCultivars() throws Exception {
+    // fix cultivar names
+    assertName("Acer campestre L. cv. 'nanum'", "Acer campestre 'nanum'")
+        .cultivar("Acer", "campestre", "nanum")
+        .combAuthors(null, "L.")
+        .nothingElse();
+
+    assertName("Verpericola megasoma \"Dall\" Pils.", "Verpericola megasoma 'Dall'")
+        .cultivar("Verpericola", "megasoma", "Dall")
+        .combAuthors(null, "Pils.")
+        .nothingElse();
+
+    assertName("Abutilon 'Kentish Belle'", "Abutilon 'Kentish Belle'")
+        .cultivar("Abutilon", "Kentish Belle")
+        .nothingElse();
+
+    assertName("Abutilon 'Nabob'", "Abutilon 'Nabob'")
+        .cultivar("Abutilon", "Nabob")
+        .nothingElse();
+
+    assertName("Sorbus americana Marshall cv. 'Belmonte'", "Sorbus americana 'Belmonte'")
+        .cultivar("Sorbus", "americana", "Belmonte")
+        .combAuthors(null, "Marshall")
+        .nothingElse();
+
+    assertName("Sorbus hupehensis C.K.Schneid. cv. 'November pink'", "Sorbus hupehensis 'November pink'")
+        .cultivar("Sorbus", "hupehensis", "November pink")
+        .combAuthors(null, "C.K.Schneid.")
+        .nothingElse();
+
+    assertName("Symphoricarpos albus (L.) S.F.Blake cv. 'Turesson'", "Symphoricarpos albus 'Turesson'")
+        .cultivar("Symphoricarpos", "albus", CULTIVAR, "Turesson")
+        .basAuthors(null, "L.")
+        .combAuthors(null, "S.F.Blake")
+        .nothingElse();
+
+    assertName("Symphoricarpos sp. cv. 'mother of pearl'", "Symphoricarpos 'mother of pearl'")
+        .cultivar("Symphoricarpos", CULTIVAR, "mother of pearl")
+        .nothingElse();
+
+    assertName("Primula Border Auricula Group", "Primula Border Auricula Group")
+        .cultivar("Primula", CULTIVAR_GROUP, "Border Auricula")
+        .nothingElse();
+
+    assertName("Rhododendron boothii Mishmiense Group", "Rhododendron boothii Mishmiense Group")
+        .cultivar("Rhododendron", "boothii", CULTIVAR_GROUP, "Mishmiense")
+        .nothingElse();
+
+    assertName("Paphiopedilum Sorel grex", "Paphiopedilum Sorel gx")
+        .cultivar("Paphiopedilum", GREX, "Sorel")
+        .nothingElse();
+
+    assertName("Cattleya Prince John gx", "Cattleya Prince John gx")
+        .cultivar("Cattleya", GREX, "Prince John")
         .nothingElse();
   }
 
@@ -818,7 +870,7 @@ public class NameParserTest {
       ParsedName pn = parser.parse(name, null);
     } catch (UnparsableNameException e) {
       // swallow
-      if (VIRUS == e.getType()) {
+      if (NameType.VIRUS == e.getType()) {
         return true;
       }
     }

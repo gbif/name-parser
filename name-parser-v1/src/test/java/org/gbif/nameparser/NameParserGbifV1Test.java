@@ -1,5 +1,6 @@
 package org.gbif.nameparser;
 
+import org.gbif.api.exception.UnparsableException;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.NamePart;
 import org.gbif.api.vocabulary.NameType;
@@ -17,9 +18,20 @@ public class NameParserGbifV1Test {
 
   @Test
   public void convertNameType() throws Exception {
+    org.gbif.nameparser.api.ParsedName pn = new org.gbif.nameparser.api.ParsedName();
     for (org.gbif.nameparser.api.NameType t : org.gbif.nameparser.api.NameType.values()) {
-      assertNotNull(NameParserGbifV1.toGbif(t));
+      pn.setType(t);
+      assertNotNull(NameParserGbifV1.gbifNameType(pn));
     }
+    pn.setCandidatus(true);
+    assertEquals(NameType.CANDIDATUS, NameParserGbifV1.gbifNameType(pn));
+
+    pn.setCandidatus(false);
+    pn.setCultivarEpithet("Bella");
+    assertEquals(NameType.CULTIVAR, NameParserGbifV1.gbifNameType(pn));
+
+    pn.setDoubtful(true);
+    assertEquals(NameType.DOUBTFUL, NameParserGbifV1.gbifNameType(pn));
   }
 
   @Test
@@ -79,15 +91,37 @@ public class NameParserGbifV1Test {
     assertEquals("?", pn.getGenusOrAbove());
     assertEquals(Rank.SPECIES, pn.getRank());
     assertEquals("hostilis", pn.getSpecificEpithet());
+
+    pn = parser.parseQuietly("unassigned Asteraceae");
+    assertEquals("unassigned Asteraceae", pn.getScientificName());
+    assertNull(pn.canonicalName());
+    assertNull(pn.getGenusOrAbove());
+    assertNull(pn.getRank());
+    assertNull(pn.getSpecificEpithet());
+  }
+
+  @Test
+  public void unparsable() throws Exception {
+    String[] unparsables = new String[]{"BOLD:AAX3687", "Potatoe virus", "Pinus alba × Abies picea Mill."};
+    for (String n : unparsables) {
+      try {
+        ParsedName pn = parser.parse(n);
+        fail(n+ " should be unparsable");
+      } catch (UnparsableException e) {
+        // expected
+      }
+    }
   }
 
   @Test
   public void parseToCanonical() throws Exception {
     assertEquals("Abies alba", parser.parseToCanonical("Abies alba Mill."));
+    assertNull(parser.parseToCanonical("BOLD:AAX3687", Rank.SPECIES));
   }
 
   @Test
   public void parseToCanonicalOrScientificName() throws Exception {
+    assertEquals("BOLD:AAX3687", parser.parseToCanonicalOrScientificName("BOLD:AAX3687", Rank.SPECIES));
     assertEquals("Abies alba", parser.parseToCanonicalOrScientificName("Abies alba"));
     assertEquals("Abies alba x Pinus graecus L.", parser.parseToCanonicalOrScientificName("Abies alba x Pinus graecus L."));
   }

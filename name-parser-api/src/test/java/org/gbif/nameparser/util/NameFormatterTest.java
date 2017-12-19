@@ -63,6 +63,37 @@ public class NameFormatterTest {
   }
 
   @Test
+  public void testCultivar() throws Exception {
+    pn.setUninomial("Symphoricarpos");
+    pn.setCode(NomCode.CULTIVARS);
+    assertEquals("Symphoricarpos", pn.canonicalName());
+
+    pn.setUninomial(null);
+    pn.setGenus("Symphoricarpos");
+    pn.setCultivarEpithet("mother of pearl");
+    assertEquals("Symphoricarpos 'mother of pearl'", pn.canonicalName());
+
+    pn.setRank(Rank.CULTIVAR);
+    assertEquals("Symphoricarpos 'mother of pearl'", pn.canonicalName());
+
+    pn.setGenus("Primula");
+    pn.setCultivarEpithet("Border Auricula");
+    assertEquals("Primula 'Border Auricula'", pn.canonicalName());
+
+    pn.setRank(Rank.CULTIVAR_GROUP);
+    assertEquals("Primula Border Auricula Group", pn.canonicalName());
+
+    pn.setRank(Rank.GREX);
+    assertEquals("Primula Border Auricula gx", pn.canonicalName());
+
+    pn.setSpecificEpithet("boothii");
+    assertEquals("Primula boothii Border Auricula gx", pn.canonicalName());
+
+    pn.setRank(Rank.CULTIVAR_GROUP);
+    assertEquals("Primula boothii Border Auricula Group", pn.canonicalName());
+  }
+
+  @Test
   @Ignore("currently expected to be handled externally")
   public void testCanonicalAscii() throws Exception {
     pn.setGenus("Abies");

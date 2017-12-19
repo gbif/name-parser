@@ -157,7 +157,7 @@ public class NameFormatter {
       }
 
       if (n.getSpecificEpithet() == null) {
-        if (showIndet) {
+        if (showIndet && n.getCultivarEpithet() == null) {
           if (Rank.SPECIES == n.getRank()) {
             // no species epithet given, but rank=species. Indetermined species!
             sb.append(" spec.");
@@ -183,7 +183,11 @@ public class NameFormatter {
 
         if (n.getInfraspecificEpithet() == null) {
           // Indetermined infraspecies? Only show indet cultivar marker if no cultivar epithet exists
-          if (showIndet && n.getRank() != null && n.getRank().isInfraspecific() && (Rank.CULTIVAR != n.getRank() || n.getCultivarEpithet() == null)) {
+          if (showIndet
+              && n.getRank() != null
+              && n.getRank().isInfraspecific()
+              && (NomCode.CULTIVARS != n.getRank().isRestrictedToCode() || n.getCultivarEpithet() == null)
+          ) {
             // no infraspecific epitheton given, but rank below species. Indetermined!
             sb.append(' ')
               .append(n.getRank().getMarker());
@@ -226,17 +230,29 @@ public class NameFormatter {
       appendAuthorship(n, sb);
     }
 
-    // add cultivar name
+    // add strain name
     if (showStrain && n.getStrain() != null) {
-      sb.append(" ");
-      sb.append(n.getStrain());
+      sb.append(" ")
+        .append(n.getStrain());
     }
 
     // add cultivar name
     if (showCultivar && n.getCultivarEpithet() != null) {
-      sb.append(" '");
-      sb.append(n.getCultivarEpithet());
-      sb.append("'");
+      if (Rank.CULTIVAR_GROUP == n.getRank()) {
+        sb.append(" ")
+          .append(n.getCultivarEpithet())
+          .append(" Group");
+
+      } else if (Rank.GREX == n.getRank()) {
+        sb.append(" ")
+          .append(n.getCultivarEpithet())
+          .append(" gx");
+
+      } else {
+        sb.append(" '");
+        sb.append(n.getCultivarEpithet());
+        sb.append("'");
+      }
     }
 
     // add sensu/sec reference

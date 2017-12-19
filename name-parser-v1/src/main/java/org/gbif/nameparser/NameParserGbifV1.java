@@ -11,6 +11,7 @@ import org.gbif.api.service.checklistbank.NameParser;
 import org.gbif.api.vocabulary.NameType;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.nameparser.api.NamePart;
+import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.nameparser.util.NameFormatter;
 import org.slf4j.Logger;
@@ -62,7 +63,7 @@ public class NameParserGbifV1 implements NameParser {
       return convert(s, rank, parser.parse(s, fromGbif(rank)));
 
     } catch (UnparsableNameException e) {
-      throw new UnparsableException(toGbif(e.getType()), e.getName());
+      throw new UnparsableException(NAME_TYPE_MAP.getOrDefault(e.getType(), NameType.DOUBTFUL), e.getName());
     }
   }
 
@@ -142,10 +143,16 @@ public class NameParserGbifV1 implements NameParser {
 
 
 
-  private ParsedName convert(String scientificName, Rank rank, org.gbif.nameparser.api.ParsedName pn) {
+  private ParsedName convert(String scientificName, Rank rank, org.gbif.nameparser.api.ParsedName pn) throws UnparsableException {
+    // throw unparsable for all unparsable types but placeholder and for all names that have a not parsed state
+    if ((!pn.getType().isParsable() && pn.getType() != org.gbif.nameparser.api.NameType.PLACEHOLDER)
+        || pn.getState() == org.gbif.nameparser.api.ParsedName.State.NONE) {
+      throw new UnparsableException(gbifNameType(pn), scientificName);
+    }
+
     ParsedName gbif = new ParsedName();
 
-    gbif.setType(toGbif(pn.getType()));
+    gbif.setType(gbifNameType(pn));
     gbif.setScientificName(scientificName);
 
     gbif.setGenusOrAbove(MoreObjects.firstNonNull(pn.getGenus(), pn.getUninomial()));
@@ -177,8 +184,17 @@ public class NameParserGbifV1 implements NameParser {
   }
 
   @VisibleForTesting
-  static NameType toGbif(org.gbif.nameparser.api.NameType type) {
-    return NAME_TYPE_MAP.getOrDefault(type, NameType.DOUBTFUL);
+  static NameType gbifNameType(org.gbif.nameparser.api.ParsedName pn) {
+    // detect name types that only exist in the GBIF API v1
+    if (pn.isCandidatus()) {
+      return NameType.CANDIDATUS;
+    } else if (pn.isDoubtful()) {
+      return NameType.DOUBTFUL;
+    } else if (pn.getCode() == NomCode.CULTIVARS || pn.getCultivarEpithet() != null) {
+      return NameType.CULTIVAR;
+    }
+    // convert all others
+    return NAME_TYPE_MAP.get(pn.getType());
   }
 
   @VisibleForTesting

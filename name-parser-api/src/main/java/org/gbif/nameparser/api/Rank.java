@@ -161,7 +161,7 @@ public enum Rank {
    * and individual orchid plants can be selected (and propagated) and named as cultivars
    * https://en.wikipedia.org/wiki/Grex_(horticulture)
    */
-  GREX("grex"),
+  GREX("gx"),
 
   SUBSPECIES("subsp."),
 

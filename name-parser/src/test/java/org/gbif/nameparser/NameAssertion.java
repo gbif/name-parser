@@ -2,13 +2,12 @@ package org.gbif.nameparser;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.gbif.nameparser.api.NamePart;
-import org.gbif.nameparser.api.NameType;
-import org.gbif.nameparser.api.ParsedName;
-import org.gbif.nameparser.api.Rank;
+import org.gbif.nameparser.api.*;
 
 import java.util.Set;
 
+import static org.gbif.nameparser.api.NomCode.BACTERIAL;
+import static org.gbif.nameparser.api.NomCode.BOTANICAL;
 import static org.junit.Assert.*;
 
 /**
@@ -20,7 +19,7 @@ public class NameAssertion {
 
   private enum NP {TYPE, EPITHETS, STRAIN, CULTIVAR, CANDIDATE, NOTHO,
     AUTH, EXAUTH, BAS, EXBAS, SANCT, RANK,
-    SENSU, NOMNOTE, REMARK, DOUBTFUL, STATE
+    SENSU, NOMNOTE, REMARK, DOUBTFUL, STATE, CODE
   }
 
   public NameAssertion(ParsedName n) {
@@ -87,7 +86,9 @@ public class NameAssertion {
           case TYPE:
             assertEquals(NameType.SCIENTIFIC, n.getType());
             break;
-
+          case CODE:
+            assertNull(n.getCode());
+            break;
         }
       }
     }
@@ -169,14 +170,42 @@ public class NameAssertion {
     return add(NP.NOTHO);
   }
 
-  NameAssertion cultivar(String epithet) {
-    assertEquals(epithet, n.getCultivarEpithet());
-    return add(NP.CULTIVAR);
+  NameAssertion cultivar(String genus, String cultivar) {
+    return cultivar(genus, null, Rank.CULTIVAR, cultivar);
+  }
+  NameAssertion cultivar(String genus, Rank rank, String cultivar) {
+    return cultivar(genus, null, rank, cultivar);
+  }
+  NameAssertion cultivar(String genus, String species, String cultivar) {
+    return cultivar(genus, species, Rank.CULTIVAR, cultivar);
+  }
+  NameAssertion cultivar(String genus, String species, Rank rank, String cultivar) {
+    if (species == null) {
+      assertEquals(genus, n.getUninomial());
+      assertNull(n.getGenus());
+      assertNull(n.getSpecificEpithet());
+    } else {
+      assertNull(n.getUninomial());
+      assertEquals(genus, n.getGenus());
+      assertEquals(species, n.getSpecificEpithet());
+    }
+    assertNull(n.getInfragenericEpithet());
+    assertNull(n.getInfraspecificEpithet());
+    assertEquals(cultivar, n.getCultivarEpithet());
+    assertEquals(rank, n.getRank());
+    assertEquals(NomCode.CULTIVARS, n.getCode());
+    return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.CODE);
+  }
+
+  NameAssertion code(NomCode code) {
+    assertEquals(code, n.getCode());
+    return add(NP.CODE);
   }
 
   NameAssertion candidatus() {
     assertTrue(n.isCandidatus());
-    return add(NP.CANDIDATE);
+    assertEquals(BACTERIAL, n.getCode());
+    return add(NP.CANDIDATE, NP.CODE);
   }
 
   NameAssertion strain(String strain) {
@@ -206,7 +235,8 @@ public class NameAssertion {
 
   NameAssertion sanctAuthor(String author) {
     assertEquals(author, n.getSanctioningAuthor());
-    return add(NP.SANCT);
+    assertEquals(BOTANICAL, n.getCode());
+    return add(NP.SANCT, NP.CODE);
   }
 
   NameAssertion combExAuthors(String... authors) {

@@ -44,7 +44,7 @@ public class NameParserGBIF implements NameParser {
 
   @VisibleForTesting
   protected static final Pattern CULTIVAR = Pattern.compile("(?: cv\\.? ?)?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
-  private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex)\\b");
+  private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex|gx)\\b");
 
   // TODO: replace with more generic manuscript name parsing: https://github.com/gbif/name-parser/issues/8
   private static final Pattern INFRASPEC_UPPER = Pattern.compile("(?<=forma? )([A-Z])\\b");
@@ -333,7 +333,7 @@ public class NameParserGBIF implements NameParser {
       pn.setCultivarEpithet(m.group(1));
       name = m.replaceFirst(" ");
       String cgroup = m.group(2);
-      if (cgroup.equalsIgnoreCase("grex")) {
+      if (cgroup.equalsIgnoreCase("grex") || cgroup.equalsIgnoreCase("gx")) {
         pn.setRank(Rank.GREX);
       } else {
         pn.setRank(Rank.CULTIVAR_GROUP);
