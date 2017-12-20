@@ -111,7 +111,7 @@ public class NormalisedNameParserTest {
 
   @Test
   public void timeoutLongNames() throws Exception {
-    final int timeout = 50;
+    final int timeout = 10;
     NormalisedNameParser parser = new NormalisedNameParser(timeout);
 
     String name = "Equicapillimyces hongkongensis S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, G.K.Y. Choi, R.W.S. Poon, J.J.Y. Hui, F.J. Low, Luk &";
