@@ -3,6 +3,7 @@ package org.gbif.nameparser.api;
 import com.google.common.collect.Lists;
 import org.gbif.nameparser.util.NameFormatter;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Objects;
 
@@ -73,6 +74,7 @@ public class ParsedName {
 	/**
 	 * Rank of the name from enumeration
 	 */
+  @Nonnull
 	private Rank rank = Rank.UNRANKED;
 
 	private NomCode code;
@@ -186,7 +188,7 @@ public class ParsedName {
   }
 
   public void setRank(Rank rank) {
-    this.rank = rank;
+    this.rank = rank == null ? Rank.UNRANKED : rank;
   }
 
   public NomCode getCode() {

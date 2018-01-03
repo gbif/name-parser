@@ -71,7 +71,21 @@ public class ParsedNameTest {
     n.setSpecificEpithet(null);
     assertFalse(n.isConsistent());
   }
-  
+
+  @Test
+  public void unrankedDefault() throws Exception {
+    ParsedName n = new ParsedName();
+    assertEquals(Rank.UNRANKED, n.getRank());
+
+    for (Rank r : Rank.values()) {
+      n.setRank(r);
+      assertEquals(r, n.getRank());
+    }
+
+    n.setRank(null);
+    assertEquals(Rank.UNRANKED, n.getRank());
+  }
+
   @Test
   public void testTerminalEpithet() throws Exception {
     ParsedName pn = new ParsedName();

@@ -295,7 +295,7 @@ public enum Rank {
 
   /**
    * Rank used for unknown or explicitly not assigned rank.
-   * The default if not given.
+   * The default if not given instead of null.
    */
   UNRANKED;
 
