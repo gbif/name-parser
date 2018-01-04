@@ -1,6 +1,7 @@
 package org.gbif.nameparser;
 
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang3.time.StopWatch;
 import org.gbif.nameparser.api.*;
 import org.gbif.nameparser.api.ParsedName.State;
 import org.junit.Ignore;
@@ -12,13 +13,12 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
-import java.util.regex.Matcher;
 
 import static org.gbif.nameparser.api.NamePart.INFRASPECIFIC;
 import static org.gbif.nameparser.api.NameType.*;
+import static org.gbif.nameparser.api.NomCode.BOTANICAL;
+import static org.gbif.nameparser.api.NomCode.ZOOLOGICAL;
 import static org.gbif.nameparser.api.Rank.*;
-import static org.gbif.nameparser.api.NomCode.*;
-
 import static org.junit.Assert.*;
 
 /**
@@ -497,33 +497,28 @@ public class NameParserTest {
   }
 
   @Test
-  public void testCultivarPattern() throws Exception {
-    testCultivar("'Kentish Belle'");
-    testCultivar("'Nabob'");
-    testCultivar("\"Dall\"");
-    testCultivar(" cv. 'Belmonte'");
-    testCultivar("Sorbus hupehensis C.K.Schneid. cv. 'November pink'");
-    testCultivar("Symphoricarpos albus (L.) S.F.Blake cv. 'Turesson'");
-    testCultivar("Symphoricarpos sp. cv. 'mother of pearl'");
-  }
+  public void timeoutLongNames() throws Exception {
+    final int timeout = 2;
+    NameParser quickParser = new NameParserGBIF(timeout);
+    final String name = "Equicapillimyces hongkongensis S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, G.K.Y. Choi, R.W.S. Poon, J.J.Y. Hui, F.J. Low, Luk &";
+    StopWatch watch = new StopWatch();
+    // warm up parser
+    quickParser.parse("Abies", Rank.GENUS);
 
-  private void testCultivar(String cultivar) {
-    Matcher m = NameParserGBIF.CULTIVAR.matcher(cultivar);
-    assertTrue (m.find());
-  }
+    watch.start();
+    try {
+      quickParser.parse(name);
+      fail("Expected to be unparsable: "+name);
 
-  @Test
-  public void testEscaping() throws Exception {
-    assertEquals("Caloplaca poliotera (Nyl.) J. Steiner",
-        NameParserGBIF.normalize("Caloplaca poliotera (Nyl.) J. Steiner\r\n\r\n"));
-    assertEquals("Caloplaca poliotera (Nyl.) J. Steiner",
-        NameParserGBIF.normalize("Caloplaca poliotera (Nyl.) J. Steiner\\r\\n\\r\\r"));
+    } catch (UnparsableNameException ex) {
 
-    assertName("Caloplaca poliotera (Nyl.) J. Steiner\r\n\r\n", "Caloplaca poliotera")
-        .species("Caloplaca", "poliotera")
-        .basAuthors(null, "Nyl.")
-        .combAuthors(null, "J.Steiner")
-        .nothingElse();
+      final long duration = watch.getTime();
+      System.out.println("Parsing took "+duration+"ms");
+      // the duration is the timeout PLUS some initialization overhead thats why we allow 25ms for
+      assertTrue("No timeout happening for long running parsing ("+duration+"ms)", duration < 25 + timeout);
+      assertEquals(NameType.SCIENTIFIC, ex.getType());
+      assertEquals(name, ex.getName());
+    }
   }
 
   @Test
@@ -724,8 +719,48 @@ public class NameParserTest {
   }
 
   @Test
-  public void testTimeoutNameFile() throws Exception {
-    Reader reader = resourceReader("timeout-names.txt");
+  @Ignore("To be implemented")
+  public void testNonNames() throws Exception {
+    assertName("Lindera Thunb. non Adans. 1763", "Lindera")
+        .monomial("Lindera")
+        .combAuthors(null, "Thunb.")
+        .sensu("non Adans. 1763")
+        .nothingElse();
+
+    assertName("Lindera Thunb., Nov. Gen. Pl.: 64. 1783, non Adans. 1763", "Lindera")
+        .monomial("Lindera")
+        .combAuthors(null, "Thunb.")
+        .nothingElse();
+
+    assertName("Bartlingia Brongn. in Ann. Sci. Nat. (Paris) 10: 373. 1827, non Rchb. 1824 nec F.Muell. 1882", "Bartlingia")
+        .monomial("Bartlingia")
+        .combAuthors(null, "Brongn.")
+        .nothingElse();
+
+    assertName("Nitocris (Nitocris) similis Breuning, 1956 (nec Gahan, 1893)", "Nitocris similis")
+        .species("Nitocris", "similis")
+        .combAuthors("1956", "Breuning")
+        .nothingElse();
+  }
+
+  @Test
+  public void testMisapplied() throws Exception {
+    assertName("Ficus exasperata auct. non Vahl", "Ficus exasperata")
+        .species("Ficus", "exasperata")
+        .sensu("auct. non Vahl")
+        .nothingElse();
+  }
+
+  /**
+   * Simply test all names in names.txt and make sure they parse without exception.
+   * This test does not verify if the parsed name was correct in all its pieces,
+   * so only use this as a quick way to add names to tests.
+   *
+   * Exceptional cases should better be tested in a test on its own!
+   */
+  @Test
+  public void testNameFile() throws Exception {
+    Reader reader = resourceReader("names.txt");
     LineIterator iter = new LineIterator(reader);
     while (iter.hasNext()) {
       String line = iter.nextLine();
@@ -733,6 +768,7 @@ public class NameParserTest {
         continue;
       }
       ParsedName n = parser.parse(line, null);
+      assertTrue(n.getState().isAuthorshipParsed());
     }
   }
 
@@ -789,7 +825,7 @@ public class NameParserTest {
   @Test
   @Ignore
   public void testOccNameFile() throws Exception {
-    Reader reader = resourceReader("parseNull.txt");
+    Reader reader = resourceReader("occurrence-names.txt");
     LineIterator iter = new LineIterator(reader);
 
     int parseFails = 0;
