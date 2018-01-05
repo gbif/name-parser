@@ -67,6 +67,14 @@ public class NameParserTest {
   }
 
   @Test
+  public void parseAuthorPrefixes() throws Exception {
+    assertName("Hieracium scorzoneraefolium De la Soie", "Hieracium scorzoneraefolium")
+        .species("Hieracium", "scorzoneraefolium")
+        .combAuthors(null, "De la Soie")
+        .nothingElse();
+  }
+
+  @Test
   public void parseInfraSpecies() throws Exception {
 
     assertName("Abies alba ssp. alpina Mill.", "Abies alba subsp. alpina")
@@ -498,13 +506,17 @@ public class NameParserTest {
 
   @Test
   public void timeoutLongNames() throws Exception {
-    final int timeout = 2;
+    final int timeout = 5;
     NameParser quickParser = new NameParserGBIF(timeout);
-    final String name = "Equicapillimyces hongkongensis S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, G.K.Y. Choi, R.W.S. Poon, J.J.Y. Hui, F.J. Low, Luk &";
     StopWatch watch = new StopWatch();
     // warm up parser
-    quickParser.parse("Abies", Rank.GENUS);
+    try {
+      quickParser.parse("Abies", Rank.GENUS);
+    } catch (UnparsableNameException ex) {
+      // too short on your machine? ignore
+    }
 
+    String name = "Desmarestia ligulata subsp. muelleri (M.E.Ramirez & A.F.Peters) S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, A.F.Peters, E.C.Yang, A.F.Peters, E.C.Yang, F.C.Küpper & Prud'Homme van Reine, 2014";
     watch.start();
     try {
       quickParser.parse(name);
@@ -519,6 +531,9 @@ public class NameParserTest {
       assertEquals(NameType.SCIENTIFIC, ex.getType());
       assertEquals(name, ex.getName());
     }
+
+
+    //TODO
   }
 
   @Test

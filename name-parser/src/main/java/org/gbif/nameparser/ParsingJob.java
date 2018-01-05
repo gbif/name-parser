@@ -53,20 +53,23 @@ class ParsingJob implements Callable<ParsedName> {
   static final String author_letters = name_letters + "\\p{Ll}-?"; // lower case unicode letter, not numerical
   // (\W is alphanum)
   private static final String AUTHOR_PREFIXES =
-    "(?:[vV](?:an)(?:[ -](?:den|der) )? ?|von[ -](?:den |der |dem )?|(?:del|de|di|da)[`' _]|(?:Des|De|Di|N)[`' _]?|(?:de )?(?:la|le) |d'|D'|Mac|Mc|Le|St\\.? ?|Ou|O')";
+    "(?:v\\. " +
+        "|[vV][ao]n(?:[ -](?:den|der|dem) )? ?" +
+        "|[dD](?:e|el|es|i|a)[`' _](?:l[ae] )?" +
+        "|[dDN]'" +
+        "|Mac|Mc|Le|St\\.? ?" +
+        "|Ou|O'" +
+    ")?";
   static final String AUTHOR_CAP = "[" + AUTHOR_LETTERS + "]+[" + author_letters + "]";
   private static final String AUTHOR_TOKEN_DOT  = AUTHOR_CAP + "*\\.?";
   private static final String AUTHOR_TOKEN_LONG = AUTHOR_CAP + "{3,}";
   private static final String AUTHOR = "(?:" +
-      // author initials
+      // optional author initials
       "(?:" + "(?:[" + AUTHOR_LETTERS + "]{1,3}\\.?[ -]?){0,3}" +
       // or full first name
       "|" + AUTHOR_TOKEN_LONG + " )?" +
-      // common prefixes
-      AUTHOR_PREFIXES + "?" +
-      // only allow v. in front of Capital Authornames
-      // if included in AUTHOR_PREFIXES parseIgnoreAuthors fails
-      "(?:v\\. )?" +
+      // optional common prefixes
+      AUTHOR_PREFIXES +
       // regular author name
       AUTHOR_TOKEN_DOT +
       // potential double names, e.g. Solms-Laub.
