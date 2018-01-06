@@ -838,13 +838,11 @@ public class NameParserTest {
   }
 
   @Test
-  @Ignore
   public void testOccNameFile() throws Exception {
     Reader reader = resourceReader("occurrence-names.txt");
     LineIterator iter = new LineIterator(reader);
 
     int parseFails = 0;
-    int parseAuthorless = 0;
     int lineNum = 0;
     long start = System.currentTimeMillis();
 
@@ -854,10 +852,6 @@ public class NameParserTest {
       ParsedName n;
       try {
         n = parser.parse(name, null);
-        if (!n.getState().isAuthorshipParsed()) {
-          parseAuthorless++;
-          LOG.warn("NO AUTHORS\t " + name);
-        }
       } catch (UnparsableNameException e) {
         parseFails++;
         LOG.warn("FAIL\t " + name);
@@ -866,18 +860,12 @@ public class NameParserTest {
     long end = System.currentTimeMillis();
     LOG.info("\n\nNames tested: " + lineNum);
     LOG.info("Names parse fail: " + parseFails);
-    LOG.info("Names parse no authors: " + parseAuthorless);
     LOG.info("Total time: " + (end - start));
     LOG.info("Average per name: " + (((double) end - start) / lineNum));
 
-    int currFail = 2;
+    int currFail = 77;
     if ((parseFails) > currFail) {
       fail("We are getting worse, not better. Currently failing: " + (parseFails) + ". Was passing:" + currFail);
-    }
-    int currNoAuthors = 109;
-    if ((parseAuthorless) > currNoAuthors) {
-      fail(
-          "We are getting worse, not better. Currently without authors: " + (parseAuthorless) + ". Was:" + currNoAuthors);
     }
   }
 

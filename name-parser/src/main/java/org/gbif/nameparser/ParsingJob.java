@@ -55,19 +55,23 @@ class ParsingJob implements Callable<ParsedName> {
   private static final String AUTHOR_PREFIXES =
     "(?:v\\. " +
         "|[vV][ao]n(?:[ -](?:den|der|dem) )? ?" +
-        "|[dD](?:e|el|es|i|a)[`' _](?:l[ae] )?" +
+        "|De" +
+        "|[dD](?:e|el|es|i|a)(?:[' ]l[ae])?[' ]" +
         "|[dDN]'" +
         "|Mac|Mc|Le|St\\.? ?" +
         "|Ou|O'" +
+        "|'t " +
     ")?";
-  static final String AUTHOR_CAP = "[" + AUTHOR_LETTERS + "]+[" + author_letters + "]";
+  static final String AUTHOR_CAP = "[" + AUTHOR_LETTERS + "]+[" + author_letters + "']";
   private static final String AUTHOR_TOKEN_DOT  = AUTHOR_CAP + "*\\.?";
-  private static final String AUTHOR_TOKEN_LONG = AUTHOR_CAP + "{3,}";
+  private static final String AUTHOR_TOKEN_LONG = AUTHOR_CAP + "{2,}";
   private static final String AUTHOR = "(?:" +
-      // optional author initials
-      "(?:" + "(?:[" + AUTHOR_LETTERS + "]{1,3}\\.?[ -]?){0,3}" +
-      // or full first name
-      "|" + AUTHOR_TOKEN_LONG + " )?" +
+      "(?:" +
+        // optional author initials
+        "(?:[" + AUTHOR_LETTERS + "]{1,3}(?:[" + author_letters + "]{0,2})\\.?[ -]?){0,3}" +
+        // or up to 2 full first names
+        "|" + AUTHOR_TOKEN_LONG + "(?: "+AUTHOR_TOKEN_LONG+")?" +
+      " )?" +
       // optional common prefixes
       AUTHOR_PREFIXES +
       // regular author name
@@ -75,7 +79,7 @@ class ParsingJob implements Callable<ParsedName> {
       // potential double names, e.g. Solms-Laub.
       // space will be added to dots preceding a capital letter like in Müll.Arg. -> Müll. Arg.
       // otherwise the AUTHOR_TEAM regex will become 10 times slower!!!
-      "(?:(?:[- ](?:de|da|du)?[- ]?)" + AUTHOR_TOKEN_DOT + ")?" +
+      "(?:[- '](?:d[eau][- ])?" + AUTHOR_TOKEN_DOT + ")?" +
       // common name suffices (ms=manuscript, not yet published)
       "(?: ?(?:f|fil|j|jr|jun|junior|sr|sen|senior|ms)\\.?)?" +
       ")";
@@ -220,6 +224,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern COMMA_AFTER_BASYEAR = Pattern.compile("("+YEAR+")\\s*\\)\\s*,");
   private static final Pattern REPLACE_QUOTES = Pattern.compile("(^\\s*[\"',]+)|([\"',]+\\s*$)");
 
+  private static final Pattern NORM_APOSTROPHES = Pattern.compile("([\u0060\u00B4\u2018\u2019]+)");
   private static final Pattern NORM_QUOTES = Pattern.compile("([\"'`´]+)");
   private static final Pattern NORM_UPPERCASE_WORDS = Pattern.compile("\\b(\\p{Lu})(\\p{Lu}{2,})\\b");
   private static final Pattern NORM_WHITESPACE = Pattern.compile("(?:\\\\[nr]|\\s)+");
@@ -235,26 +240,21 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_SUBGENUS = Pattern.compile("(" + MONOMIAL + ") (" + MONOMIAL + ") ([" + name_letters + "+-]{5,})");
   private static final Pattern NO_Q_MARKS = Pattern.compile("([" + author_letters + "])\\?+");
   private static final Pattern NORM_COMMAS = Pattern.compile("\\s*,+");
-  // TODO: this next regex gets real slow with long list of authors - needs fixing !!!
-  private static final Pattern NORM_ORIG_AUTH =
-      Pattern.compile("(?<=[ \\(])(" + AUTHORSHIP + ") ?\\( ?(" + YEAR_LOOSE + ")\\)");
+  // TODO: this next regex gets real slow with long list of authors - needs fixing, avoid lookbehind? !!!
+  private static final Pattern NORM_ORIG_AUTH  = Pattern.compile(" (" + AUTHORSHIP + ") ?\\( ?(" + YEAR_LOOSE + ") ?\\)");
   private static final Pattern NORM_ORIG_AUTH2 = Pattern.compile("\\((" + AUTHORSHIP + ")\\) ?,? ?(" + YEAR_LOOSE + ")");
-  private static final Pattern NORM_IMPRINT_YEAR =
-      Pattern.compile("(" + YEAR_LOOSE + ")\\s*(?:\\(\"?[\\s0-9-_,?]+\"?\\)|\\[\"?[0-9 -,]+\"?\\]|\"[0-9 -,]+\")");
+  private static final Pattern NORM_IMPRINT_YEAR = Pattern.compile("(" + YEAR_LOOSE + ")\\s*(?:\\(\"?[\\s0-9-_,?]+\"?\\)|\\[\"?[0-9 -,]+\"?\\]|\"[0-9 -,]+\")");
   // √ó is an utf garbaged version of the hybrid cross found in IPNI. See http://dev.gbif.org/issues/browse/POR-3081
   private static final Pattern NORM_HYBRIDS_GENUS = Pattern.compile("^\\s*(?:[+×xX]|√ó)\\s*([" + NAME_LETTERS + "])");
   private static final Pattern NORM_HYBRIDS_EPITH = Pattern.compile("^\\s*(×?" + MONOMIAL + ")\\s+(?:×|√ó|[xX]\\s)\\s*(" + EPHITHET + ")");
   private static final Pattern NORM_HYBRIDS_FORM = Pattern.compile(" ([×xX]|√ó) ");
   private static final Pattern NORM_INDET = Pattern.compile("((^| )(undet|indet|aff|cf)[#!?\\.]?)+(?![a-z])");
-  private static final Pattern NORM_DOTS = Pattern.compile("(^\\s*[" + NAME_LETTERS + "]|" + RANK_MARKER_ALL + "|"+AUTHOR_CAP+"*)\\.");
-  private static final Pattern NORM_TF_GENUS =
-      Pattern.compile("^([" + NAME_LETTERS + "])\\(([" + name_letters + "-]+)\\)\\.? ");
+  private static final Pattern NORM_DOTS = Pattern.compile("\\.(?![ ,\\)])");
+  private static final Pattern NORM_TF_GENUS = Pattern.compile("^([" + NAME_LETTERS + "])\\(([" + name_letters + "-]+)\\)\\.? ");
   private static final Pattern NORM_IN_COMMA = Pattern.compile(", in ", CASE_INSENSITIVE);
-  private static final Pattern NORM_IN_BIB = Pattern.compile("( in .+$| ?: ?[0-9]+)", CASE_INSENSITIVE);
   private static final Pattern NORM_PREFIXES = Pattern.compile("^(sub)?(fossil|" +
       StringUtils.join(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
-  private static final Pattern NORM_SUFFIXES =
-      Pattern.compile("[,;:]? (sp|anon|spp|hort|ms|&|[a-zA-Z][0-9])?\\.? *$", CASE_INSENSITIVE);
+  private static final Pattern NORM_SUFFIXES = Pattern.compile("[,;:]? (sp|anon|spp|hort|ms|&|[a-zA-Z][0-9])?\\.? *$", CASE_INSENSITIVE);
   // removed not|indetermin[a-z]+
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
   private static final String PLACEHOLDER_AUTHOR = "(?:unknown|unspecified|uncertain|\\?)";
@@ -581,6 +581,7 @@ class ParsingJob implements Callable<ParsedName> {
           unparsable(NameType.NO_NAME, scientificName);
 
       } else {
+        pn.setDoubtful(true);
         LOG.warn("PARSED DIRTY: {}  ---  {}", scientificName, deDirtedName);
       }
     }
@@ -690,10 +691,10 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceAll("sl");
     }
 
-    // normalise usage of dots after abbreviated genus and rank marker
+    // normalise usage of dots making sure its followed by a space, a bracket or a comma
     m = NORM_DOTS.matcher(name);
     if (m.find()) {
-      name = m.replaceAll("$1. ");
+      name = m.replaceAll(". ");
     }
     // remove commans after basionym brackets
     m = COMMA_AFTER_BASYEAR.matcher(name);
@@ -828,17 +829,18 @@ class ParsingJob implements Callable<ParsedName> {
 
     // normalise original name authorship, putting author AND year in brackets
     // with long authorships this gets slow. Test if year exists first:
-    m = EXTRACT_YEAR.matcher(name);
-    if (m.find() && name.length() < 80) {
-      m = NORM_ORIG_AUTH.matcher(name);
-      if (m.find()) {
-        name = m.replaceAll("($1 $2)");
-      }
-      m = NORM_ORIG_AUTH2.matcher(name);
-      if (m.find()) {
-        name = m.replaceAll("($1 $2)");
-      }
-    }
+    //TODO: is this really needed for some names??? activate if we find evidence and add to tests
+    //m = EXTRACT_YEAR.matcher(name);
+    //if (m.find() && name.length() < 80) {
+    //  m = NORM_ORIG_AUTH.matcher(name);
+    //  if (m.find()) {
+    //    name = m.replaceAll(" ($1 $2)");
+    //  }
+    //  m = NORM_ORIG_AUTH2.matcher(name);
+    //  if (m.find()) {
+    //    name = m.replaceAll("($1 $2)");
+    //  }
+    //}
 
     // replace square brackets, keeping content (or better remove all within?)
     name = NORM_NO_SQUARE_BRACKETS.matcher(name).replaceAll(" $1 ");
@@ -907,6 +909,9 @@ class ParsingJob implements Callable<ParsedName> {
       }
     }
     name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
+    // replace various single quote apostrophes with always '
+    name = NORM_APOSTROPHES.matcher(name).replaceAll("'");
+
     return StringUtils.trimToEmpty(name);
   }
 

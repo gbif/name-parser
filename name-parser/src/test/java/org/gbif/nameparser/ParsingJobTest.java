@@ -86,6 +86,17 @@ public class ParsingJobTest {
     assertAuthorTeamPattern("Wang, Yuwen & Xian-wei Liu", null, "Wang", "Yuwen", "Xian-wei Liu");
     assertAuthorTeamPattern("Liu, Xian-wei, Z. Zheng & G. Xi", null, "Liu", "Xian-wei", "Z.Zheng", "G.Xi");
     assertAuthorTeamPattern("Clayton, D.H.; Price, R.D.; Page, R.D.M.", null, "D.H.Clayton", "R.D.Price", "R.D.M.Page");
+    assertAuthorTeamPattern("Michiel de Ruyter", null, "Michiel de Ruyter");
+    assertAuthorTeamPattern("DeFilipps", null, "DeFilipps");
+    assertAuthorTeamPattern("Henk 't Hart", null, "Henk 't Hart");
+    assertAuthorTeamPattern("P.E.Berry & Reg.B.Miller", null, "P.E.Berry", "Reg.B.Miller");
+    assertAuthorTeamPattern("'t Hart", null, "'t Hart");
+    assertAuthorTeamPattern("Abdallah & Sa'ad", null, "Abdallah", "Sa'ad");
+    assertAuthorTeamPattern("Bollmann, M.Y.Cortés, Kleijne, J.B.Østerg. & Jer.R.Young", null, "Bollmann", "M.Y.Cortés", "Kleijne", "J.B.Østerg.", "Jer.R.Young");
+    assertAuthorTeamPattern("Branco, M.T.P.Azevedo, Sant'Anna & Komárek", null, "Branco", "M.T.P.Azevedo", "Sant'Anna", "Komárek");
+    assertAuthorTeamPattern("Janick Hendrik van Kinsbergen", null, "Janick Hendrik van Kinsbergen");
+    assertAuthorTeamPattern("Jan Hendrik van Kinsbergen", null, "Jan Hendrik van Kinsbergen");
+    //assertAuthorTeamPattern("A.F.Peters, E.C.Yang, A.F.Peters, E.C.Yang, F.C.Küpper & Prud'Homme van Reine", null, "A.F.Peters", "E.C.Yang", "A.F.Peters", "E.C.Yang", "F.C.Küpper", "Prud'Homme van Reine");
   }
 
   @Test
@@ -118,7 +129,7 @@ public class ParsingJobTest {
 
   private void assertAuthorTeamPattern(String authorship, String exAuthor, String ... authors) {
     Matcher m = ParsingJob.AUTHORSHIP_PATTERN.matcher(authorship);
-    assertTrue(m.find());
+    assertTrue(authorship, m.find());
     if (ParsingJob.LOG.isDebugEnabled()) {
       ParsingJob.logMatcher(m);
     }

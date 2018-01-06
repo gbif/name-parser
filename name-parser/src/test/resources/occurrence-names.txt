@@ -17,7 +17,6 @@ Adenandra serpyllacea Bartl. var. b Sond.
 Adenocaulon lechleri Sch.Bip.
 Adenolepis calva Sch.Bip. ex Miq.
 Aegiphila falcata Donn.Sm.
-Agaricus pseudopratensis BohusBohus var. niveus BohusBohus
 Agrostistachys indica Dalzell var. longifolia Müll.Arg.
 Ainsliaea glumacea Sch.Bip.
 Alangium sundanum Miq. var. ß
@@ -196,7 +195,7 @@ Claoxylon wallichianum Müll.Arg.
 Clavaria formosa Pers./Krombh.?
 Cleistanthus boivinianus Baill. ex Müll.Arg.
 Cleistanthus malabaricus Müll.Arg.
-Clermontia samuelii ForbesForbes
+Clermontia samuelii Forbes
 Clibadium arboreum Donn.Sm.
 Clutia richardiana Müll.Arg.
 Cnidoscolus aurelii Fern.Casas
@@ -220,7 +219,6 @@ Conyza schimperi Sch.Bip. ex A.Rich.
 Conyza steudelii Sch.Bip. ex A.Rich.
 Conyza variegata Sch.Bip. ex A.Rich.
 Conyza vernonioides (Sch.Bip. ex A.Rich.) Wild
-Copiapoa cinerea (Phil.Phil.) BrittonBritton & Rose & Rose
 Coreopsis abyssinica Sch.Bip.
 Coreopsis macrantha Sch.Bip. ex Walp.
 Cotinus coggygria Scop. cv. 'Rubrifolius'
@@ -432,7 +430,6 @@ Lachnanthes tinctoria var. major Griseb,
 Lactuca paradoxa Sch.Bip. ex A.Rich.
 Lagerheimia hindakii E.Hegewald & Ant.Schmidt
 Lamprotornis acuticaudus acuticaudus (Barboza du Bocage, 1870)
-Lecidea parvifoliella Pers. var. corallina (Eschw.Eschw.) Müll.Arg.Müll.Arg.
 Lepidaploa gnaphalioides (Sch.Bip. ex Baker) H.Rob.
 Leptonychia schliebenii Mildbr. ms.
 Lessingianthus rugulosus (Sch.Bip. ex Baker) H.Rob.
@@ -787,17 +784,14 @@ Villarsia exiliflora F. v. Muell.
 Villarsia hydrocharoides F. v. Muell.
 Villarsia lasiosperma F. v. Muell.
 Viola biflora ssp. carlottae Calder & Roy L.Taylor
-Viola kauaensis A.Gray var. wahiawaensis ForbesForbes
+Viola kauaensis A.Gray var. wahiawaensis Forbes
 Weinmannia laevis Bojer ms.
 Weinmannia lucida Merr. var.
 Wuerschmittia abyssinica Sch.Bip. ex A.Rich.
 Würschmittia abyssinica Sch.Bip. ex A.Rich.
-Xanthophyllum bicolor W.J.de WildeW.J.de Wilde & Duyfjes & Duyfjes
-Xanthophyllum griffithii Hook.f. ex A.W.Benn. var. papillosum W.J.de WildeW.J.de Wilde & Duyfjes & D
-Xanthophyllum longum W.J.de WildeW.J.de Wilde & Duyfjes & Duyfjes
-Xanthophyllum nitidum W.J.de WildeW.J.de Wilde & Duyfjes & Duyfjes
-Xanthophyllum pachycarpon W.J.de WildeW.J.de Wilde & Duyfjes & Duyfjes
-Xanthophyllum rectum W.J.de WildeW.J.de Wilde & Duyfjes & Duyfjes
+Xanthophyllum bicolor W.J.de Wilde & Duyfjes
+Xanthophyllum griffithii Hook.f. ex A.W.Benn. var. papillosum W.J.de Wilde & Duyfjes
+Xanthophyllum rectum W.J.de Wilde & Duyfjes
 Xanthostemon formosus Peter G.Wilson
 Ximenia parviflora Benth. var. glauca DeFilipps
 Xylosma chlorantha Donn.Sm.
@@ -809,6 +803,3 @@ Xylosma quichensis Donn.Sm.
 Xylosma quichensis var. subalpina Donn.Sm.
 Zexmenia guatemalensis Donn.Sm.
 Zinnia jugistyla Paul G.Wilson
-cf.
-fragment
-without specimen without specimen without specimen
