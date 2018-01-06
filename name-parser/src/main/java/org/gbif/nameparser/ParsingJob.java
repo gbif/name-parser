@@ -81,7 +81,7 @@ class ParsingJob implements Callable<ParsedName> {
       // otherwise the AUTHOR_TEAM regex will become 10 times slower!!!
       "(?:[- '](?:d[eau][- ])?" + AUTHOR_TOKEN_DOT + ")?" +
       // common name suffices (ms=manuscript, not yet published)
-      "(?: ?(?:f|fil|j|jr|jun|junior|sr|sen|senior|ms)\\.?)?" +
+      "(?: ?(?:f|fil|filius|j|jr|jun|junior|sr|sen|senior|ms)\\.?)?" +
       ")";
   private static final String AUTHOR_TEAM = AUTHOR +
       "(?:(?: ?(?:&| et |,|;) ?)+" + AUTHOR + ")*" +
