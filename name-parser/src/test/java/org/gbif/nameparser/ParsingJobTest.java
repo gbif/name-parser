@@ -3,7 +3,7 @@ package org.gbif.nameparser;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.Authorship;
-import org.junit.Ignore;
+import org.gbif.nameparser.api.Rank;
 import org.junit.Test;
 
 import java.util.regex.Matcher;
@@ -215,7 +215,7 @@ public class ParsingJobTest {
         ParsingJob.normalize("Asplenium X inexpectatum (E. L. Braun 1940)Morton (1956) "));
     assertEquals("×Agropogon", ParsingJob.normalize(" × Agropogon"));
     assertEquals("Salix ×capreola Andersson", ParsingJob.normalize("Salix × capreola Andersson"));
-    assertEquals("Leucanitis roda Herrich-Schäffer (1851), 1845",
+    assertEquals("Leucanitis roda Herrich-Schäffer (1851) 1845",
         ParsingJob.normalize("Leucanitis roda Herrich-Schäffer (1851) 1845"));
 
     assertEquals("Huaiyuanella Xing, Yan & Yin, 1984", ParsingJob.normalize("Huaiyuanella Xing, Yan&Yin, 1984"));
@@ -224,36 +224,35 @@ public class ParsingJobTest {
 
   @Test
   public void testNormalizeStrongName() {
-    assertEquals("Alstonia vieillardii Van Heurck & Müll. Arg.",
-        ParsingJob.normalizeStrong("Alstonia vieillardii Van Heurck & Müll.Arg."));
-    assertEquals("Nuculoidea Williams & Breger, 1916",
-        ParsingJob.normalizeStrong("Nuculoidea Williams et  Breger 1916  "));
-    assertEquals("Nuculoidea behrens var. christoph Williams & Breger, 1916",
-        ParsingJob.normalizeStrong("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
-    assertEquals("Nuculoidea Williams & Breger, 1916",
-        ParsingJob.normalizeStrong(" 'Nuculoidea Williams & Breger, 1916'"));
-    assertEquals("Photina (Cardioptera) burmeisteri (Westwood, 1889)",
-        ParsingJob.normalizeStrong("Photina Cardioptera burmeisteri (Westwood 1889)"));
-    assertEquals("Suaeda forsskahlei Schweinf.",
-        ParsingJob.normalizeStrong("Suaeda forsskahlei Schweinf. ms."));
-    assertEquals("Acacia bicolor Bojer", ParsingJob.normalizeStrong("Acacia bicolor Bojer ms."));
-    assertEquals("Astelia alpina var. novae-hollandiae",
-        ParsingJob.normalizeStrong("Astelia alpina var. novae-hollandiae"));
-    // ampersand entities are handled as part of the regular html entity escaping:
-    assertEquals("N. behrens Williams & amp; Breger, 1916",
-        ParsingJob.normalizeStrong("  N.behrens Williams &amp;  Breger , 1916  "));
-    assertEquals("N.behrens Williams & Breger , 1916",
-        ParsingJob.preClean("  N.behrens Williams &amp;  Breger , 1916  "));
-    assertEquals("N. behrens Williams & Breger, 1916",
-        ParsingJob.normalizeStrong(ParsingJob.preClean("  N.behrens Williams &amp;  Breger , 1916  ")));
+    assertNormalizeStrong("‘Perca’ lactarioides Lin, Nolf, Steurbaut & Girone, 2016", "Perca lactarioides Lin, Nolf, Steurbaut & Girone, 2016");
+
+
+    assertNormalizeStrong("Alstonia vieillardii Van Heurck & Müll.Arg.", "Alstonia vieillardii Van Heurck & Müll. Arg.");
+    assertNormalizeStrong("Nuculoidea Williams et  Breger 1916  ","Nuculoidea Williams & Breger, 1916");
+    assertNormalizeStrong("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea behrens var. christoph Williams & Breger, 1916");
+    assertNormalizeStrong(" 'Nuculoidea Williams & Breger, 1916'", "Nuculoidea Williams & Breger, 1916");
+    assertNormalizeStrong("Photina Cardioptera burmeisteri (Westwood 1889)", "Photina (Cardioptera) burmeisteri (Westwood, 1889)");
+    assertNormalizeStrong("Suaeda forsskahlei Schweinf. ms.", "Suaeda forsskahlei Schweinf.");
+    assertNormalizeStrong("Acacia bicolor Bojer ms.", "Acacia bicolor Bojer");
+    assertNormalizeStrong("Astelia alpina var. novae-hollandiae", "Astelia alpina var. novae-hollandiae");
+    assertNormalizeStrong("  N.behrens Williams &amp;  Breger , 1916  ", "N. behrens Williams & Breger, 1916");
+    assertNormalizeStrong("Melanoides kinshassaensis D+P", "Melanoides kinshassaensis D & P");
+    assertNormalizeStrong("Malacosteus australis Kenaley/2007", "Malacosteus australis Kenaley, 2007");
+    assertNormalizeStrong("Bathylychnops chilensis Parin_NV, Belyanina_TN & Evseenko 2009", "Bathylychnops chilensis Parin NV, Belyanina TN & Evseenko, 2009");
+    assertNormalizeStrong("denheyeri Eghbalian, Khanjani and Ueckermann in Eghbalian, Khanjani & Ueckermann, 2017", "? denheyeri Eghbalian, Khanjani & Ueckermann in Eghbalian, Khanjani & Ueckermann, 2017");
+    // http://zoobank.org/References/C37149C7-FC3B-4267-9CD0-03E0E0059459
+    // http://www.tandfonline.com/doi/full/10.1080/14772019.2016.1246112
+    assertNormalizeStrong("‘Perca’ lactarioides Lin, Nolf, Steurbaut & Girone, 2016", "Perca lactarioides Lin, Nolf, Steurbaut & Girone, 2016");
+    assertNormalizeStrong(" ‘Liopropoma’ sculpta sp. nov.", "Liopropoma sculpta sp. nov.");
+    assertNormalizeStrong("fordycei Boersma, McCurry & Pyenson, 2017", "? fordycei Boersma, McCurry & Pyenson, 2017");
+
+    //TODO: very expected results!
+    //assertNormalizeStrong("Malacocarpus schumannianus (Nicolai (1893)) Britton & Rose", "Malacocarpus schumannianus (Nicolai, 1893) Britton & Rose");
+    //assertNormalizeStrong("Leucanitis roda Herrich-Schäffer (1851) 1845", "Leucanitis roda (Herrich-Schäffer, 1851), 1845");
   }
 
-  @Test
-  @Ignore("needs to be verified")
-  public void testNormalizeStrongNameIgnored() {
-    assertEquals("Malacocarpus schumannianus (Nicolai, 1893) Britton & Rose",
-        ParsingJob.normalizeStrong("Malacocarpus schumannianus (Nicolai (1893)) Britton & Rose"));
-    assertEquals("Leucanitis roda (Herrich-Schäffer, 1851), 1845",
-        ParsingJob.normalizeStrong("Leucanitis roda Herrich-Schäffer (1851) 1845"));
+  private void assertNormalizeStrong(String raw, String expected) {
+    assertEquals(expected, new ParsingJob("Aa", Rank.UNRANKED).normalizeStrong(ParsingJob.preClean(raw)));
   }
+
 }

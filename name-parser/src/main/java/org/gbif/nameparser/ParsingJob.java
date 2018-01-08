@@ -220,20 +220,22 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern EXTRACT_REMARKS = Pattern.compile("\\s+(anon\\.?)(\\s.+)?$");
   private static final Pattern EXTRACT_YEAR = Pattern.compile("(" + YEAR_LOOSE + "\\s*\\)?)");
 
-  private static final Pattern COMMA_BEFORE_YEAR = Pattern.compile("(,+|[^0-9\\(\\[\"])\\s*(\\d{3})");
+  private static final Pattern COMMA_BEFORE_YEAR = Pattern.compile("(\\p{L})[\\s/-]*(\\d{3})");
   private static final Pattern COMMA_AFTER_BASYEAR = Pattern.compile("("+YEAR+")\\s*\\)\\s*,");
-  private static final Pattern REPLACE_QUOTES = Pattern.compile("(^\\s*[\"',]+)|([\"',]+\\s*$)");
 
   private static final Pattern NORM_APOSTROPHES = Pattern.compile("([\u0060\u00B4\u2018\u2019]+)");
   private static final Pattern NORM_QUOTES = Pattern.compile("([\"'`´]+)");
+  private static final Pattern REPL_GENUS_QUOTE = Pattern.compile("^' *(" + MONOMIAL + ") *'");
+  private static final Pattern REPL_ENCLOSING_QUOTE = Pattern.compile("^[',\\s]+|[',\\s]+$");
   private static final Pattern NORM_UPPERCASE_WORDS = Pattern.compile("\\b(\\p{Lu})(\\p{Lu}{2,})\\b");
   private static final Pattern NORM_WHITESPACE = Pattern.compile("(?:\\\\[nr]|\\s)+");
+  private static final Pattern REPL_UNDERSCORE = Pattern.compile("_+");
   private static final Pattern NORM_NO_SQUARE_BRACKETS = Pattern.compile("\\[(.*?)\\]");
   private static final Pattern NORM_BRACKETS_OPEN = Pattern.compile("([{(\\[])\\s*,?");
   private static final Pattern NORM_BRACKETS_CLOSE = Pattern.compile(",?\\s*([})\\]])");
-  private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("( ?[{(\\[] ?)+");
-  private static final Pattern NORM_BRACKETS_CLOSE_STRONG = Pattern.compile("( ?[})\\]] ?)+");
-  private static final Pattern NORM_AND = Pattern.compile(" (and|et|und) ");
+  private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("( ?[{\\[] ?)+");
+  private static final Pattern NORM_BRACKETS_CLOSE_STRONG = Pattern.compile("( ?[}\\]] ?)+");
+  private static final Pattern NORM_AND = Pattern.compile("\\b *(and|et|und|\\+) *\\b");
   private static final Pattern NORM_ET_AL = Pattern.compile("(?:& )+al\\.?");
   private static final Pattern NORM_AMPERSAND_WS = Pattern.compile("&");
   private static final Pattern NORM_HYPHENS = Pattern.compile("\\s*-\\s*");
@@ -252,28 +254,27 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_DOTS = Pattern.compile("\\.(?![ ,\\)])");
   private static final Pattern NORM_TF_GENUS = Pattern.compile("^([" + NAME_LETTERS + "])\\(([" + name_letters + "-]+)\\)\\.? ");
   private static final Pattern NORM_IN_COMMA = Pattern.compile(", in ", CASE_INSENSITIVE);
-  private static final Pattern NORM_PREFIXES = Pattern.compile("^(sub)?(fossil|" +
+  private static final Pattern REPL_RANK_PREFIXES = Pattern.compile("^(sub)?(fossil|" +
       StringUtils.join(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
   private static final Pattern NORM_SUFFIXES = Pattern.compile("[,;:]? (sp|anon|spp|hort|ms|&|[a-zA-Z][0-9])?\\.? *$", CASE_INSENSITIVE);
   // removed not|indetermin[a-z]+
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
-  private static final String PLACEHOLDER_AUTHOR = "(?:unknown|unspecified|uncertain|\\?)";
-  private static final Pattern REMOVE_PLACEHOLDER_AUTHOR = Pattern.compile("\\b"+PLACEHOLDER_AUTHOR+"[, ] ?(" + YEAR_LOOSE + ")$", CASE_INSENSITIVE);
-  private static final Pattern PLACEHOLDER_GENUS = Pattern.compile("^(Missing|Dummy|Temp|Unknown|Unplaced|Unspecified) (?=[a-z]+)\\b");
-  private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|dummy|incertae sedis|mixed|not assigned|temp|unaccepted|unallocated|unassigned|uncertain|unclassified|uncultured|undetermined|unknown|unnamed|unplaced|unspecified)";
+  private static final Pattern REMOVE_PLACEHOLDER_AUTHOR = Pattern.compile("\\b"+
+      "(?:unknown|unspecified|uncertain|\\?)" +
+      "[, ] ?(" + YEAR_LOOSE + ")$", CASE_INSENSITIVE
+  );
+  private static final Pattern PLACEHOLDER_GENUS = Pattern.compile("^(In|Dummy|Missing|Temp|Unknown|Unplaced|Unspecified) (?=[a-z]+)\\b");
+  private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|deleted?|dummy|incertae sedis|mixed|not assigned|not stated|place ?holder|temp|tobedeleted|unaccepted|unallocated|unassigned|uncertain|unclassified|uncultured|undetermined|unknown|unnamed|unplaced|unspecified)";
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
   private static final Pattern PLACEHOLDER = Pattern.compile("\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
   private static final Pattern DOUBTFUL = Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + "\":;&*+\\s,.()/'`´0-9-†]+$");
   private static final Pattern DOUBTFUL2 = Pattern.compile("\\bnull\\b");
-  private static final Pattern BAD_NAME_SUFFICES = Pattern.compile(" (author|unknown|unassigned|not_stated)$", CASE_INSENSITIVE);
   private static final Pattern XML_ENTITY_STRIP = Pattern.compile("&\\s*([a-z]+)\\s*;");
   // matches badly formed amoersands which are important in names / authorships
   private static final Pattern AMPERSAND_ENTITY = Pattern.compile("& *amp +");
 
   private static final Pattern XML_TAGS = Pattern.compile("< */? *[a-zA-Z] *>");
-  private static final Pattern FIRST_WORD = Pattern.compile("^([×xX]\\s+)?([×x][A-Z])?([a-zA-Z])([a-zA-Z]+) ");
-  private static final String WEIRD_CHARS = "[§$%/#+!;:_|\"=*]";
-  private static final Pattern NORM_WEIRD_CHARS = Pattern.compile(WEIRD_CHARS);
+  private static final Pattern STARTING_EPITHET = Pattern.compile("^\\s*(" + EPHITHET + ")\\b");
   private static final Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\.sp(?:ec)?\\b");
   private static final Pattern SENSU_LATU = Pattern.compile("\\bs\\.l\\.\\b");
 
@@ -567,23 +568,13 @@ class ParsingJob implements Callable<ParsedName> {
     // try regular parsing
     boolean parsed = parseNormalisedName(name);
     if (!parsed) {
-      // try again with stronger normalisation, maybe that helps...
-      LOG.debug("Can't parse, use dirty normalizer");
-      final String deDirtedName = cleanStrong(name);
-      parsed = parseNormalisedName(deDirtedName);
-      if (!parsed) {
-          // we just cant parse this one
-          // try to spot a virus name once we know its not a scientific name
-          m = IS_VIRUS_PATTERN_POSTFAIL.matcher(name);
-          if (m.find()) {
-            unparsable(NameType.VIRUS, scientificName);
-          }
-          unparsable(NameType.NO_NAME, scientificName);
-
-      } else {
-        pn.setDoubtful(true);
-        LOG.warn("PARSED DIRTY: {}  ---  {}", scientificName, deDirtedName);
-      }
+        // try to spot a virus name once we know its not a scientific name
+        m = IS_VIRUS_PATTERN_POSTFAIL.matcher(name);
+        if (m.find()) {
+          unparsable(NameType.VIRUS, scientificName);
+        }
+        // cant parse it, fail!
+        unparsable(NameType.NO_NAME, scientificName);
     }
 
     // did we parse a infraspecic manuscript name?
@@ -608,52 +599,6 @@ class ParsingJob implements Callable<ParsedName> {
 
     // determine code if not yet assigned
     determineCode(pn);
-  }
-
-  /**
-   * A very optimistic cleaning intended for names potentially very very dirty
-   *
-   * @param name To normalize
-   *
-   * @return The normalized name
-   */
-  private static String cleanStrong(String name) {
-    if (name != null) {
-      // remove final & which causes long parse times
-
-      // test for known bad suffixes like in Palythoa texaensis author unknown
-      Matcher m = BAD_NAME_SUFFICES.matcher(name);
-      if (m.find()) {
-        name = m.replaceAll("");
-      }
-
-      // replace weird chars
-      name = NORM_WEIRD_CHARS.matcher(name).replaceAll(" ");
-      // swap comb and basionym authors if comb authorship is clearly identified by a &
-
-      // TODO: improve regex - some names take minutes to parse, so we cant use it as it is !
-      // Matcher m = COMB_BAS_AUTHOR_SWAP.matcher(name);
-      // if (m.find() && m.group(1)!=null && m.group(1).contains("&") && m.group(3)!=null ){
-      // System.out.println("SWAP:"+m.group(1)+"|"+m.group(2)+"|"+m.group(3)+"|"+m.group(4));
-      // name = m.replaceFirst(StringUtils.defaultString("("+m.group(3))+StringUtils.trimToEmpty(m.group(4))+")" +
-      // m.group(1)+StringUtils.trimToEmpty(m.group(2)));
-      // }
-      // uppercase the first letter, lowercase the rest of the first word
-      m = FIRST_WORD.matcher(name);
-      if (m.find() && m.group(2) == null) {
-        // System.out.println(m.group(1)+"|"+m.group(2)+"|"+m.group(3)+"|"+m.group(4));
-        name = m.replaceFirst(
-            StringUtils.defaultString(m.group(1)) + m.group(3).toUpperCase() + m.group(4).toLowerCase() + " ");
-      }
-
-      // normalize genus hybrid marker again
-      m = NORM_HYBRIDS_GENUS.matcher(name);
-      if (m.find()) {
-        name = m.replaceFirst("×$1");
-      }
-    }
-
-    return name;
   }
 
   /**
@@ -703,7 +648,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // use commas before years
-    // ICZN §22A.2 http://www.iczn.org/iczn/includes/page.jsp?article=22&nfv=
+    // ICZN §22A.2 http://www.nhm.ac.uk/hosted-sites/iczn/code/index.jsp?article=22&nfv=true
     m = COMMA_BEFORE_YEAR.matcher(name);
     if (m.find()) {
       name = m.replaceAll("$1, $2");
@@ -762,14 +707,17 @@ class ParsingJob implements Callable<ParsedName> {
    * @return The normalized name
    */
   @VisibleForTesting
-  static String normalizeStrong(String name) {
+  String normalizeStrong(String name) {
     if (name == null) {
       return null;
     }
     // normalize all quotes to single "
     name = NORM_QUOTES.matcher(name).replaceAll("'");
-    // enclosing quotes
-    name = REPLACE_QUOTES.matcher(name).replaceAll("");
+    // remove quotes from genus
+    name = REPL_GENUS_QUOTE.matcher(name).replaceFirst("$1 ");
+    // remove enclosing quotes
+    name = REPL_ENCLOSING_QUOTE.matcher(name).replaceAll("");
+
     // no question marks after words (after years they should remain!)
     Matcher m = NO_Q_MARKS.matcher(name);
     if (m.find()) {
@@ -777,13 +725,14 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // remove prefixes
-    name = NORM_PREFIXES.matcher(name).replaceAll("");
+    name = REPL_RANK_PREFIXES.matcher(name).replaceAll("");
 
     // remove brackets inside the genus, the kind taxon finder produces
     m = NORM_TF_GENUS.matcher(name);
     if (m.find()) {
       name = m.replaceAll("$1$2 ");
     }
+
     // replace imprint years. See ICZN §22A.2.3 http://www.iczn.org/iczn/index.jsp?nfv=&article=22
     // Ctenotus alacer Storr, 1970 ["1969"] -> Ctenotus alacer Storr, 1970
     // C. Flahault 1887 ("1886-1888") -> C. Flahault 1887
@@ -794,38 +743,9 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceAll("$1");
     }
 
-    // replace bibliographic in authorship
+    // replace comma before bibliographic in reference
     name = NORM_IN_COMMA.matcher(name).replaceFirst(" in ");
-    /*
-     * m = NORM_IN_BIB.matcher(name);
-     * if (m.find()) {
-     * // keep year if it only exists in IN reference
-     * Matcher mIN = EXTRACT_YEAR.matcher(m.group(0));
-     * name = m.replaceAll("");
-     * Matcher mNAME = EXTRACT_YEAR.matcher(name);
-     * if (mIN.find() && !mNAME.find()) {
-     * name = name + ", " + mIN.group(1);
-     * }
-     * }
-     */
-
-    // This is redundant, as it is done in the regular normalize function already
-    // BUT somehow all upper case authors slow down parsing so much that it can even come to an hold in the next step
-    // so we pay the price and do it twice
-    // capitalize all entire upper case words
-    m = NORM_UPPERCASE_WORDS.matcher(name);
-    while (m.find()) {
-      name = name.replaceFirst(m.group(0), m.group(1) + m.group(2).toLowerCase());
-    }
-
-    /*
-     * ICBN §46.2, Note 1.
-     * When authorship of a name differs from authorship of the publication in which it was validly published, both are
-     * sometimes cited,
-     * connected by the word "in". In such a case, "in" and what follows are part of a bibliographic citation and are
-     * better omitted
-     * unless the place of publication is being cited.
-     */
+    // TODO: replace full bibliographic in citation
 
     // normalise original name authorship, putting author AND year in brackets
     // with long authorships this gets slow. Test if year exists first:
@@ -842,8 +762,12 @@ class ParsingJob implements Callable<ParsedName> {
     //  }
     //}
 
+    // replace underscores
+    name = REPL_UNDERSCORE.matcher(name).replaceAll(" ");
+
     // replace square brackets, keeping content (or better remove all within?)
     name = NORM_NO_SQUARE_BRACKETS.matcher(name).replaceAll(" $1 ");
+
     // replace different kind of brackets with ()
     name = NORM_BRACKETS_OPEN_STRONG.matcher(name).replaceAll(" (");
     name = NORM_BRACKETS_CLOSE_STRONG.matcher(name).replaceAll(") ");
@@ -852,16 +776,19 @@ class ParsingJob implements Callable<ParsedName> {
     // but keep "et al." instead of "& al."
     name = NORM_ET_AL.matcher(name).replaceAll(" et al.");
 
-    // // add commas between authors in space delimited list
-    // m = NORM_AUTH_DELIMIT.matcher(name);
-    // if (m.find()){
-    // name = m.replaceAll("$1, $2");
-    // }
     // Bryozoan indet. 1
     // Bryozoa sp. 2
     // Bryozoa sp. E
-
     name = NORM_SUFFIXES.matcher(name).replaceAll("");
+
+    // add ? genus when name starts with an epithet
+    m = STARTING_EPITHET.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst("? $1");
+      //TODO: mark as doubtful?
+      //pn.setDoubtful(true);
+    }
+
 
     // add parenthesis around subgenus if missing
     m = NORM_SUBGENUS.matcher(name);
@@ -869,10 +796,8 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceAll("$1 ($2) $3");
     }
 
-    // finally whitespace and trimming
-    name = normalize(name);
-    // name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
-    return StringUtils.trimToEmpty(name);
+    // finally regular normalization again
+    return normalize(name);
   }
 
   /**

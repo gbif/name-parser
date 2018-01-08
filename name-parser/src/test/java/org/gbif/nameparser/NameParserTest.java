@@ -256,6 +256,12 @@ public class NameParserTest {
 
   @Test
   public void parsePlaceholder() throws Exception {
+    assertName("denheyeri Eghbalian, Khanjani and Ueckermann in Eghbalian, Khanjani & Ueckermann, 2017", "? denheyeri")
+        .species("?", "denheyeri")
+        .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
+        .type(PLACEHOLDER)
+        .nothingElse();
+
     assertName("\"? gryphoidis", "? gryphoidis")
         .species("?", "gryphoidis")
         .type(PLACEHOLDER)
@@ -814,7 +820,6 @@ public class NameParserTest {
     assertNoName("&nbsp;");
     assertNoName("X");
     assertNoName("a");
-    assertNoName("von");
     assertNoName("143");
     assertNoName("321-432");
     assertNoName("-,.#");
@@ -863,7 +868,7 @@ public class NameParserTest {
     LOG.info("Total time: " + (end - start));
     LOG.info("Average per name: " + (((double) end - start) / lineNum));
 
-    int currFail = 77;
+    int currFail = 73;
     if ((parseFails) > currFail) {
       fail("We are getting worse, not better. Currently failing: " + (parseFails) + ". Was passing:" + currFail);
     }
