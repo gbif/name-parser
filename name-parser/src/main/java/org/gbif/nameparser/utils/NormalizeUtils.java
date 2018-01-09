@@ -10,8 +10,6 @@ import java.util.regex.Pattern;
  */
 public class NormalizeUtils {
 
-  private static final Pattern NORM_PUNCTUATION = Pattern.compile("[-_\\.;!\"]+");
-  private static final Pattern NORM_WHITESPACE = Pattern.compile("\\s+");
   private static final Pattern NORM_TERM = Pattern.compile("[-_\\.\\s]+");
   private static final Pattern NORM_CITATION_PUNCT = Pattern.compile("\\. *");
   private static final Pattern NORM_CITATION_WHITE = Pattern.compile("[_\\s]+");
@@ -26,19 +24,6 @@ public class NormalizeUtils {
 
   public static String normalizeTerm(String term) {
     return trimToNull(NORM_TERM.matcher(term).replaceAll(" ").toLowerCase());
-  }
-
-  public static String normalizeVernacular(String name) {
-    if (name == null) {
-      return name;
-    }
-    // decode escaped chars and normalize whitespace and hyphenation
-    return trimToNull(
-      NORM_WHITESPACE.matcher(NORM_PUNCTUATION.matcher(replaceUnicodeEntities(name)).replaceAll(" ")).replaceAll(" "));
-  }
-
-  public static String normalizeWhitespace(String x) {
-    return trimToNull(NORM_WHITESPACE.matcher(x).replaceAll(" "));
   }
 
   public static String replaceUnicodeEntities(String x) {

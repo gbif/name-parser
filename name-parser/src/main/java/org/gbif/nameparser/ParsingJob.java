@@ -343,6 +343,10 @@ class ParsingJob implements Callable<ParsedName> {
     throw new UnparsableNameException(type, name);
   }
 
+  static Matcher interruptableMatcher(Pattern pattern, String text) {
+    return pattern.matcher(new InterruptibleCharSequence(text));
+  }
+
   private final String scientificName;
   private final Rank rank;
   private final ParsedName pn;
@@ -932,15 +936,15 @@ class ParsingJob implements Callable<ParsedName> {
    * Tries to parse a name string with the full regular expression.
    * In very few, extreme cases names with very long authorships might cause the regex to never finish or take hours
    * we run this parsing in a separate thread that can be stopped if it runs too long.
-   * @param scientificName
+   * @param name
    * @return  true if the name could be parsed, false in case of failure
    */
-  boolean parseNormalisedName(String scientificName) {
-    LOG.debug("Parse normed name string: {}", scientificName);
-    Matcher matcher = NAME_PATTERN.matcher(scientificName);
+  private boolean parseNormalisedName(String name) {
+    LOG.debug("Parse normed name string: {}", name);
+    Matcher matcher = interruptableMatcher(NAME_PATTERN, name);
     if (matcher.find()) {
-      if (!matcher.group(0).equals(scientificName)) {
-        LOG.info("{} - matched only part of the name: {}", matcher.group(0), scientificName);
+      if (!matcher.group(0).equals(name)) {
+        LOG.info("{} - matched only part of the name: {}", matcher.group(0), name);
         pn.setState(ParsedName.State.NAME_AND_AUTHOR);
 
       } else {
@@ -999,9 +1003,9 @@ class ParsingJob implements Callable<ParsedName> {
         }
 
         // make sure (infra)specific epithet is not a rank marker!
-        lookForIrregularRankMarker(pn);
+        lookForIrregularRankMarker();
         // 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
-        checkEpithetVsAuthorPrefx(pn);
+        checkEpithetVsAuthorPrefx();
 
         // if no rank was parsed but given externally use it!
         if (rank != null && pn.getRank().otherOrUnranked()) {
@@ -1067,58 +1071,56 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * if no rank marker is set, inspect epitheta for wrongly placed rank markers and modify parsed name accordingly.
    * This is sometimes the case for informal names like: Coccyzus americanus ssp.
-   *
-   * @param cn the already parsed name
    */
-  private void lookForIrregularRankMarker(ParsedName cn) {
-    if (cn.getRank() == null) {
-      if (cn.getInfraspecificEpithet() != null) {
-        Matcher m = RANK_MARKER_ONLY.matcher(cn.getInfraspecificEpithet());
+  private void lookForIrregularRankMarker() {
+    if (pn.getRank() == null) {
+      if (pn.getInfraspecificEpithet() != null) {
+        Matcher m = RANK_MARKER_ONLY.matcher(pn.getInfraspecificEpithet());
         if (m.find()) {
           // we found a rank marker, make it one
-          setRank(cn, cn.getInfraspecificEpithet());
-          cn.setInfraspecificEpithet(null);
+          setRank(pn, pn.getInfraspecificEpithet());
+          pn.setInfraspecificEpithet(null);
         }
-      } else if (cn.getSpecificEpithet() != null) {
-        Matcher m = RANK_MARKER_ONLY.matcher(cn.getSpecificEpithet());
+      } else if (pn.getSpecificEpithet() != null) {
+        Matcher m = RANK_MARKER_ONLY.matcher(pn.getSpecificEpithet());
         if (m.find()) {
           // we found a rank marker, make it one
-          setRank(cn, cn.getSpecificEpithet());
-          cn.setSpecificEpithet(null);
+          setRank(pn, pn.getSpecificEpithet());
+          pn.setSpecificEpithet(null);
         }
       }
-    } else if(cn.getRank() == Rank.SPECIES && cn.getInfraspecificEpithet() != null) {
+    } else if(pn.getRank() == Rank.SPECIES && pn.getInfraspecificEpithet() != null) {
       // sometimes sp. is wrongly used as a subspecies rankmarker
-      cn.setRank(Rank.SUBSPECIES);
-      cn.addWarning("Name was considered species but contains infraspecific epithet");
+      pn.setRank(Rank.SUBSPECIES);
+      pn.addWarning("Name was considered species but contains infraspecific epithet");
     }
   }
 
   /**
-   * 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
+   * TODO: 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
    */
-  private void checkEpithetVsAuthorPrefx(ParsedName cn) {
-    if (cn.getRank() == null) {
-      if (cn.getInfraspecificEpithet() != null) {
+  private void checkEpithetVsAuthorPrefx() {
+    if (pn.getRank() == null) {
+      if (pn.getInfraspecificEpithet() != null) {
         // might be subspecies without rank marker
         // or short authorship prefix in epithet. test
-        String extendedAuthor = cn.getInfraspecificEpithet() + " " + cn.getCombinationAuthorship();
-        Matcher m = AUTHORSHIP_PATTERN.matcher(extendedAuthor);
+        String extendedAuthor = pn.getInfraspecificEpithet() + " " + pn.getCombinationAuthorship();
+        Matcher m = interruptableMatcher(AUTHORSHIP_PATTERN, extendedAuthor);
         if (m.find()) {
           // matches author. Prefer that
           LOG.debug("use infraspecific epithet as author prefix");
-          cn.setInfraspecificEpithet(null);
+          pn.setInfraspecificEpithet(null);
 //TODO
 //          cn.setAuthorship(parseAuthorship(extendedAuthor));
         }
       } else {
         // might be monomial with the author prefix erroneously taken as the species epithet
-        String extendedAuthor = cn.getSpecificEpithet() + " " + cn.getCombinationAuthorship();
-        Matcher m = AUTHORSHIP_PATTERN.matcher(extendedAuthor);
+        String extendedAuthor = pn.getSpecificEpithet() + " " + pn.getCombinationAuthorship();
+        Matcher m = interruptableMatcher(AUTHORSHIP_PATTERN, extendedAuthor);
         if (m.find()) {
           // matches author. Prefer that
           LOG.debug("use specific epithet as author prefix");
-          cn.setSpecificEpithet(null);
+          pn.setSpecificEpithet(null);
 //TODO
 //          cn.setAuthorship(parseAuthorship(extendedAuthor));
         }

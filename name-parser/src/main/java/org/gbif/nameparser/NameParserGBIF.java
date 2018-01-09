@@ -19,16 +19,16 @@ import static org.gbif.nameparser.ParsingJob.unparsable;
  * Make sure to reuse the instance as much as possible and don't forget to close it for the threads to shutdown properly.
  */
 public class NameParserGBIF implements NameParser {
-
+  public static final String THREAD_NAME = "NameParser-worker";
   private static Logger LOG = LoggerFactory.getLogger(NameParserGBIF.class);
   /**
-   * We use a cached threadpool to run the normalised parsing in the background so we can control
+   * We use a cached threadpool to run the parsing in the background so we can control
    * timeouts. If idle the pool shrinks to no threads after 10 seconds.
    */
   private static final ExecutorService EXEC = new ThreadPoolExecutor(0, 100,
       10L, TimeUnit.SECONDS,
       new SynchronousQueue<Runnable>(),
-      new NamedThreadFactory("NormalisedNameParser", Thread.MAX_PRIORITY, true),
+      new NamedThreadFactory(THREAD_NAME, Thread.NORM_PRIORITY, true),
       new ThreadPoolExecutor.CallerRunsPolicy());
 
   private final long timeout;  // max parsing time in milliseconds
@@ -94,6 +94,7 @@ public class NameParserGBIF implements NameParser {
     } catch (TimeoutException e) {
       // parsing timeout
       LOG.warn("Parsing timeout for name: {}", scientificName);
+      task.cancel(true);
     }
 
     throw new UnparsableNameException(NameType.SCIENTIFIC, scientificName);

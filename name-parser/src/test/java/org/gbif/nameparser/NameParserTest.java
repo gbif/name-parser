@@ -1,7 +1,6 @@
 package org.gbif.nameparser;
 
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang3.time.StopWatch;
 import org.gbif.nameparser.api.*;
 import org.gbif.nameparser.api.ParsedName.State;
 import org.junit.Ignore;
@@ -508,38 +507,6 @@ public class NameParserTest {
     assertName("Cattleya Prince John gx", "Cattleya Prince John gx")
         .cultivar("Cattleya", GREX, "Prince John")
         .nothingElse();
-  }
-
-  @Test
-  public void timeoutLongNames() throws Exception {
-    final int timeout = 5;
-    NameParser quickParser = new NameParserGBIF(timeout);
-    StopWatch watch = new StopWatch();
-    // warm up parser
-    try {
-      quickParser.parse("Abies", Rank.GENUS);
-    } catch (UnparsableNameException ex) {
-      // too short on your machine? ignore
-    }
-
-    String name = "Desmarestia ligulata subsp. muelleri (M.E.Ramirez & A.F.Peters) S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, A.F.Peters, E.C.Yang, A.F.Peters, E.C.Yang, F.C.Küpper & Prud'Homme van Reine, 2014";
-    watch.start();
-    try {
-      quickParser.parse(name);
-      fail("Expected to be unparsable: "+name);
-
-    } catch (UnparsableNameException ex) {
-
-      final long duration = watch.getTime();
-      System.out.println("Parsing took "+duration+"ms");
-      // the duration is the timeout PLUS some initialization overhead thats why we allow 25ms for
-      assertTrue("No timeout happening for long running parsing ("+duration+"ms)", duration < 25 + timeout);
-      assertEquals(NameType.SCIENTIFIC, ex.getType());
-      assertEquals(name, ex.getName());
-    }
-
-
-    //TODO
   }
 
   @Test
