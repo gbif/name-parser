@@ -109,6 +109,10 @@ public class ParsedNameTest {
   @Test
   public void testIndet() throws Exception {
     ParsedName pn = new ParsedName();
+    pn.setRank(Rank.SPECIES);
+    assertTrue(pn.isIndetermined());
+
+    pn.setRank(null);
     pn.setGenus("Abies");
     assertFalse(pn.isIndetermined());
 

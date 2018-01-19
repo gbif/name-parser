@@ -23,9 +23,10 @@ import static org.junit.Assert.*;
 /**
  *
  */
-public class NameParserTest {
-  private static Logger LOG = LoggerFactory.getLogger(NameParserTest.class);
-  static final NameParser parser = new NameParserGBIF();
+public class NameParserGBIFTest {
+  private static Logger LOG = LoggerFactory.getLogger(NameParserGBIFTest.class);
+  private static boolean DEBUG = true;
+  static final NameParser parser = new NameParserGBIF(DEBUG? 99999999 : 1000);
 
   @Test
   public void parseSpecies() throws Exception {
@@ -242,6 +243,24 @@ public class NameParserTest {
         .nothingElse();
   }
 
+  /**
+   * https://github.com/gbif/checklistbank/issues/48
+   */
+  @Test
+  public void novPlaceholder() throws Exception {
+    assertName("Gen.nov.", null)
+        .type(PLACEHOLDER)
+        .rank(Rank.GENUS)
+        .nomNote("Gen. nov.")
+        .nothingElse();
+
+    assertName("Gen.nov. sp.nov.", null)
+        .type(PLACEHOLDER)
+        .rank(Rank.SPECIES)
+        .nomNote("Gen. nov. sp. nov.")
+        .nothingElse();
+  }
+
   @Test
   public void unparsablePlaceholder() throws Exception {
     assertUnparsable("[unassigned] Cladobranchia", PLACEHOLDER);
@@ -317,7 +336,6 @@ public class NameParserTest {
         .combAuthors(null, "L.")
         .nothingElse();
   }
-
 
   @Test
   public void testCandidatus() throws Exception {
@@ -765,15 +783,14 @@ public class NameParserTest {
    */
   @Test
   public void testEmpty() throws Exception {
-    assertEmptyName(null);
-    assertEmptyName("");
-    assertEmptyName(" ");
-    assertEmptyName("\t");
-    assertEmptyName("\n");
-    assertEmptyName("\t\n");
-    // TODO: should this be no name instead ???
-    assertEmptyName("\"");
-    assertEmptyName("'");
+    assertNoName(null);
+    assertNoName("");
+    assertNoName(" ");
+    assertNoName("\t");
+    assertNoName("\n");
+    assertNoName("\t\n");
+    assertNoName("\"");
+    assertNoName("'");
   }
 
   /**
@@ -893,11 +910,6 @@ public class NameParserTest {
   // **************
   // HELPER METHODS
   // **************
-
-
-  private void assertEmptyName(String name) {
-    assertUnparsableName(name, NO_NAME, null);
-  }
 
   private void assertNoName(String name) {
     assertUnparsable(name, NO_NAME);

@@ -228,6 +228,11 @@ public class NameAssertion {
     return add(NP.DOUBTFUL);
   }
 
+  NameAssertion rank(Rank rank) {
+    assertEquals(rank, n.getRank());
+    return add(NP.RANK);
+  }
+
   NameAssertion state(ParsedName.State state) {
     assertEquals(state, n.getState());
     return add(NP.STATE);

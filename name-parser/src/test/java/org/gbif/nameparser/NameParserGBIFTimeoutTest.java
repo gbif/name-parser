@@ -14,7 +14,7 @@ import static org.junit.Assert.fail;
 /**
  *
  */
-public class NameParserTimeoutTest {
+public class NameParserGBIFTimeoutTest {
 
   @Test
   public void timeoutLongNames() throws Exception {

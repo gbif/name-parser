@@ -157,7 +157,7 @@ public class NameFormatter {
       }
 
       if (n.getSpecificEpithet() == null) {
-        if (showIndet && n.getCultivarEpithet() == null) {
+        if (showIndet && n.getGenus() != null && n.getCultivarEpithet() == null) {
           if (Rank.SPECIES == n.getRank()) {
             // no species epithet given, but rank=species. Indetermined species!
             sb.append(" spec.");
@@ -249,29 +249,30 @@ public class NameFormatter {
           .append(" gx");
 
       } else {
-        sb.append(" '");
-        sb.append(n.getCultivarEpithet());
-        sb.append("'");
+        sb.append(" '")
+          .append(n.getCultivarEpithet())
+          .append("'");
       }
     }
 
     // add sensu/sec reference
     if (showSensu && n.getSensu() != null) {
-      sb.append(" ");
-      sb.append(n.getSensu());
+      appendIfNotEmpty(sb," ")
+          .append(n.getSensu());
     }
 
     // add nom status
     if (nomNote && n.getNomenclaturalNotes() != null) {
-      sb.append(", ");
-      sb.append(n.getNomenclaturalNotes());
+      appendIfNotEmpty(sb,", ")
+          .append(n.getNomenclaturalNotes());
     }
 
     // add remarks
     if (remarks && n.getRemarks() != null) {
-      sb.append(" [");
-      sb.append(n.getRemarks());
-      sb.append("]");
+      appendIfNotEmpty(sb, " ")
+          .append("[")
+          .append(n.getRemarks())
+          .append("]");
     }
 
     // final char transformations
@@ -283,6 +284,13 @@ public class NameFormatter {
       name = UnicodeUtils.ascii(name);
     }
     return Strings.emptyToNull(name);
+  }
+
+  private static StringBuilder appendIfNotEmpty(StringBuilder sb, String toAppend) {
+    if (sb.length() > 0) {
+      sb.append(toAppend);
+    }
+    return sb;
   }
 
   private static boolean isZoo(NomCode code) {

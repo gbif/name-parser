@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 
 @Ignore("Manual longer runnng test to test parse in multithreaded environmen")
-public class NameParserThreadTest {
+public class NameParserGBIFThreadTest {
   static final String NAME = "Oreocharis aurea var. cordato-ovata K.Y. Pan, A.L. Weitzman & Skog, ";
   static final int REPEAT = 10;
 

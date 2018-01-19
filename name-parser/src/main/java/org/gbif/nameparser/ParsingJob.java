@@ -204,17 +204,17 @@ class ParsingJob implements Callable<ParsedName> {
   private static final String SENSU =
       "(s\\.(?:l\\.|str\\.)|sensu\\s+(?:latu|strictu?)|(sec|sensu|auct|non)((\\.|\\s)(.*))?)";
   private static final Pattern EXTRACT_SENSU = Pattern.compile(",?\\s+(" + SENSU + "$|\\(" + SENSU + "\\))");
-  private static final String NOV_RANKS = "fam|gen|sp|ssp|var|forma";
+  private static final String NOV_RANKS = "((?:[sS]ub)?(?:[fF]am|[gG]en|[sS]s?p(?:ec)?|[vV]ar|[fF](?:orma?)?))";
   private static final Pattern NOV_RANK_MARKER = Pattern.compile("(" + NOV_RANKS + ")");
-  protected static final Pattern EXTRACT_NOMSTATUS = Pattern.compile("(?:, ?| )"
+  protected static final Pattern EXTRACT_NOMSTATUS = Pattern.compile("(?:, ?| |\\b)"
       + "\\(?"
       + "("
-      + "(?:comb|"+NOV_RANKS+")?[\\. ] ?nov[\\. $](?: ?ined\\.?)?"
-      + "|ined\\."
-      + "|nom(?:\\s+|\\.\\s*|en\\s+)"
-      + "(?:utiq(?:ue\\s+|\\.\\s*))?"
-      + "(?:ambig|alter|alt|correct|cons|dubium|dub|herb|illeg|invalid|inval|negatum|neg|novum|nov|nudum|nud|oblitum|obl|praeoccup|prov|prot|transf|superfl|super|rejic|rej)\\.?"
-      + "(?:\\s+(?:prop|proposed)\\.?)?"
+        + "(?:comb|"+NOV_RANKS+")\\.? nov\\.? ?(?:ined\\.?)?"
+        + "|ined\\."
+        + "|nom(?:\\s+|\\.\\s*|en\\s+)"
+          + "(?:utiq(?:ue\\s+|\\.\\s*))?"
+          + "(?:ambig|alter|alt|correct|cons|dubium|dub|herb|illeg|invalid|inval|negatum|neg|novum|nov|nudum|nud|oblitum|obl|praeoccup|prov|prot|transf|superfl|super|rejic|rej)\\.?"
+          + "(?:\\s+(?:prop|proposed)\\.?)?"
       + ")"
       + "\\)?");
   private static final Pattern EXTRACT_REMARKS = Pattern.compile("\\s+(anon\\.?)(\\s.+)?$");
@@ -339,10 +339,6 @@ class ParsingJob implements Callable<ParsedName> {
              ")" +
              "$");
 
-  static ParsedName unparsable(NameType type, String name) throws UnparsableNameException {
-    throw new UnparsableNameException(type, name);
-  }
-
   static Matcher interruptableMatcher(Pattern pattern, String text) {
     return pattern.matcher(new InterruptibleCharSequence(text));
   }
@@ -359,6 +355,10 @@ class ParsingJob implements Callable<ParsedName> {
     this.scientificName = Preconditions.checkNotNull(scientificName);
     this.rank = Preconditions.checkNotNull(rank);
     pn =  new ParsedName();
+  }
+
+  private ParsedName unparsable(NameType type) throws UnparsableNameException {
+    throw new UnparsableNameException(type, scientificName);
   }
 
   /**
@@ -419,7 +419,7 @@ class ParsingJob implements Callable<ParsedName> {
     m = INFRASPEC_UPPER.matcher(name);
     String infraspecEpithet = null;
     if (m.find()) {
-      // we will replace the infraspecific one later!
+      // we will replace is later again with infraspecific we memorized here!!!
       name = m.replaceFirst("vulgaris");
       infraspecEpithet = m.group(1);
       pn.setType(NameType.INFORMAL);
@@ -455,11 +455,11 @@ class ParsingJob implements Callable<ParsedName> {
 
     // detect further unparsable names
     if (PLACEHOLDER.matcher(name).find()) {
-      unparsable(NameType.PLACEHOLDER, scientificName);
+      unparsable(NameType.PLACEHOLDER);
     }
 
     if (IS_VIRUS_PATTERN.matcher(name).find() || IS_VIRUS_PATTERN_CASE_SENSITIVE.matcher(name).find()) {
-      unparsable(NameType.VIRUS, scientificName);
+      unparsable(NameType.VIRUS);
     }
 
     // detect RNA/DNA gene/strain names and flag as informal
@@ -470,7 +470,7 @@ class ParsingJob implements Callable<ParsedName> {
     // normalise name
     name = normalize(name);
     if (Strings.isNullOrEmpty(name)) {
-      unparsable(NameType.NO_NAME, null);
+      unparsable(NameType.NO_NAME);
     }
 
     // check for supraspecific ranks at the beginning of the name
@@ -503,11 +503,11 @@ class ParsingJob implements Callable<ParsedName> {
 
     // name without any latin char letter at all?
     if (NO_LETTERS.matcher(name).find()) {
-      unparsable(NameType.NO_NAME, scientificName);
+      unparsable(NameType.NO_NAME);
     }
 
     if (HYBRID_FORMULA_PATTERN.matcher(name).find()) {
-      unparsable(NameType.HYBRID_FORMULA, scientificName);
+      unparsable(NameType.HYBRID_FORMULA);
     }
 
     m = IS_CANDIDATUS_PATTERN.matcher(name);
@@ -519,15 +519,26 @@ class ParsingJob implements Callable<ParsedName> {
     // extract nom.illeg. and other nomen status notes
     m = EXTRACT_NOMSTATUS.matcher(name);
     if (m.find()) {
-      pn.setNomenclaturalNotes(StringUtils.trimToNull(m.group(1)));
-      name = m.replaceFirst("");
-      // if there was a rank given in the nom status populate the rank marker field
-      if (pn.getNomenclaturalNotes() != null) {
-        Matcher rm = NOV_RANK_MARKER.matcher(pn.getNomenclaturalNotes());
-        if (rm.find()) {
-          ParsingJob.setRank(pn, rm.group(1));
+      StringBuilder notes = new StringBuilder();
+      StringBuffer sb = new StringBuffer();
+      do {
+        if (notes.length() > 0) {
+          notes.append(" ");
         }
-      }
+        String note = StringUtils.trimToNull(m.group(1));
+        if (note != null) {
+          notes.append(note);
+          m.appendReplacement(sb, "");
+          // if there was a rank given in the nom status populate the rank marker field
+          Matcher rm = NOV_RANK_MARKER.matcher(note);
+          if (rm.find()) {
+            ParsingJob.setRank(pn, rm.group(1));
+          }
+        }
+      } while (m.find());
+      m.appendTail(sb);
+      name = sb.toString();
+      pn.setNomenclaturalNotes(notes.toString());
     }
 
     // extract sec reference
@@ -561,13 +572,21 @@ class ParsingJob implements Callable<ParsedName> {
 
     }
 
+    // remember current rank for later reuse
+    final Rank preparsingRank = pn.getRank();
+
     name = normalizeStrong(name);
     if (Strings.isNullOrEmpty(name)) {
-      unparsable(NameType.NO_NAME, scientificName);
+      // we might have parsed out remarks already which we treat as a placeholder
+      if (preparsingRank == null && preparsingRank.otherOrUnranked()) {
+        unparsable(NameType.NO_NAME);
+      } else {
+        // stop here!
+        pn.setState(ParsedName.State.COMPLETE);
+        pn.setType(NameType.PLACEHOLDER);
+        return;
+      }
     }
-
-    // remember current rank for later reuse
-    Rank preparsingRank = pn.getRank();
 
     // try regular parsing
     boolean parsed = parseNormalisedName(name);
@@ -575,10 +594,10 @@ class ParsingJob implements Callable<ParsedName> {
         // try to spot a virus name once we know its not a scientific name
         m = IS_VIRUS_PATTERN_POSTFAIL.matcher(name);
         if (m.find()) {
-          unparsable(NameType.VIRUS, scientificName);
+          unparsable(NameType.VIRUS);
         }
         // cant parse it, fail!
-        unparsable(NameType.NO_NAME, scientificName);
+        unparsable(NameType.NO_NAME);
     }
 
     // did we parse a infraspecic manuscript name?

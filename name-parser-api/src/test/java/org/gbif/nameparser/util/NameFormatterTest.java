@@ -138,6 +138,26 @@ public class NameFormatterTest {
   }
 
   @Test
+  public void testIndet() throws Exception {
+    pn.setNomenclaturalNotes("sp.nov.");
+    for (Rank r : Rank.values()) {
+      pn.setRank(r);
+      assertNull(pn.canonicalName());
+      assertEquals("sp.nov.", pn.canonicalNameComplete());
+    }
+
+    pn.setGenus("Abies");
+    pn.setRank(Rank.UNRANKED);
+    assertEquals("Abies", pn.canonicalName());
+
+    pn.setRank(Rank.SPECIES);
+    assertEquals("Abies spec.", pn.canonicalName());
+
+    pn.setSpecificEpithet("alba");
+    assertEquals("Abies alba", pn.canonicalName());
+  }
+
+  @Test
   public void testCanonicalNames() throws Exception {
     pn.setGenus("Abies");
     assertEquals("Abies", pn.canonicalName());

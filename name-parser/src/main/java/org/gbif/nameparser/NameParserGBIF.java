@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.*;
 
-import static org.gbif.nameparser.ParsingJob.unparsable;
-
 /**
  * The default GBIF name parser build on regular expressions.
  * In order to avoid long running regex matches it runs the core parsing in a background threadpool
@@ -58,7 +56,7 @@ public class NameParserGBIF implements NameParser {
    * on the nomenclatural status. In some cases the authorship parsing proves impossible and this nameparser will
    * return null.
    *
-   * For strings which are no scientific names and scientific names that cannot be expressed by the ParsedName class
+   * For strings which are null, empty, no scientific names and scientific names that cannot be expressed by the ParsedName class
    * the parser will throw an UnparsableException with a given NameType and the original, unparsed name. This is the
    * case for all virus names and proper hybrid formulas, so make sure you catch and process this exception.
    *
@@ -69,7 +67,7 @@ public class NameParserGBIF implements NameParser {
    */
   public ParsedName parse(final String scientificName, Rank rank) throws UnparsableNameException {
     if (Strings.isNullOrEmpty(scientificName)) {
-      unparsable(NameType.NO_NAME, null);
+      throw new UnparsableNameException(NameType.NO_NAME, scientificName);
     }
 
     FutureTask<ParsedName> task = new FutureTask<ParsedName>(new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank));

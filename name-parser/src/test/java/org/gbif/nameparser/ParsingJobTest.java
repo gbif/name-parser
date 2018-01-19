@@ -119,6 +119,28 @@ public class ParsingJobTest {
     testCultivar("Symphoricarpos sp. cv. 'mother of pearl'");
   }
 
+  @Test
+  public void testNomStatusRemarks() throws Exception {
+    // parser expects a dot followed by a space as done by the string normalizer
+    nomStatusRemark("Spec nov");
+    nomStatusRemark("sp. nov.");
+    nomStatusRemark("Fam. nov.");
+    nomStatusRemark("Gen. nov.");
+    // our test only catches the first match, real parsing both!
+    nomStatusRemark("Gen. nov. sp. nov", "Gen. nov.");
+    nomStatusRemark("Abies keralia spec. nov.", "spec. nov.");
+    nomStatusRemark("Abies sp. nov.", "sp. nov.");
+  }
+
+  private void nomStatusRemark(String remarks) {
+    nomStatusRemark(remarks, remarks);
+  }
+  private void nomStatusRemark(String remarks, String match) {
+    Matcher m = ParsingJob.EXTRACT_NOMSTATUS.matcher(remarks);
+    assertTrue (m.find());
+    assertEquals(match, m.group().trim());
+  }
+
   private void testCultivar(String cultivar) {
     Matcher m = ParsingJob.CULTIVAR.matcher(cultivar);
     assertTrue (m.find());
