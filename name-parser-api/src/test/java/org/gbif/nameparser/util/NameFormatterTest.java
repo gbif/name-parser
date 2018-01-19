@@ -247,6 +247,19 @@ public class NameFormatterTest {
     assertEquals("× Abies alba alpina Mill.", pn.canonicalName());
   }
 
+  @Test
+  public void testUnparsable() throws Exception {
+    for (NameType t : NameType.values()) {
+      if (!t.isParsable()) {
+        pn.setType(t);
+        for (Rank r : Rank.values()) {
+          pn.setRank(r);
+          assertName(null,null);
+        }
+      }
+    }
+  }
+
   /**
    * http://dev.gbif.org/issues/browse/POR-2624
    */
