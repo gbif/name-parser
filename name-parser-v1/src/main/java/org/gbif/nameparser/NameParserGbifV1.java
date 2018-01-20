@@ -1,7 +1,6 @@
 package org.gbif.nameparser;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
@@ -155,7 +154,7 @@ public class NameParserGbifV1 implements NameParser {
     gbif.setType(gbifNameType(pn));
     gbif.setScientificName(scientificName);
 
-    gbif.setGenusOrAbove(MoreObjects.firstNonNull(pn.getGenus(), pn.getUninomial()));
+    gbif.setGenusOrAbove(pn.getGenus() != null ? pn.getGenus(): pn.getUninomial());
     gbif.setInfraGeneric(pn.getInfragenericEpithet());
     gbif.setSpecificEpithet(pn.getSpecificEpithet());
     gbif.setInfraSpecificEpithet(pn.getInfraspecificEpithet());
