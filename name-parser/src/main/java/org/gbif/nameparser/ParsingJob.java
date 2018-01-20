@@ -80,6 +80,8 @@ class ParsingJob implements Callable<ParsedName> {
       // space will be added to dots preceding a capital letter like in Müll.Arg. -> Müll. Arg.
       // otherwise the AUTHOR_TEAM regex will become 10 times slower!!!
       "(?:[- '](?:d[eau][- ])?" + AUTHOR_TOKEN_DOT + ")?" +
+      // and another 3rd option, e.g Sainte-Claire Deville
+      "(?:[- ]" + AUTHOR_TOKEN_DOT + ")?" +
       // common name suffices (ms=manuscript, not yet published)
       "(?: ?(?:f|fil|filius|j|jr|jun|junior|sr|sen|senior|ms)\\.?)?" +
       ")";

@@ -162,7 +162,7 @@ public class NameParserGbifV1 implements NameParser {
     gbif.setNotho(toGbif(pn.getNotho()));
     gbif.setRank(toGbif(pn.getRank()));
     // in the old API we used null instead of unranked
-    if (gbif.getRank() == rank.UNRANKED && rank.UNRANKED != rank) {
+    if (gbif.getRank() == Rank.UNRANKED && Rank.UNRANKED != rank) {
       gbif.setRank(null);
     }
     gbif.setStrain(pn.getStrain());

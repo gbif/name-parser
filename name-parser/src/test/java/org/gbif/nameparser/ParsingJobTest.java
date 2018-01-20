@@ -97,6 +97,8 @@ public class ParsingJobTest {
     assertAuthorTeamPattern("Branco, M.T.P.Azevedo, Sant'Anna & Komárek", null, "Branco", "M.T.P.Azevedo", "Sant'Anna", "Komárek");
     assertAuthorTeamPattern("Janick Hendrik van Kinsbergen", null, "Janick Hendrik van Kinsbergen");
     assertAuthorTeamPattern("Jan Hendrik van Kinsbergen", null, "Jan Hendrik van Kinsbergen");
+    assertAuthorTeamPattern("Sainte-Claire Deville", null, "Sainte-Claire Deville");
+
     //assertAuthorTeamPattern("A.F.Peters, E.C.Yang, A.F.Peters, E.C.Yang, F.C.Küpper & Prud'Homme van Reine", null, "A.F.Peters", "E.C.Yang", "A.F.Peters", "E.C.Yang", "F.C.Küpper", "Prud'Homme van Reine");
   }
 
