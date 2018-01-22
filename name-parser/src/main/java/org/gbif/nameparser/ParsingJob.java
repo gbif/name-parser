@@ -40,7 +40,8 @@ class ParsingJob implements Callable<ParsedName> {
   static Logger LOG = LoggerFactory.getLogger(ParsingJob.class);
 
   private static final Pattern ET_PATTERN = Pattern.compile(" et ", Pattern.CASE_INSENSITIVE);
-  private static final Splitter AUTHORTEAM_SPLITTER = Splitter.on(CharMatcher.anyOf(",&")).trimResults().omitEmptyStrings();
+  private static final CharMatcher AUTHORTEAM_DELIMITER = CharMatcher.anyOf(",&");
+  private static final Splitter AUTHORTEAM_SPLITTER = Splitter.on(AUTHORTEAM_DELIMITER).trimResults().omitEmptyStrings();
   private static final Splitter AUTHORTEAM_SEMI_SPLITTER = Splitter.on(";").trimResults().omitEmptyStrings();
   private static final Pattern AUTHOR_INITIAL_SWAP = Pattern.compile("^([^,]+) *, *([^,]+)$");
   private static final Pattern NORM_PUNCT = Pattern.compile("\\. +");
@@ -54,18 +55,20 @@ class ParsingJob implements Callable<ParsedName> {
   // (\W is alphanum)
   private static final String AUTHOR_PREFIXES =
     "(?:v\\. " +
-        "|[vV][ao]n(?:[ -](?:den|der|dem) )? ?" +
+        "|[vV]?[Aao]n(?:[ -](?:den|der|dem) )? ?" +
         "|De" +
         "|[dD](?:e|el|es|i|a)(?:[' ]l[ae])?[' ]" +
         "|[dDN]'" +
-        "|Mac|Mc|Le|St\\.? ?" +
+        "|Mac|Mc" +
+        "|la |Le" +
+        "|s'|St\\.? ?" +
         "|Ou|O'" +
         "|'t " +
     ")?";
   static final String AUTHOR_CAP = "[" + AUTHOR_LETTERS + "]+[" + author_letters + "']";
   private static final String AUTHOR_TOKEN_DOT  = AUTHOR_CAP + "*\\.?";
   private static final String AUTHOR_TOKEN_LONG = AUTHOR_CAP + "{2,}";
-  private static final String AUTHOR = "(?:" +
+  private static final String AUTHOR2 = "(?:" +
       "(?:" +
         // optional author initials
         "(?:[" + AUTHOR_LETTERS + "]{1,3}(?:[" + author_letters + "]{0,2})\\.?[ -]?){0,3}" +
@@ -85,6 +88,15 @@ class ParsingJob implements Callable<ParsedName> {
       // common name suffices (ms=manuscript, not yet published)
       "(?: ?(?:f|fil|filius|j|jr|jun|junior|sr|sen|senior|ms)\\.?)?" +
       ")";
+  private static final String AUTHOR_PREFIX =
+      "(?:" +
+           "v(?:\\.|[ao]n)(?:[ -](?:den|der|dem) )? ?" +
+          "|d(?:e|el|es|i|a)?(?:[' ]l[ae])?[' ]" +
+          "|l[ae] " +
+          "|s'" +
+          "|'t " +
+      ")?";
+  private static final String AUTHOR = AUTHOR_PREFIX + "?\\p{Lu}[\\p{Lu}\\p{Ll}\\. '-]*?";
   private static final String AUTHOR_TEAM = AUTHOR +
       "(?:(?: ?(?:&| et |,|;) ?)+" + AUTHOR + ")*" +
       "(?:(?: ?& ?| et )al\\.?)?";
@@ -651,6 +663,9 @@ class ParsingJob implements Callable<ParsedName> {
       return null;
     }
 
+    // translate some very similar characters that sometimes get misused instead of real letters
+    name = StringUtils.replaceChars(name, "¡", "i");
+
     // normalise usage of rank marker with 2 dots, i.e. forma specialis and sensu latu
     Matcher m = FORM_SPECIALIS.matcher(name);
     if (m.find()) {
@@ -1181,8 +1196,34 @@ class ParsingJob implements Callable<ParsedName> {
       }
       return authors;
 
-    } else {
+    } else if(AUTHORTEAM_DELIMITER.matchesAnyOf(team)) {
       return AUTHORTEAM_SPLITTER.splitToList(normAuthor(team));
+
+    } else {
+      // we sometimes see space delimited authorteams with the initials consistently at the end of a single author:
+      // Balsamo M Fregni E Tongiorgi MA
+      String SPACE_AUTHOR = "(\\p{Lu}\\p{Ll}+ \\p{Lu}+)";
+      Pattern AUTHORTEAM_SPACED = Pattern.compile("^" + SPACE_AUTHOR + "(?: " + SPACE_AUTHOR + ")*$");
+      Pattern AUTHOR_SPACED = Pattern.compile("(\\p{Lu}\\p{Ll}+) (\\p{Lu}+)");
+      Matcher m = AUTHORTEAM_SPACED.matcher(team);
+      if (m.find()) {
+        // We should be able to extract the authors from the first match instead of doing it again
+        Matcher m2 = AUTHOR_SPACED.matcher(team);
+        List<String> authors = Lists.newArrayList();
+        while (m2.find()) {
+          StringBuilder sb = new StringBuilder();
+          for (char initial : m2.group(2).toCharArray()) {
+            sb.append(initial);
+            sb.append('.');
+          }
+          sb.append(m2.group(1));
+          authors.add(sb.toString());
+        }
+        return authors;
+      } else {
+        // no delimiters found, treat as one author
+        return Lists.newArrayList(normAuthor(team));
+      }
     }
   }
 

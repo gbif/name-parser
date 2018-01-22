@@ -129,6 +129,13 @@ public class NameParserGBIFTest {
         .combExAuthors("Baker f.")
         .nothingElse();
 
+    assertName("Gymnocalycium eurypleurumn Plesn¡k ex F.Ritter", "Gymnocalycium eurypleurumn")
+        .species("Gymnocalycium", "eurypleurumn")
+        .combAuthors(null, "F.Ritter")
+        .combExAuthors("Plesnik")
+        .doubtful()
+        .nothingElse();
+
     // "Abies brevifolia cv. ex Dallim."
     // "Abies brevifolia hort. ex Dallim."
     // "Acacia truncata (Burm. f.) hort. ex Hoffmanns."
@@ -698,7 +705,7 @@ public class NameParserGBIFTest {
   }
 
   @Test
-  public void testApostropheAuthors() throws Exception {
+  public void testAuthorSpecialities() throws Exception {
     assertName("Cirsium creticum d'Urv.", "Cirsium creticum")
         .species("Cirsium", "creticum")
         .combAuthors(null, "d'Urv.")
@@ -709,6 +716,16 @@ public class NameParserGBIFTest {
         .infraSpecies("Cirsium", "creticum", SUBSPECIES, "creticum")
         //.combAuthors(null, "d'Urv.")
         .autonym()
+        .nothingElse();
+
+    assertName("Cirsium creticum Balsamo M Fregni E Tongiorgi P", "Cirsium creticum")
+        .species("Cirsium", "creticum")
+        .combAuthors(null, "M.Balsamo", "E.Fregni", "P.Tongiorgi")
+        .nothingElse();
+
+    assertName("Cirsium creticum Balsamo M Todaro MA", "Cirsium creticum")
+        .species("Cirsium", "creticum")
+        .combAuthors(null, "M.Balsamo", "M.A.Todaro")
         .nothingElse();
   }
 

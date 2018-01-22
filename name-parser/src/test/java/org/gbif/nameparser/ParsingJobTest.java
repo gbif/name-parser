@@ -92,14 +92,24 @@ public class ParsingJobTest {
     assertAuthorTeamPattern("P.E.Berry & Reg.B.Miller", null, "P.E.Berry", "Reg.B.Miller");
     assertAuthorTeamPattern("'t Hart", null, "'t Hart");
     assertAuthorTeamPattern("Abdallah & Sa'ad", null, "Abdallah", "Sa'ad");
-    assertAuthorTeamPattern("Linnaeus filius", null, "Linnaeus filius");
+    assertAuthorTeamPattern("Linnaeus filius");
     assertAuthorTeamPattern("Bollmann, M.Y.Cortés, Kleijne, J.B.Østerg. & Jer.R.Young", null, "Bollmann", "M.Y.Cortés", "Kleijne", "J.B.Østerg.", "Jer.R.Young");
     assertAuthorTeamPattern("Branco, M.T.P.Azevedo, Sant'Anna & Komárek", null, "Branco", "M.T.P.Azevedo", "Sant'Anna", "Komárek");
-    assertAuthorTeamPattern("Janick Hendrik van Kinsbergen", null, "Janick Hendrik van Kinsbergen");
-    assertAuthorTeamPattern("Jan Hendrik van Kinsbergen", null, "Jan Hendrik van Kinsbergen");
-    assertAuthorTeamPattern("Sainte-Claire Deville", null, "Sainte-Claire Deville");
-
-    //assertAuthorTeamPattern("A.F.Peters, E.C.Yang, A.F.Peters, E.C.Yang, F.C.Küpper & Prud'Homme van Reine", null, "A.F.Peters", "E.C.Yang", "A.F.Peters", "E.C.Yang", "F.C.Küpper", "Prud'Homme van Reine");
+    assertAuthorTeamPattern("Janick Hendrik van Kinsbergen");
+    assertAuthorTeamPattern("Jan Hendrik van Kinsbergen");
+    assertAuthorTeamPattern("Sainte-Claire Deville");
+    assertAuthorTeamPattern("Semenov-Tian-Shanskij");
+    assertAuthorTeamPattern("Semenov-Tian-Shanskij, Sainte-Claire Deville, Janick Hendrik van Kinsbergen", null, "Semenov-Tian-Shanskij", "Sainte-Claire Deville", "Janick Hendrik van Kinsbergen");
+    assertAuthorTeamPattern("Scotto la Massese");
+    assertAuthorTeamPattern("An der Lan");
+    assertAuthorTeamPattern("Bor & s'Jacob", null, "Bor", "s'Jacob");
+    assertAuthorTeamPattern("Brunner von Wattenwyl v.W.");
+    assertAuthorTeamPattern("Martinez y Saez");
+    assertAuthorTeamPattern("Da Silva e Castro");
+    assertAuthorTeamPattern("LafuenteRoca & Carbonell", null, "LafuenteRoca", "Carbonell");
+    assertAuthorTeamPattern("Mas-ComaBargues & Esteban", null, "Mas-ComaBargues", "Esteban");
+    assertAuthorTeamPattern("Hondt d");
+    assertAuthorTeamPattern("Abou-El-Naga");
   }
 
   @Test
