@@ -19,7 +19,7 @@ public class NameAssertion {
 
   private enum NP {TYPE, EPITHETS, STRAIN, CULTIVAR, CANDIDATE, NOTHO,
     AUTH, EXAUTH, BAS, EXBAS, SANCT, RANK,
-    SENSU, NOMNOTE, REMARK, DOUBTFUL, STATE, CODE
+    TAXNOTE, NOMNOTE, REMARK, DOUBTFUL, STATE, CODE
   }
 
   public NameAssertion(ParsedName n) {
@@ -68,8 +68,8 @@ public class NameAssertion {
           case RANK:
             assertEquals(Rank.UNRANKED, n.getRank());
             break;
-          case SENSU:
-            assertNull(n.getSensu());
+          case TAXNOTE:
+            assertNull(n.getTaxonomicNote());
             break;
           case NOMNOTE:
             assertNull(n.getNomenclaturalNotes());
@@ -130,9 +130,13 @@ public class NameAssertion {
   }
 
   NameAssertion species(String genus, String epithet) {
+    return species(genus, null, epithet);
+  }
+
+  NameAssertion species(String genus, String infraGeneric, String epithet) {
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());
-    assertNull(n.getInfragenericEpithet());
+    assertEquals(infraGeneric, n.getInfragenericEpithet());
     assertEquals(epithet, n.getSpecificEpithet());
     assertNull(n.getInfraspecificEpithet());
     assertEquals(Rank.SPECIES, n.getRank());
@@ -214,8 +218,8 @@ public class NameAssertion {
   }
 
   NameAssertion sensu(String sensu) {
-    assertEquals(sensu, n.getSensu());
-    return add(NP.SENSU);
+    assertEquals(sensu, n.getTaxonomicNote());
+    return add(NP.TAXNOTE);
   }
 
   NameAssertion nomNote(String nomNote) {

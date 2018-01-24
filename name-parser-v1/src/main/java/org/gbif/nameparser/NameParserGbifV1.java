@@ -166,7 +166,7 @@ public class NameParserGbifV1 implements NameParser {
       gbif.setRank(null);
     }
     gbif.setStrain(pn.getStrain());
-    gbif.setSensu(pn.getSensu());
+    gbif.setSensu(pn.getTaxonomicNote());
 
     gbif.setAuthorship(NameFormatter.authorString(pn.getCombinationAuthorship(), false));
     gbif.setYear(pn.getCombinationAuthorship().getYear());
@@ -176,8 +176,9 @@ public class NameParserGbifV1 implements NameParser {
     gbif.setNomStatus(pn.getNomenclaturalNotes());
     gbif.setRemarks(pn.getRemarks());
 
-    gbif.setParsed(pn.getState().isNameParsed());
-    gbif.setAuthorsParsed(pn.getState().isAuthorshipParsed());
+    gbif.setParsed(pn.getState().isParsed());
+    // we do not distinct between the 2 anymore, either parsed or not
+    gbif.setAuthorsParsed(gbif.isParsed());
 
     return gbif;
   }

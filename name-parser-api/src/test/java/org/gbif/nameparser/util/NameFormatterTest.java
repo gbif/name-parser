@@ -174,7 +174,7 @@ public class NameFormatterTest {
     pn.getBasionymAuthorship().getAuthors().add("Carl.");
     pn.setNotho(NamePart.GENERIC);
     pn.setInfraspecificEpithet("alpina");
-    pn.setSensu("Döring");
+    pn.setTaxonomicNote("Döring");
     pn.setRemarks("lost");
     pn.setNomenclaturalNotes("nom. illeg.");
 

@@ -11,6 +11,7 @@ import org.gbif.nameparser.util.RankUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -45,94 +46,71 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Splitter AUTHORTEAM_SEMI_SPLITTER = Splitter.on(";").trimResults().omitEmptyStrings();
   private static final Pattern AUTHOR_INITIAL_SWAP = Pattern.compile("^([^,]+) *, *([^,]+)$");
   private static final Pattern NORM_PUNCT = Pattern.compile("\\. +");
+  private static final Pattern NORM_EX_HORT = Pattern.compile("\\b(?:hort|cv)[. ]ex ", CASE_INSENSITIVE);
 
+  // normalized space, comma & dots. Always just one of them
+  private static final String DOTSP = "[. ]";
   // name parsing
   static final String NAME_LETTERS = "A-ZÏËÖÜÄÉÈČÁÀÆŒ";
   static final String name_letters = "a-zïëöüäåéèčáàæœ";
   static final String AUTHOR_LETTERS = NAME_LETTERS + "\\p{Lu}"; // upper case unicode letter, not numerical
   // (\W is alphanum)
   static final String author_letters = name_letters + "\\p{Ll}-?"; // lower case unicode letter, not numerical
-  // (\W is alphanum)
-  private static final String AUTHOR_PREFIXES =
-    "(?:v\\. " +
-        "|[vV]?[Aao]n(?:[ -](?:den|der|dem) )? ?" +
-        "|De" +
-        "|[dD](?:e|el|es|i|a)(?:[' ]l[ae])?[' ]" +
-        "|[dDN]'" +
-        "|Mac|Mc" +
-        "|la |Le" +
-        "|s'|St\\.? ?" +
-        "|Ou|O'" +
-        "|'t " +
-    ")?";
-  static final String AUTHOR_CAP = "[" + AUTHOR_LETTERS + "]+[" + author_letters + "']";
-  private static final String AUTHOR_TOKEN_DOT  = AUTHOR_CAP + "*\\.?";
-  private static final String AUTHOR_TOKEN_LONG = AUTHOR_CAP + "{2,}";
-  private static final String AUTHOR2 = "(?:" +
-      "(?:" +
-        // optional author initials
-        "(?:[" + AUTHOR_LETTERS + "]{1,3}(?:[" + author_letters + "]{0,2})\\.?[ -]?){0,3}" +
-        // or up to 2 full first names
-        "|" + AUTHOR_TOKEN_LONG + "(?: "+AUTHOR_TOKEN_LONG+")?" +
-      " )?" +
-      // optional common prefixes
-      AUTHOR_PREFIXES +
-      // regular author name
-      AUTHOR_TOKEN_DOT +
-      // potential double names, e.g. Solms-Laub.
-      // space will be added to dots preceding a capital letter like in Müll.Arg. -> Müll. Arg.
-      // otherwise the AUTHOR_TEAM regex will become 10 times slower!!!
-      "(?:[- '](?:d[eau][- ])?" + AUTHOR_TOKEN_DOT + ")?" +
-      // and another 3rd option, e.g Sainte-Claire Deville
-      "(?:[- ]" + AUTHOR_TOKEN_DOT + ")?" +
-      // common name suffices (ms=manuscript, not yet published)
-      "(?: ?(?:f|fil|filius|j|jr|jun|junior|sr|sen|senior|ms)\\.?)?" +
-      ")";
+  // common name suffices (ms=manuscript, not yet published)
+  private static final String AUTHOR_SUFFICES = "f|fil|filius|j|jr|jun|junior|sr|sen|senior|ms";
   private static final String AUTHOR_PREFIX =
       "(?:" +
            "v(?:\\.|[ao]n)(?:[ -](?:den|der|dem) )? ?" +
-          "|d(?:e|el|es|i|a)?(?:[' ]l[ae])?[' ]" +
+          "|la " +
+          "|d(?:e|el|es|i|a|u)?(?:[' ]l[ae])?[' ]" +
+          "|degli " +
           "|l[ae] " +
           "|s'" +
           "|'t " +
-      ")?";
-  private static final String AUTHOR = AUTHOR_PREFIX + "?\\p{Lu}[\\p{Lu}\\p{Ll}\\. '-]*?";
+      ")";
+  private static final String AUTHOR_OLD = "(?:" +
+      // lowercase prefixes known for author names
+      AUTHOR_PREFIX + "?" +
+      // anything with Upper case letter, non greedy
+      "\\p{Lu}[\\p{Lu}\\p{Ll}'-]*?" +
+      // any known lowercase suffices
+      "(?:[. ]" + AUTHOR_SUFFICES +"\\b)?" +
+      "[. -]?)+";
+
+
+  private static final String AUTHOR_TOKEN = "(?:\\p{Lu}[\\p{Lu}\\p{Ll}'-]*" +
+      "|al|f|fil|filius|hort|j|jr|jun|junior|sr|sen|senior|ms" +
+      "|v|v[ao]n|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|'?t|y" +
+  ")\\.?";
+  private static final String AUTHOR = AUTHOR_TOKEN + "(?:[. '-]" + AUTHOR_TOKEN + ")*";
   private static final String AUTHOR_TEAM = AUTHOR +
-      "(?:(?: ?(?:&| et |,|;) ?)+" + AUTHOR + ")*" +
-      "(?:(?: ?& ?| et )al\\.?)?";
+      "(?:[&,;]+" + AUTHOR + ")*";
   static final String AUTHORSHIP =
       // ex authors
-      "(?:(" +
-      AUTHOR_TEAM +
-      ") ex\\.? )?" +
+      "(?:(" + AUTHOR_TEAM + ") ?\\bex[. ])?" +
       // main authors
       "(" + AUTHOR_TEAM + ")" +
       // 2 well known sanction authors for fungus, see POR-2454
-      "(?: *: *(Pers\\.?|Fr\\.?))?" +
-      // superfluous in authors
-      "(?: in " +
-      AUTHOR_TEAM +
-      ")?";
+      "(?: *: *(Pers\\.?|Fr\\.?))?";
   static final Pattern AUTHORSHIP_PATTERN = Pattern.compile("^" + AUTHORSHIP + "$");
-  static final String YEAR = "[12][0-9][0-9][0-9?]";
-  static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/-][0-9]{1,4})?";
-  // protected static final String YEAR_RANGE = YEAR+"(?: ?-? ?"+YEAR+")?";
+  private static final String YEAR = "[12][0-9][0-9][0-9?]";
+  private static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/,-][0-9]{1,4})?";
 
   private static final String NOTHO = "notho";
   private static final String RANK_MARKER_SPECIES =
-    "(?:"+NOTHO+")?(?:(?<!f[ .] ?)sp|" + StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") + ")\\.?";
-
-  private static final Function<Rank,String> REMOVE_RANK_MARKER = new Function<Rank, String>() {
-    @Override
-    public String apply(Rank rank) {
-      return rank.getMarker().replaceAll("\\.", "\\\\.");
-    }
-  };
+    "(?:"+NOTHO+")?(?:(?<!f[ .])sp|" + StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") + ")";
 
   static final String RANK_MARKER_MICROBIAL =
-    "(?:bv\\.|ct\\.|f\\. ?sp\\.|"
-    + StringUtils.join(Lists.transform(Lists.newArrayList(RankUtils.INFRASUBSPECIFIC_MICROBIAL_RANKS), REMOVE_RANK_MARKER
-    ), "|") + ")";
+    "(?:bv\\.|ct\\.|f\\.sp\\.|" +
+        StringUtils.join(Lists.transform(Lists.newArrayList(RankUtils.INFRASUBSPECIFIC_MICROBIAL_RANKS), new Function<Rank, String>() {
+              @Nullable
+              @Override
+              public String apply(@Nullable Rank r) {
+                return r.getMarker().replaceAll("\\.", "\\\\.");
+              }
+            }
+        ), "|") +
+    ")";
 
   private static final String EPHITHET_PREFIXES = "van|novae";
   private static final String GENETIC_EPHITHETS = "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
@@ -140,7 +118,7 @@ class ParsingJob implements Callable<ParsedName> {
             + "(?:(?:" + EPHITHET_PREFIXES + ") [a-z])?"
             + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
             // avoid epithets ending with the unallowed endings, e.g. serovar
-            + "(?<!(?:\\bex|"+GENETIC_EPHITHETS+"))(?=\\b)";
+            + "(?<!(?:\\bex|\\bl[ae]|\\bv[ao]n|"+GENETIC_EPHITHETS+"))(?=\\b)";
   static final String MONOMIAL =
     "[" + NAME_LETTERS + "](?:\\.|[" + name_letters + "]+)(?:-[" + NAME_LETTERS + "]?[" + name_letters + "]+)?";
   // a pattern matching typical latin word endings. Helps identify name parts from authors
@@ -156,8 +134,10 @@ class ParsingJob implements Callable<ParsedName> {
       }
   }
   private static final String INFRAGENERIC =
-    "(?:" + "\\( ?([" + NAME_LETTERS + "][" + name_letters + "-]+) ?\\)" + "|" + "(" + StringUtils
-      .join(RankUtils.RANK_MARKER_MAP_INFRAGENERIC.keySet(), "|") + ")\\.? ?([" + NAME_LETTERS + "][" + name_letters + "-]+)"
+    "(?:\\(([" + NAME_LETTERS + "][" + name_letters + "-]+)\\)" +
+        "| (" +
+          StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRAGENERIC.keySet(), "|") +
+        ")[. ]([" + NAME_LETTERS + "][" + name_letters + "-]+)"
     + ")";
 
   static final String RANK_MARKER_ALL = "("+NOTHO+")? *(" + StringUtils.join(RankUtils.RANK_MARKER_MAP.keySet(), "|") + ")\\.?";
@@ -174,12 +154,12 @@ class ParsingJob implements Callable<ParsedName> {
 
   // this is only used to detect whether we have a hybrid formula. If not, all markers are normalised
   public static final String HYBRID_MARKER = "×";
-  public static final Pattern HYBRID_FORMULA_PATTERN = Pattern.compile(" " + HYBRID_MARKER + " ");
+  public static final Pattern HYBRID_FORMULA_PATTERN = Pattern.compile("[. ]" + HYBRID_MARKER + " ");
   public static final String EXTINCT_MARKER = "†";
   private static final Pattern EXTINCT_PATTERN = Pattern.compile(EXTINCT_MARKER + "\\s*");
 
   @VisibleForTesting
-  protected static final Pattern CULTIVAR = Pattern.compile("(?: cv\\.? ?)?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
+  protected static final Pattern CULTIVAR = Pattern.compile("(?:([. ])cv[. ])?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
   private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex|gx)\\b");
 
   // TODO: replace with more generic manuscript name parsing: https://github.com/gbif/name-parser/issues/8
@@ -198,7 +178,7 @@ class ParsingJob implements Callable<ParsedName> {
   // BIN = BOLD:AAA0003
   private static final Pattern OTU_PATTERN = Pattern.compile("(BOLD:[0-9A-Z]{7}$|SH[0-9]{6}\\.[0-9]{2}FU)", CASE_INSENSITIVE);
   // spots a Candidatus bacterial name
-  private static final String CANDIDATUS = "(Candidatus\\s|Ca\\.)\\s*";
+  private static final String CANDIDATUS = "(Candidatus\\s|Ca\\.)";
   private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS);
   private static final Pattern IS_CANDIDATUS_QUOTE_PATTERN = Pattern.compile("\"" + CANDIDATUS + "(.+)\"", CASE_INSENSITIVE);
   private static final Pattern SUPRA_RANK_PREFIX = Pattern.compile("^(" + StringUtils.join(
@@ -215,28 +195,31 @@ class ParsingJob implements Callable<ParsedName> {
       " ?(?:Ad|Lv)?\\.?" +
       "$");
   // name normalising
-  private static final String SENSU =
-      "(s\\.(?:l\\.|str\\.)|sensu\\s+(?:latu|strictu?)|(sec|sensu|auct|non)((\\.|\\s)(.*))?)";
-  private static final Pattern EXTRACT_SENSU = Pattern.compile(",?\\s+(" + SENSU + "$|\\(" + SENSU + "\\))");
+  private static final Pattern EXTRACT_SENSU = Pattern.compile(" ?\\b" +
+      "(" +
+        "(?:(?:excl[. ](?:gen|sp|var)|mut.char|p.p)[. ])?" +
+        "\\(?(?:" +
+          "s[. ](?:ampl|l|s|str)[. ]" +
+          "|sensu (?:lat|strict|ampl)(?:[uo]|issimo)?" +
+          "|(?:auct|emend|fide|non|nec|sec|sensu|according to)[. ][^)]*" +
+        ")\\)?" +
+      ")");
   private static final String NOV_RANKS = "((?:[sS]ub)?(?:[fF]am|[gG]en|[sS]s?p(?:ec)?|[vV]ar|[fF](?:orma?)?))";
   private static final Pattern NOV_RANK_MARKER = Pattern.compile("(" + NOV_RANKS + ")");
-  protected static final Pattern EXTRACT_NOMSTATUS = Pattern.compile("(?:, ?| |\\b)"
+  static final Pattern EXTRACT_NOMSTATUS = Pattern.compile("[;, ]?"
       + "\\(?"
-      + "("
-        + "(?:comb|"+NOV_RANKS+")\\.? nov\\.? ?(?:ined\\.?)?"
-        + "|ined\\."
-        + "|nom(?:\\s+|\\.\\s*|en\\s+)"
-          + "(?:utiq(?:ue\\s+|\\.\\s*))?"
-          + "(?:ambig|alter|alt|correct|cons|dubium|dub|herb|illeg|invalid|inval|negatum|neg|novum|nov|nudum|nud|oblitum|obl|praeoccup|prov|prot|transf|superfl|super|rejic|rej)\\.?"
-          + "(?:\\s+(?:prop|proposed)\\.?)?"
+      + "\\b("
+        + "(?:comb|"+NOV_RANKS+")[. ]nov\\b[. ]?(?:ined[. ])?"
+        + "|ined[. ]"
+        + "|nom(?:en)?[. ]"
+          + "(?:utiq(?:ue)?[. ])?"
+          + "(?:ambig|alter|alt|correct|cons|dubium|dub|herb|illeg|invalid|inval|negatum|neg|novum|nov|nudum|nud|oblitum|obl|praeoccup|prov|prot|transf|superfl|super|rejic|rej)\\b[. ]?"
+          + "(?:prop[. ]|proposed\\b)?"
       + ")"
       + "\\)?");
   private static final Pattern EXTRACT_REMARKS = Pattern.compile("\\s+(anon\\.?)(\\s.+)?$");
-  private static final Pattern EXTRACT_YEAR = Pattern.compile("(" + YEAR_LOOSE + "\\s*\\)?)");
-
   private static final Pattern COMMA_BEFORE_YEAR = Pattern.compile("(\\p{L})[\\s/-]*(\\d{3})");
   private static final Pattern COMMA_AFTER_BASYEAR = Pattern.compile("("+YEAR+")\\s*\\)\\s*,");
-
   private static final Pattern NORM_APOSTROPHES = Pattern.compile("([\u0060\u00B4\u2018\u2019]+)");
   private static final Pattern NORM_QUOTES = Pattern.compile("([\"'`´]+)");
   private static final Pattern REPL_GENUS_QUOTE = Pattern.compile("^' *(" + MONOMIAL + ") *'");
@@ -245,33 +228,34 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_WHITESPACE = Pattern.compile("(?:\\\\[nr]|\\s)+");
   private static final Pattern REPL_UNDERSCORE = Pattern.compile("_+");
   private static final Pattern NORM_NO_SQUARE_BRACKETS = Pattern.compile("\\[(.*?)\\]");
-  private static final Pattern NORM_BRACKETS_OPEN = Pattern.compile("([{(\\[])\\s*,?");
-  private static final Pattern NORM_BRACKETS_CLOSE = Pattern.compile(",?\\s*([})\\]])");
+  private static final Pattern NORM_BRACKETS_OPEN = Pattern.compile("\\s*([{(\\[])\\s*,?\\s*");
+  private static final Pattern NORM_BRACKETS_CLOSE = Pattern.compile("\\s*,?\\s*([})\\]])\\s*");
   private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("( ?[{\\[] ?)+");
   private static final Pattern NORM_BRACKETS_CLOSE_STRONG = Pattern.compile("( ?[}\\]] ?)+");
-  private static final Pattern NORM_AND = Pattern.compile("\\b *(and|et|und|\\+) *\\b");
-  private static final Pattern NORM_ET_AL = Pattern.compile("(?:& )+al\\.?");
-  private static final Pattern NORM_AMPERSAND_WS = Pattern.compile("&");
-  private static final Pattern NORM_HYPHENS = Pattern.compile("\\s*-\\s*");
+  private static final Pattern NORM_AND = Pattern.compile("\\b *(and|et|und|\\+|,&) *\\b");
   private static final Pattern NORM_SUBGENUS = Pattern.compile("(" + MONOMIAL + ") (" + MONOMIAL + ") ([" + name_letters + "+-]{5,})");
   private static final Pattern NO_Q_MARKS = Pattern.compile("([" + author_letters + "])\\?+");
-  private static final Pattern NORM_COMMAS = Pattern.compile("\\s*,+");
-  // TODO: this next regex gets real slow with long list of authors - needs fixing, avoid lookbehind? !!!
-  private static final Pattern NORM_ORIG_AUTH  = Pattern.compile(" (" + AUTHORSHIP + ") ?\\( ?(" + YEAR_LOOSE + ") ?\\)");
-  private static final Pattern NORM_ORIG_AUTH2 = Pattern.compile("\\((" + AUTHORSHIP + ")\\) ?,? ?(" + YEAR_LOOSE + ")");
-  private static final Pattern NORM_IMPRINT_YEAR = Pattern.compile("(" + YEAR_LOOSE + ")\\s*(?:\\(\"?[\\s0-9-_,?]+\"?\\)|\\[\"?[0-9 -,]+\"?\\]|\"[0-9 -,]+\")");
+  private static final Pattern NORM_PUNCTUATIONS = Pattern.compile("\\s*([.,;:&(){}\\[\\]-])\\s*\\1*\\s*");
+  private static final Pattern NORM_IMPRINT_YEAR = Pattern.compile("(" + YEAR_LOOSE + ")\\s*" +
+      "([(\\[,]? *(?:not|imprint)? *\"?" + YEAR_LOOSE + "\"?[)\\]]?)");
   // √ó is an utf garbaged version of the hybrid cross found in IPNI. See http://dev.gbif.org/issues/browse/POR-3081
   private static final Pattern NORM_HYBRIDS_GENUS = Pattern.compile("^\\s*(?:[+×xX]|√ó)\\s*([" + NAME_LETTERS + "])");
   private static final Pattern NORM_HYBRIDS_EPITH = Pattern.compile("^\\s*(×?" + MONOMIAL + ")\\s+(?:×|√ó|[xX]\\s)\\s*(" + EPHITHET + ")");
-  private static final Pattern NORM_HYBRIDS_FORM = Pattern.compile(" ([×xX]|√ó) ");
-  private static final Pattern NORM_INDET = Pattern.compile("((^| )(undet|indet|aff|cf)[#!?\\.]?)+(?![a-z])");
-  private static final Pattern NORM_DOTS = Pattern.compile("\\.(?![ ,\\)])");
+  private static final Pattern NORM_HYBRIDS_FORM = Pattern.compile("\\b([×xX]|√ó) ");
   private static final Pattern NORM_TF_GENUS = Pattern.compile("^([" + NAME_LETTERS + "])\\(([" + name_letters + "-]+)\\)\\.? ");
-  private static final Pattern NORM_IN_COMMA = Pattern.compile(", in ", CASE_INSENSITIVE);
+  private static final Pattern REPL_IN_REF = Pattern.compile("[, ]?\\b(?:in|IN) (" + AUTHOR_TEAM + ")");
   private static final Pattern REPL_RANK_PREFIXES = Pattern.compile("^(sub)?(fossil|" +
       StringUtils.join(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
-  private static final Pattern NORM_SUFFIXES = Pattern.compile("[,;:]? (sp|anon|spp|hort|ms|&|[a-zA-Z][0-9])?\\.? *$", CASE_INSENSITIVE);
-  // removed not|indetermin[a-z]+
+
+  // Genoplesium vernalis D.L.Jones ms.
+  // Verticordia sp.1
+  // Bryozoan indet. 1
+  // Bryozoa sp. E
+  // Prostanthera sp. Somersbey (B.J.Conn 4024)
+  // Elseya sp. nov. (AMS – R140984)
+  private static final Pattern MANUSCRIPT_NAMES = Pattern.compile("\\b(indet|spp?)[. ](?:nov\\.)?[A-Z0-9][a-zA-Z0-9-]*(?:\\(.+?\\))?");
+  private static final Pattern MANUSCRIPT_SUFFIX = Pattern.compile("\\bms\\.?$");
+  private static final Pattern REPL_AFF = Pattern.compile("([. ])(?:undet|indet|aff|cf)[?.]?\\b");
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
   private static final Pattern REMOVE_PLACEHOLDER_AUTHOR = Pattern.compile("\\b"+
       "(?:unknown|unspecified|uncertain|\\?)" +
@@ -281,7 +265,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|deleted?|dummy|incertae sedis|mixed|not assigned|not stated|place ?holder|temp|tobedeleted|unaccepted|unallocated|unassigned|uncertain|unclassified|uncultured|undetermined|unknown|unnamed|unplaced|unspecified)";
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
   private static final Pattern PLACEHOLDER = Pattern.compile("\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
-  private static final Pattern DOUBTFUL = Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + "\":;&*+\\s,.()/'`´0-9-†]+$");
+  private static final Pattern DOUBTFUL = Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + "\":;&*+\\s,.()\\[\\]/'`´0-9-†]+$");
   private static final Pattern DOUBTFUL2 = Pattern.compile("\\bnull\\b");
   private static final Pattern XML_ENTITY_STRIP = Pattern.compile("&\\s*([a-z]+)\\s*;");
   // matches badly formed amoersands which are important in names / authorships
@@ -289,7 +273,7 @@ class ParsingJob implements Callable<ParsedName> {
 
   private static final Pattern XML_TAGS = Pattern.compile("< */? *[a-zA-Z] *>");
   private static final Pattern STARTING_EPITHET = Pattern.compile("^\\s*(" + EPHITHET + ")\\b");
-  private static final Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\.sp(?:ec)?\\b");
+  private static final Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\. *sp(?:ec)?\\b");
   private static final Pattern SENSU_LATU = Pattern.compile("\\bs\\.l\\.\\b");
 
   // many names still use outdated xxxtype rank marker, e.g. serotype instead of serovar
@@ -313,21 +297,21 @@ class ParsingJob implements Callable<ParsedName> {
              // #1 genus/monomial
              "(×?(?:\\?|" + MONOMIAL + "))" +
              // #2 or #4 subgenus/section with #3 infrageneric rank marker
-             "(?:(?<!ceae) " + INFRAGENERIC + ")?" +
+             "(?:(?<!ceae)" + INFRAGENERIC + ")?" +
              // #5 species
-             "(?: (×?" + EPHITHET + "))?" +
+             "(?:(?:\\b| )(×?" + EPHITHET + "))?" +
 
              "(?:" +
                // #6 superfluent intermediate (subspecies) epithet in quadrinomials
                "( " + EPHITHET + ")??" +
                "(?:" +
                  // strip out intermediate, irrelevant authors
-                 "(?: .+)??" +
+                 "(?: .+?)??" +
                  // #7 infraspecies rank
-                 "( " + RANK_MARKER_SPECIES + ")" +
+                 " ?(" + RANK_MARKER_SPECIES + ")" +
                ")?" +
                // #8 infraspecies epitheton
-               "(?: (×?\"?" + EPHITHET + "\"?))" +
+               "(?:[. ](×?\"?" + EPHITHET + "\"?))" +
              ")?" +
 
              "(?: " +
@@ -338,18 +322,18 @@ class ParsingJob implements Callable<ParsedName> {
              ")?" +
 
              // #11 entire authorship incl basionyms and year
-             "(,?" +
-               "(?: ?\\(" +
+             "([, ]?" +
+               "(?:\\(" +
                  // #12/13/14 basionym authorship (ex/auth/sanct)
                  "(?:" + AUTHORSHIP + ")?" +
                  // #15 basionym year
-                 ",?( ?" + YEAR_LOOSE + ")?" +
+                 "[, ]?(" + YEAR_LOOSE + ")?" +
                "\\))?" +
 
                // #16/17/18 authorship (ex/auth/sanct)
-               "(?: " + AUTHORSHIP + ")?" +
+               "(?:" + AUTHORSHIP + ")?" +
                // #19 year with or without brackets
-               "(?: ?\\(?,? ?(" + YEAR_LOOSE + ")\\)?)?" +
+               "(?: ?\\(?,?(" + YEAR_LOOSE + ")\\)?)?" +
              ")" +
              "$");
 
@@ -360,6 +344,7 @@ class ParsingJob implements Callable<ParsedName> {
   private final String scientificName;
   private final Rank rank;
   private final ParsedName pn;
+  private boolean ignoreAuthorship;
 
   /**
    * @param scientificName the full scientific name to parse
@@ -402,7 +387,7 @@ class ParsingJob implements Callable<ParsedName> {
       pn.setUninomial(m.group(1));
       pn.setType(NameType.OTU);
       pn.setRank(rank == null || rank.otherOrUnranked() ? Rank.SPECIES : rank);
-      pn.setState(ParsedName.State.NAME_ONLY);
+      pn.setState(ParsedName.State.COMPLETE);
 
     } else {
       // do the main incremental parsing
@@ -437,15 +422,6 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceFirst("vulgaris");
       infraspecEpithet = m.group(1);
       pn.setType(NameType.INFORMAL);
-    }
-
-    // parse out species/strain names with numbers found in Genebank/EBI names, e.g. Advenella kashmirensis W13003
-    m = STRAIN.matcher(name);
-    if (m.find()) {
-      name = m.replaceFirst(m.group(1));
-      pn.setType(NameType.INFORMAL);
-      pn.setStrain(m.group(2));
-      LOG.debug("Strain: {}", m.group(2));
     }
 
     // remove placeholders from infragenerics and authors and set type
@@ -483,6 +459,7 @@ class ParsingJob implements Callable<ParsedName> {
 
     // normalise name
     name = normalize(name);
+
     if (Strings.isNullOrEmpty(name)) {
       unparsable(NameType.NO_NAME);
     }
@@ -510,8 +487,8 @@ class ParsingJob implements Callable<ParsedName> {
     }
     m = CULTIVAR.matcher(name);
     if (m.find()) {
-      pn.setCultivarEpithet(m.group(1));
-      name = m.replaceFirst(" ");
+      pn.setCultivarEpithet(m.group(2));
+      name = m.replaceFirst("$1");
       pn.setRank(Rank.CULTIVAR);
     }
 
@@ -546,7 +523,7 @@ class ParsingJob implements Callable<ParsedName> {
           // if there was a rank given in the nom status populate the rank marker field
           Matcher rm = NOV_RANK_MARKER.matcher(note);
           if (rm.find()) {
-            ParsingJob.setRank(pn, rm.group(1));
+            setRank(rm.group(1));
           }
         }
       } while (m.find());
@@ -555,10 +532,34 @@ class ParsingJob implements Callable<ParsedName> {
       pn.setNomenclaturalNotes(notes.toString());
     }
 
+
+    // manuscript names (unpublished names)
+    // http://splink.cria.org.br/docs/appendix_j.pdf
+    m = MANUSCRIPT_NAMES.matcher(name);
+    if (m.find()) {
+      pn.setType(NameType.INFORMAL);
+      setRank(m.group(1).replace("indet", "sp"));
+      name = m.replaceFirst("");
+    }
+    m = MANUSCRIPT_SUFFIX.matcher(name);
+    if (m.find()) {
+      pn.setType(NameType.INFORMAL);
+      name = m.replaceFirst("");
+    }
+
+    // parse out species/strain names with numbers found in Genebank/EBI names, e.g. Advenella kashmirensis W13003
+    m = STRAIN.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst(m.group(1));
+      pn.setType(NameType.INFORMAL);
+      pn.setStrain(m.group(2));
+      LOG.debug("Strain: {}", m.group(2));
+    }
+
     // extract sec reference
     m = EXTRACT_SENSU.matcher(name);
     if (m.find()) {
-      pn.setSensu(StringUtils.trimToNull(m.group(1)));
+      pn.setTaxonomicNote(normNote(m.group(1).replaceAll("[)(]", "")));
       name = m.replaceFirst("");
     }
     // extract other remarks
@@ -568,28 +569,32 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceFirst("");
     }
 
-    // check for indets unless we already have a cultivar
-    if (pn.getCultivarEpithet() == null) {
-      m = RANK_MARKER_AT_END.matcher(name);
-      // f. is a marker for forms, but more often also found in authorships as "filius" - son of.
-      // so ignore those
-      if (m.find() && !(name.endsWith(" f.") || name.endsWith(" f"))) {
+    // check for indets
+    m = RANK_MARKER_AT_END.matcher(name);
+    // f. is a marker for forms, but more often also found in authorships as "filius" - son of.
+    // so ignore those
+    if (m.find() && !(name.endsWith(" f.") || name.endsWith(" f"))) {
+      // use as rank unless we already have a cultivar
+      ignoreAuthorship = true;
+      if (pn.getCultivarEpithet() == null) {
         pn.setType(NameType.INFORMAL);
-        ParsingJob.setRank(pn, m.group(2));
-        name = m.replaceAll("");
+        setRank(m.group(2));
       }
-      m = NORM_INDET.matcher(name);
-      if (m.find()) {
-        pn.setType(NameType.INFORMAL);
-        name = m.replaceAll(" ");
-      }
+      name = m.replaceAll("");
+    }
 
+    // remove informal identification notes
+    m = REPL_AFF.matcher(name);
+    if (m.find()) {
+      pn.setType(NameType.INFORMAL);
+      name = m.replaceAll("$1");
     }
 
     // remember current rank for later reuse
     final Rank preparsingRank = pn.getRank();
 
     name = normalizeStrong(name);
+
     if (Strings.isNullOrEmpty(name)) {
       // we might have parsed out remarks already which we treat as a placeholder
       if (preparsingRank == null && preparsingRank.otherOrUnranked()) {
@@ -600,6 +605,12 @@ class ParsingJob implements Callable<ParsedName> {
         pn.setType(NameType.PLACEHOLDER);
         return;
       }
+    }
+
+    // replace bibliographic in references
+    m = REPL_IN_REF.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst("");
     }
 
     // try regular parsing
@@ -624,10 +635,10 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // determine name type
-    determineNameType(pn, name);
+    determineNameType(name);
 
     // flag names that match doubtful patterns
-    applyDoubtfulFlag(pn, scientificName);
+    applyDoubtfulFlag(scientificName);
 
     // determine rank if not yet assigned
     if (pn.getRank() == null || pn.getRank().otherOrUnranked()) {
@@ -635,9 +646,17 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // determine code if not yet assigned
-    determineCode(pn);
+    determineCode();
   }
 
+  private static String normNote(String x) {
+    // dots and commas before years and after lower case words should have a space
+    return StringUtils.trimToNull(
+        x.replaceAll("([.,])(?=" + YEAR + ")", "$1 ")
+         .replaceAll("\\b([a-z]{2,})([.,])(?!= )", "$1$2 ")
+        .replaceAll("&", " & ")
+    );
+  }
   /**
    * Carefully normalizes a scientific name trying to maintain the original as close as possible.
    * In particular the string is normalized by:
@@ -658,7 +677,7 @@ class ParsingJob implements Callable<ParsedName> {
    * @return The normalized name
    */
   @VisibleForTesting
-  static String normalize(String name) {
+  String normalize(String name) {
     if (name == null) {
       return null;
     }
@@ -676,11 +695,24 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceAll("sl");
     }
 
-    // normalise usage of dots making sure its followed by a space, a bracket or a comma
-    m = NORM_DOTS.matcher(name);
+    // remove imprint years. See ICZN §22A.2.3 http://www.iczn.org/iczn/index.jsp?nfv=&article=22
+    m = NORM_IMPRINT_YEAR.matcher(name);
     if (m.find()) {
-      name = m.replaceAll(". ");
+      LOG.debug("Imprint year {} removed", m.group(2));
+      name = m.replaceAll("$1");
     }
+
+    // replace underscores
+    name = REPL_UNDERSCORE.matcher(name).replaceAll(" ");
+
+    // normalise punctuations removing any adjacent space
+    m = NORM_PUNCTUATIONS.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("$1");
+    }
+    // normalise different usages of ampersand, and, et &amp; to always use &
+    name = NORM_AND.matcher(name).replaceAll("&");
+
     // remove commans after basionym brackets
     m = COMMA_AFTER_BASYEAR.matcher(name);
     if (m.find()) {
@@ -691,26 +723,16 @@ class ParsingJob implements Callable<ParsedName> {
     // ICZN §22A.2 http://www.nhm.ac.uk/hosted-sites/iczn/code/index.jsp?article=22&nfv=true
     m = COMMA_BEFORE_YEAR.matcher(name);
     if (m.find()) {
-      name = m.replaceAll("$1, $2");
+      //name = m.replaceAll("$1,$2");
     }
-    // no whitespace around hyphens
-    name = NORM_HYPHENS.matcher(name).replaceAll("-");
-    // use whitespace with &
-    name = NORM_AMPERSAND_WS.matcher(name).replaceAll(" & ");
-
-    // whitespace before and after brackets, keeping the bracket style
+    // no whitespace before and after brackets, keeping the bracket style
     m = NORM_BRACKETS_OPEN.matcher(name);
     if (m.find()) {
-      name = m.replaceAll(" $1");
+      name = m.replaceAll("$1");
     }
     m = NORM_BRACKETS_CLOSE.matcher(name);
     if (m.find()) {
-      name = m.replaceAll("$1 ");
-    }
-    // remove whitespace before commas and replace double commas with one
-    m = NORM_COMMAS.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll(", ");
+      name = m.replaceAll("$1");
     }
     // normalize hybrid markers
     m = NORM_HYBRIDS_GENUS.matcher(name);
@@ -751,6 +773,9 @@ class ParsingJob implements Callable<ParsedName> {
     if (name == null) {
       return null;
     }
+    // normalize ex hort. (for gardeners, often used as ex names) spelled in lower case
+    name = NORM_EX_HORT.matcher(name).replaceAll("hort.ex ");
+
     // normalize all quotes to single "
     name = NORM_QUOTES.matcher(name).replaceAll("'");
     // remove quotes from genus
@@ -758,10 +783,11 @@ class ParsingJob implements Callable<ParsedName> {
     // remove enclosing quotes
     name = REPL_ENCLOSING_QUOTE.matcher(name).replaceAll("");
 
-    // no question marks after words (after years they should remain!)
+    // no question marks after letters (after years they should remain)
     Matcher m = NO_Q_MARKS.matcher(name);
     if (m.find()) {
       name = m.replaceAll("$1");
+      pn.setDoubtful(true);
     }
 
     // remove prefixes
@@ -773,53 +799,12 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceAll("$1$2 ");
     }
 
-    // replace imprint years. See ICZN §22A.2.3 http://www.iczn.org/iczn/index.jsp?nfv=&article=22
-    // Ctenotus alacer Storr, 1970 ["1969"] -> Ctenotus alacer Storr, 1970
-    // C. Flahault 1887 ("1886-1888") -> C. Flahault 1887
-    m = NORM_IMPRINT_YEAR.matcher(name);
-    if (m.find()) {
-      // System.out.println(m.group(0));
-      // System.out.println(m.group(1));
-      name = m.replaceAll("$1");
-    }
-
-    // replace comma before bibliographic in reference
-    name = NORM_IN_COMMA.matcher(name).replaceFirst(" in ");
-    // TODO: replace full bibliographic in citation
-
-    // normalise original name authorship, putting author AND year in brackets
-    // with long authorships this gets slow. Test if year exists first:
-    //TODO: is this really needed for some names??? activate if we find evidence and add to tests
-    //m = EXTRACT_YEAR.matcher(name);
-    //if (m.find() && name.length() < 80) {
-    //  m = NORM_ORIG_AUTH.matcher(name);
-    //  if (m.find()) {
-    //    name = m.replaceAll(" ($1 $2)");
-    //  }
-    //  m = NORM_ORIG_AUTH2.matcher(name);
-    //  if (m.find()) {
-    //    name = m.replaceAll("($1 $2)");
-    //  }
-    //}
-
-    // replace underscores
-    name = REPL_UNDERSCORE.matcher(name).replaceAll(" ");
-
-    // replace square brackets, keeping content (or better remove all within?)
-    name = NORM_NO_SQUARE_BRACKETS.matcher(name).replaceAll(" $1 ");
+    // TODO: replace square brackets, keeping content (or better remove all within?)
+    //name = NORM_NO_SQUARE_BRACKETS.matcher(name).replaceAll(" $1 ");
 
     // replace different kind of brackets with ()
-    name = NORM_BRACKETS_OPEN_STRONG.matcher(name).replaceAll(" (");
-    name = NORM_BRACKETS_CLOSE_STRONG.matcher(name).replaceAll(") ");
-    // normalise different usages of ampersand, and, et &amp;
-    name = NORM_AND.matcher(name).replaceAll(" & ");
-    // but keep "et al." instead of "& al."
-    name = NORM_ET_AL.matcher(name).replaceAll(" et al.");
-
-    // Bryozoan indet. 1
-    // Bryozoa sp. 2
-    // Bryozoa sp. E
-    name = NORM_SUFFIXES.matcher(name).replaceAll("");
+    name = NORM_BRACKETS_OPEN_STRONG.matcher(name).replaceAll("(");
+    name = NORM_BRACKETS_CLOSE_STRONG.matcher(name).replaceAll(")");
 
     // add ? genus when name starts with an epithet
     m = STARTING_EPITHET.matcher(name);
@@ -833,11 +818,13 @@ class ParsingJob implements Callable<ParsedName> {
     // add parenthesis around subgenus if missing
     m = NORM_SUBGENUS.matcher(name);
     if (m.find()) {
-      name = m.replaceAll("$1 ($2) $3");
+      name = m.replaceAll("$1($2)$3");
     }
 
-    // finally regular normalization again
-    return normalize(name);
+    // finally NORMALIZE PUNCTUATION AND WHITESPACE again
+    name = NORM_PUNCTUATIONS.matcher(name).replaceAll("$1");
+    name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
+    return StringUtils.trimToEmpty(name);
   }
 
   /**
@@ -853,7 +840,7 @@ class ParsingJob implements Callable<ParsedName> {
     // unescape html entities
     name = StringEscapeUtils.unescapeHtml4(name);
     // finally remove still existing bad ampersands missing the closing ;
-    name = AMPERSAND_ENTITY.matcher(name).replaceAll("& ");
+    name = AMPERSAND_ENTITY.matcher(name).replaceAll("&");
     // replace xml tags
     name = XML_TAGS.matcher(name).replaceAll("");
     // trim
@@ -889,7 +876,7 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * Identifies a name type, defaulting to SCIENTIFIC_NAME so that type is never null
    */
-  private void determineNameType(ParsedName pn, String normedName) {
+  private void determineNameType(String normedName) {
     // all rules below do not apply to unparsable names
     if (pn.getType() == null || pn.getType().isParsable()) {
 
@@ -930,7 +917,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
 
-  private void applyDoubtfulFlag(ParsedName pn, String scientificName) {
+  private void applyDoubtfulFlag(String scientificName) {
     // all rules below do not apply to unparsable names
     Matcher m = DOUBTFUL.matcher(scientificName);
     if (!m.find()) {
@@ -946,7 +933,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
 
-  private void determineCode(ParsedName pn) {
+  private void determineCode() {
     if (pn.getCode() == null) {
       // does the rank tell us sth?
       if (pn.getRank().isRestrictedToCode() != null) {
@@ -981,7 +968,7 @@ class ParsingJob implements Callable<ParsedName> {
     if (matcher.find()) {
       if (!matcher.group(0).equals(name)) {
         LOG.info("{} - matched only part of the name: {}", matcher.group(0), name);
-        pn.setState(ParsedName.State.NAME_AND_AUTHOR);
+        pn.setState(ParsedName.State.PARTIAL);
 
       } else {
         pn.setState(ParsedName.State.COMPLETE);
@@ -995,7 +982,7 @@ class ParsingJob implements Callable<ParsedName> {
           bracketSubrankFound = true;
           pn.setInfragenericEpithet(StringUtils.trimToNull(matcher.group(2)));
         } else if (matcher.group(4) != null) {
-          setRank(pn, matcher.group(3));
+          setRank(matcher.group(3));
           pn.setInfragenericEpithet(StringUtils.trimToNull(matcher.group(4)));
         }
         pn.setSpecificEpithet(StringUtils.trimToNull(matcher.group(5)));
@@ -1003,21 +990,31 @@ class ParsingJob implements Callable<ParsedName> {
           // 4 parted name, so its below subspecies
           pn.setRank(Rank.INFRASUBSPECIFIC_NAME);
         }
-        if (matcher.group(7) != null && matcher.group(7).length() > 1) {
-          setRank(pn, matcher.group(7));
+        if (matcher.group(7) != null && !matcher.group(7).isEmpty()) {
+          setRank(matcher.group(7));
         }
         pn.setInfraspecificEpithet(StringUtils.trimToNull(matcher.group(8)));
 
         // microbial ranks
         if (matcher.group(9) != null) {
-          setRank(pn, matcher.group(9));
+          setRank(matcher.group(9));
           pn.setInfraspecificEpithet(matcher.group(10));
         }
 
+        // if no rank was parsed but given externally use it!
+        if (rank != null && !rank.otherOrUnranked() && pn.getRank().otherOrUnranked()) {
+          pn.setRank(rank);
+          if (pn.getGenus() == null && rank.isInfrageneric()) {
+            pn.setGenus(pn.getUninomial());
+            pn.setUninomial(null);
+          }
+          if (pn.isIndetermined()) {
+            ignoreAuthorship = true;
+          }
+        }
+
         // #11 is entire authorship, not stored in ParsedName
-        if (matcher.group(11) != null) {
-          // #12/13/14/15 basionym authorship (ex/auth/sanct/year)
-          pn.setBasionymAuthorship(parseAuthorship(matcher.group(12), matcher.group(13), matcher.group(15)));
+        if (!ignoreAuthorship && matcher.group(11) != null) {
           if (bracketSubrankFound && infragenericIsAuthor(pn, rank)) {
             // rather an author than a infrageneric rank. Swap
             pn.setBasionymAuthorship(parseAuthorship(null, pn.getInfragenericEpithet(), null));
@@ -1028,6 +1025,10 @@ class ParsingJob implements Callable<ParsedName> {
               pn.setGenus(null);
             }
             LOG.debug("swapped subrank with bracket author: {}", pn.getBasionymAuthorship());
+
+          } else {
+            // #12/13/14/15 basionym authorship (ex/auth/sanct/year)
+            pn.setBasionymAuthorship(parseAuthorship(matcher.group(12), matcher.group(13), matcher.group(15)));
           }
 
           // #16/17/18/19 authorship (ex/auth/sanct/year)
@@ -1043,13 +1044,8 @@ class ParsingJob implements Callable<ParsedName> {
         // 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
         checkEpithetVsAuthorPrefx();
 
-        // if no rank was parsed but given externally use it!
-        if (rank != null && pn.getRank().otherOrUnranked()) {
-          pn.setRank(rank);
-        }
         return true;
       }
-
     }
 
     return false;
@@ -1065,22 +1061,24 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * Sets the parsed names rank based on a found rank marker
    * Potentially also sets the notho field in case the rank marker indicates a hybrid
-   * @param pn
+   * if the rankMarker cannot be interpreted or is null nothing will be done.
    * @param rankMarker
    */
-  static void setRank(ParsedName pn, String rankMarker) {
+  private void setRank(String rankMarker) {
     rankMarker = StringUtils.trimToNull(rankMarker);
     Rank rank = RankUtils.inferRank(rankMarker);
-    pn.setRank(rank);
-    if (rank != null && rankMarker.startsWith(NOTHO)) {
-      if (rank.isInfraspecific()) {
-        pn.setNotho(NamePart.INFRASPECIFIC);
-      } else if (rank == Rank.SPECIES) {
-        pn.setNotho(NamePart.SPECIFIC);
-      } else if (rank.isInfrageneric()) {
-        pn.setNotho(NamePart.INFRAGENERIC);
-      } else if (rank == Rank.GENUS) {
-        pn.setNotho(NamePart.GENERIC);
+    if (rank != null && !rank.otherOrUnranked()) {
+      pn.setRank(rank);
+      if (rankMarker.startsWith(NOTHO)) {
+        if (rank.isInfraspecific()) {
+          pn.setNotho(NamePart.INFRASPECIFIC);
+        } else if (rank == Rank.SPECIES) {
+          pn.setNotho(NamePart.SPECIFIC);
+        } else if (rank.isInfrageneric()) {
+          pn.setNotho(NamePart.INFRAGENERIC);
+        } else if (rank == Rank.GENUS) {
+          pn.setNotho(NamePart.GENERIC);
+        }
       }
     }
   }
@@ -1097,7 +1095,8 @@ class ParsingJob implements Callable<ParsedName> {
 
     private void setUninomialOrGenus(Matcher matcher, ParsedName pn) {
       // the match can be the genus part of a bi/trinomial or a uninomial
-      if (matcher.group(2) != null || matcher.group(4) != null || matcher.group(5) != null) {
+      if (matcher.group(2) != null || matcher.group(4) != null || matcher.group(5) != null
+          || (pn.getRank() != null && pn.getRank().isSpeciesOrBelow() && pn.getRank().isRestrictedToCode() != NomCode.CULTIVARS) ) {
         pn.setGenus(StringUtils.trimToNull(matcher.group(1)));
       } else {
         pn.setUninomial(StringUtils.trimToNull(matcher.group(1)));
@@ -1109,19 +1108,19 @@ class ParsingJob implements Callable<ParsedName> {
    * This is sometimes the case for informal names like: Coccyzus americanus ssp.
    */
   private void lookForIrregularRankMarker() {
-    if (pn.getRank() == null) {
+    if (pn.getRank() == null || pn.getRank().otherOrUnranked()) {
       if (pn.getInfraspecificEpithet() != null) {
         Matcher m = RANK_MARKER_ONLY.matcher(pn.getInfraspecificEpithet());
         if (m.find()) {
           // we found a rank marker, make it one
-          setRank(pn, pn.getInfraspecificEpithet());
+          setRank(pn.getInfraspecificEpithet());
           pn.setInfraspecificEpithet(null);
         }
       } else if (pn.getSpecificEpithet() != null) {
         Matcher m = RANK_MARKER_ONLY.matcher(pn.getSpecificEpithet());
         if (m.find()) {
           // we found a rank marker, make it one
-          setRank(pn, pn.getSpecificEpithet());
+          setRank(pn.getSpecificEpithet());
           pn.setSpecificEpithet(null);
         }
       }

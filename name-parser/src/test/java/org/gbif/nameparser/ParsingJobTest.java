@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import static org.junit.Assert.*;
 
 public class ParsingJobTest {
+  final static ParsingJob JOB = new ParsingJob("Abies", Rank.UNRANKED);
 
   @Test
   public void testEpithetPattern() throws Exception {
@@ -39,8 +40,10 @@ public class ParsingJobTest {
 
   @Test
   public void testAuthorship() throws Exception {
+    assertAuthorTeamPattern("Plesn¡k ex F.Ritter", "Plesnik", "F.Ritter");
     assertAuthorTeamPattern("Britton, Sterns, & Poggenb.", null, "Britton", "Sterns", "Poggenb.");
     assertAuthorTeamPattern("Van Heurck & Müll. Arg.", null, "Van Heurck", "Müll.Arg.");
+    assertAuthorTeamPattern("Gruber-Vodicka", null, "Gruber-Vodicka");
     assertAuthorTeamPattern("Gruber-Vodicka et al.", null, "Gruber-Vodicka", "al.");
     assertAuthorTeamPattern("L.");
     assertAuthorTeamPattern("Lin.");
@@ -110,14 +113,8 @@ public class ParsingJobTest {
     assertAuthorTeamPattern("Mas-ComaBargues & Esteban", null, "Mas-ComaBargues", "Esteban");
     assertAuthorTeamPattern("Hondt d");
     assertAuthorTeamPattern("Abou-El-Naga");
-  }
 
-  @Test
-  public void testEscaping() throws Exception {
-    assertEquals("Caloplaca poliotera (Nyl.) J. Steiner",
-        ParsingJob.normalize("Caloplaca poliotera (Nyl.) J. Steiner\r\n\r\n"));
-    assertEquals("Caloplaca poliotera (Nyl.) J. Steiner",
-        ParsingJob.normalize("Caloplaca poliotera (Nyl.) J. Steiner\\r\\n\\r\\r"));
+    assertAuthorTeamPatternFails("Wedd. ex Sch. Bip. (");
   }
 
   @Test
@@ -133,22 +130,22 @@ public class ParsingJobTest {
 
   @Test
   public void testNomStatusRemarks() throws Exception {
-    // parser expects a dot followed by a space as done by the string normalizer
+    // parser expects a dot or a space as done by the string normalizer
+    nomStatusRemark("sp.nov.");
     nomStatusRemark("Spec nov");
-    nomStatusRemark("sp. nov.");
-    nomStatusRemark("Fam. nov.");
-    nomStatusRemark("Gen. nov.");
+    nomStatusRemark("Fam.nov.");
+    nomStatusRemark("Gen.nov.");
     // our test only catches the first match, real parsing both!
-    nomStatusRemark("Gen. nov. sp. nov", "Gen. nov.");
-    nomStatusRemark("Abies keralia spec. nov.", "spec. nov.");
-    nomStatusRemark("Abies sp. nov.", "sp. nov.");
+    nomStatusRemark("Gen. nov. sp. nov", "Gen.nov.");
+    nomStatusRemark("Abies keralia spec. nov.", "spec.nov.");
+    nomStatusRemark("Abies sp. nov.", "sp.nov.");
   }
 
   private void nomStatusRemark(String remarks) {
     nomStatusRemark(remarks, remarks);
   }
   private void nomStatusRemark(String remarks, String match) {
-    Matcher m = ParsingJob.EXTRACT_NOMSTATUS.matcher(remarks);
+    Matcher m = ParsingJob.EXTRACT_NOMSTATUS.matcher(JOB.normalize(remarks));
     assertTrue (m.find());
     assertEquals(match, m.group().trim());
   }
@@ -163,7 +160,9 @@ public class ParsingJobTest {
   }
 
   private void assertAuthorTeamPattern(String authorship, String exAuthor, String ... authors) {
-    Matcher m = ParsingJob.AUTHORSHIP_PATTERN.matcher(authorship);
+    String normed = JOB.normalize(authorship);
+    System.out.println(normed);
+    Matcher m = ParsingJob.AUTHORSHIP_PATTERN.matcher(normed);
     assertTrue(authorship, m.find());
     if (ParsingJob.LOG.isDebugEnabled()) {
       ParsingJob.logMatcher(m);
@@ -178,49 +177,55 @@ public class ParsingJobTest {
     assertEquals(Lists.newArrayList(authors), auth.getAuthors());
   }
 
+  private void assertAuthorTeamPatternFails(String authorship) {
+    String normed = JOB.normalize(authorship);
+    Matcher m = ParsingJob.AUTHORSHIP_PATTERN.matcher(normed);
+    assertFalse(authorship, m.find());
+  }
+
 
   @Test
   public void testNomenclaturalNotesPattern() throws Exception {
-    assertNomNote("nom. illeg.",  "Vaucheria longicaulis var. bengalensis Islam, nom. illeg.");
-    assertNomNote("nom. correct",  "Dorataspidae nom. correct");
-    assertNomNote("nom. transf.",  "Ethmosphaeridae nom. transf.");
-    assertNomNote("nom. ambig.",  "Fucus ramosissimus Oeder, nom. ambig.");
-    assertNomNote("nom. nov.",  "Myrionema majus Foslie, nom. nov.");
-    assertNomNote("nom. utique rej.",  "Corydalis bulbosa (L.) DC., nom. utique rej.");
-    assertNomNote("nom. cons. prop.",  "Anthoceros agrestis var. agrestis Paton nom. cons. prop.");
-    assertNomNote("nom. superfl.", "Lithothamnion glaciale forma verrucosum (Foslie) Foslie, nom. superfl.");
+    assertNomNote("nom.illeg.",  "Vaucheria longicaulis var. bengalensis Islam, nom. illeg.");
+    assertNomNote("nom.correct",  "Dorataspidae nom. correct");
+    assertNomNote("nom.transf.",  "Ethmosphaeridae nom. transf.");
+    assertNomNote("nom.ambig.",  "Fucus ramosissimus Oeder, nom. ambig.");
+    assertNomNote("nom.nov.",  "Myrionema majus Foslie, nom. nov.");
+    assertNomNote("nom.utique rej.",  "Corydalis bulbosa (L.) DC., nom. utique rej.");
+    assertNomNote("nom.cons.prop.",  "Anthoceros agrestis var. agrestis Paton nom. cons. prop.");
+    assertNomNote("nom.superfl.", "Lithothamnion glaciale forma verrucosum (Foslie) Foslie, nom. superfl.");
     assertNomNote("nom.rejic.","Pithecellobium montanum var. subfalcatum (Zoll. & Moritzi)Miq., nom.rejic.");
-    assertNomNote("nom. inval","Fucus vesiculosus forma volubilis (Goodenough & Woodward) H.T. Powell, nom. inval");
-    assertNomNote("nom. nud.",  "Sao hispanica R. & E. Richter nom. nud. in Sampelayo 1935");
+    assertNomNote("nom.inval","Fucus vesiculosus forma volubilis (Goodenough & Woodward) H.T. Powell, nom. inval");
+    assertNomNote("nom.nud.",  "Sao hispanica R. & E. Richter nom. nud. in Sampelayo 1935");
     assertNomNote("nom.illeg.",  "Hallo (nom.illeg.)");
-    assertNomNote("nom. super.",  "Calamagrostis cinnoides W. Bart. nom. super.");
-    assertNomNote("nom. nud.",  "Iridaea undulosa var. papillosa Bory de Saint-Vincent, nom. nud.");
-    assertNomNote("nom. inval","Sargassum angustifolium forma filiforme V. Krishnamurthy & H. Joshi, nom. inval");
+    assertNomNote("nom.super.",  "Calamagrostis cinnoides W. Bart. nom. super.");
+    assertNomNote("nom.nud.",  "Iridaea undulosa var. papillosa Bory de Saint-Vincent, nom. nud.");
+    assertNomNote("nom.inval","Sargassum angustifolium forma filiforme V. Krishnamurthy & H. Joshi, nom. inval");
     assertNomNote("nomen nudum",  "Solanum bifidum Vell. ex Dunal, nomen nudum");
     assertNomNote("nomen invalid.","Schoenoplectus ×scheuchzeri (Bruegger) Palla ex Janchen, nomen invalid.");
-    assertNomNote("nom. nud.","Cryptomys \"Kasama\" Kawalika et al., 2001, nom. nud. (Kasama, Zambia) .");
-    assertNomNote("nom. super.",  "Calamagrostis cinnoides W. Bart. nom. super.");
-    assertNomNote("nom. dub.",  "Pandanus odorifer (Forssk.) Kuntze, nom. dub.");
-    assertNomNote("nom. rejic.",  "non Clarisia Abat, 1792, nom. rejic.");
-    assertNomNote("nom. cons","Yersinia pestis (Lehmann and Neumann, 1896) van Loghem, 1944 (Approved Lists, 1980) , nom. cons");
-    assertNomNote("nom. rejic.","\"Pseudomonas denitrificans\" (Christensen, 1903) Bergey et al., 1923, nom. rejic.");
-    assertNomNote("nom. nov.",  "Tipula rubiginosa Loew, 1863, nom. nov.");
-    assertNomNote("nom. prov.",  "Amanita pruittii A.H.Sm. ex Tulloss & J.Lindgr., nom. prov.");
-    assertNomNote("nom. cons.",  "Ramonda Rich., nom. cons.");
-    assertNomNote("nom. cons.","Kluyver and van Niel, 1936 emend. Barker, 1956 (Approved Lists, 1980) , nom. cons., emend. Mah and Kuhn, 1984");
-    assertNomNote("nom. superfl.",  "Coccocypselum tontanea (Aubl.) Kunth, nom. superfl.");
-    assertNomNote("nom. ambig.",  "Lespedeza bicolor var. intermedia Maxim. , nom. ambig.");
-    assertNomNote("nom. praeoccup.",  "Erebia aethiops uralensis Goltz, 1930 nom. praeoccup.");
-    assertNomNote("comb. nov. ined.",  "Ipomopsis tridactyla (Rydb.) Wilken, comb. nov. ined.");
-    assertNomNote("sp. nov. ined.",  "Orobanche riparia Collins, sp. nov. ined.");
-    assertNomNote("gen. nov.",  "Anchimolgidae gen. nov. New Caledonia-Rjh-, 2004");
-    assertNomNote("gen. nov. ined.",  "Stebbinsoseris gen. nov. ined.");
-    assertNomNote("var. nov.",  "Euphorbia rossiana var. nov. Steinmann, 1199");
+    assertNomNote("nom.nud.","Cryptomys \"Kasama\" Kawalika et al., 2001, nom. nud. (Kasama, Zambia) .");
+    assertNomNote("nom.super.",  "Calamagrostis cinnoides W. Bart. nom. super.");
+    assertNomNote("nom.dub.",  "Pandanus odorifer (Forssk.) Kuntze, nom. dub.");
+    assertNomNote("nom.rejic.",  "non Clarisia Abat, 1792, nom. rejic.");
+    assertNomNote("nom.cons","Yersinia pestis (Lehmann and Neumann, 1896) van Loghem, 1944 (Approved Lists, 1980) , nom. cons");
+    assertNomNote("nom.rejic.","\"Pseudomonas denitrificans\" (Christensen, 1903) Bergey et al., 1923, nom. rejic.");
+    assertNomNote("nom.nov.",  "Tipula rubiginosa Loew, 1863, nom. nov.");
+    assertNomNote("nom.prov.",  "Amanita pruittii A.H.Sm. ex Tulloss & J.Lindgr., nom. prov.");
+    assertNomNote("nom.cons.",  "Ramonda Rich., nom. cons.");
+    assertNomNote("nom.cons.","Kluyver and van Niel, 1936 emend. Barker, 1956 (Approved Lists, 1980) , nom. cons., emend. Mah and Kuhn, 1984");
+    assertNomNote("nom.superfl.",  "Coccocypselum tontanea (Aubl.) Kunth, nom. superfl.");
+    assertNomNote("nom.ambig.",  "Lespedeza bicolor var. intermedia Maxim. , nom. ambig.");
+    assertNomNote("nom.praeoccup.",  "Erebia aethiops uralensis Goltz, 1930 nom. praeoccup.");
+    assertNomNote("comb.nov.ined.",  "Ipomopsis tridactyla (Rydb.) Wilken, comb. nov. ined.");
+    assertNomNote("sp.nov.ined.",  "Orobanche riparia Collins, sp. nov. ined.");
+    assertNomNote("gen.nov.",  "Anchimolgidae gen. nov. New Caledonia-Rjh-, 2004");
+    assertNomNote("gen.nov.ined.",  "Stebbinsoseris gen. nov. ined.");
+    assertNomNote("var.nov.",  "Euphorbia rossiana var. nov. Steinmann, 1199");
   }
 
   private void assertNomNote(String expectedNote, String name) {
     String nomNote = null;
-    Matcher matcher = ParsingJob.EXTRACT_NOMSTATUS.matcher(name);
+    Matcher matcher = ParsingJob.EXTRACT_NOMSTATUS.matcher(JOB.normalize(name));
     if (matcher.find()) {
       nomNote = (StringUtils.trimToNull(matcher.group(1)));
     }
@@ -237,48 +242,55 @@ public class ParsingJobTest {
 
   @Test
   public void testNormalizeName() {
-    assertEquals("Anniella nigra Fischer, 1885", ParsingJob.normalize("Anniella nigra FISCHER 1885"));
-    assertEquals("Nuculoidea Williams et Breger, 1916", ParsingJob.normalize("Nuculoidea Williams et  Breger 1916  "));
-    assertEquals("Nuculoidea behrens var. christoph Williams & Breger [1916]",
-        ParsingJob.normalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
-    assertEquals("Nuculoidea behrens var. christoph Williams & Breger [1916]",
-        ParsingJob.normalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  "));
-    assertEquals(ParsingJob.normalize("Nuculoidea Williams & Breger, 1916  "),
-        ParsingJob.normalize("Nuculoidea   Williams& Breger, 1916"));
-    assertEquals("Asplenium ×inexpectatum (E. L. Braun, 1940) Morton (1956)",
-        ParsingJob.normalize("Asplenium X inexpectatum (E. L. Braun 1940)Morton (1956) "));
-    assertEquals("×Agropogon", ParsingJob.normalize(" × Agropogon"));
-    assertEquals("Salix ×capreola Andersson", ParsingJob.normalize("Salix × capreola Andersson"));
-    assertEquals("Leucanitis roda Herrich-Schäffer (1851) 1845",
-        ParsingJob.normalize("Leucanitis roda Herrich-Schäffer (1851) 1845"));
+    assertNormalize("Anniella nigra FISCHER 1885", "Anniella nigra Fischer,1885");
+    assertNormalize("Nuculoidea Williams et  Breger 1916  ","Nuculoidea Williams&Breger,1916");
+    assertNormalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea behrens var.christoph Williams&Breger[1916]");
+    assertNormalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  ","Nuculoidea behrens var.christoph Williams&Breger[1916]");
+    assertNormalize("Nuculoidea   Williams& Breger, 1916  ", "Nuculoidea Williams&Breger,1916");
+    assertNormalize("Asplenium X inexpectatum (E. L. Braun 1940)Morton (1956) ", "Asplenium ×inexpectatum(E.L.Braun,1940)Morton(1956)");
+    assertNormalize(" × Agropogon", "×Agropogon");
+    assertNormalize("Salix × capreola Andersson","Salix ×capreola Andersson");
+    assertNormalize("Leucanitis roda Herrich-Schäffer (1851) 1845", "Leucanitis roda Herrich-Schäffer(1851)1845");
+    assertNormalize("Huaiyuanella Xing, Yan&Yin, 1984", "Huaiyuanella Xing,Yan&Yin,1984");
+    assertNormalize("Caloplaca poliotera (Nyl.) J. Steiner\r\n\r\n", "Caloplaca poliotera(Nyl.)J.Steiner");
+    assertNormalize("Caloplaca poliotera (Nyl.) J. Steiner\\r\\n\\r\\r", "Caloplaca poliotera(Nyl.)J.Steiner");
+    assertNormalize("Choi,J.H.; Im,W.T.; Yoo,J.S.; Lee,S.M.; Moon,D.S.; Kim,H.J.; Rhee,S.K.", "Choi,J.H.;Im,W.T.;Yoo,J.S.;Lee,S.M.;Moon,D.S.;Kim,H.J.;Rhee,S.K.");
 
-    assertEquals("Huaiyuanella Xing, Yan & Yin, 1984", ParsingJob.normalize("Huaiyuanella Xing, Yan&Yin, 1984"));
+    // imprint years
+    assertNormalize("Ctenotus alacer Storr, 1970 [\"1969\"]", "Ctenotus alacer Storr,1970");
+    assertNormalize("C. Flahault 1887 (\"1886-1888\")", "C.Flahault,1887");
+    assertNormalize("Ehrenberg, 1870, 1869", "Ehrenberg,1870");
+    assertNormalize("Ctenotus alacer Storr, 1970 (\"1969\")", "Ctenotus alacer Storr,1970");
+    assertNormalize("Ctenotus alacer Storr, 1970 [\"1969\"]", "Ctenotus alacer Storr,1970");
+    assertNormalize("Ctenotus alacer Storr, 1970 (imprint 1969)", "Ctenotus alacer Storr,1970");
+    assertNormalize("Ctenotus alacer Storr, 1970 (not 1969)", "Ctenotus alacer Storr,1970");
+
   }
 
+  private void assertNormalize(String raw, String expected) {
+    assertEquals(expected, JOB.normalize(ParsingJob.preClean(raw)));
+  }
 
   @Test
   public void testNormalizeStrongName() {
-    assertNormalizeStrong("‘Perca’ lactarioides Lin, Nolf, Steurbaut & Girone, 2016", "Perca lactarioides Lin, Nolf, Steurbaut & Girone, 2016");
-
-
-    assertNormalizeStrong("Alstonia vieillardii Van Heurck & Müll.Arg.", "Alstonia vieillardii Van Heurck & Müll. Arg.");
-    assertNormalizeStrong("Nuculoidea Williams et  Breger 1916  ","Nuculoidea Williams & Breger, 1916");
-    assertNormalizeStrong("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea behrens var. christoph Williams & Breger, 1916");
-    assertNormalizeStrong(" 'Nuculoidea Williams & Breger, 1916'", "Nuculoidea Williams & Breger, 1916");
-    assertNormalizeStrong("Photina Cardioptera burmeisteri (Westwood 1889)", "Photina (Cardioptera) burmeisteri (Westwood, 1889)");
+    assertNormalizeStrong("Alstonia vieillardii Van Heurck & Müll.Arg.", "Alstonia vieillardii Van Heurck&Müll.Arg.");
+    assertNormalizeStrong("Nuculoidea Williams et  Breger 1916  ","Nuculoidea Williams&Breger,1916");
+    //assertNormalizeStrong("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea behrens var.christoph Williams&Breger,1916");
+    assertNormalizeStrong(" 'Nuculoidea Williams & Breger, 1916'", "Nuculoidea Williams&Breger,1916");
+    assertNormalizeStrong("Photina Cardioptera burmeisteri (Westwood 1889)", "Photina(Cardioptera)burmeisteri(Westwood,1889)");
     assertNormalizeStrong("Suaeda forsskahlei Schweinf. ms.", "Suaeda forsskahlei Schweinf.");
     assertNormalizeStrong("Acacia bicolor Bojer ms.", "Acacia bicolor Bojer");
-    assertNormalizeStrong("Astelia alpina var. novae-hollandiae", "Astelia alpina var. novae-hollandiae");
-    assertNormalizeStrong("  N.behrens Williams &amp;  Breger , 1916  ", "N. behrens Williams & Breger, 1916");
-    assertNormalizeStrong("Melanoides kinshassaensis D+P", "Melanoides kinshassaensis D & P");
-    assertNormalizeStrong("Malacosteus australis Kenaley/2007", "Malacosteus australis Kenaley, 2007");
-    assertNormalizeStrong("Bathylychnops chilensis Parin_NV, Belyanina_TN & Evseenko 2009", "Bathylychnops chilensis Parin NV, Belyanina TN & Evseenko, 2009");
-    assertNormalizeStrong("denheyeri Eghbalian, Khanjani and Ueckermann in Eghbalian, Khanjani & Ueckermann, 2017", "? denheyeri Eghbalian, Khanjani & Ueckermann in Eghbalian, Khanjani & Ueckermann, 2017");
+    assertNormalizeStrong("Astelia alpina var. novae-hollandiae", "Astelia alpina var.novae-hollandiae");
+    assertNormalizeStrong("  N.behrens Williams &amp;  Breger , 1916  ", "N.behrens Williams&Breger,1916");
+    assertNormalizeStrong("Melanoides kinshassaensis D+P", "Melanoides kinshassaensis D&P");
+    assertNormalizeStrong("Malacosteus australis Kenaley/2007", "Malacosteus australis Kenaley,2007");
+    assertNormalizeStrong("Bathylychnops chilensis Parin_NV, Belyanina_TN & Evseenko 2009", "Bathylychnops chilensis Parin NV,Belyanina TN&Evseenko,2009");
+    assertNormalizeStrong("denheyeri Eghbalian, Khanjani and Ueckermann in Eghbalian, Khanjani & Ueckermann, 2017", "? denheyeri Eghbalian,Khanjani&Ueckermann in Eghbalian,Khanjani&Ueckermann,2017");
     // http://zoobank.org/References/C37149C7-FC3B-4267-9CD0-03E0E0059459
     // http://www.tandfonline.com/doi/full/10.1080/14772019.2016.1246112
-    assertNormalizeStrong("‘Perca’ lactarioides Lin, Nolf, Steurbaut & Girone, 2016", "Perca lactarioides Lin, Nolf, Steurbaut & Girone, 2016");
-    assertNormalizeStrong(" ‘Liopropoma’ sculpta sp. nov.", "Liopropoma sculpta sp. nov.");
-    assertNormalizeStrong("fordycei Boersma, McCurry & Pyenson, 2017", "? fordycei Boersma, McCurry & Pyenson, 2017");
+    assertNormalizeStrong("‘Perca’ lactarioides Lin, Nolf, Steurbaut & Girone, 2016", "Perca lactarioides Lin,Nolf,Steurbaut&Girone,2016");
+    assertNormalizeStrong(" ‘Liopropoma’ sculpta sp. nov.", "Liopropoma sculpta sp.nov.");
+    assertNormalizeStrong("fordycei Boersma, McCurry & Pyenson, 2017", "? fordycei Boersma,McCurry&Pyenson,2017");
 
     //TODO: very expected results!
     //assertNormalizeStrong("Malacocarpus schumannianus (Nicolai (1893)) Britton & Rose", "Malacocarpus schumannianus (Nicolai, 1893) Britton & Rose");
@@ -286,7 +298,7 @@ public class ParsingJobTest {
   }
 
   private void assertNormalizeStrong(String raw, String expected) {
-    assertEquals(expected, new ParsingJob("Aa", Rank.UNRANKED).normalizeStrong(ParsingJob.preClean(raw)));
+    assertEquals(expected, JOB.normalizeStrong(JOB.normalize(ParsingJob.preClean(raw))));
   }
 
 }

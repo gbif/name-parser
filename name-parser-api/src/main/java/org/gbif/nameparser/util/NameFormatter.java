@@ -145,11 +145,16 @@ public class NameFormatter {
             sb.append(n.getInfragenericEpithet());
           }
 
-        } else if (infrageneric) {
-          // additional subgenus shown for binomial. Always shown in brackets
-          sb.append(" (")
-            .append(n.getInfragenericEpithet())
-            .append(")");
+        } else {
+          if (n.getGenus() != null) {
+            appendGenus(sb, n, hybridMarker);
+          }
+          if (infrageneric) {
+            // additional subgenus shown for binomial. Always shown in brackets
+            sb.append(" (")
+                .append(n.getInfragenericEpithet())
+                .append(")");
+          }
         }
 
       } else if (n.getGenus() != null) {
@@ -256,9 +261,9 @@ public class NameFormatter {
     }
 
     // add sensu/sec reference
-    if (showSensu && n.getSensu() != null) {
+    if (showSensu && n.getTaxonomicNote() != null) {
       appendIfNotEmpty(sb," ")
-          .append(n.getSensu());
+          .append(n.getTaxonomicNote());
     }
 
     // add nom status
@@ -319,12 +324,13 @@ public class NameFormatter {
     }
   }
 
-  private static void appendGenus(StringBuilder sb, ParsedName n, boolean hybridMarker) {
+  private static StringBuilder appendGenus(StringBuilder sb, ParsedName n, boolean hybridMarker) {
     if (hybridMarker && NamePart.GENERIC == n.getNotho()) {
       sb.append(HYBRID_MARKER)
           .append(" ");
     }
     sb.append(n.getGenus());
+    return sb;
   }
 
   private static String joinAuthors(List<String> authors, boolean useEtAl) {

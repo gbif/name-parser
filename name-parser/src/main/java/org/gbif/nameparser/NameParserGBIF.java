@@ -44,6 +44,7 @@ public class NameParserGBIF implements NameParser {
    */
   public NameParserGBIF(long timeout) {
     Preconditions.checkArgument(timeout > 0, "Timeout needs to be at least 1ms");
+    LOG.debug("Create new name parser with timeout={}", timeout);
     this.timeout = timeout;  // max default parsing time is one second;
   }
 

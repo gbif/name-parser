@@ -24,15 +24,10 @@ public class ParsedName {
     COMPLETE,
 
     /**
-     * The name epithets and the authorship have been successfully parsed,
-     * but some more characters were found at the end of the name string that have been ignored.
-     */
-    NAME_AND_AUTHOR,
-
-    /**
-     * Only the name was parsed, ignoring any authorship
+     * name & authorship has been parsed, but parts of the input string have not been understood.
+     * Should be flagged as doubtful.
      **/
-    NAME_ONLY,
+    PARTIAL,
 
     /**
      * An unparsable name
@@ -40,17 +35,10 @@ public class ParsedName {
     NONE;
 
     /**
-     * @return true if the name epithets, rank and notho property have been parsed
+     * @return true if the name could be parsed into a structured form
      */
-    public boolean isNameParsed() {
+    public boolean isParsed() {
       return this != NONE;
-    }
-
-    /**
-     * @return true if in addition to the name also the authorship has been parsed
-     */
-    public boolean isAuthorshipParsed() {
-      return this == COMPLETE || this == NAME_AND_AUTHOR;
     }
   }
 
@@ -128,7 +116,7 @@ public class ParsedName {
   /**
    * Nomenclatural status remarks of the name.
    */
-  private String sensu;
+  private String taxonomicNote;
 
 	/**
 	 * Nomenclatural status remarks of the name.
@@ -304,12 +292,12 @@ public class ParsedName {
     this.nomenclaturalNotes = nomenclaturalNotes;
   }
 
-  public String getSensu() {
-    return sensu;
+  public String getTaxonomicNote() {
+    return taxonomicNote;
   }
 
-  public void setSensu(String sensu) {
-    this.sensu = sensu;
+  public void setTaxonomicNote(String taxonomicNote) {
+    this.taxonomicNote = taxonomicNote;
   }
 
   public String getRemarks() {
@@ -488,7 +476,7 @@ public class ParsedName {
         Objects.equals(cultivarEpithet, that.cultivarEpithet) &&
         Objects.equals(strain, that.strain) &&
         notho == that.notho &&
-        Objects.equals(sensu, that.sensu) &&
+        Objects.equals(taxonomicNote, that.taxonomicNote) &&
         Objects.equals(nomenclaturalNotes, that.nomenclaturalNotes) &&
         Objects.equals(remarks, that.remarks) &&
         type == that.type &&
@@ -497,7 +485,7 @@ public class ParsedName {
 
   @Override
   public int hashCode() {
-    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, sensu, nomenclaturalNotes, remarks, type, doubtful, state, warnings);
+    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, taxonomicNote, nomenclaturalNotes, remarks, type, doubtful, state, warnings);
   }
 
   @Override
