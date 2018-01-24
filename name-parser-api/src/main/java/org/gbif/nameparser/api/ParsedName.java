@@ -1,6 +1,7 @@
 package org.gbif.nameparser.api;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
 import javax.annotation.Nonnull;
@@ -309,7 +310,9 @@ public class ParsedName {
   }
 
   public void addRemark(String remark) {
-    this.remarks = remarks == null ? remark : remarks + "; " + remark;
+    if (!StringUtils.isBlank(remark)) {
+      this.remarks = remarks == null ? remark.trim() : remarks + "; " + remark.trim();
+    }
   }
 
   public State getState() {

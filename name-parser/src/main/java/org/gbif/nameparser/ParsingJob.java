@@ -254,7 +254,7 @@ class ParsingJob implements Callable<ParsedName> {
   // Elseya sp. nov. (AMS – R140984)
   private static final Pattern MANUSCRIPT_NAMES = Pattern.compile("\\b(indet|spp?)[. ](?:nov\\.)?[A-Z0-9][a-zA-Z0-9-]*(?:\\(.+?\\))?");
   private static final Pattern MANUSCRIPT_SUFFIX = Pattern.compile("\\bms\\.?$");
-  private static final Pattern REPL_AFF = Pattern.compile("([. ])(?:undet|indet|aff|cf)[?.]?\\b");
+  private static final Pattern REPL_AFF = Pattern.compile("\\b(undet|indet|aff|cf)[?.]?\\b");
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
   private static final Pattern REMOVE_PLACEHOLDER_AUTHOR = Pattern.compile("\\b"+
       "(?:unknown|unspecified|uncertain|\\?)" +
@@ -587,7 +587,8 @@ class ParsingJob implements Callable<ParsedName> {
     m = REPL_AFF.matcher(name);
     if (m.find()) {
       pn.setType(NameType.INFORMAL);
-      name = m.replaceAll("$1");
+      pn.addRemark(m.group(0));
+      name = m.replaceAll("");
     }
 
     // remember current rank for later reuse
@@ -610,6 +611,7 @@ class ParsingJob implements Callable<ParsedName> {
     // replace bibliographic in references
     m = REPL_IN_REF.matcher(name);
     if (m.find()) {
+      pn.addRemark(m.group(0));
       name = m.replaceFirst("");
     }
 

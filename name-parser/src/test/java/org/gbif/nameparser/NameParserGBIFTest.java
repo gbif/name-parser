@@ -310,6 +310,7 @@ public class NameParserGBIFTest {
         .species("?", "denheyeri")
         .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
         .type(PLACEHOLDER)
+        .remarks("in Eghbalian,Khanjani&Ueckermann")
         .nothingElse();
 
     assertName("\"? gryphoidis", "? gryphoidis")
@@ -465,6 +466,7 @@ public class NameParserGBIFTest {
         .basAuthors("1913", "Popofsky")
         .combAuthors("1971", "Petrushevskaya")
         .type(INFORMAL)
+        .remarks("aff.")
         .nothingElse();
 
     assertName("Tripodiscium gephyristes  (Hülseman, 1963) BJ&KR-Atsdatabanken", "Tripodiscium gephyristes")
@@ -900,6 +902,7 @@ public class NameParserGBIFTest {
         .species("Trisulcus", "nana")
         .combAuthors("1971", "Petrushevskaya")
         .type(INFORMAL)
+        .remarks("aff.")
         .nothingElse();
   }
 
