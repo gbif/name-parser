@@ -218,7 +218,6 @@ class ParsingJob implements Callable<ParsedName> {
       + ")"
       + "\\)?");
   private static final Pattern EXTRACT_REMARKS = Pattern.compile("\\s+(anon\\.?)(\\s.+)?$");
-  private static final Pattern COMMA_BEFORE_YEAR = Pattern.compile("(\\p{L})[\\s/-]*(\\d{3})");
   private static final Pattern COMMA_AFTER_BASYEAR = Pattern.compile("("+YEAR+")\\s*\\)\\s*,");
   private static final Pattern NORM_APOSTROPHES = Pattern.compile("([\u0060\u00B4\u2018\u2019]+)");
   private static final Pattern NORM_QUOTES = Pattern.compile("([\"'`´]+)");
@@ -719,12 +718,6 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceFirst("$1)");
     }
 
-    // use commas before years
-    // ICZN §22A.2 http://www.nhm.ac.uk/hosted-sites/iczn/code/index.jsp?article=22&nfv=true
-    m = COMMA_BEFORE_YEAR.matcher(name);
-    if (m.find()) {
-      //name = m.replaceAll("$1,$2");
-    }
     // no whitespace before and after brackets, keeping the bracket style
     m = NORM_BRACKETS_OPEN.matcher(name);
     if (m.find()) {

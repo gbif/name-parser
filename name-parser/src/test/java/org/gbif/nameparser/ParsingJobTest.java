@@ -74,7 +74,6 @@ public class ParsingJobTest {
     assertAuthorTeamPattern("MacLeish");
     assertAuthorTeamPattern("Monterosato ms.");
     assertAuthorTeamPattern("Arn. ms., Grunow", null, "Arn.ms.", "Grunow");
-    assertAuthorTeamPattern("Mosely in Mosely & Kimmins", null, "Mosely");
     assertAuthorTeamPattern("Choi,J.H.; Im,W.T.; Yoo,J.S.; Lee,S.M.; Moon,D.S.; Kim,H.J.; Rhee,S.K.; Roh,D.H.", null,
         "J.H.Choi", "W.T.Im", "J.S.Yoo", "S.M.Lee", "D.S.Moon", "H.J.Kim", "S.K.Rhee", "D.H.Roh");
     assertAuthorTeamPattern("da Costa Lima", null, "da Costa Lima");
@@ -242,12 +241,12 @@ public class ParsingJobTest {
 
   @Test
   public void testNormalizeName() {
-    assertNormalize("Anniella nigra FISCHER 1885", "Anniella nigra Fischer,1885");
-    assertNormalize("Nuculoidea Williams et  Breger 1916  ","Nuculoidea Williams&Breger,1916");
+    assertNormalize("Anniella nigra FISCHER 1885", "Anniella nigra Fischer 1885");
+    assertNormalize("Nuculoidea Williams et  Breger 1916  ","Nuculoidea Williams&Breger 1916");
     assertNormalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea behrens var.christoph Williams&Breger[1916]");
     assertNormalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  ","Nuculoidea behrens var.christoph Williams&Breger[1916]");
     assertNormalize("Nuculoidea   Williams& Breger, 1916  ", "Nuculoidea Williams&Breger,1916");
-    assertNormalize("Asplenium X inexpectatum (E. L. Braun 1940)Morton (1956) ", "Asplenium ×inexpectatum(E.L.Braun,1940)Morton(1956)");
+    assertNormalize("Asplenium X inexpectatum (E. L. Braun 1940)Morton (1956) ", "Asplenium ×inexpectatum(E.L.Braun 1940)Morton(1956)");
     assertNormalize(" × Agropogon", "×Agropogon");
     assertNormalize("Salix × capreola Andersson","Salix ×capreola Andersson");
     assertNormalize("Leucanitis roda Herrich-Schäffer (1851) 1845", "Leucanitis roda Herrich-Schäffer(1851)1845");
@@ -258,7 +257,7 @@ public class ParsingJobTest {
 
     // imprint years
     assertNormalize("Ctenotus alacer Storr, 1970 [\"1969\"]", "Ctenotus alacer Storr,1970");
-    assertNormalize("C. Flahault 1887 (\"1886-1888\")", "C.Flahault,1887");
+    assertNormalize("C. Flahault 1887 (\"1886-1888\")", "C.Flahault 1887");
     assertNormalize("Ehrenberg, 1870, 1869", "Ehrenberg,1870");
     assertNormalize("Ctenotus alacer Storr, 1970 (\"1969\")", "Ctenotus alacer Storr,1970");
     assertNormalize("Ctenotus alacer Storr, 1970 [\"1969\"]", "Ctenotus alacer Storr,1970");
@@ -274,17 +273,16 @@ public class ParsingJobTest {
   @Test
   public void testNormalizeStrongName() {
     assertNormalizeStrong("Alstonia vieillardii Van Heurck & Müll.Arg.", "Alstonia vieillardii Van Heurck&Müll.Arg.");
-    assertNormalizeStrong("Nuculoidea Williams et  Breger 1916  ","Nuculoidea Williams&Breger,1916");
+    assertNormalizeStrong("Nuculoidea Williams et  Breger 1916  ","Nuculoidea Williams&Breger 1916");
     //assertNormalizeStrong("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea behrens var.christoph Williams&Breger,1916");
     assertNormalizeStrong(" 'Nuculoidea Williams & Breger, 1916'", "Nuculoidea Williams&Breger,1916");
-    assertNormalizeStrong("Photina Cardioptera burmeisteri (Westwood 1889)", "Photina(Cardioptera)burmeisteri(Westwood,1889)");
-    assertNormalizeStrong("Suaeda forsskahlei Schweinf. ms.", "Suaeda forsskahlei Schweinf.");
-    assertNormalizeStrong("Acacia bicolor Bojer ms.", "Acacia bicolor Bojer");
+    assertNormalizeStrong("Photina Cardioptera burmeisteri (Westwood 1889)", "Photina(Cardioptera)burmeisteri(Westwood 1889)");
+    assertNormalizeStrong("Suaeda forsskahlei Schweinf. ms.", "Suaeda forsskahlei Schweinf.ms.");
+    assertNormalizeStrong("Acacia bicolor Bojer ms.", "Acacia bicolor Bojer ms.");
     assertNormalizeStrong("Astelia alpina var. novae-hollandiae", "Astelia alpina var.novae-hollandiae");
     assertNormalizeStrong("  N.behrens Williams &amp;  Breger , 1916  ", "N.behrens Williams&Breger,1916");
     assertNormalizeStrong("Melanoides kinshassaensis D+P", "Melanoides kinshassaensis D&P");
-    assertNormalizeStrong("Malacosteus australis Kenaley/2007", "Malacosteus australis Kenaley,2007");
-    assertNormalizeStrong("Bathylychnops chilensis Parin_NV, Belyanina_TN & Evseenko 2009", "Bathylychnops chilensis Parin NV,Belyanina TN&Evseenko,2009");
+    assertNormalizeStrong("Bathylychnops chilensis Parin_NV, Belyanina_TN & Evseenko 2009", "Bathylychnops chilensis Parin NV,Belyanina TN&Evseenko 2009");
     assertNormalizeStrong("denheyeri Eghbalian, Khanjani and Ueckermann in Eghbalian, Khanjani & Ueckermann, 2017", "? denheyeri Eghbalian,Khanjani&Ueckermann in Eghbalian,Khanjani&Ueckermann,2017");
     // http://zoobank.org/References/C37149C7-FC3B-4267-9CD0-03E0E0059459
     // http://www.tandfonline.com/doi/full/10.1080/14772019.2016.1246112
