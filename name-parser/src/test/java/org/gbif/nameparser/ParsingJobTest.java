@@ -263,7 +263,6 @@ public class ParsingJobTest {
     assertNormalize("Ctenotus alacer Storr, 1970 [\"1969\"]", "Ctenotus alacer Storr,1970");
     assertNormalize("Ctenotus alacer Storr, 1970 (imprint 1969)", "Ctenotus alacer Storr,1970");
     assertNormalize("Ctenotus alacer Storr, 1970 (not 1969)", "Ctenotus alacer Storr,1970");
-
   }
 
   private void assertNormalize(String raw, String expected) {

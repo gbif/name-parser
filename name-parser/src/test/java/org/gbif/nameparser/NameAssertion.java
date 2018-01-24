@@ -174,6 +174,11 @@ public class NameAssertion {
     return add(NP.NOTHO);
   }
 
+  NameAssertion remarks(String remarks) {
+    assertEquals(remarks, n.getRemarks());
+    return add(NP.REMARK);
+  }
+
   NameAssertion cultivar(String genus, String cultivar) {
     return cultivar(genus, null, Rank.CULTIVAR, cultivar);
   }

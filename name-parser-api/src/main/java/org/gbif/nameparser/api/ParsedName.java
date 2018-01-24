@@ -308,6 +308,10 @@ public class ParsedName {
     this.remarks = remarks;
   }
 
+  public void addRemark(String remark) {
+    this.remarks = remarks == null ? remark : remarks + "; " + remark;
+  }
+
   public State getState() {
     return state;
   }

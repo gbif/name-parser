@@ -537,6 +537,7 @@ class ParsingJob implements Callable<ParsedName> {
     m = MANUSCRIPT_NAMES.matcher(name);
     if (m.find()) {
       pn.setType(NameType.INFORMAL);
+      pn.addRemark(m.group(0));
       setRank(m.group(1).replace("indet", "sp"));
       name = m.replaceFirst("");
     }

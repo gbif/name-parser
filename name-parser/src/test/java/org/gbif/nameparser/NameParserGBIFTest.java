@@ -1337,6 +1337,7 @@ public class NameParserGBIFTest {
     assertName("Lepidoptera sp. JGP0404", "Lepidoptera spec.")
         .species("Lepidoptera", null)
         .type(INFORMAL)
+        .remarks("sp.JGP0404")
         .nothingElse();
 
     assertName("Genoplesium vernalis D.L.Jones ms.", "Genoplesium vernalis")
@@ -1348,21 +1349,25 @@ public class NameParserGBIFTest {
     assertName("Verticordia sp.1", "Verticordia spec.")
         .species("Verticordia", null)
         .type(INFORMAL)
+        .remarks("sp.1")
         .nothingElse();
 
     assertName("Bryozoan indet. 1", "Bryozoan spec.")
         .species("Bryozoan", null)
         .type(INFORMAL)
+        .remarks("indet.1")
         .nothingElse();
 
     assertName("Bryozoan sp. E", "Bryozoan spec.")
         .species("Bryozoan", null)
         .type(INFORMAL)
+        .remarks("sp.E")
         .nothingElse();
 
     assertName("Prostanthera sp. Somersbey (B.J.Conn 4024)", "Prostanthera spec.")
         .species("Prostanthera", null)
         .type(INFORMAL)
+        .remarks("sp.Somersbey(B.J.Conn 4024)")
         .nothingElse();
   }
 
