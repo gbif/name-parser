@@ -7,6 +7,8 @@ import org.gbif.api.vocabulary.NameType;
 import org.gbif.api.vocabulary.Rank;
 import org.junit.Test;
 
+import java.lang.management.ManagementFactory;
+
 import static org.junit.Assert.*;
 
 
@@ -14,7 +16,10 @@ import static org.junit.Assert.*;
  *
  */
 public class NameParserGbifV1Test {
-  NameParserGbifV1 parser = new NameParserGbifV1();
+  private static final boolean DEBUG = ManagementFactory.getRuntimeMXBean()
+      .getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+
+  NameParserGbifV1 parser = new NameParserGbifV1(DEBUG ? 99999999 : 1000);
 
   @Test
   public void convertNameType() throws Exception {
@@ -58,8 +63,12 @@ public class NameParserGbifV1Test {
 
   @Test
   public void parseQuietly() throws Exception {
+    ParsedName pn = parser.parseQuietly("Navicula var. fasciata", Rank.VARIETY);
+    assertNull(pn.getSpecificEpithet());
+    assertEquals(NameType.INFORMAL, pn.getType());
+
     assertEquals("Abies alba", parser.parseQuietly("Abies alba Mill.").canonicalName());
-    ParsedName pn = parser.parseQuietly("Abies alba x Pinus graecus L.");
+    pn = parser.parseQuietly("Abies alba x Pinus graecus L.");
     assertEquals("Abies alba x Pinus graecus L.", pn.getScientificName());
     assertEquals(NameType.HYBRID, pn.getType());
     assertNull(pn.getGenusOrAbove());

@@ -997,6 +997,9 @@ class ParsingJob implements Callable<ParsedName> {
           pn.setInfraspecificEpithet(matcher.group(10));
         }
 
+        // make sure (infra)specific epithet is not a rank marker!
+        lookForIrregularRankMarker();
+
         // if no rank was parsed but given externally use it!
         if (rank != null && !rank.otherOrUnranked() && pn.getRank().otherOrUnranked()) {
           pn.setRank(rank);
@@ -1034,9 +1037,6 @@ class ParsingJob implements Callable<ParsedName> {
             pn.setSanctioningAuthor(matcher.group(18));
           }
         }
-
-        // make sure (infra)specific epithet is not a rank marker!
-        lookForIrregularRankMarker();
 
         // 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
         checkEpithetVsAuthorPrefx();
