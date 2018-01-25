@@ -854,6 +854,21 @@ public class NameParserGBIFTest {
   }
 
   /**
+   * Test all names in nonames.txt and makes sure they are NO_NAMEs.
+   */
+  @Test
+  public void nonamesFile() throws Exception {
+    for (String name : iterResource("nonames.txt")) {
+      try {
+        ParsedName pn = parser.parse(name);
+        fail("Expected "+name+" to be unparsable");
+      } catch (UnparsableNameException ex) {
+        assertEquals(NameType.NO_NAME, ex.getType());
+        assertEquals(name, ex.getName());
+      }
+    }
+  }
+  /**
    * Converts lines of a classpath resource that are not empty or are comments starting with #
    * into a simple string iterable
    */
@@ -1168,6 +1183,16 @@ public class NameParserGBIFTest {
 
   @Test
   public void indetNames() throws Exception {
+    assertName("Ocymyrmex Weitzaeckeri subsp. arnoldi", "Ocymyrmex subsp. arnoldi")
+        .infraSpecies("Ocymyrmex", null, Rank.SUBSPECIES, "arnoldi")
+        .type(NameType.INFORMAL)
+        .nothingElse();
+
+    assertName("Navicula var. fasciata", "Navicula var. fasciata")
+        .infraSpecies("Navicula", null, Rank.VARIETY, "fasciata")
+        .type(NameType.INFORMAL)
+        .nothingElse();
+
     assertName("Polygonum spec.", "Polygonum spec.")
         .species("Polygonum", null)
         .type(NameType.INFORMAL)

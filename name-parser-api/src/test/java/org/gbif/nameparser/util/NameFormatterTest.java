@@ -139,6 +139,13 @@ public class NameFormatterTest {
 
   @Test
   public void testIndet() throws Exception {
+    pn.setGenus("Ocymyrmex");
+    pn.setInfragenericEpithet("Weitzaeckeri");
+    pn.setInfraspecificEpithet("arnoldi");
+    pn.setRank(Rank.SUBSPECIES);
+    assertEquals("Ocymyrmex subsp. arnoldi", pn.canonicalName());
+    pn = new ParsedName();
+
     pn.setNomenclaturalNotes("sp.nov.");
     for (Rank r : Rank.values()) {
       pn.setRank(r);

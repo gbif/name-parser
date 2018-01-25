@@ -119,7 +119,7 @@ public class NameFormatter {
     } else {
       // bi- or trinomials or infrageneric names
       if (n.getInfragenericEpithet() != null) {
-        if (n.getSpecificEpithet() == null) {
+        if ((isUnknown(n.getRank()) && n.getSpecificEpithet() == null) || (n.getRank() != null && n.getRank().isInfragenericAndSupraspecific())) {
           // the infrageneric is the terminal rank. Always show it and wrap it with its genus if requested
           if (n.getGenus() != null && genusForinfrageneric) {
             appendGenus(sb, n, hybridMarker);
@@ -132,10 +132,12 @@ public class NameFormatter {
                   .append(")");
 
             } else {
-              if (rankMarker && n.getRank() != null) {
+              if (rankMarker) {
                 // If we know the rank we use explicit rank markers
                 // this is how botanical infrageneric names are formed, see http://www.iapt-taxon.org/nomen/main.php?page=art21
-                appendRankMarker(sb, n.getRank());
+                if (appendRankMarker(sb, n.getRank())) {
+                  sb.append(' ');
+                }
               }
               sb.append(n.getInfragenericEpithet());
             }
@@ -170,8 +172,7 @@ public class NameFormatter {
 
           } else if (n.getRank() != null && n.getRank().isInfraspecific()) {
             // no species epithet given, but rank below species. Indetermined!
-            sb.append(' ');
-            sb.append(n.getRank().getMarker());
+            appendInfraspecific(sb, n, hybridMarker, rankMarker, true);
             authorship = false;
           }
         }
@@ -201,21 +202,7 @@ public class NameFormatter {
 
         } else {
           // infraspecific part
-          sb.append(' ');
-          if (hybridMarker && NamePart.INFRASPECIFIC == n.getNotho()) {
-            if (rankMarker && n.getRank() != null && isInfraspecificMarker(n.getRank())) {
-              sb.append("notho");
-            } else {
-              sb.append(HYBRID_MARKER);
-              sb.append(" ");
-            }
-          }
-          // hide subsp. from zoological names
-          if (rankMarker && (!isZoo(n.getCode()) || Rank.SUBSPECIES != n.getRank())) {
-            appendRankMarker(sb, n.getRank(), NameFormatter::isInfraspecificMarker);
-          }
-          epi = n.getInfraspecificEpithet().replaceAll("[ _-]", "-");
-          sb.append(epi);
+          appendInfraspecific(sb, n, hybridMarker, rankMarker, false);
           // non autonym authorship ?
           if (n.isAutonym()) {
             authorship = false;
@@ -291,6 +278,29 @@ public class NameFormatter {
     return Strings.emptyToNull(name);
   }
 
+  private static StringBuilder appendInfraspecific(StringBuilder sb, ParsedName n, boolean hybridMarker, boolean rankMarker, boolean forceRankMarker) {
+    // infraspecific part
+    sb.append(' ');
+    if (hybridMarker && NamePart.INFRASPECIFIC == n.getNotho()) {
+      if (rankMarker && n.getRank() != null && isInfraspecificMarker(n.getRank())) {
+        sb.append("notho");
+      } else {
+        sb.append(HYBRID_MARKER);
+        sb.append(" ");
+      }
+    }
+    // hide subsp. from zoological names
+    if (forceRankMarker || rankMarker && (!isZoo(n.getCode()) || Rank.SUBSPECIES != n.getRank())) {
+      if (appendRankMarker(sb, n.getRank(), NameFormatter::isInfraspecificMarker) && n.getInfraspecificEpithet() != null) {
+        sb.append(' ');
+      }
+    }
+    if (n.getInfraspecificEpithet() != null) {
+      sb.append(n.getInfraspecificEpithet().replaceAll("[ _-]", "-"));
+    }
+    return sb;
+  }
+
   private static StringBuilder appendIfNotEmpty(StringBuilder sb, String toAppend) {
     if (sb.length() > 0) {
       sb.append(toAppend);
@@ -302,6 +312,10 @@ public class NameFormatter {
     return code != null && code == NomCode.ZOOLOGICAL;
   }
 
+  private static boolean isUnknown(Rank r) {
+    return r == null || r.otherOrUnranked();
+  }
+
   private static boolean isInfragenericMarker(Rank r) {
     return r != null && r.isInfrageneric() && !r.isUncomparable();
   }
@@ -310,18 +324,25 @@ public class NameFormatter {
     return r.isInfraspecific() && !r.isUncomparable();
   }
 
-  private static void appendRankMarker(StringBuilder sb, Rank rank) {
-    appendRankMarker(sb, rank, null);
+  /**
+   * @return true if rank marker was added
+   */
+  private static boolean appendRankMarker(StringBuilder sb, Rank rank) {
+    return appendRankMarker(sb, rank, null);
   }
 
-  private static void appendRankMarker(StringBuilder sb, Rank rank, Predicate<Rank> ifRank) {
+  /**
+   * @return true if rank marker was added
+   */
+  private static boolean appendRankMarker(StringBuilder sb, Rank rank, Predicate<Rank> ifRank) {
     if (rank != null
         && rank.getMarker() != null
         && (ifRank == null || ifRank.test(rank))
       ) {
       sb.append(rank.getMarker());
-      sb.append(' ');
+      return true;
     }
+    return false;
   }
 
   private static StringBuilder appendGenus(StringBuilder sb, ParsedName n, boolean hybridMarker) {

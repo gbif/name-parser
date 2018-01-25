@@ -421,6 +421,13 @@ public enum Rank {
   }
 
   /**
+   * @return true for rank is below genus. Also incluse species and infraspecific ranks
+   */
+  public boolean isInfragenericAndSupraspecific() {
+    return isInfrageneric() && isSupraspecific();
+  }
+
+  /**
    * True for all mayor Linnéan ranks, ie kingdom,phylum,class,order,family,genus and species.
    */
   public boolean isLinnean() {

@@ -113,12 +113,13 @@ class ParsingJob implements Callable<ParsedName> {
     ")";
 
   private static final String EPHITHET_PREFIXES = "van|novae";
-  private static final String GENETIC_EPHITHETS = "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
+  private static final String UNALLOWED_EPITHET_ENDING =
+      "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
   static final String EPHITHET = "(?:[0-9]+-?|[doml]')?"
             + "(?:(?:" + EPHITHET_PREFIXES + ") [a-z])?"
             + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
             // avoid epithets ending with the unallowed endings, e.g. serovar
-            + "(?<!(?:\\bex|\\bl[ae]|\\bv[ao]n|"+GENETIC_EPHITHETS+"))(?=\\b)";
+            + "(?<!(?:\\bex|\\bl[ae]|\\bv[ao]n|"+ UNALLOWED_EPITHET_ENDING +"))(?=\\b)";
   static final String MONOMIAL =
     "[" + NAME_LETTERS + "](?:\\.|[" + name_letters + "]+)(?:-[" + NAME_LETTERS + "]?[" + name_letters + "]+)?";
   // a pattern matching typical latin word endings. Helps identify name parts from authors
@@ -232,7 +233,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("( ?[{\\[] ?)+");
   private static final Pattern NORM_BRACKETS_CLOSE_STRONG = Pattern.compile("( ?[}\\]] ?)+");
   private static final Pattern NORM_AND = Pattern.compile("\\b *(and|et|und|\\+|,&) *\\b");
-  private static final Pattern NORM_SUBGENUS = Pattern.compile("(" + MONOMIAL + ") (" + MONOMIAL + ") ([" + name_letters + "+-]{5,})");
+  private static final Pattern NORM_SUBGENUS = Pattern.compile("(" + MONOMIAL + ") (" + MONOMIAL + ") (" + EPHITHET+ ")");
   private static final Pattern NO_Q_MARKS = Pattern.compile("([" + author_letters + "])\\?+");
   private static final Pattern NORM_PUNCTUATIONS = Pattern.compile("\\s*([.,;:&(){}\\[\\]-])\\s*\\1*\\s*");
   private static final Pattern NORM_IMPRINT_YEAR = Pattern.compile("(" + YEAR_LOOSE + ")\\s*" +
@@ -254,7 +255,7 @@ class ParsingJob implements Callable<ParsedName> {
   // Elseya sp. nov. (AMS – R140984)
   private static final Pattern MANUSCRIPT_NAMES = Pattern.compile("\\b(indet|spp?)[. ](?:nov\\.)?[A-Z0-9][a-zA-Z0-9-]*(?:\\(.+?\\))?");
   private static final Pattern MANUSCRIPT_SUFFIX = Pattern.compile("\\bms\\.?$");
-  private static final Pattern REPL_AFF = Pattern.compile("\\b(undet|indet|aff|cf)[?.]?\\b");
+  private static final Pattern REPL_AFF = Pattern.compile("\\b(undet|indet|aff|cf)[?.]?\\b", CASE_INSENSITIVE);
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
   private static final Pattern REMOVE_PLACEHOLDER_AUTHOR = Pattern.compile("\\b"+
       "(?:unknown|unspecified|uncertain|\\?)" +
@@ -598,7 +599,7 @@ class ParsingJob implements Callable<ParsedName> {
 
     if (Strings.isNullOrEmpty(name)) {
       // we might have parsed out remarks already which we treat as a placeholder
-      if (preparsingRank == null && preparsingRank.otherOrUnranked()) {
+      if (preparsingRank == null || preparsingRank.otherOrUnranked()) {
         unparsable(NameType.NO_NAME);
       } else {
         // stop here!
@@ -814,7 +815,10 @@ class ParsingJob implements Callable<ParsedName> {
     // add parenthesis around subgenus if missing
     m = NORM_SUBGENUS.matcher(name);
     if (m.find()) {
-      name = m.replaceAll("$1($2)$3");
+      // make sure epithet is not a rank mismatch
+      if (parseRank(m.group(3)) == null){
+        name = m.replaceAll("$1($2)$3");
+      }
     }
 
     // finally NORMALIZE PUNCTUATION AND WHITESPACE again
@@ -1037,6 +1041,7 @@ class ParsingJob implements Callable<ParsedName> {
 
         // make sure (infra)specific epithet is not a rank marker!
         lookForIrregularRankMarker();
+
         // 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
         checkEpithetVsAuthorPrefx();
 
@@ -1061,8 +1066,7 @@ class ParsingJob implements Callable<ParsedName> {
    * @param rankMarker
    */
   private void setRank(String rankMarker) {
-    rankMarker = StringUtils.trimToNull(rankMarker);
-    Rank rank = RankUtils.inferRank(rankMarker);
+    Rank rank = parseRank(rankMarker);
     if (rank != null && !rank.otherOrUnranked()) {
       pn.setRank(rank);
       if (rankMarker.startsWith(NOTHO)) {
@@ -1079,6 +1083,9 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
 
+  private static Rank parseRank(String rankMarker) {
+    return RankUtils.inferRank(StringUtils.trimToNull(rankMarker));
+  }
     private static boolean infragenericIsAuthor(ParsedName pn, Rank rank) {
         return pn.getBasionymAuthorship().isEmpty()
             && pn.getSpecificEpithet() == null
@@ -1091,7 +1098,7 @@ class ParsingJob implements Callable<ParsedName> {
 
     private void setUninomialOrGenus(Matcher matcher, ParsedName pn) {
       // the match can be the genus part of a bi/trinomial or a uninomial
-      if (matcher.group(2) != null || matcher.group(4) != null || matcher.group(5) != null
+      if (matcher.group(2) != null || matcher.group(4) != null || matcher.group(5) != null || matcher.group(8) != null
           || (pn.getRank() != null && pn.getRank().isSpeciesOrBelow() && pn.getRank().isRestrictedToCode() != NomCode.CULTIVARS) ) {
         pn.setGenus(StringUtils.trimToNull(matcher.group(1)));
       } else {
@@ -1112,7 +1119,8 @@ class ParsingJob implements Callable<ParsedName> {
           setRank(pn.getInfraspecificEpithet());
           pn.setInfraspecificEpithet(null);
         }
-      } else if (pn.getSpecificEpithet() != null) {
+      }
+      if (pn.getSpecificEpithet() != null) {
         Matcher m = RANK_MARKER_ONLY.matcher(pn.getSpecificEpithet());
         if (m.find()) {
           // we found a rank marker, make it one
