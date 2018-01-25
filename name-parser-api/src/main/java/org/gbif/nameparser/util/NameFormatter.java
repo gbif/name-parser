@@ -119,7 +119,7 @@ public class NameFormatter {
     } else {
       // bi- or trinomials or infrageneric names
       if (n.getInfragenericEpithet() != null) {
-        if ((isUnknown(n.getRank()) && n.getSpecificEpithet() == null) || (n.getRank() != null && n.getRank().isInfragenericAndSupraspecific())) {
+        if ((isUnknown(n.getRank()) && n.getSpecificEpithet() == null) || (n.getRank() != null && n.getRank().isInfragenericStrictly())) {
           // the infrageneric is the terminal rank. Always show it and wrap it with its genus if requested
           if (n.getGenus() != null && genusForinfrageneric) {
             appendGenus(sb, n, hybridMarker);

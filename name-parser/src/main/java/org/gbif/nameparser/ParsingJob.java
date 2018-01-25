@@ -637,7 +637,7 @@ class ParsingJob implements Callable<ParsedName> {
     applyDoubtfulFlag(scientificName);
 
     // determine rank if not yet assigned
-    if (pn.getRank() == null || pn.getRank().otherOrUnranked()) {
+    if (pn.getRank().otherOrUnranked()) {
       pn.setRank(RankUtils.inferRank(pn));
     }
 
@@ -895,8 +895,8 @@ class ParsingJob implements Callable<ParsedName> {
           pn.addWarning("indetermined infraspecies without infraspecific epithet");
           pn.setType(NameType.INFORMAL);
 
-        } else if (!pn.getRank().isSpeciesOrBelow() && pn.isBinomial()) {
-          pn.addWarning("binomial with rank higher than species");
+        } else if (!pn.getRank().isSpeciesAggregateOrBelow() && pn.isBinomial()) {
+          pn.addWarning("binomial with rank higher than species aggregate");
           pn.setDoubtful(true);
         }
       }
@@ -1107,7 +1107,7 @@ class ParsingJob implements Callable<ParsedName> {
    * This is sometimes the case for informal names like: Coccyzus americanus ssp.
    */
   private void lookForIrregularRankMarker() {
-    if (pn.getRank() == null || pn.getRank().otherOrUnranked()) {
+    if (pn.getRank().otherOrUnranked()) {
       if (pn.getInfraspecificEpithet() != null) {
         Matcher m = RANK_MARKER_ONLY.matcher(pn.getInfraspecificEpithet());
         if (m.find()) {
@@ -1135,7 +1135,6 @@ class ParsingJob implements Callable<ParsedName> {
    * TODO: 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
    */
   private void checkEpithetVsAuthorPrefx() {
-    if (pn.getRank() == null) {
       if (pn.getInfraspecificEpithet() != null) {
         // might be subspecies without rank marker
         // or short authorship prefix in epithet. test
@@ -1160,7 +1159,6 @@ class ParsingJob implements Callable<ParsedName> {
 //          cn.setAuthorship(parseAuthorship(extendedAuthor));
         }
       }
-    }
   }
 
   @VisibleForTesting

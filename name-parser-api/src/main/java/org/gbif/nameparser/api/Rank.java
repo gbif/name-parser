@@ -135,7 +135,7 @@ public enum Rank {
   SUBSERIES("subser."),
 
   /**
-   * used for any other unspecific rank below genera and above species.
+   * used for any other unspecific rank below genera and above species aggregates.
    */
   INFRAGENERIC_NAME("infragen."),
 
@@ -421,10 +421,10 @@ public enum Rank {
   }
 
   /**
-   * @return true for rank is below genus. Also incluse species and infraspecific ranks
+   * @return true for real infrageneric ranks with an infragenericEpithet below genus and above species aggregate.
    */
-  public boolean isInfragenericAndSupraspecific() {
-    return isInfrageneric() && isSupraspecific();
+  public boolean isInfragenericStrictly() {
+    return isInfrageneric() && ordinal() < SPECIES_AGGREGATE.ordinal();
   }
 
   /**
@@ -441,6 +441,10 @@ public enum Rank {
 
   public boolean isSpeciesOrBelow() {
     return ordinal() >= SPECIES.ordinal() && notOtherOrUnranked();
+  }
+
+  public boolean isSpeciesAggregateOrBelow() {
+    return ordinal() >= SPECIES_AGGREGATE.ordinal() && notOtherOrUnranked();
   }
 
   public boolean notOtherOrUnranked() {
@@ -495,6 +499,13 @@ public enum Rank {
    */
   public NomCode isRestrictedToCode() {
     return RANK2CODE.get(this);
+  }
+
+  /**
+   * @return true if the rank is restricted to Cultivated Plants
+   */
+  public boolean isCultivarRank() {
+    return NomCode.CULTIVARS == isRestrictedToCode();
   }
 
   /**

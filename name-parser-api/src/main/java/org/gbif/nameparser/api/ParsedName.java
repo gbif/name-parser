@@ -383,7 +383,10 @@ public class ParsedName {
   }
 
   public boolean isIndetermined() {
-    return rank != null && (rank.isInfrageneric() && rank.isSupraspecific() && infragenericEpithet == null || rank.isSpeciesOrBelow() && specificEpithet == null || rank.isInfraspecific() && infraspecificEpithet == null);
+    return rank.isInfragenericStrictly() && infragenericEpithet == null && specificEpithet == null
+        || rank.isSpeciesOrBelow() && specificEpithet == null
+        || rank.isCultivarRank() && cultivarEpithet == null
+        || rank.isInfraspecific() && !rank.isCultivarRank() && infraspecificEpithet == null;
   }
 
   /**
@@ -403,7 +406,7 @@ public class ParsedName {
 
 		}
 		// verify ranks
-		if (rank != null && rank.notOtherOrUnranked()) {
+		if (rank.notOtherOrUnranked()) {
 			if (rank.isGenusOrSuprageneric()) {
 				if (genus != null || uninomial == null)
 					return false;

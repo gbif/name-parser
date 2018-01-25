@@ -393,10 +393,29 @@ public class NameParserGBIFTest {
   }
 
   @Test
-  public void simpleBinomial() throws Exception {
-    assertName("Abies alba", "Abies alba")
-        .species("Abies", "alba")
+  public void rankExplicit() throws Exception {
+    assertName("Achillea millefolium L.", Rank.SPECIES, "Achillea millefolium")
+        .species("Achillea", "millefolium")
+        .combAuthors(null, "L.")
         .nothingElse();
+
+    assertName("Achillea millefolium L.", Rank.SPECIES_AGGREGATE, "Achillea millefolium")
+        .binomial("Achillea", null, "millefolium", Rank.SPECIES_AGGREGATE)
+        .combAuthors(null, "L.")
+        .nothingElse();
+
+    // higher ranks should be marked as doubtful
+    for (Rank r : Rank.values()) {
+      if (r.otherOrUnranked() || r.isSpeciesAggregateOrBelow()) continue;
+      NameAssertion ass = assertName("Achillea millefolium L.", r, "Achillea millefolium")
+          .binomial("Achillea", null, "millefolium", r)
+          .combAuthors(null, "L.")
+          .doubtful();
+      if (r.isRestrictedToCode() != null) {
+        ass.code(r.isRestrictedToCode());
+      }
+      ass.nothingElse();
+    }
   }
 
   @Test
@@ -989,7 +1008,7 @@ public class NameParserGBIFTest {
   @Test
   public void nonNames() throws Exception {
     assertName("Nitocris (Nitocris) similis Breuning, 1956 (nec Gahan, 1893)", "Nitocris similis")
-        .species("Nitocris", "Nitocris", "similis")
+        .binomial("Nitocris", "Nitocris", "similis", Rank.SPECIES)
         .combAuthors("1956", "Breuning")
         .sensu("nec Gahan, 1893")
         .nothingElse();
