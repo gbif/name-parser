@@ -9,68 +9,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 
 public class ParsedNameTest {
-  
-  @Test
-  public void isConsistent() throws Exception {
-    ParsedName n = new ParsedName();
-    assertTrue(n.isConsistent());
-
-    n.setUninomial("Asteraceae");
-    n.setRank(Rank.FAMILY);
-    assertTrue(n.isConsistent());
-    for (Rank r : Rank.values()) {
-      if (r.isSuprageneric()) {
-        n.setRank(r);
-        assertTrue(n.isConsistent());
-      }
-    }
-
-    n.setRank(Rank.GENUS);
-    assertTrue(n.isConsistent());
-
-    n.setUninomial("Abies");
-    assertTrue(n.isConsistent());
-
-    n.getCombinationAuthorship().getAuthors().add("Mill.");
-    assertTrue(n.isConsistent());
-
-    n.setRank(Rank.SPECIES);
-    assertFalse(n.isConsistent());
-
-    n.setInfragenericEpithet("Pinoideae");
-    assertFalse(n.isConsistent());
-
-    n.setRank(Rank.SUBGENUS);
-    // should we not also check if scientificName property makes sense???
-    assertTrue(n.isConsistent());
-
-    n.setGenus("Abies");
-    assertTrue(n.isConsistent());
-
-    n.setSpecificEpithet("alba");
-    assertFalse(n.isConsistent());
-
-    n.setRank(Rank.SPECIES);
-    assertFalse(n.isConsistent());
-
-    n.setInfragenericEpithet(null);
-    assertTrue(n.isConsistent());
-
-    n.setRank(Rank.VARIETY);
-    assertFalse(n.isConsistent());
-
-    n.setInfraspecificEpithet("alpina");
-    assertTrue(n.isConsistent());
-
-    n.setRank(Rank.SPECIES);
-    assertFalse(n.isConsistent());
-
-    n.setRank(Rank.UNRANKED);
-    assertTrue(n.isConsistent());
-
-    n.setSpecificEpithet(null);
-    assertFalse(n.isConsistent());
-  }
 
   @Test
   public void unrankedDefault() throws Exception {

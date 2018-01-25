@@ -177,25 +177,48 @@ public class ParsingJobTest {
     nomStatusRemark("Abies sp. nov.", "sp.nov.");
   }
 
-  private void nomStatusRemark(String remarks) {
+  @Test
+  public void testPotentialName() throws Exception {
+    noPotentialName("sp.nov.");
+    isPotentialName("Abies");
+    isPotentialName("Aba");
+    isPotentialName("Abies keralia spec. nov.");
+    isPotentialName("Aba");
+
+    noPotentialName("APSE-2");
+    noPotentialName("34212");
+    noPotentialName("Ab123452");
+    noPotentialName("Abies43");
+    noPotentialName("ARV-138");
+    noPotentialName("ATCC 4321");
+  }
+
+  private static void nomStatusRemark(String remarks) {
     nomStatusRemark(remarks, remarks);
   }
-  private void nomStatusRemark(String remarks, String match) {
+  private static void nomStatusRemark(String remarks, String match) {
     Matcher m = ParsingJob.EXTRACT_NOMSTATUS.matcher(JOB.normalize(remarks));
     assertTrue (m.find());
     assertEquals(match, m.group().trim());
   }
 
-  private void testCultivar(String cultivar) {
+  private static void isPotentialName(String name) {
+    assertTrue(ParsingJob.POTENTIAL_NAME_PATTERN.matcher(name).find());
+  }
+  private static void noPotentialName(String name) {
+    assertFalse(ParsingJob.POTENTIAL_NAME_PATTERN.matcher(name).find());
+  }
+
+  private static void testCultivar(String cultivar) {
     Matcher m = ParsingJob.CULTIVAR.matcher(cultivar);
     assertTrue (m.find());
   }
 
-  private void assertAuthorshipPattern(String authorship) {
+  private static void assertAuthorshipPattern(String authorship) {
     assertAuthorshipPattern(authorship, null, authorship);
   }
 
-  private void assertAuthorshipPattern(String authorship, String exAuthor, String ... authors) {
+  private static void assertAuthorshipPattern(String authorship, String exAuthor, String ... authors) {
     try {
       String normed = JOB.normalize(authorship);
       Matcher m = AUTHORSHIP_PATTERN.matcher(normed);
@@ -218,7 +241,7 @@ public class ParsingJobTest {
     }
   }
 
-  private void assertAuthorshipPatternFails(String authorship) {
+  private static void assertAuthorshipPatternFails(String authorship) {
     String normed = JOB.normalize(authorship);
     Matcher m = AUTHORSHIP_PATTERN.matcher(normed);
     assertFalse(authorship, m.find());

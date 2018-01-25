@@ -46,8 +46,6 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern AUTHOR_INITIAL_SWAP = Pattern.compile("^([^,]+) *, *([^,]+)$");
   private static final Pattern NORM_EX_HORT = Pattern.compile("\\b(?:hort|cv)[. ]ex ", CASE_INSENSITIVE);
 
-  // normalized space, comma & dots. Always just one of them
-  private static final String DOTSP = "[. ]";
   // name parsing
   static final String NAME_LETTERS = "A-ZÏËÖÜÄÉÈČÁÀÆŒ";
   static final String name_letters = "a-zïëöüäåéèčáàæœ";
@@ -55,27 +53,6 @@ class ParsingJob implements Callable<ParsedName> {
   // (\W is alphanum)
   static final String author_letters = name_letters + "\\p{Ll}-?"; // lower case unicode letter, not numerical
   // common name suffices (ms=manuscript, not yet published)
-  private static final String AUTHOR_SUFFICES = "f|fil|filius|j|jr|jun|junior|sr|sen|senior|ms";
-  private static final String AUTHOR_PREFIX =
-      "(?:" +
-           "v(?:\\.|[ao]n)(?:[ -](?:den|der|dem) )? ?" +
-          "|la " +
-          "|d(?:e|el|es|i|a|u)?(?:[' ]l[ae])?[' ]" +
-          "|degli " +
-          "|l[ae] " +
-          "|s'" +
-          "|'t " +
-      ")";
-  private static final String AUTHOR_OLD = "(?:" +
-      // lowercase prefixes known for author names
-      AUTHOR_PREFIX + "?" +
-      // anything with Upper case letter, non greedy
-      "\\p{Lu}[\\p{Lu}\\p{Ll}'-]*?" +
-      // any known lowercase suffices
-      "(?:[. ]" + AUTHOR_SUFFICES +"\\b)?" +
-      "[. -]?)+";
-
-
   private static final String AUTHOR_TOKEN = "(?:\\p{Lu}[\\p{Lu}\\p{Ll}'-]*" +
       "|al|f|fil|filius|hort|j|jr|jun|junior|sr|sen|senior|ms" +
       "|v|v[ao]n|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|'?t|y" +
@@ -284,6 +261,8 @@ class ParsingJob implements Callable<ParsedName> {
     TYPE_TO_VAR = Pattern.compile(sb.toString());
   }
 
+  @VisibleForTesting
+  static final Pattern POTENTIAL_NAME_PATTERN = Pattern.compile("^×?" + MONOMIAL + "\\b");
   public static final Pattern NAME_PATTERN = Pattern.compile("^" +
              // #1 genus/monomial
              "(×?(?:\\?|" + MONOMIAL + "))" +
@@ -595,9 +574,9 @@ class ParsingJob implements Callable<ParsedName> {
     // remember current rank for later reuse
     final Rank preparsingRank = pn.getRank();
 
-    name = normalizeStrong(name);
+    String nameStrongly = normalizeStrong(name);
 
-    if (Strings.isNullOrEmpty(name)) {
+    if (Strings.isNullOrEmpty(nameStrongly)) {
       // we might have parsed out remarks already which we treat as a placeholder
       if (preparsingRank == null || preparsingRank.otherOrUnranked()) {
         unparsable(NameType.NO_NAME);
@@ -610,15 +589,21 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // try regular parsing
-    boolean parsed = parseNormalisedName(name);
+    boolean parsed = parseNormalisedName(nameStrongly);
     if (!parsed) {
-        // try to spot a virus name once we know its not a scientific name
-        m = IS_VIRUS_PATTERN_POSTFAIL.matcher(name);
-        if (m.find()) {
-          unparsable(NameType.VIRUS);
-        }
-        // cant parse it, fail!
+      // try to spot a virus name once we know its not a scientific name
+      m = IS_VIRUS_PATTERN_POSTFAIL.matcher(nameStrongly);
+      if (m.find()) {
+        unparsable(NameType.VIRUS);
+      }
+
+      // cant parse it, fail!
+      // Does it appear to be a genuine name starting with a monomial?
+      if (POTENTIAL_NAME_PATTERN.matcher(name).find()) {
+        unparsable(NameType.SCIENTIFIC);
+      } else {
         unparsable(NameType.NO_NAME);
+      }
     }
 
     // did we parse a infraspecic manuscript name?

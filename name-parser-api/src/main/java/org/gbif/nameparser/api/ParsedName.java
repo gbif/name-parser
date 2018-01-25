@@ -390,47 +390,6 @@ public class ParsedName {
   }
 
   /**
-	 * Validates consistency of name properties. This method checks if the given
-	 * rank matches populated properties and available properties make sense
-	 * together.
-	 */
-	public boolean isConsistent() {
-		if (specificEpithet != null && genus == null) {
-			return false;
-
-		} else if (infraspecificEpithet != null && specificEpithet == null) {
-			return false;
-
-		} else if (infragenericEpithet != null && specificEpithet != null) {
-			return false;
-
-		}
-		// verify ranks
-		if (rank.notOtherOrUnranked()) {
-			if (rank.isGenusOrSuprageneric()) {
-				if (genus != null || uninomial == null)
-					return false;
-
-			} else if (rank.isInfrageneric() && rank.isSupraspecific()) {
-				if (infragenericEpithet == null)
-					return false;
-
-			} else if (rank.isSpeciesOrBelow()) {
-				if (specificEpithet == null)
-					return false;
-				if (!rank.isInfraspecific() && infraspecificEpithet != null)
-					return false;
-			}
-
-			if (rank.isInfraspecific()) {
-				if (infraspecificEpithet == null)
-					return false;
-			}
-		}
-		return true;
-	}
-
-  /**
    * @See NameFormatter.canonical()
    */
   public String canonicalName() {

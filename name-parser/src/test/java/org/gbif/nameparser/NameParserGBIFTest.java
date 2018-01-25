@@ -34,6 +34,11 @@ public class NameParserGBIFTest {
 
   @Test
   public void species() throws Exception {
+    assertName("Dysponetus bulbosus Hartmann-Schroder 1982", "Dysponetus bulbosus")
+        .species("Dysponetus", "bulbosus")
+        .combAuthors("1982", "Hartmann-Schroder")
+        .nothingElse();
+
     assertName("Zophosis persis (Chatanay 1914)", "Zophosis persis")
         .species("Zophosis", "persis")
         .basAuthors("1914", "Chatanay")
@@ -179,12 +184,19 @@ public class NameParserGBIFTest {
 
   @Test
   public void monomial() throws Exception {
-
+    assertName("Animalia", "Animalia")
+        .monomial("Animalia")
+        .nothingElse();
+    assertName("Polychaeta", "Polychaeta")
+        .monomial("Polychaeta")
+        .nothingElse();
+    assertName("Chrysopetalidae", "Chrysopetalidae")
+        .monomial("Chrysopetalidae", Rank.FAMILY)
+        .nothingElse();
     assertName("Acripeza Guérin-Ménéville 1838", "Acripeza")
         .monomial("Acripeza")
         .combAuthors("1838", "Guérin-Ménéville")
         .nothingElse();
-
   }
 
   @Test
@@ -909,6 +921,57 @@ public class NameParserGBIFTest {
       }
     }
   }
+
+  @Test
+  public void occNameFile() throws Exception {
+    int currFail = 70;
+    int fails = parseFile("occurrence-names.txt");
+    if (fails > currFail) {
+      fail("We are getting worse, not better. Currently failing: " + fails + ". Was passing:" + currFail);
+    }
+  }
+
+  /**
+   * Parse all verbatim GBIF checklist names to spot room for improvements
+   */
+  @Test
+  @Ignore
+  public void gbifFile() throws Exception {
+    parseFile("gbif-verbatim-names.txt");
+  }
+
+  /**
+   * @return number of failed names
+   */
+  private int parseFile(String resourceName) throws Exception {
+    int parseFails = 0;
+    int counter = 0;
+    long start = System.currentTimeMillis();
+    for (String name : iterResource(resourceName)) {
+      counter++;
+      if (counter % 100000 == 0) {
+        long end = System.currentTimeMillis();
+        LOG.info("{} names tested, {} failed", counter, parseFails);
+        LOG.info("Total time {}ms, average per name {}", (end - start), (((double) end - start) / counter));
+      }
+      try {
+        ParsedName pn = parser.parse(name);
+        if (pn.getState() != ParsedName.State.COMPLETE) {
+          LOG.info("{} {}", pn.getState(), name);
+        }
+      } catch (UnparsableNameException ex) {
+        if (ex.getType().isParsable() || ex.getType() == NO_NAME) {
+          parseFails++;
+          LOG.warn("{}: {}", ex.getType(), name);
+        }
+      }
+    }
+    long end = System.currentTimeMillis();
+    LOG.info("{} names tested, {} failed", counter, parseFails);
+    LOG.info("Total time {}ms, average per name {}", (end - start), (((double) end - start) / counter));
+    return parseFails;
+  }
+
   /**
    * Converts lines of a classpath resource that are not empty or are comments starting with #
    * into a simple string iterable
@@ -1036,38 +1099,6 @@ public class NameParserGBIFTest {
 
   private void assertSensu(String raw, String sensu) throws UnparsableNameException {
     assertEquals(sensu, parser.parse(raw, null).getTaxonomicNote());
-  }
-
-  @Test
-  public void occNameFile() throws Exception {
-    Reader reader = resourceReader("occurrence-names.txt");
-    LineIterator iter = new LineIterator(reader);
-
-    int parseFails = 0;
-    int lineNum = 0;
-    long start = System.currentTimeMillis();
-
-    while (iter.hasNext()) {
-      lineNum++;
-      String name = iter.nextLine();
-      ParsedName n;
-      try {
-        n = parser.parse(name, null);
-      } catch (UnparsableNameException e) {
-        parseFails++;
-        LOG.warn("FAIL\t " + name);
-      }
-    }
-    long end = System.currentTimeMillis();
-    LOG.info("\n\nNames tested: " + lineNum);
-    LOG.info("Names parse fail: " + parseFails);
-    LOG.info("Total time: " + (end - start));
-    LOG.info("Average per name: " + (((double) end - start) / lineNum));
-
-    int currFail = 73;
-    if ((parseFails) > currFail) {
-      fail("We are getting worse, not better. Currently failing: " + (parseFails) + ". Was passing:" + currFail);
-    }
   }
 
   @Test
