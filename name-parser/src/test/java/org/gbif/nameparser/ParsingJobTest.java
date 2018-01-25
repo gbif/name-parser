@@ -13,6 +13,7 @@ import static org.junit.Assert.*;
 
 public class ParsingJobTest {
   final static ParsingJob JOB = new ParsingJob("Abies", Rank.UNRANKED);
+  static final Pattern AUTHORSHIP_PATTERN = Pattern.compile("^" + ParsingJob.AUTHORSHIP + "$");
 
   @Test
   public void testEpithetPattern() throws Exception {
@@ -39,81 +40,117 @@ public class ParsingJobTest {
   }
 
   @Test
-  public void testAuthorship() throws Exception {
-    assertAuthorTeamPattern("Plesn¡k ex F.Ritter", "Plesnik", "F.Ritter");
-    assertAuthorTeamPattern("Britton, Sterns, & Poggenb.", null, "Britton", "Sterns", "Poggenb.");
-    assertAuthorTeamPattern("Van Heurck & Müll. Arg.", null, "Van Heurck", "Müll.Arg.");
-    assertAuthorTeamPattern("Gruber-Vodicka", null, "Gruber-Vodicka");
-    assertAuthorTeamPattern("Gruber-Vodicka et al.", null, "Gruber-Vodicka", "al.");
+  public void testAuthorteam() throws Exception {
+    assertAuthorTeamPattern("Petzold & G.Kirchn.",  "Petzold", "G.Kirchn.");
+    assertAuthorTeamPattern("Britton, Sterns, & Poggenb.",  "Britton", "Sterns", "Poggenb.");
+    assertAuthorTeamPattern("Van Heurck & Müll. Arg.",  "Van Heurck", "Müll.Arg.");
+    assertAuthorTeamPattern("Gruber-Vodicka",  "Gruber-Vodicka");
+    assertAuthorTeamPattern("Gruber-Vodicka et al.",  "Gruber-Vodicka", "al.");
     assertAuthorTeamPattern("L.");
     assertAuthorTeamPattern("Lin.");
     assertAuthorTeamPattern("Linné");
     assertAuthorTeamPattern("DC.");
     assertAuthorTeamPattern("de Chaudoir");
     assertAuthorTeamPattern("Hilaire");
-    assertAuthorTeamPattern("St. Hilaire",null,"St.Hilaire");
-    assertAuthorTeamPattern("Geoffroy St. Hilaire", null, "Geoffroy St.Hilaire");
+    assertAuthorTeamPattern("St. Hilaire","St.Hilaire");
+    assertAuthorTeamPattern("Geoffroy St. Hilaire",  "Geoffroy St.Hilaire");
     assertAuthorTeamPattern("Acev.-Rodr.");
-    assertAuthorTeamPattern("Steyerm., Aristeg. & Wurdack",null,"Steyerm.","Aristeg.", "Wurdack");
-    assertAuthorTeamPattern("Du Puy & Labat", null,"Du Puy","Labat");
+    assertAuthorTeamPattern("Steyerm., Aristeg. & Wurdack","Steyerm.","Aristeg.", "Wurdack");
+    assertAuthorTeamPattern("Du Puy & Labat", "Du Puy","Labat");
     assertAuthorTeamPattern("Baum.-Bod.");
-    assertAuthorTeamPattern("Engl. & v. Brehmer",null,"Engl.", "v.Brehmer");
-    assertAuthorTeamPattern("F. v. Muell.", null, "F.v.Muell.");
-    assertAuthorTeamPattern("W.J.de Wilde & Duyfjes", null, "W.J.de Wilde", "Duyfjes");
+    assertAuthorTeamPattern("Engl. & v. Brehmer","Engl.", "v.Brehmer");
+    assertAuthorTeamPattern("F. v. Muell.",  "F.v.Muell.");
+    assertAuthorTeamPattern("W.J.de Wilde & Duyfjes",  "W.J.de Wilde", "Duyfjes");
     assertAuthorTeamPattern("C.E.M.Bicudo");
     assertAuthorTeamPattern("Alves-da-Silva");
-    assertAuthorTeamPattern("Alves-da-Silva & C.E.M.Bicudo", null, "Alves-da-Silva", "C.E.M.Bicudo");
+    assertAuthorTeamPattern("Alves-da-Silva & C.E.M.Bicudo",  "Alves-da-Silva", "C.E.M.Bicudo");
     assertAuthorTeamPattern("Kingdon-Ward");
-    assertAuthorTeamPattern("Merr. & L.M.Perry", null, "Merr.", "L.M.Perry");
-    assertAuthorTeamPattern("Calat., Nav.-Ros. & Hafellner", null, "Calat.", "Nav.-Ros.", "Hafellner");
+    assertAuthorTeamPattern("Merr. & L.M.Perry",  "Merr.", "L.M.Perry");
+    assertAuthorTeamPattern("Calat., Nav.-Ros. & Hafellner",  "Calat.", "Nav.-Ros.", "Hafellner");
     assertAuthorTeamPattern("Barboza du Bocage");
-    assertAuthorTeamPattern("Arv.-Touv. ex Dörfl.", "Arv.-Touv.", "Dörfl.");
-    assertAuthorTeamPattern("Payri & P.W.Gabrielson", null, "Payri", "P.W.Gabrielson");
-    assertAuthorTeamPattern("N'Yeurt, Payri & P.W.Gabrielson", null, "N'Yeurt", "Payri", "P.W.Gabrielson");
+    assertAuthorTeamPattern("Payri & P.W.Gabrielson",  "Payri", "P.W.Gabrielson");
+    assertAuthorTeamPattern("N'Yeurt, Payri & P.W.Gabrielson",  "N'Yeurt", "Payri", "P.W.Gabrielson");
     assertAuthorTeamPattern("VanLand.");
     assertAuthorTeamPattern("MacLeish");
     assertAuthorTeamPattern("Monterosato ms.");
-    assertAuthorTeamPattern("Arn. ms., Grunow", null, "Arn.ms.", "Grunow");
-    assertAuthorTeamPattern("Choi,J.H.; Im,W.T.; Yoo,J.S.; Lee,S.M.; Moon,D.S.; Kim,H.J.; Rhee,S.K.; Roh,D.H.", null,
+    assertAuthorTeamPattern("Arn. ms., Grunow",  "Arn.ms.", "Grunow");
+    assertAuthorTeamPattern("Choi,J.H.; Im,W.T.; Yoo,J.S.; Lee,S.M.; Moon,D.S.; Kim,H.J.; Rhee,S.K.; Roh,D.H.",
         "J.H.Choi", "W.T.Im", "J.S.Yoo", "S.M.Lee", "D.S.Moon", "H.J.Kim", "S.K.Rhee", "D.H.Roh");
-    assertAuthorTeamPattern("da Costa Lima", null, "da Costa Lima");
-    assertAuthorTeamPattern("Krapov., W.C.Greg. & C.E.Simpson", null, "Krapov.", "W.C.Greg.", "C.E.Simpson");
-    assertAuthorTeamPattern("de Jussieu", null, "de Jussieu");
-    assertAuthorTeamPattern("Griseb. ex. Wedd.", "Griseb.", "Wedd.");
-    assertAuthorTeamPattern("van-der Land", null, "van-der Land");
-    assertAuthorTeamPattern("van der Land", null, "van der Land");
-    assertAuthorTeamPattern("van Helmsick", null, "van Helmsick");
-    assertAuthorTeamPattern("Xing, Yan & Yin", null, "Xing", "Yan", "Yin");
-    assertAuthorTeamPattern("Xiao & Knoll", null, "Xiao", "Knoll");
-    assertAuthorTeamPattern("Wang, Yuwen & Xian-wei Liu", null, "Wang", "Yuwen", "Xian-wei Liu");
-    assertAuthorTeamPattern("Liu, Xian-wei, Z. Zheng & G. Xi", null, "Liu", "Xian-wei", "Z.Zheng", "G.Xi");
-    assertAuthorTeamPattern("Clayton, D.H.; Price, R.D.; Page, R.D.M.", null, "D.H.Clayton", "R.D.Price", "R.D.M.Page");
-    assertAuthorTeamPattern("Michiel de Ruyter", null, "Michiel de Ruyter");
-    assertAuthorTeamPattern("DeFilipps", null, "DeFilipps");
-    assertAuthorTeamPattern("Henk 't Hart", null, "Henk 't Hart");
-    assertAuthorTeamPattern("P.E.Berry & Reg.B.Miller", null, "P.E.Berry", "Reg.B.Miller");
-    assertAuthorTeamPattern("'t Hart", null, "'t Hart");
-    assertAuthorTeamPattern("Abdallah & Sa'ad", null, "Abdallah", "Sa'ad");
+    assertAuthorTeamPattern("da Costa Lima",  "da Costa Lima");
+    assertAuthorTeamPattern("Krapov., W.C.Greg. & C.E.Simpson",  "Krapov.", "W.C.Greg.", "C.E.Simpson");
+    assertAuthorTeamPattern("de Jussieu",  "de Jussieu");
+    assertAuthorTeamPattern("van-der Land",  "van-der Land");
+    assertAuthorTeamPattern("van der Land",  "van der Land");
+    assertAuthorTeamPattern("van Helmsick",  "van Helmsick");
+    assertAuthorTeamPattern("Xing, Yan & Yin",  "Xing", "Yan", "Yin");
+    assertAuthorTeamPattern("Xiao & Knoll",  "Xiao", "Knoll");
+    assertAuthorTeamPattern("Wang, Yuwen & Xian-wei Liu",  "Wang", "Yuwen", "Xian-wei Liu");
+    assertAuthorTeamPattern("Liu, Xian-wei, Z. Zheng & G. Xi",  "Liu", "Xian-wei", "Z.Zheng", "G.Xi");
+    assertAuthorTeamPattern("Clayton, D.H.; Price, R.D.; Page, R.D.M.",  "D.H.Clayton", "R.D.Price", "R.D.M.Page");
+    assertAuthorTeamPattern("Michiel de Ruyter",  "Michiel de Ruyter");
+    assertAuthorTeamPattern("DeFilipps",  "DeFilipps");
+    assertAuthorTeamPattern("Henk 't Hart",  "Henk 't Hart");
+    assertAuthorTeamPattern("P.E.Berry & Reg.B.Miller",  "P.E.Berry", "Reg.B.Miller");
+    assertAuthorTeamPattern("'t Hart",  "'t Hart");
+    assertAuthorTeamPattern("Abdallah & Sa'ad",  "Abdallah", "Sa'ad");
     assertAuthorTeamPattern("Linnaeus filius");
-    assertAuthorTeamPattern("Bollmann, M.Y.Cortés, Kleijne, J.B.Østerg. & Jer.R.Young", null, "Bollmann", "M.Y.Cortés", "Kleijne", "J.B.Østerg.", "Jer.R.Young");
-    assertAuthorTeamPattern("Branco, M.T.P.Azevedo, Sant'Anna & Komárek", null, "Branco", "M.T.P.Azevedo", "Sant'Anna", "Komárek");
+    assertAuthorTeamPattern("Bollmann, M.Y.Cortés, Kleijne, J.B.Østerg. & Jer.R.Young",  "Bollmann", "M.Y.Cortés", "Kleijne", "J.B.Østerg.", "Jer.R.Young");
+    assertAuthorTeamPattern("Branco, M.T.P.Azevedo, Sant'Anna & Komárek",  "Branco", "M.T.P.Azevedo", "Sant'Anna", "Komárek");
     assertAuthorTeamPattern("Janick Hendrik van Kinsbergen");
     assertAuthorTeamPattern("Jan Hendrik van Kinsbergen");
     assertAuthorTeamPattern("Sainte-Claire Deville");
     assertAuthorTeamPattern("Semenov-Tian-Shanskij");
-    assertAuthorTeamPattern("Semenov-Tian-Shanskij, Sainte-Claire Deville, Janick Hendrik van Kinsbergen", null, "Semenov-Tian-Shanskij", "Sainte-Claire Deville", "Janick Hendrik van Kinsbergen");
+    assertAuthorTeamPattern("Semenov-Tian-Shanskij, Sainte-Claire Deville, Janick Hendrik van Kinsbergen",  "Semenov-Tian-Shanskij", "Sainte-Claire Deville", "Janick Hendrik van Kinsbergen");
     assertAuthorTeamPattern("Scotto la Massese");
     assertAuthorTeamPattern("An der Lan");
-    assertAuthorTeamPattern("Bor & s'Jacob", null, "Bor", "s'Jacob");
+    assertAuthorTeamPattern("Bor & s'Jacob",  "Bor", "s'Jacob");
     assertAuthorTeamPattern("Brunner von Wattenwyl v.W.");
     assertAuthorTeamPattern("Martinez y Saez");
     assertAuthorTeamPattern("Da Silva e Castro");
-    assertAuthorTeamPattern("LafuenteRoca & Carbonell", null, "LafuenteRoca", "Carbonell");
-    assertAuthorTeamPattern("Mas-ComaBargues & Esteban", null, "Mas-ComaBargues", "Esteban");
+    assertAuthorTeamPattern("LafuenteRoca & Carbonell",  "LafuenteRoca", "Carbonell");
+    assertAuthorTeamPattern("Mas-ComaBargues & Esteban",  "Mas-ComaBargues", "Esteban");
     assertAuthorTeamPattern("Hondt d");
     assertAuthorTeamPattern("Abou-El-Naga");
+  }
 
-    assertAuthorTeamPatternFails("Wedd. ex Sch. Bip. (");
+  @Test
+  public void testAuthorship() throws Exception {
+    assertAuthorshipPattern("Plesn¡k ex F.Ritter", "Plesnik", "F.Ritter");
+    assertAuthorshipPattern("Britton, Sterns, & Poggenb.", null, "Britton", "Sterns", "Poggenb.");
+    assertAuthorshipPattern("Van Heurck & Müll. Arg.", null, "Van Heurck", "Müll.Arg.");
+    assertAuthorshipPattern("Gruber-Vodicka", null, "Gruber-Vodicka");
+    assertAuthorshipPattern("Gruber-Vodicka et al.", null, "Gruber-Vodicka", "al.");
+    assertAuthorshipPattern("L.");
+    assertAuthorshipPattern("Lin.");
+    assertAuthorshipPattern("Linné");
+    assertAuthorshipPattern("DC.");
+    assertAuthorshipPattern("de Chaudoir");
+    assertAuthorshipPattern("Hilaire");
+    assertAuthorshipPattern("St. Hilaire",null,"St.Hilaire");
+    assertAuthorshipPattern("Geoffroy St. Hilaire", null, "Geoffroy St.Hilaire");
+    assertAuthorshipPattern("Acev.-Rodr.");
+    assertAuthorshipPattern("Steyerm., Aristeg. & Wurdack",null,"Steyerm.","Aristeg.", "Wurdack");
+    assertAuthorshipPattern("Du Puy & Labat", null,"Du Puy","Labat");
+    assertAuthorshipPattern("Baum.-Bod.");
+    assertAuthorshipPattern("Engl. & v. Brehmer",null,"Engl.", "v.Brehmer");
+    assertAuthorshipPattern("F. v. Muell.", null, "F.v.Muell.");
+    assertAuthorshipPattern("W.J.de Wilde & Duyfjes", null, "W.J.de Wilde", "Duyfjes");
+    assertAuthorshipPattern("C.E.M.Bicudo");
+    assertAuthorshipPattern("Alves-da-Silva");
+    assertAuthorshipPattern("Alves-da-Silva & C.E.M.Bicudo", null, "Alves-da-Silva", "C.E.M.Bicudo");
+    assertAuthorshipPattern("Kingdon-Ward");
+    assertAuthorshipPattern("Merr. & L.M.Perry", null, "Merr.", "L.M.Perry");
+    assertAuthorshipPattern("Calat., Nav.-Ros. & Hafellner", null, "Calat.", "Nav.-Ros.", "Hafellner");
+    assertAuthorshipPattern("Arv.-Touv. ex Dörfl.", "Arv.-Touv.", "Dörfl.");
+    assertAuthorshipPattern("Payri & P.W.Gabrielson", null, "Payri", "P.W.Gabrielson");
+    assertAuthorshipPattern("N'Yeurt, Payri & P.W.Gabrielson", null, "N'Yeurt", "Payri", "P.W.Gabrielson");
+    assertAuthorshipPattern("VanLand.");
+    assertAuthorshipPattern("MacLeish");
+    assertAuthorshipPattern("Monterosato ms.");
+    assertAuthorshipPattern("Arn. ms., Grunow", null, "Arn.ms.", "Grunow");
+    assertAuthorshipPattern("Griseb. ex. Wedd.", "Griseb.", "Wedd.");
+
+    assertAuthorshipPatternFails("Wedd. ex Sch. Bip. (");
   }
 
   @Test
@@ -154,34 +191,54 @@ public class ParsingJobTest {
     assertTrue (m.find());
   }
 
-  private void assertAuthorTeamPattern(String authorship) {
-    assertAuthorTeamPattern(authorship, null, authorship);
+  private void assertAuthorshipPattern(String authorship) {
+    assertAuthorshipPattern(authorship, null, authorship);
   }
 
-  private void assertAuthorTeamPattern(String authorship, String exAuthor, String ... authors) {
+  private void assertAuthorshipPattern(String authorship, String exAuthor, String ... authors) {
+    try {
+      String normed = JOB.normalize(authorship);
+      Matcher m = AUTHORSHIP_PATTERN.matcher(normed);
+      assertTrue(authorship, m.find());
+      if (ParsingJob.LOG.isDebugEnabled()) {
+        ParsingJob.logMatcher(m);
+      }
+      Authorship auth = ParsingJob.parseAuthorship(m.group(1), m.group(2), m.group(3));
+      if (exAuthor == null) {
+        assertTrue(auth.getExAuthors().isEmpty());
+      } else {
+        assertEquals(exAuthor, auth.getExAuthors().get(0));
+        assertEquals(1, auth.getExAuthors().size());
+      }
+      assertEquals(Lists.newArrayList(authors), auth.getAuthors());
+
+    } catch (AssertionError | RuntimeException e) {
+      System.err.println("Authorship error: " + authorship);
+      throw e;
+    }
+  }
+
+  private void assertAuthorshipPatternFails(String authorship) {
     String normed = JOB.normalize(authorship);
-    System.out.println(normed);
-    Matcher m = ParsingJob.AUTHORSHIP_PATTERN.matcher(normed);
+    Matcher m = AUTHORSHIP_PATTERN.matcher(normed);
+    assertFalse(authorship, m.find());
+  }
+
+
+  private void assertAuthorTeamPattern(String authorship) {
+    assertAuthorTeamPattern(authorship, authorship);
+  }
+
+  private void assertAuthorTeamPattern(String authorship, String ... authors) {
+    String normed = JOB.normalize(authorship);
+    Matcher m = ParsingJob.AUTHOR_TEAM_PATTERN.matcher(normed);
     assertTrue(authorship, m.find());
     if (ParsingJob.LOG.isDebugEnabled()) {
       ParsingJob.logMatcher(m);
     }
-    Authorship auth = ParsingJob.parseAuthorship(m.group(1), m.group(2), m.group(3));
-    if (exAuthor == null) {
-      assertTrue(auth.getExAuthors().isEmpty());
-    } else {
-      assertEquals(exAuthor, auth.getExAuthors().get(0));
-      assertEquals(1, auth.getExAuthors().size());
-    }
+    Authorship auth = ParsingJob.parseAuthorship(null, m.group(0), null);
     assertEquals(Lists.newArrayList(authors), auth.getAuthors());
   }
-
-  private void assertAuthorTeamPatternFails(String authorship) {
-    String normed = JOB.normalize(authorship);
-    Matcher m = ParsingJob.AUTHORSHIP_PATTERN.matcher(normed);
-    assertFalse(authorship, m.find());
-  }
-
 
   @Test
   public void testNomenclaturalNotesPattern() throws Exception {

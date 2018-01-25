@@ -188,6 +188,21 @@ public class NameParserGBIFTest {
   }
 
   @Test
+  public void inReferences() throws Exception {
+    assertName("Negundo aceroides var. violaceum G.Kirchn. in Petzold & G.Kirchn.", "Negundo aceroides var. violaceum")
+        .infraSpecies("Negundo", "aceroides", Rank.VARIETY, "violaceum")
+        .combAuthors(null, "G.Kirchn.")
+        .remarks("in Petzold & G.Kirchn.")
+        .nothingElse();
+
+    assertName("Abies denheyeri Eghbalian, Khanjani and Ueckermann in Eghbalian, Khanjani & Ueckermann, 2017", "Abies denheyeri")
+        .species("Abies", "denheyeri")
+        .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
+        .remarks("in Eghbalian, Khanjani & Ueckermann")
+        .nothingElse();
+  }
+
+  @Test
   public void infraGeneric() throws Exception {
     assertName("Arrhoges (Antarctohoges)", SUBGENUS,"Arrhoges subgen. Antarctohoges")
         .infraGeneric("Arrhoges", SUBGENUS, "Antarctohoges")
@@ -310,7 +325,7 @@ public class NameParserGBIFTest {
         .species("?", "denheyeri")
         .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
         .type(PLACEHOLDER)
-        .remarks("in Eghbalian,Khanjani&Ueckermann")
+        .remarks("in Eghbalian, Khanjani & Ueckermann")
         .nothingElse();
 
     assertName("\"? gryphoidis", "? gryphoidis")

@@ -40,12 +40,10 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 class ParsingJob implements Callable<ParsedName> {
   static Logger LOG = LoggerFactory.getLogger(ParsingJob.class);
 
-  private static final Pattern ET_PATTERN = Pattern.compile(" et ", Pattern.CASE_INSENSITIVE);
   private static final CharMatcher AUTHORTEAM_DELIMITER = CharMatcher.anyOf(",&");
   private static final Splitter AUTHORTEAM_SPLITTER = Splitter.on(AUTHORTEAM_DELIMITER).trimResults().omitEmptyStrings();
   private static final Splitter AUTHORTEAM_SEMI_SPLITTER = Splitter.on(";").trimResults().omitEmptyStrings();
   private static final Pattern AUTHOR_INITIAL_SWAP = Pattern.compile("^([^,]+) *, *([^,]+)$");
-  private static final Pattern NORM_PUNCT = Pattern.compile("\\. +");
   private static final Pattern NORM_EX_HORT = Pattern.compile("\\b(?:hort|cv)[. ]ex ", CASE_INSENSITIVE);
 
   // normalized space, comma & dots. Always just one of them
@@ -82,7 +80,7 @@ class ParsingJob implements Callable<ParsedName> {
       "|al|f|fil|filius|hort|j|jr|jun|junior|sr|sen|senior|ms" +
       "|v|v[ao]n|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|'?t|y" +
   ")\\.?";
-  private static final String AUTHOR = AUTHOR_TOKEN + "(?:[. '-]" + AUTHOR_TOKEN + ")*";
+  private static final String AUTHOR = AUTHOR_TOKEN + "(?:[ '-]?" + AUTHOR_TOKEN + ")*";
   private static final String AUTHOR_TEAM = AUTHOR +
       "(?:[&,;]+" + AUTHOR + ")*";
   static final String AUTHORSHIP =
@@ -92,7 +90,7 @@ class ParsingJob implements Callable<ParsedName> {
       "(" + AUTHOR_TEAM + ")" +
       // 2 well known sanction authors for fungus, see POR-2454
       "(?: *: *(Pers\\.?|Fr\\.?))?";
-  static final Pattern AUTHORSHIP_PATTERN = Pattern.compile("^" + AUTHORSHIP + "$");
+  static final Pattern AUTHOR_TEAM_PATTERN = Pattern.compile("^" + AUTHOR_TEAM + "$");
   private static final String YEAR = "[12][0-9][0-9][0-9?]";
   private static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/,-][0-9]{1,4})?";
 
@@ -612,7 +610,9 @@ class ParsingJob implements Callable<ParsedName> {
     // replace bibliographic in references
     m = REPL_IN_REF.matcher(name);
     if (m.find()) {
-      pn.addRemark(m.group(0));
+      LOG.debug(name);
+      logMatcher(m);
+      pn.addRemark(normNote(m.group(0)));
       name = m.replaceFirst("");
     }
 
@@ -653,10 +653,13 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   private static String normNote(String x) {
-    // dots and commas before years and after lower case words should have a space
     return StringUtils.trimToNull(
-        x.replaceAll("([.,])(?=" + YEAR + ")", "$1 ")
-         .replaceAll("\\b([a-z]{2,})([.,])(?!= )", "$1$2 ")
+        x
+        // punctuation followed by a space, dots are special because of author initials
+        .replaceAll("([,;])(?!= )", "$1 ")
+        // dots before years and after lower case words should have a space
+        .replaceAll("(?:\\.(?=" + YEAR + ")|(?<=\\b[a-z]{2,})\\.(?!= ))", ". ")
+        // ands with space
         .replaceAll("&", " & ")
     );
   }
@@ -1144,7 +1147,7 @@ class ParsingJob implements Callable<ParsedName> {
         // might be subspecies without rank marker
         // or short authorship prefix in epithet. test
         String extendedAuthor = pn.getInfraspecificEpithet() + " " + pn.getCombinationAuthorship();
-        Matcher m = interruptableMatcher(AUTHORSHIP_PATTERN, extendedAuthor);
+        Matcher m = interruptableMatcher(AUTHOR_TEAM_PATTERN, extendedAuthor);
         if (m.find()) {
           // matches author. Prefer that
           LOG.debug("use infraspecific epithet as author prefix");
@@ -1155,7 +1158,7 @@ class ParsingJob implements Callable<ParsedName> {
       } else {
         // might be monomial with the author prefix erroneously taken as the species epithet
         String extendedAuthor = pn.getSpecificEpithet() + " " + pn.getCombinationAuthorship();
-        Matcher m = interruptableMatcher(AUTHORSHIP_PATTERN, extendedAuthor);
+        Matcher m = interruptableMatcher(AUTHOR_TEAM_PATTERN, extendedAuthor);
         if (m.find()) {
           // matches author. Prefer that
           LOG.debug("use specific epithet as author prefix");
@@ -1184,23 +1187,21 @@ class ParsingJob implements Callable<ParsedName> {
    * Splits an author team by either ; or ,
    */
   private static List<String> splitTeam(String team) {
-    // normalize & and et
-    team = ET_PATTERN.matcher(team).replaceAll(" & ");
     // treat semicolon differently. Single author name can contain a comma now!
     if (team.contains(";")) {
       List<String> authors = Lists.newArrayList();
       for (String a : AUTHORTEAM_SEMI_SPLITTER.split(team)) {
         Matcher m = AUTHOR_INITIAL_SWAP.matcher(a);
         if (m.find()) {
-          authors.add(normAuthor(m.group(2) + " " + m.group(1)));
+          authors.add(normAuthor(m.group(2) + " " + m.group(1), true));
         } else {
-          authors.add(normAuthor(a));
+          authors.add(normAuthor(a, false));
         }
       }
       return authors;
 
     } else if(AUTHORTEAM_DELIMITER.matchesAnyOf(team)) {
-      return AUTHORTEAM_SPLITTER.splitToList(normAuthor(team));
+      return AUTHORTEAM_SPLITTER.splitToList(normAuthor(team, false));
 
     } else {
       // we sometimes see space delimited authorteams with the initials consistently at the end of a single author:
@@ -1225,7 +1226,7 @@ class ParsingJob implements Callable<ParsedName> {
         return authors;
       } else {
         // no delimiters found, treat as one author
-        return Lists.newArrayList(normAuthor(team));
+        return Lists.newArrayList(normAuthor(team, false));
       }
     }
   }
@@ -1234,8 +1235,11 @@ class ParsingJob implements Callable<ParsedName> {
    * Author strings are normalized by removing any whitespace following a dot.
    * See IPNI author standard form recommendations: http://www.ipni.org/standard_forms_author.html
    */
-  private static String normAuthor(String authors) {
-    return StringUtils.trimToNull(NORM_PUNCT.matcher(authors).replaceAll("\\."));
+  private static String normAuthor(String authors, boolean normPunctuation) {
+    if (normPunctuation) {
+      authors = NORM_PUNCTUATIONS.matcher(authors).replaceAll("$1");
+    }
+    return StringUtils.trimToNull(authors);
   }
 
   static void logMatcher(Matcher matcher) {
