@@ -200,6 +200,13 @@ public class NameParserGBIFTest {
         .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
         .remarks("in Eghbalian, Khanjani & Ueckermann")
         .nothingElse();
+
+    assertName("Mica Budde-Lund in Voeltzkow, 1908", "Mica")
+        .monomial("Mica")
+        .combAuthors("1908", "Budde-Lund")
+        .remarks("in Voeltzkow")
+        .nothingElse();
+
   }
 
   @Test

@@ -244,13 +244,6 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern REPL_IN_REF = Pattern.compile("[, ]?\\b(?:in|IN) (" + AUTHOR_TEAM + ")");
   private static final Pattern REPL_RANK_PREFIXES = Pattern.compile("^(sub)?(fossil|" +
       StringUtils.join(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
-
-  // Genoplesium vernalis D.L.Jones ms.
-  // Verticordia sp.1
-  // Bryozoan indet. 1
-  // Bryozoa sp. E
-  // Prostanthera sp. Somersbey (B.J.Conn 4024)
-  // Elseya sp. nov. (AMS – R140984)
   private static final Pattern MANUSCRIPT_NAMES = Pattern.compile("\\b(indet|spp?)[. ](?:nov\\.)?[A-Z0-9][a-zA-Z0-9-]*(?:\\(.+?\\))?");
   private static final Pattern MANUSCRIPT_SUFFIX = Pattern.compile("\\bms\\.?$");
   private static final Pattern REPL_AFF = Pattern.compile("\\b(undet|indet|aff|cf)[?.]?\\b", CASE_INSENSITIVE);
@@ -590,6 +583,15 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceAll("");
     }
 
+    // replace bibliographic in references
+    m = REPL_IN_REF.matcher(name);
+    if (m.find()) {
+      LOG.debug(name);
+      logMatcher(m);
+      pn.addRemark(normNote(m.group(0)));
+      name = m.replaceFirst("");
+    }
+
     // remember current rank for later reuse
     final Rank preparsingRank = pn.getRank();
 
@@ -605,15 +607,6 @@ class ParsingJob implements Callable<ParsedName> {
         pn.setType(NameType.PLACEHOLDER);
         return;
       }
-    }
-
-    // replace bibliographic in references
-    m = REPL_IN_REF.matcher(name);
-    if (m.find()) {
-      LOG.debug(name);
-      logMatcher(m);
-      pn.addRemark(normNote(m.group(0)));
-      name = m.replaceFirst("");
     }
 
     // try regular parsing
