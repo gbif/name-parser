@@ -313,10 +313,10 @@ public class ParsingJobTest {
 
   @Test
   public void testClean1() throws Exception {
-    assertEquals("", ParsingJob.preClean(""));
-    assertEquals("Hallo Spencer", ParsingJob.preClean("Hallo Spencer "));
-    assertEquals("Hallo Spencer", ParsingJob.preClean("' 'Hallo Spencer"));
-    assertEquals("Hallo Spencer 1982", ParsingJob.preClean("'\" Hallo  Spencer 1982'"));
+    assertEquals("", JOB.preClean(""));
+    assertEquals("Hallo Spencer", JOB.preClean("Hallo Spencer "));
+    assertEquals("Hallo Spencer", JOB.preClean("' 'Hallo Spencer"));
+    assertEquals("Hallo Spencer 1982", JOB.preClean("'\" Hallo  Spencer 1982'"));
   }
 
   @Test
@@ -346,7 +346,7 @@ public class ParsingJobTest {
   }
 
   private void assertNormalize(String raw, String expected) {
-    assertEquals(expected, JOB.normalize(ParsingJob.preClean(raw)));
+    assertEquals(expected, JOB.normalize(JOB.preClean(raw)));
   }
 
   @Test
@@ -375,7 +375,7 @@ public class ParsingJobTest {
   }
 
   private void assertNormalizeStrong(String raw, String expected) {
-    assertEquals(expected, JOB.normalizeStrong(JOB.normalize(ParsingJob.preClean(raw))));
+    assertEquals(expected, JOB.normalizeStrong(JOB.normalize(JOB.preClean(raw))));
   }
 
 }

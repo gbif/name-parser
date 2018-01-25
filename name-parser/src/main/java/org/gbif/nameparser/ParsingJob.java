@@ -759,13 +759,18 @@ class ParsingJob implements Callable<ParsedName> {
     // remove quotes from genus
     name = REPL_GENUS_QUOTE.matcher(name).replaceFirst("$1 ");
     // remove enclosing quotes
-    name = REPL_ENCLOSING_QUOTE.matcher(name).replaceAll("");
+    Matcher m = REPL_ENCLOSING_QUOTE.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("");
+      pn.addWarning(Warnings.REPL_ENCLOSING_QUOTE);
+    }
 
     // no question marks after letters (after years they should remain)
-    Matcher m = NO_Q_MARKS.matcher(name);
+    m = NO_Q_MARKS.matcher(name);
     if (m.find()) {
       name = m.replaceAll("$1");
       pn.setDoubtful(true);
+      pn.addWarning(Warnings.QUESTION_MARKS_REMOVED);
     }
 
     // remove prefixes
@@ -788,10 +793,8 @@ class ParsingJob implements Callable<ParsedName> {
     m = STARTING_EPITHET.matcher(name);
     if (m.find()) {
       name = m.replaceFirst("? $1");
-      //TODO: mark as doubtful?
-      //pn.setDoubtful(true);
+      pn.addWarning(Warnings.MISSING_GENUS);
     }
-
 
     // add parenthesis around subgenus if missing
     m = NORM_SUBGENUS.matcher(name);
@@ -812,18 +815,32 @@ class ParsingJob implements Callable<ParsedName> {
    * basic careful cleaning, trying to preserve all parsable name parts
    */
   @VisibleForTesting
-  static String preClean(String name) {
+  String preClean(String name) {
     // remove bad whitespace in html entities
     Matcher m = XML_ENTITY_STRIP.matcher(name);
     if (m.find()) {
       name = m.replaceAll("&$1;");
     }
     // unescape html entities
+    int length = name.length();
     name = StringEscapeUtils.unescapeHtml4(name);
+    if (length > name.length()) {
+      pn.addWarning(Warnings.HTML_ENTITIES);
+    }
     // finally remove still existing bad ampersands missing the closing ;
-    name = AMPERSAND_ENTITY.matcher(name).replaceAll("&");
+    m = AMPERSAND_ENTITY.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("&");
+      pn.addWarning(Warnings.HTML_ENTITIES);
+    }
+
     // replace xml tags
-    name = XML_TAGS.matcher(name).replaceAll("");
+    m = XML_TAGS.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("");
+      pn.addWarning(Warnings.XML_ENTITIES);
+    }
+
     // trim
     name = name.trim();
     // remove quotes in beginning and matching ones at the end
@@ -863,25 +880,25 @@ class ParsingJob implements Callable<ParsedName> {
 
       // if we only match a monomial in the 3rd pass its suspicious
       if (pn.getUninomial() != null && Character.isLowerCase(normedName.charAt(0))) {
-        pn.addWarning("lower case monomial match");
+        pn.addWarning(Warnings.LC_MONOMIAL);
         pn.setDoubtful(true);
         setTypeIfNull(pn, NameType.INFORMAL);
 
       } else if (pn.getRank() != null && pn.getRank().notOtherOrUnranked()) {
         if (pn.getRank().equals(Rank.CULTIVAR) && pn.getCultivarEpithet() == null) {
-          pn.addWarning("indetermined cultivar witout cultivar epithet");
+          pn.addWarning(Warnings.INDET_CULTIVAR);
           pn.setType(NameType.INFORMAL);
 
         } else if (pn.getRank().isSpeciesOrBelow() && pn.getRank().isRestrictedToCode()!= NomCode.CULTIVARS && !pn.isBinomial()) {
-          pn.addWarning("indetermined species without specific epithet");
+          pn.addWarning(Warnings.INDET_SPECIES);
           pn.setType(NameType.INFORMAL);
 
         } else if (pn.getRank().isInfraspecific() && pn.getRank().isRestrictedToCode()!= NomCode.CULTIVARS && pn.getInfraspecificEpithet() == null) {
-          pn.addWarning("indetermined infraspecies without infraspecific epithet");
+          pn.addWarning(Warnings.INDET_INFRASPECIES);
           pn.setType(NameType.INFORMAL);
 
         } else if (!pn.getRank().isSpeciesAggregateOrBelow() && pn.isBinomial()) {
-          pn.addWarning("binomial with rank higher than species aggregate");
+          pn.addWarning(Warnings.HIGHER_RANK_BINOMIAL);
           pn.setDoubtful(true);
         }
       }
@@ -903,13 +920,13 @@ class ParsingJob implements Callable<ParsedName> {
     Matcher m = DOUBTFUL.matcher(scientificName);
     if (!m.find()) {
       pn.setDoubtful(true);
-      pn.addWarning("doubtful letters");
+      pn.addWarning(Warnings.UNUSUAL_CHARACTERS);
 
     } else if (pn.getType().isParsable()){
       m = DOUBTFUL2.matcher(scientificName);
       if (m.find()) {
         pn.setDoubtful(true);
-        pn.addWarning("doubtful epithet with literal value null");
+        pn.addWarning(Warnings.NULL_EPITHET);
       }
     }
   }
@@ -1112,7 +1129,7 @@ class ParsingJob implements Callable<ParsedName> {
     } else if(pn.getRank() == Rank.SPECIES && pn.getInfraspecificEpithet() != null) {
       // sometimes sp. is wrongly used as a subspecies rankmarker
       pn.setRank(Rank.SUBSPECIES);
-      pn.addWarning("Name was considered species but contains infraspecific epithet");
+      pn.addWarning(Warnings.SUBSPECIES_ASSIGNED);
     }
   }
 
