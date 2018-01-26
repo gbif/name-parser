@@ -85,6 +85,14 @@ public class ParsedNameTest {
 
     pn.setInfragenericEpithet("Mysubgenus");
     assertFalse(pn.isIndetermined());
+
+    pn = new ParsedName();
+    pn.setGenus("Abies");
+    pn.setInfraspecificEpithet("alpina");
+    assertTrue(pn.isIndetermined());
+
+    pn.setSpecificEpithet("alba");
+    assertFalse(pn.isIndetermined());
   }
 
 }

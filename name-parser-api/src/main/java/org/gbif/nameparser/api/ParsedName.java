@@ -386,7 +386,8 @@ public class ParsedName {
     return rank.isInfragenericStrictly() && infragenericEpithet == null && specificEpithet == null
         || rank.isSpeciesOrBelow() && specificEpithet == null
         || rank.isCultivarRank() && cultivarEpithet == null
-        || rank.isInfraspecific() && !rank.isCultivarRank() && infraspecificEpithet == null;
+        || rank.isInfraspecific() && !rank.isCultivarRank() && infraspecificEpithet == null
+        || infraspecificEpithet != null && specificEpithet == null;
   }
 
   /**

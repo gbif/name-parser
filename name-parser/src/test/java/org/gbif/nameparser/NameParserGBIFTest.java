@@ -922,6 +922,38 @@ public class NameParserGBIFTest {
     }
   }
 
+  /**
+   * Test all hybrid formulas in hybrids.txt and makes sure they are HYBRID_FORMULAs.
+   */
+  @Test
+  public void hybridsFile() throws Exception {
+    for (String name : iterResource("hybrids.txt")) {
+      try {
+        ParsedName pn = parser.parse(name);
+        fail("Expected "+name+" to be unparsable hybrid");
+      } catch (UnparsableNameException ex) {
+        assertEquals(NameType.HYBRID_FORMULA, ex.getType());
+        assertEquals(name, ex.getName());
+      }
+    }
+  }
+
+  /**
+   * Test all names in nonames.txt and makes sure they are NO_NAMEs.
+   */
+  @Test
+  public void placeholderFile() throws Exception {
+    for (String name : iterResource("placeholder.txt")) {
+      try {
+        ParsedName pn = parser.parse(name);
+        fail("Expected "+name+" to be an unparsable placeholder");
+      } catch (UnparsableNameException ex) {
+        assertEquals(NameType.PLACEHOLDER, ex.getType());
+        assertEquals(name, ex.getName());
+      }
+    }
+  }
+
   @Test
   public void occNameFile() throws Exception {
     int currFail = 70;
@@ -1255,6 +1287,12 @@ public class NameParserGBIFTest {
 
   @Test
   public void indetNames() throws Exception {
+    assertName("Aphaenogaster (Ichnomyrmex) Schwammerdami var. spinipes", "Aphaenogaster var. spinipes")
+        .infraSpecies("Aphaenogaster", null, Rank.VARIETY, "spinipes")
+        .infraGeneric("Ichnomyrmex")
+        .type(NameType.INFORMAL)
+        .nothingElse();
+
     assertName("Ocymyrmex Weitzaeckeri subsp. arnoldi", "Ocymyrmex subsp. arnoldi")
         .infraSpecies("Ocymyrmex", null, Rank.SUBSPECIES, "arnoldi")
         .type(NameType.INFORMAL)

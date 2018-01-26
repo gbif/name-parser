@@ -17,7 +17,7 @@ public class NameAssertion {
   private final ParsedName n;
   private Set<NP> tested = Sets.newHashSet();
 
-  private enum NP {TYPE, EPITHETS, STRAIN, CULTIVAR, CANDIDATE, NOTHO,
+  private enum NP {TYPE, EPITHETS, INFRAGEN, STRAIN, CULTIVAR, CANDIDATE, NOTHO,
     AUTH, EXAUTH, BAS, EXBAS, SANCT, RANK,
     TAXNOTE, NOMNOTE, REMARK, DOUBTFUL, STATE, CODE
   }
@@ -32,9 +32,11 @@ public class NameAssertion {
         switch (p) {
           case EPITHETS:
             assertNull(n.getGenus());
-            assertNull(n.getInfragenericEpithet());
             assertNull(n.getSpecificEpithet());
             assertNull(n.getInfraspecificEpithet());
+            break;
+          case INFRAGEN:
+            assertNull(n.getInfragenericEpithet());
             break;
           case STRAIN:
             assertNull(n.getStrain());
@@ -126,7 +128,12 @@ public class NameAssertion {
     assertEquals(rank, n.getRank());
     assertNull(n.getCultivarEpithet());
     assertNull(n.getStrain());
-    return add(NP.EPITHETS, NP.RANK, NP.STRAIN, NP.CULTIVAR);
+    return add(NP.EPITHETS, NP.INFRAGEN, NP.RANK, NP.STRAIN, NP.CULTIVAR);
+  }
+
+  NameAssertion infraGeneric(String infraGeneric) {
+    assertEquals(infraGeneric, n.getInfragenericEpithet());
+    return add(NP.INFRAGEN);
   }
 
   NameAssertion species(String genus, String epithet) {
@@ -140,13 +147,12 @@ public class NameAssertion {
     assertEquals(epithet, n.getSpecificEpithet());
     assertNull(n.getInfraspecificEpithet());
     assertEquals(rank, n.getRank());
-    return add(NP.EPITHETS, NP.RANK);
+    return add(NP.EPITHETS, NP.INFRAGEN, NP.RANK);
   }
 
   NameAssertion infraSpecies(String genus, String epithet, Rank rank, String infraEpithet) {
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());
-    assertNull(n.getInfragenericEpithet());
     assertEquals(epithet, n.getSpecificEpithet());
     assertEquals(infraEpithet, n.getInfraspecificEpithet());
     assertEquals(rank, n.getRank());

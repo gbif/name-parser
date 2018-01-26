@@ -276,7 +276,7 @@ class ParsingJob implements Callable<ParsedName> {
                "( " + EPHITHET + ")??" +
                "(?:" +
                  // strip out intermediate, irrelevant authors
-                 "(?: .+?)??" +
+                 "(?:\\b ?.+?)??" +
                  // #7 infraspecies rank
                  " ?(" + RANK_MARKER_SPECIES + ")" +
                ")?" +
@@ -1016,12 +1016,14 @@ class ParsingJob implements Callable<ParsedName> {
 
         // #11 is entire authorship, not stored in ParsedName
         if (!ignoreAuthorship && matcher.group(11) != null) {
-          if (bracketSubrankFound && infragenericIsAuthor(pn, rank)) {
-            // rather an author than a infrageneric rank. Swap
+          if (bracketSubrankFound
+              && pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null
+              && infragenericIsAuthor(pn, rank)) {
+            // rather an author than a infrageneric rank. Swap in case of monomials
             pn.setBasionymAuthorship(parseAuthorship(null, pn.getInfragenericEpithet(), null));
             pn.setInfragenericEpithet(null);
             // check if we need to move genus to uninomial
-            if (pn.getSpecificEpithet() == null) {
+            if (pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null) {
               pn.setUninomial(pn.getGenus());
               pn.setGenus(null);
             }

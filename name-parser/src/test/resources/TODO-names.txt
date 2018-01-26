@@ -5,6 +5,21 @@ Pseudoleptomesochrella incerta (Chap. and Delam. -deb., 1956)
 Rhododendron loerzingii J. J. Smith apud Koorders & Valeton
 Xolisma turquini Small apud Britton & Wilson
 Microgonium omphalodes Vieill. apud Fourn.
+Pitcairnia cinnagarina ex D. Dietr.
+Pourretia magnispatha hortusa ex K. Koch
+Pitcairnia pruinosa hortus ex K. Koch
+Grielum obtusifolium ex Harv.
+Rosa intermedia Cr?p.
+Rosa alpestris D?s?gl.
+
+Nitzschia sinuata var. (Grunow) Lange-Bert.
+Alces alces subsp. (Linnaeus, 1758)
+Canis lupus subsp. Linnaeus, 1758
+
+Pezizomycotina, ordines incertae sedis
+Ascomycota, families incertae sedis
+Heterokontophyta, genera incertae sedis
+Oxypoda ((incertae sedis)) inimica Casey, 1911
 
 Digitaria sanguinea Weber, orth. var.
 Quercus ovalis Gand., opus utique oppr.
@@ -51,7 +66,12 @@ Pseudostenophylax clavatus Tian & Li in Tian, Li, Yang & Sun, in Chen, editor, 1
 Fidicina aldegondae (Kuhlgatz in Kuhlgatz and Melichar, 1902), 1902-01-01
 Primula chamaejasme (Wulfen) K.K. Khanna & Anand Kumar ins Econ. Taxon. Bot., 22(1): 237 (1998), isonym
 Ilex montana var. lanceolata (Macfad.) Griseb., Fl. Brit. W. I. 147. 1859
-
+Tryblionella marginulata (Grunow in Cleve & M?ller) D.G. Mann in Round et al., 1990
 
 Psilopteryx psorosa subsp. retezatica Botosaneanu & ?Schneider, 1978?
 Kanimia nitida (DC:) Baker
+Osmanthus ilicifolius f. variegatus (auct.) Rehder
+Magnolia ?soulangeana Hamel (pro sp.)
+Mentha rotundifolia auct. non (L.) Huds. 1762
+Leucanthemum maximum auct. non (Ramond) DC.
+Deschampsia littoralis auct. non (Gaudin) Reuter
