@@ -86,12 +86,29 @@ public class ParsedNameTest {
     pn.setInfragenericEpithet("Mysubgenus");
     assertFalse(pn.isIndetermined());
 
+
     pn = new ParsedName();
     pn.setGenus("Abies");
     pn.setInfraspecificEpithet("alpina");
     assertTrue(pn.isIndetermined());
 
     pn.setSpecificEpithet("alba");
+    assertFalse(pn.isIndetermined());
+
+
+    pn = new ParsedName();
+    pn.setUninomial("Trematostoma");
+    assertFalse(pn.isIndetermined());
+    pn.setRank(Rank.INFRAGENERIC_NAME);
+    assertFalse(pn.isIndetermined());
+    pn.setRank(Rank.SUBGENUS);
+    assertFalse(pn.isIndetermined());
+
+    pn.setGenus(pn.getUninomial());
+    pn.setUninomial(null);
+    assertTrue(pn.isIndetermined());
+
+    pn.setInfragenericEpithet("Trematostoma");
     assertFalse(pn.isIndetermined());
   }
 

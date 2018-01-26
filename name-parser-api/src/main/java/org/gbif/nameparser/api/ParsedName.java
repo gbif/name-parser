@@ -383,7 +383,7 @@ public class ParsedName {
   }
 
   public boolean isIndetermined() {
-    return rank.isInfragenericStrictly() && infragenericEpithet == null && specificEpithet == null
+    return rank.isInfragenericStrictly() && uninomial == null && infragenericEpithet == null && specificEpithet == null
         || rank.isSpeciesOrBelow() && specificEpithet == null
         || rank.isCultivarRank() && cultivarEpithet == null
         || rank.isInfraspecific() && !rank.isCultivarRank() && infraspecificEpithet == null

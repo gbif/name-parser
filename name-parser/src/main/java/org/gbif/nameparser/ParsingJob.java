@@ -44,7 +44,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Splitter AUTHORTEAM_SPLITTER = Splitter.on(AUTHORTEAM_DELIMITER).trimResults().omitEmptyStrings();
   private static final Splitter AUTHORTEAM_SEMI_SPLITTER = Splitter.on(";").trimResults().omitEmptyStrings();
   private static final Pattern AUTHOR_INITIAL_SWAP = Pattern.compile("^([^,]+) *, *([^,]+)$");
-  private static final Pattern NORM_EX_HORT = Pattern.compile("\\b(?:hort|cv)[. ]ex ", CASE_INSENSITIVE);
+  private static final Pattern NORM_EX_HORT = Pattern.compile("\\b(?:hort(?:usa?)?|cv)[. ]ex ", CASE_INSENSITIVE);
 
   // name parsing
   static final String NAME_LETTERS = "A-ZÏËÖÜÄÉÈČÁÀÆŒ";
@@ -54,8 +54,8 @@ class ParsingJob implements Callable<ParsedName> {
   static final String author_letters = name_letters + "\\p{Ll}-?"; // lower case unicode letter, not numerical
   // common name suffices (ms=manuscript, not yet published)
   private static final String AUTHOR_TOKEN = "(?:\\p{Lu}[\\p{Lu}\\p{Ll}'-]*" +
-      "|al|f|fil|filius|hort|j|jr|jun|junior|sr|sen|senior|ms" +
-      "|v|v[ao]n|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|'?t|y" +
+      "|al|f|fil|filius|hort|j|jr|jun|junior|ms|sr|sen|senior" +
+      "|v|v[ao]n|bis|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|ter|'?t|y" +
   ")\\.?";
   private static final String AUTHOR = AUTHOR_TOKEN + "(?:[ '-]?" + AUTHOR_TOKEN + ")*";
   private static final String AUTHOR_TEAM = AUTHOR +
@@ -177,7 +177,7 @@ class ParsingJob implements Callable<ParsedName> {
         "\\(?(?:" +
           "s[. ](?:ampl|l|s|str)[. ]" +
           "|sensu (?:lat|strict|ampl)(?:[uo]|issimo)?" +
-          "|(?:auct|emend|fide|non|nec|sec|sensu|according to)[. ][^)]*" +
+          "|(?:auct|emend|fide|non|nec|sec|sensu|according to)[. ].+" +
         ")\\)?" +
       ")");
   private static final String NOV_RANKS = "((?:[sS]ub)?(?:[fF]am|[gG]en|[sS]s?p(?:ec)?|[vV]ar|[fF](?:orma?)?))";
@@ -211,14 +211,15 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_SUBGENUS = Pattern.compile("(" + MONOMIAL + ") (" + MONOMIAL + ") (" + EPHITHET+ ")");
   private static final Pattern NO_Q_MARKS = Pattern.compile("([" + author_letters + "])\\?+");
   private static final Pattern NORM_PUNCTUATIONS = Pattern.compile("\\s*([.,;:&(){}\\[\\]-])\\s*\\1*\\s*");
+  private static final Pattern NORM_YEAR = Pattern.compile("[\"'\\[]+\\s*(" + YEAR_LOOSE + ")\\s*[\"'\\]]+");
   private static final Pattern NORM_IMPRINT_YEAR = Pattern.compile("(" + YEAR_LOOSE + ")\\s*" +
-      "([(\\[,]? *(?:not|imprint)? *\"?" + YEAR_LOOSE + "\"?[)\\]]?)");
+      "([(\\[,&]? *(?:not|imprint)? *\"?" + YEAR_LOOSE + "\"?[)\\]]?)");
   // √ó is an utf garbaged version of the hybrid cross found in IPNI. See http://dev.gbif.org/issues/browse/POR-3081
   private static final Pattern NORM_HYBRIDS_GENUS = Pattern.compile("^\\s*(?:[+×xX]|√ó)\\s*([" + NAME_LETTERS + "])");
   private static final Pattern NORM_HYBRIDS_EPITH = Pattern.compile("^\\s*(×?" + MONOMIAL + ")\\s+(?:×|√ó|[xX]\\s)\\s*(" + EPHITHET + ")");
   private static final Pattern NORM_HYBRIDS_FORM = Pattern.compile("\\b([×xX]|√ó) ");
   private static final Pattern NORM_TF_GENUS = Pattern.compile("^([" + NAME_LETTERS + "])\\(([" + name_letters + "-]+)\\)\\.? ");
-  private static final Pattern REPL_IN_REF = Pattern.compile("[, ]?\\b(?:in|IN) (" + AUTHOR_TEAM + ")");
+  private static final Pattern REPL_IN_REF = Pattern.compile("[, ]?\\b(?:in|IN|apud) (" + AUTHOR_TEAM + ")");
   private static final Pattern REPL_RANK_PREFIXES = Pattern.compile("^(sub)?(fossil|" +
       StringUtils.join(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
   private static final Pattern MANUSCRIPT_NAMES = Pattern.compile("\\b(indet|spp?)[. ](?:nov\\.)?[A-Z0-9][a-zA-Z0-9-]*(?:\\(.+?\\))?");
@@ -292,7 +293,7 @@ class ParsingJob implements Callable<ParsedName> {
              ")?" +
 
              // #11 entire authorship incl basionyms and year
-             "([, ]?" +
+             "([., ]?" +
                "(?:\\(" +
                  // #12/13/14 basionym authorship (ex/auth/sanct)
                  "(?:" + AUTHORSHIP + ")?" +
@@ -530,7 +531,7 @@ class ParsingJob implements Callable<ParsedName> {
     // extract sec reference
     m = EXTRACT_SENSU.matcher(name);
     if (m.find()) {
-      pn.setTaxonomicNote(normNote(m.group(1).replaceAll("[)(]", "")));
+      pn.setTaxonomicNote(normNote(m.group(1)));
       name = m.replaceFirst("");
     }
     // extract other remarks
@@ -630,13 +631,18 @@ class ParsingJob implements Callable<ParsedName> {
     determineCode();
   }
 
-  private static String normNote(String x) {
+  private static String normNote(String note) {
+    if (note.startsWith("(") && note.endsWith(")")) {
+      note = note.substring(1, note.length()-1);
+    }
     return StringUtils.trimToNull(
-        x
+        note
         // punctuation followed by a space, dots are special because of author initials
-        .replaceAll("([,;])(?!= )", "$1 ")
+        .replaceAll("([,;)])(?!= )", "$1 ")
+        // opening brackets with space
+        .replaceAll("(?<! )([(])", " $1")
         // dots before years and after lower case words should have a space
-        .replaceAll("(?:\\.(?=" + YEAR + ")|(?<=\\b[a-z]{2,})\\.(?!= ))", ". ")
+        .replaceAll("(?:\\.(?=" + YEAR + ")|(?<=\\b[a-z]{2,})\\.(?! ))", ". ")
         // ands with space
         .replaceAll("&", " & ")
     );
@@ -678,6 +684,9 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       name = m.replaceAll("sl");
     }
+
+    // cleanup years
+    name = NORM_YEAR.matcher(name).replaceAll("$1");
 
     // remove imprint years. See ICZN §22A.2.3 http://www.iczn.org/iczn/index.jsp?nfv=&article=22
     m = NORM_IMPRINT_YEAR.matcher(name);
@@ -1009,9 +1018,10 @@ class ParsingJob implements Callable<ParsedName> {
             pn.setGenus(pn.getUninomial());
             pn.setUninomial(null);
           }
-          if (pn.isIndetermined()) {
-            ignoreAuthorship = true;
-          }
+        }
+
+        if (pn.isIndetermined()) {
+          ignoreAuthorship = true;
         }
 
         // #11 is entire authorship, not stored in ParsedName

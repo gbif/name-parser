@@ -1,25 +1,8 @@
-Pestalotiopsis dracaenae Yong Wang bis, Y. Song, K. Geng & K.D. Hyde, 2015
-Corynespora holopteleicola Sh. Kumar, R. Singh ter, Gond & Saini, 2012
-Parapyricularia indica R. Singh bis, 2013
 Pseudoleptomesochrella incerta (Chap. and Delam. -deb., 1956)
-Rhododendron loerzingii J. J. Smith apud Koorders & Valeton
-Xolisma turquini Small apud Britton & Wilson
-Microgonium omphalodes Vieill. apud Fourn.
 Pitcairnia cinnagarina ex D. Dietr.
-Pourretia magnispatha hortusa ex K. Koch
-Pitcairnia pruinosa hortus ex K. Koch
 Grielum obtusifolium ex Harv.
 Rosa intermedia Cr?p.
 Rosa alpestris D?s?gl.
-
-Nitzschia sinuata var. (Grunow) Lange-Bert.
-Alces alces subsp. (Linnaeus, 1758)
-Canis lupus subsp. Linnaeus, 1758
-
-Pezizomycotina, ordines incertae sedis
-Ascomycota, families incertae sedis
-Heterokontophyta, genera incertae sedis
-Oxypoda ((incertae sedis)) inimica Casey, 1911
 
 Digitaria sanguinea Weber, orth. var.
 Quercus ovalis Gand., opus utique oppr.
@@ -51,6 +34,7 @@ Spilogona acuticornis (Malloch, 1920
 Cerodontha lonicerae (Robineau-desvoidy, 1851
 Uroleptopsis viridis (Perejaslawzewa, 1886) ?
 
+Apatura iris junonina (Lambillion) & Cabeau, 1910
 
 Scleropogon kelloggi (Wilcox, 137)
 Ospriocerus arizonensis (Bromley, 193k7)
@@ -72,6 +56,3 @@ Psilopteryx psorosa subsp. retezatica Botosaneanu & ?Schneider, 1978?
 Kanimia nitida (DC:) Baker
 Osmanthus ilicifolius f. variegatus (auct.) Rehder
 Magnolia ?soulangeana Hamel (pro sp.)
-Mentha rotundifolia auct. non (L.) Huds. 1762
-Leucanthemum maximum auct. non (Ramond) DC.
-Deschampsia littoralis auct. non (Gaudin) Reuter

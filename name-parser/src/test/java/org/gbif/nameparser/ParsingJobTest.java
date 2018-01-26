@@ -111,6 +111,9 @@ public class ParsingJobTest {
     assertAuthorTeamPattern("Mas-ComaBargues & Esteban",  "Mas-ComaBargues", "Esteban");
     assertAuthorTeamPattern("Hondt d");
     assertAuthorTeamPattern("Abou-El-Naga");
+    assertAuthorTeamPattern("Yong Wang bis, Y. Song, K. Geng & K.D. Hyde", "Yong Wang bis", "Y.Song", "K.Geng", "K.D.Hyde");
+    assertAuthorTeamPattern("Sh. Kumar, R. Singh ter, Gond & Saini", "Sh.Kumar", "R.Singh ter", "Gond", "Saini");
+    assertAuthorTeamPattern("R.Singh bis");
   }
 
   @Test
