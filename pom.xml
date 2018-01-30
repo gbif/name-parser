@@ -39,7 +39,7 @@
         <commons-io.version>2.5</commons-io.version>
         <commons-lang.version>3.4</commons-lang.version>
         <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
-        <gbif-api.version>0.58</gbif-api.version>
+        <gbif-api.version>0.59</gbif-api.version>
         <guava.version>21.0</guava.version>
         <junit.version>4.12</junit.version>
         <logback.version>1.1.7</logback.version>
