@@ -326,8 +326,8 @@ public class ParsingJobTest {
   public void testNormalizeName() {
     assertNormalize("Anniella nigra FISCHER 1885", "Anniella nigra Fischer 1885");
     assertNormalize("Nuculoidea Williams et  Breger 1916  ","Nuculoidea Williams&Breger 1916");
-    assertNormalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea behrens var.christoph Williams&Breger[1916]");
-    assertNormalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  ","Nuculoidea behrens var.christoph Williams&Breger[1916]");
+    assertNormalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea behrens var.christoph Williams&Breger 1916");
+    assertNormalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  ","Nuculoidea behrens var.christoph Williams&Breger 1916");
     assertNormalize("Nuculoidea   Williams& Breger, 1916  ", "Nuculoidea Williams&Breger,1916");
     assertNormalize("Asplenium X inexpectatum (E. L. Braun 1940)Morton (1956) ", "Asplenium ×inexpectatum(E.L.Braun 1940)Morton(1956)");
     assertNormalize(" × Agropogon", "×Agropogon");
