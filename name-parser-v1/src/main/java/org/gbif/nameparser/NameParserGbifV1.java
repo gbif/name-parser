@@ -177,7 +177,8 @@ public class NameParserGbifV1 implements NameParser {
     gbif.setNomStatus(pn.getNomenclaturalNotes());
     gbif.setRemarks(pn.getRemarks());
 
-    gbif.setParsed(pn.getState().isParsed());
+    // we throw UnparsableException above already for State.NONE
+    gbif.setParsed(true);
     gbif.setParsedPartially(pn.getState() == State.PARTIAL);
 
     return gbif;
