@@ -979,9 +979,9 @@ class ParsingJob implements Callable<ParsedName> {
       if (StringUtils.isBlank(matcher.group(20))) {
         pn.setState(ParsedName.State.COMPLETE);
       } else {
-        LOG.info("Partial match with unparsed remainder \"{}\" for: {}", matcher.group(20), name);
+        LOG.info("Partial match with unparsed remains \"{}\" for: {}", matcher.group(20), name);
         pn.setState(ParsedName.State.PARTIAL);
-        pn.setRemains(matcher.group(20).trim());
+        pn.setUnparsed(matcher.group(20).trim());
       }
       if (LOG.isDebugEnabled()) {
         logMatcher(matcher);

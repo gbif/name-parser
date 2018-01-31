@@ -92,7 +92,7 @@ public class NameAssertion {
             assertNull(n.getCode());
             break;
           case REMAINS:
-            assertNull(n.getRemains());
+            assertNull(n.getUnparsed());
             break;
         }
       }
@@ -188,9 +188,9 @@ public class NameAssertion {
     return add(NP.REMARK);
   }
 
-  NameAssertion partial(String remains) {
+  NameAssertion partial(String unparsed) {
     assertEquals(ParsedName.State.PARTIAL, n.getState());
-    assertEquals(remains, n.getRemains());
+    assertEquals(unparsed, n.getUnparsed());
     return add(NP.REMAINS, NP.STATE);
   }
 

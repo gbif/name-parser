@@ -130,10 +130,10 @@ public class ParsedName {
   private String remarks;
 
   /**
-   * Any additional unparsed remains found in the name.
+   * Any additional unparsed string found at the end of the name.
    * Only ever set when state=PARTIAL
    */
-  private String remains;
+  private String unparsed;
 
 	/**
 	 * The kind of name classified in broad catagories based on their syntactical
@@ -320,12 +320,12 @@ public class ParsedName {
     }
   }
 
-  public String getRemains() {
-    return remains;
+  public String getUnparsed() {
+    return unparsed;
   }
 
-  public void setRemains(String remains) {
-    this.remains = remains;
+  public void setUnparsed(String unparsed) {
+    this.unparsed = unparsed;
   }
 
   public State getState() {
@@ -462,14 +462,14 @@ public class ParsedName {
         Objects.equals(taxonomicNote, that.taxonomicNote) &&
         Objects.equals(nomenclaturalNotes, that.nomenclaturalNotes) &&
         Objects.equals(remarks, that.remarks) &&
-        Objects.equals(remains, that.remains) &&
+        Objects.equals(unparsed, that.unparsed) &&
         type == that.type &&
         Objects.equals(warnings, that.warnings);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, taxonomicNote, nomenclaturalNotes, remarks, remains, type, doubtful, state, warnings);
+    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, taxonomicNote, nomenclaturalNotes, remarks, unparsed, type, doubtful, state, warnings);
   }
 
   @Override
