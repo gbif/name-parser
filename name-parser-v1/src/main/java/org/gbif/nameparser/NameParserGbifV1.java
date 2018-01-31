@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import static org.gbif.nameparser.api.ParsedName.State;
 
 /**
  * A name parser wrapped to return classic ParsedName objects from the GBIF API v1.
@@ -83,7 +84,7 @@ public class NameParserGbifV1 implements NameParser {
       p.setRank(rank);
       p.setType(e.type);
       p.setParsed(false);
-      p.setAuthorsParsed(false);
+      p.setParsedPartially(false);
     }
 
     return p;
@@ -177,8 +178,7 @@ public class NameParserGbifV1 implements NameParser {
     gbif.setRemarks(pn.getRemarks());
 
     gbif.setParsed(pn.getState().isParsed());
-    // we do not distinct between the 2 anymore, either parsed or not
-    gbif.setAuthorsParsed(gbif.isParsed());
+    gbif.setParsedPartially(pn.getState() == State.PARTIAL);
 
     return gbif;
   }

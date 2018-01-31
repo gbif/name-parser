@@ -94,7 +94,7 @@ class ParsingJob implements Callable<ParsedName> {
             + "(?:(?:" + EPHITHET_PREFIXES + ") [a-z])?"
             + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
             // avoid epithets ending with the unallowed endings, e.g. serovar
-            + "(?<!(?:\\bex|\\bl[ae]|\\bv[ao]n|"+ UNALLOWED_EPITHET_ENDING +"))(?=\\b)";
+            + "(?<!(?:\\bex|\\bl[ae]|\\bv[ao]n|\\bhort|"+ UNALLOWED_EPITHET_ENDING +"))(?=\\b)";
   static final String MONOMIAL =
     "[" + NAME_LETTERS + "](?:\\.|[" + name_letters + "]+)(?:-[" + NAME_LETTERS + "]?[" + name_letters + "]+)?";
   // a pattern matching typical latin word endings. Helps identify name parts from authors
@@ -274,10 +274,11 @@ class ParsingJob implements Callable<ParsedName> {
 
              "(?:" +
                // #6 superfluent intermediate (subspecies) epithet in quadrinomials
-               "( " + EPHITHET + ")??" +
+               "( (?!"+RANK_MARKER_SPECIES+")" + EPHITHET + ")?" +
                "(?:" +
                  // strip out intermediate, irrelevant authors
-                 "(?:\\b ?.+?)??" +
+                 //"(?:\\b ?(?:[&,;]+\" + AUTHOR + \")*)??" +
+                 "(?:\\b ?.+?\\b)??" +
                  // #7 infraspecies rank
                  " ?(" + RANK_MARKER_SPECIES + ")" +
                ")?" +
@@ -306,7 +307,9 @@ class ParsingJob implements Callable<ParsedName> {
                // #19 year with or without brackets
                "(?: ?\\(?,?(" + YEAR_LOOSE + ")\\)?)?" +
              ")" +
-             "$");
+
+             // #20 any remainder
+             "(\\b.*?)??$");
 
   static Matcher interruptableMatcher(Pattern pattern, String text) {
     return pattern.matcher(new InterruptibleCharSequence(text));
@@ -973,90 +976,89 @@ class ParsingJob implements Callable<ParsedName> {
     LOG.debug("Parse normed name string: {}", name);
     Matcher matcher = interruptableMatcher(NAME_PATTERN, name);
     if (matcher.find()) {
-      if (!matcher.group(0).equals(name)) {
-        LOG.info("{} - matched only part of the name: {}", matcher.group(0), name);
-        pn.setState(ParsedName.State.PARTIAL);
-
-      } else {
+      if (StringUtils.isBlank(matcher.group(20))) {
         pn.setState(ParsedName.State.COMPLETE);
-        if (LOG.isDebugEnabled()) {
-          logMatcher(matcher);
-        }
-        // the match can be the genus part of a bi/trinomial or a uninomial
-        setUninomialOrGenus(matcher, pn);
-        boolean bracketSubrankFound = false;
-        if (matcher.group(2) != null) {
-          bracketSubrankFound = true;
-          pn.setInfragenericEpithet(StringUtils.trimToNull(matcher.group(2)));
-        } else if (matcher.group(4) != null) {
-          setRank(matcher.group(3));
-          pn.setInfragenericEpithet(StringUtils.trimToNull(matcher.group(4)));
-        }
-        pn.setSpecificEpithet(StringUtils.trimToNull(matcher.group(5)));
-        if (matcher.group(6) != null && matcher.group(6).length() > 1 && !matcher.group(6).contains("null")) {
-          // 4 parted name, so its below subspecies
-          pn.setRank(Rank.INFRASUBSPECIFIC_NAME);
-        }
-        if (matcher.group(7) != null && !matcher.group(7).isEmpty()) {
-          setRank(matcher.group(7));
-        }
-        pn.setInfraspecificEpithet(StringUtils.trimToNull(matcher.group(8)));
+      } else {
+        LOG.info("Partial match with unparsed remainder \"{}\" for: {}", matcher.group(20), name);
+        pn.setState(ParsedName.State.PARTIAL);
+      }
+      if (LOG.isDebugEnabled()) {
+        logMatcher(matcher);
+      }
+      // the match can be the genus part of a bi/trinomial or a uninomial
+      setUninomialOrGenus(matcher, pn);
+      boolean bracketSubrankFound = false;
+      if (matcher.group(2) != null) {
+        bracketSubrankFound = true;
+        pn.setInfragenericEpithet(StringUtils.trimToNull(matcher.group(2)));
+      } else if (matcher.group(4) != null) {
+        setRank(matcher.group(3));
+        pn.setInfragenericEpithet(StringUtils.trimToNull(matcher.group(4)));
+      }
+      pn.setSpecificEpithet(StringUtils.trimToNull(matcher.group(5)));
+      if (matcher.group(6) != null && matcher.group(6).length() > 1 && !matcher.group(6).contains("null")) {
+        // 4 parted name, so its below subspecies
+        pn.setRank(Rank.INFRASUBSPECIFIC_NAME);
+      }
+      if (matcher.group(7) != null && !matcher.group(7).isEmpty()) {
+        setRank(matcher.group(7));
+      }
+      pn.setInfraspecificEpithet(StringUtils.trimToNull(matcher.group(8)));
 
-        // microbial ranks
-        if (matcher.group(9) != null) {
-          setRank(matcher.group(9));
-          pn.setInfraspecificEpithet(matcher.group(10));
+      // microbial ranks
+      if (matcher.group(9) != null) {
+        setRank(matcher.group(9));
+        pn.setInfraspecificEpithet(matcher.group(10));
+      }
+
+      // make sure (infra)specific epithet is not a rank marker!
+      lookForIrregularRankMarker();
+
+      // if no rank was parsed but given externally use it!
+      if (rank != null && !rank.otherOrUnranked() && pn.getRank().otherOrUnranked()) {
+        pn.setRank(rank);
+        if (pn.getGenus() == null && rank.isInfrageneric()) {
+          pn.setGenus(pn.getUninomial());
+          pn.setUninomial(null);
         }
+      }
 
-        // make sure (infra)specific epithet is not a rank marker!
-        lookForIrregularRankMarker();
+      if (pn.isIndetermined()) {
+        ignoreAuthorship = true;
+      }
 
-        // if no rank was parsed but given externally use it!
-        if (rank != null && !rank.otherOrUnranked() && pn.getRank().otherOrUnranked()) {
-          pn.setRank(rank);
-          if (pn.getGenus() == null && rank.isInfrageneric()) {
-            pn.setGenus(pn.getUninomial());
-            pn.setUninomial(null);
+      // #11 is entire authorship, not stored in ParsedName
+      if (!ignoreAuthorship && matcher.group(11) != null) {
+        if (bracketSubrankFound
+            && pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null
+            && infragenericIsAuthor(pn, rank)) {
+          // rather an author than a infrageneric rank. Swap in case of monomials
+          pn.setBasionymAuthorship(parseAuthorship(null, pn.getInfragenericEpithet(), null));
+          pn.setInfragenericEpithet(null);
+          // check if we need to move genus to uninomial
+          if (pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null) {
+            pn.setUninomial(pn.getGenus());
+            pn.setGenus(null);
           }
+          LOG.debug("swapped subrank with bracket author: {}", pn.getBasionymAuthorship());
+
+        } else {
+          // #12/13/14/15 basionym authorship (ex/auth/sanct/year)
+          pn.setBasionymAuthorship(parseAuthorship(matcher.group(12), matcher.group(13), matcher.group(15)));
         }
 
-        if (pn.isIndetermined()) {
-          ignoreAuthorship = true;
-        }
-
-        // #11 is entire authorship, not stored in ParsedName
-        if (!ignoreAuthorship && matcher.group(11) != null) {
-          if (bracketSubrankFound
-              && pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null
-              && infragenericIsAuthor(pn, rank)) {
-            // rather an author than a infrageneric rank. Swap in case of monomials
-            pn.setBasionymAuthorship(parseAuthorship(null, pn.getInfragenericEpithet(), null));
-            pn.setInfragenericEpithet(null);
-            // check if we need to move genus to uninomial
-            if (pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null) {
-              pn.setUninomial(pn.getGenus());
-              pn.setGenus(null);
-            }
-            LOG.debug("swapped subrank with bracket author: {}", pn.getBasionymAuthorship());
-
-          } else {
-            // #12/13/14/15 basionym authorship (ex/auth/sanct/year)
-            pn.setBasionymAuthorship(parseAuthorship(matcher.group(12), matcher.group(13), matcher.group(15)));
-          }
-
-          // #16/17/18/19 authorship (ex/auth/sanct/year)
-          pn.setCombinationAuthorship(parseAuthorship(matcher.group(16), matcher.group(17), matcher.group(19)));
-          // sanctioning author
-          if (matcher.group(18) != null) {
-            pn.setSanctioningAuthor(matcher.group(18));
-          }
+        // #16/17/18/19 authorship (ex/auth/sanct/year)
+        pn.setCombinationAuthorship(parseAuthorship(matcher.group(16), matcher.group(17), matcher.group(19)));
+        // sanctioning author
+        if (matcher.group(18) != null) {
+          pn.setSanctioningAuthor(matcher.group(18));
         }
 
         // 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
         checkEpithetVsAuthorPrefx();
 
-        return true;
       }
+      return true;
     }
 
     return false;

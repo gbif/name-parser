@@ -73,8 +73,12 @@ public class NameParserGbifV1Test {
     assertEquals(NameType.HYBRID, pn.getType());
     assertNull(pn.getGenusOrAbove());
 
-    assertTrue(parser.parseQuietly("Protoscenium simplex  (Cleve, 1899), Jørgensen, 1905 ", Rank.SPECIES).isAuthorsParsed());
-    assertTrue(parser.parseQuietly("Plagiacanthidae", Rank.SPECIES).isAuthorsParsed());
+    assertFalse(parser.parseQuietly("Protoscenium simplex  (Cleve, 1899), Jørgensen, 1905 ", Rank.SPECIES).isParsedPartially());
+    assertFalse(parser.parseQuietly("Plagiacanthidae", Rank.SPECIES).isParsedPartially());
+
+    pn = parser.parseQuietly("Plagiacanthidae WhatTheHeck @%&/ (please dont parse me[ he?5789])", Rank.SPECIES);
+    assertTrue(pn.isParsed());
+    assertTrue(pn.isParsedPartially());
   }
 
   @Test

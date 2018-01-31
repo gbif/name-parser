@@ -180,6 +180,12 @@ public class NameParserGBIFTest {
         .combAuthors("1967", "Movchan")
         .code(ZOOLOGICAL)
         .nothingElse();
+
+    assertName("Cymbella cistula var. sinus regis", "Cymbella cistula var. sinus")
+        .infraSpecies("Cymbella", "cistula", VARIETY, "sinus")
+        .state(ParsedName.State.PARTIAL)
+        .nothingElse();
+
   }
 
   @Test
@@ -966,7 +972,7 @@ public class NameParserGBIFTest {
 
   @Test
   public void occNameFile() throws Exception {
-    int currFail = 70;
+    int currFail = 0;
     int fails = parseFile("occurrence-names.txt");
     if (fails > currFail) {
       fail("We are getting worse, not better. Currently failing: " + fails + ". Was passing:" + currFail);
