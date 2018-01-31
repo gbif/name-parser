@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>name-parser-motherpom</artifactId>
-    <version>3.1-SNAPSHOT</version>
+    <version>3.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>GBIF Name Parser Motherpom</name>
