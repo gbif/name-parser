@@ -79,6 +79,7 @@ public class NameParserGbifV1Test {
     pn = parser.parseQuietly("Plagiacanthidae WhatTheHeck @%&/ (please dont parse me[ he?5789])", Rank.SPECIES);
     assertTrue(pn.isParsed());
     assertTrue(pn.isParsedPartially());
+    assertEquals("Plagiacanthidae", pn.getGenusOrAbove());
   }
 
   @Test
