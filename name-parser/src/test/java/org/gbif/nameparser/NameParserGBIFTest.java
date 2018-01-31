@@ -183,9 +183,8 @@ public class NameParserGBIFTest {
 
     assertName("Cymbella cistula var. sinus regis", "Cymbella cistula var. sinus")
         .infraSpecies("Cymbella", "cistula", VARIETY, "sinus")
-        .state(ParsedName.State.PARTIAL)
+        .partial("regis")
         .nothingElse();
-
   }
 
   @Test
@@ -972,7 +971,7 @@ public class NameParserGBIFTest {
 
   @Test
   public void occNameFile() throws Exception {
-    int currFail = 0;
+    int currFail = 4;
     int fails = parseFile("occurrence-names.txt");
     if (fails > currFail) {
       fail("We are getting worse, not better. Currently failing: " + fails + ". Was passing:" + currFail);
@@ -1005,7 +1004,7 @@ public class NameParserGBIFTest {
       try {
         ParsedName pn = parser.parse(name);
         if (pn.getState() != ParsedName.State.COMPLETE) {
-          LOG.info("{} {}", pn.getState(), name);
+          LOG.debug("{} {}", pn.getState(), name);
         }
       } catch (UnparsableNameException ex) {
         if (ex.getType().isParsable() || ex.getType() == NO_NAME) {

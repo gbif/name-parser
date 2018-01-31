@@ -129,6 +129,11 @@ public class ParsedName {
    */
   private String remarks;
 
+  /**
+   * Any additional unparsed remains found in the name.
+   * Only ever set when state=PARTIAL
+   */
+  private String remains;
 
 	/**
 	 * The kind of name classified in broad catagories based on their syntactical
@@ -315,6 +320,14 @@ public class ParsedName {
     }
   }
 
+  public String getRemains() {
+    return remains;
+  }
+
+  public void setRemains(String remains) {
+    this.remains = remains;
+  }
+
   public State getState() {
     return state;
   }
@@ -449,13 +462,14 @@ public class ParsedName {
         Objects.equals(taxonomicNote, that.taxonomicNote) &&
         Objects.equals(nomenclaturalNotes, that.nomenclaturalNotes) &&
         Objects.equals(remarks, that.remarks) &&
+        Objects.equals(remains, that.remains) &&
         type == that.type &&
         Objects.equals(warnings, that.warnings);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, taxonomicNote, nomenclaturalNotes, remarks, type, doubtful, state, warnings);
+    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, taxonomicNote, nomenclaturalNotes, remarks, remains, type, doubtful, state, warnings);
   }
 
   @Override

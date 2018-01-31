@@ -277,8 +277,8 @@ class ParsingJob implements Callable<ParsedName> {
                "( (?!"+RANK_MARKER_SPECIES+")" + EPHITHET + ")?" +
                "(?:" +
                  // strip out intermediate, irrelevant authors
-                 //"(?:\\b ?(?:[&,;]+\" + AUTHOR + \")*)??" +
-                 "(?:\\b ?.+?\\b)??" +
+                 // allow only short lower case tokens to avoid matching to a real epithet
+                 "(?:\\b[ \\p{Ll}'(-]{0,3}\\p{Lu}.*?\\b)??" +
                  // #7 infraspecies rank
                  " ?(" + RANK_MARKER_SPECIES + ")" +
                ")?" +
@@ -981,6 +981,7 @@ class ParsingJob implements Callable<ParsedName> {
       } else {
         LOG.info("Partial match with unparsed remainder \"{}\" for: {}", matcher.group(20), name);
         pn.setState(ParsedName.State.PARTIAL);
+        pn.setRemains(matcher.group(20).trim());
       }
       if (LOG.isDebugEnabled()) {
         logMatcher(matcher);
@@ -1058,6 +1059,7 @@ class ParsingJob implements Callable<ParsedName> {
         checkEpithetVsAuthorPrefx();
 
       }
+
       return true;
     }
 

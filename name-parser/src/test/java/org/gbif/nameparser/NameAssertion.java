@@ -19,7 +19,7 @@ public class NameAssertion {
 
   private enum NP {TYPE, EPITHETS, INFRAGEN, STRAIN, CULTIVAR, CANDIDATE, NOTHO,
     AUTH, EXAUTH, BAS, EXBAS, SANCT, RANK,
-    TAXNOTE, NOMNOTE, REMARK, DOUBTFUL, STATE, CODE
+    TAXNOTE, NOMNOTE, REMARK, DOUBTFUL, STATE, CODE, REMAINS
   }
 
   public NameAssertion(ParsedName n) {
@@ -90,6 +90,9 @@ public class NameAssertion {
             break;
           case CODE:
             assertNull(n.getCode());
+            break;
+          case REMAINS:
+            assertNull(n.getRemains());
             break;
         }
       }
@@ -183,6 +186,12 @@ public class NameAssertion {
   NameAssertion remarks(String remarks) {
     assertEquals(remarks, n.getRemarks());
     return add(NP.REMARK);
+  }
+
+  NameAssertion partial(String remains) {
+    assertEquals(ParsedName.State.PARTIAL, n.getState());
+    assertEquals(remains, n.getRemains());
+    return add(NP.REMAINS, NP.STATE);
   }
 
   NameAssertion cultivar(String genus, String cultivar) {
