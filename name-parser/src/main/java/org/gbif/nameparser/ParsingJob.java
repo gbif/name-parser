@@ -358,7 +358,7 @@ class ParsingJob implements Callable<ParsedName> {
     // before further cleaning/parsing try if we have known OTU formats, i.e. BIN or SH numbers
     Matcher m = OTU_PATTERN.matcher(name);
     if (m.find()) {
-      pn.setUninomial(m.group(1));
+      pn.setUninomial(m.group(1).toUpperCase());
       pn.setType(NameType.OTU);
       pn.setRank(rank == null || rank.otherOrUnranked() ? Rank.SPECIES : rank);
       pn.setState(ParsedName.State.COMPLETE);
@@ -979,7 +979,7 @@ class ParsingJob implements Callable<ParsedName> {
       if (StringUtils.isBlank(matcher.group(20))) {
         pn.setState(ParsedName.State.COMPLETE);
       } else {
-        LOG.info("Partial match with unparsed remains \"{}\" for: {}", matcher.group(20), name);
+        LOG.debug("Partial match with unparsed remains \"{}\" for: {}", matcher.group(20), name);
         pn.setState(ParsedName.State.PARTIAL);
         pn.setUnparsed(matcher.group(20).trim());
       }

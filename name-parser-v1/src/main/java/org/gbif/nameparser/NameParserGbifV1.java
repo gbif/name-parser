@@ -107,9 +107,17 @@ public class NameParserGbifV1 implements NameParser {
         return pn.canonicalName();
       }
     } catch (UnparsableException e) {
-      LOG.warn("Unparsable name " + scientificName + " >>> " + e.getMessage());
+      logUnparsable(e);
     }
     return null;
+  }
+
+  private static void logUnparsable(UnparsableException e) {
+    if (e.type.isParsable()) {
+      LOG.debug("Unparsable {} {} >>> {}", e.type, e.name, e.getMessage());
+    } else {
+      LOG.warn("Unparsable {} {} >>> {}", e.type, e.name, e.getMessage());
+    }
   }
 
   @Override
@@ -136,7 +144,7 @@ public class NameParserGbifV1 implements NameParser {
         return pn.canonicalName();
       }
     } catch (UnparsableException e) {
-      LOG.warn("Unparsable name " + scientificName + " >>> " + e.getMessage());
+      logUnparsable(e);
     }
     return StringUtils.normalizeSpace(scientificName.trim());
   }

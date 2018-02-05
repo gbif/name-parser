@@ -643,6 +643,16 @@ public class NameParserGBIFTest {
         .type(OTU)
         .nothingElse();
 
+    assertName("SH460441.07FU", "SH460441.07FU")
+        .monomial("SH460441.07FU", Rank.SPECIES)
+        .type(OTU)
+        .nothingElse();
+
+    assertName("sh460441.07fu", "SH460441.07FU")
+        .monomial("SH460441.07FU", Rank.SPECIES)
+        .type(OTU)
+        .nothingElse();
+
     assertName("Festuca sp. BOLD:ACW2100", "BOLD:ACW2100")
         .monomial("BOLD:ACW2100", Rank.SPECIES)
         .type(OTU)
@@ -664,6 +674,30 @@ public class NameParserGBIFTest {
     assertName("Boldea vulgaris", "Boldea vulgaris")
         .species("Boldea", "vulgaris")
         .nothingElse();
+  }
+
+  /**
+   * http://dev.gbif.org/issues/browse/POR-2397
+   *
+   * TODO: convert all test cases. Can the strain & manuscript name property be merged ???
+   */
+  @Test
+  public void testStrainNames() throws Exception {
+    assertName("Candidatus Liberibacter solanacearum", "\"Candidatus Liberibacter solanacearum\"")
+        .species("Liberibacter", "solanacearum")
+        .candidatus()
+        .nothingElse();
+
+    //assertName("Methylocystis sp. M6", "Methylocystis sp. M6")
+    //    .species("Liberibacter", "solanacearum")
+    //    .candidatus()
+    //    .nothingElse();
+
+    //assertStrain("", NameType.INFORMAL, "Methylocystis", null, null, Rank.SPECIES, "M6");
+    //assertStrain("Advenella kashmirensis W13003", NameType.INFORMAL, "Advenella", "kashmirensis", null, null, "W13003");
+    //assertStrain("Garra cf. dampaensis M23", NameType.INFORMAL, "Garra", "dampaensis", null, null, "M23");
+    //assertStrain("Sphingobium lucknowense F2", NameType.INFORMAL, "Sphingobium", "lucknowense", null, null, "F2");
+    //assertStrain("Pseudomonas syringae pv. atrofaciens LMG 5095T", NameType.INFORMAL, "Pseudomonas", "syringae", "atrofaciens", Rank.PATHOVAR, "LMG 5095T");
   }
 
   @Test
@@ -1133,6 +1167,17 @@ public class NameParserGBIFTest {
         .combAuthors(null, "Thunb.")
         .sensu("non Adans. 1763")
         .nothingElse();
+
+    assertName("Chorististium maculatum (non Bloch 1790)", "Chorististium maculatum")
+        .species("Chorististium", "maculatum")
+        .sensu("non Bloch 1790")
+        .nothingElse();
+
+    assertName("Puntius arulius subsp. tambraparniei (non Silas 1954)", "Puntius arulius subsp. tambraparniei")
+        .infraSpecies("Puntius", "arulius", Rank.SUBSPECIES, "tambraparniei")
+        .sensu("non Silas 1954")
+        .nothingElse();
+
   }
 
   @Test
@@ -1548,6 +1593,15 @@ public class NameParserGBIFTest {
         .species("Prostanthera", null)
         .type(INFORMAL)
         .remarks("sp.Somersbey(B.J.Conn 4024)")
+        .nothingElse();
+  }
+
+  @Test
+  public void testUnsupportedAuthors() throws Exception {
+    assertName(" Anolis marmoratus girafus LAZELL 1964: 377", "Anolis marmoratus girafus")
+        .infraSpecies("Anolis", "marmoratus", Rank.INFRASPECIFIC_NAME, "girafus")
+        .combAuthors("1964", "Lazell")
+        .partial(":377")
         .nothingElse();
   }
 
