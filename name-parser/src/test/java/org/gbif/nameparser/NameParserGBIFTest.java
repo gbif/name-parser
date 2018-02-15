@@ -899,6 +899,13 @@ public class NameParserGBIFTest {
         .combAuthors(null, "K.Koch")
         .combExAuthors("hort.")
         .nothingElse();
+
+    assertName("Platycarpha glomerata (Thunberg) A.P.de Candolle", "Platycarpha glomerata")
+        .species("Platycarpha", "glomerata")
+        .basAuthors(null, "Thunberg")
+        .combAuthors(null, "A.P.de Candolle")
+        .nothingElse();
+
   }
 
   @Test
