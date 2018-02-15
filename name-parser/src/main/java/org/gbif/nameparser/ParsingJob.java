@@ -72,8 +72,11 @@ class ParsingJob implements Callable<ParsedName> {
   private static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/,-][0-9]{1,4})?";
 
   private static final String NOTHO = "notho";
-  private static final String RANK_MARKER_SPECIES =
-    "(?:"+NOTHO+")?(?:(?<!f[ .])sp|" + StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") + ")";
+  static final String RANK_MARKER = ("(?:"+NOTHO+")?(?:(?<!f[ .])sp|" +
+        StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") +
+    ")")
+    // avoid hort.ex matches
+    .replace("|hort|", "|hort(?!\\.ex)|");
 
   static final String RANK_MARKER_MICROBIAL =
     "(?:bv\\.|ct\\.|f\\.sp\\.|" +
@@ -87,11 +90,11 @@ class ParsingJob implements Callable<ParsedName> {
         ), "|") +
     ")";
 
-  private static final String EPHITHET_PREFIXES = "van|novae";
   private static final String UNALLOWED_EPITHET_ENDING =
       "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
-  static final String EPHITHET = "(?:[0-9]+-?|[doml]')?"
-            + "(?:(?:" + EPHITHET_PREFIXES + ") [a-z])?"
+  static final String EPHITHET = "(?:[0-9]+-?|[doml]'|(?:van|novae) [a-z])?"
+            // avoid matching to rank markers
+            + "(?!"+RANK_MARKER+"\\b)"
             + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
             // avoid epithets ending with the unallowed endings, e.g. serovar
             + "(?<!(?:\\bex|\\bl[ae]|\\bv[ao]n|\\bhort|"+ UNALLOWED_EPITHET_ENDING +"))(?=\\b)";
@@ -163,12 +166,12 @@ class ParsingJob implements Callable<ParsedName> {
           .putAll(RankUtils.RANK_MARKER_MAP_INFRAGENERIC)
           .build().keySet()
       , "|") + ")[\\. ] *");
-  private static final Pattern RANK_MARKER_AT_END = Pattern.compile(" " +
+  private static final Pattern RANK_MARKER_AT_END = Pattern.compile("[ .]" +
       RANK_MARKER_ALL.substring(0,RANK_MARKER_ALL.lastIndexOf(')')) +
       "|" +
-      RANK_MARKER_MICROBIAL.substring(3) + "\\.?" +
+      RANK_MARKER_MICROBIAL.substring(3) +
       // allow for larva/adult life stage indicators: http://dev.gbif.org/issues/browse/POR-3000
-      " ?(?:Ad|Lv)?\\.?" +
+      "[. ]?(?:Ad|Lv)?\\.?" +
       "$");
   // name normalising
   private static final Pattern EXTRACT_SENSU = Pattern.compile(" ?\\b" +
@@ -264,27 +267,27 @@ class ParsingJob implements Callable<ParsedName> {
 
   @VisibleForTesting
   static final Pattern POTENTIAL_NAME_PATTERN = Pattern.compile("^×?" + MONOMIAL + "\\b");
+  private static final Pattern REMOVE_INTER_RANKS = Pattern.compile("\\b((?:subsp|ssp|var)[ .].+)\\b("+RANK_MARKER+")\\b");
+  // allow only short lower case tokens to avoid matching to a real epithet
+  private static final String SKIP_AUTHORS = "(?:\\b[ \\p{Ll}'(-]{0,3}\\p{Lu}.*?\\b)??";
   public static final Pattern NAME_PATTERN = Pattern.compile("^" +
              // #1 genus/monomial
              "(×?(?:\\?|" + MONOMIAL + "))" +
              // #2 or #4 subgenus/section with #3 infrageneric rank marker
              "(?:(?<!ceae)" + INFRAGENERIC + ")?" +
              // #5 species
-             "(?:(?:\\b| )(×?" + EPHITHET + "))?" +
-
-             "(?:" +
-               // #6 superfluent intermediate (subspecies) epithet in quadrinomials
-               "( (?!"+RANK_MARKER_SPECIES+")" + EPHITHET + ")?" +
-               "(?:" +
-                 // strip out intermediate, irrelevant authors
-                 // allow only short lower case tokens to avoid matching to a real epithet
-                 "(?:\\b[ \\p{Ll}'(-]{0,3}\\p{Lu}.*?\\b)??" +
-                 // #7 infraspecies rank
-                 " ?(" + RANK_MARKER_SPECIES + ")" +
-               ")?" +
-               // #8 infraspecies epitheton
-               "(?:[. ](×?\"?" + EPHITHET + "\"?))" +
-             ")?" +
+             "(?:(?:\\b| )(×?" + EPHITHET + ")" +
+                "(?:" +
+                // any superfluous intermediate bits before terminal epithets, e.g. species authors
+                "(?:.*?)" +
+                // #6 superfluous subspecies epithet
+                "( ×?" + EPHITHET + ")?" +
+                // #7 infraspecies rank
+                "[. ]?(" + RANK_MARKER + ")?" +
+                // #8 infraspecies epitheton, avoid matching to degli which is part of Italian author names
+                "[. ](×?\"?(?!degli\\b)" + EPHITHET + "\"?)" +
+                ")?" +
+              ")?" +
 
              "(?: " +
                // #9 microbial rank
@@ -293,22 +296,25 @@ class ParsingJob implements Callable<ParsedName> {
                "(\\S+)" +
              ")?" +
 
-             // #11 entire authorship incl basionyms and year
+             // #11 indet rank marker after epithets
+             "([. ]" + RANK_MARKER + ")?" +
+
+             // #12 entire authorship incl basionyms and year
              "([., ]?" +
                "(?:\\(" +
-                 // #12/13/14 basionym authorship (ex/auth/sanct)
+                 // #13/14/15 basionym authorship (ex/auth/sanct)
                  "(?:" + AUTHORSHIP + ")?" +
-                 // #15 basionym year
+                 // #16 basionym year
                  "[, ]?(" + YEAR_LOOSE + ")?" +
                "\\))?" +
 
-               // #16/17/18 authorship (ex/auth/sanct)
+               // #17/18/19 authorship (ex/auth/sanct)
                "(?:" + AUTHORSHIP + ")?" +
-               // #19 year with or without brackets
+               // #20 year with or without brackets
                "(?: ?\\(?,?(" + YEAR_LOOSE + ")\\)?)?" +
              ")" +
 
-             // #20 any remainder
+             // #21 any remainder
              "(\\b.*?)??$");
 
   static Matcher interruptableMatcher(Pattern pattern, String text) {
@@ -549,6 +555,7 @@ class ParsingJob implements Callable<ParsedName> {
     // f. is a marker for forms, but more often also found in authorships as "filius" - son of.
     // so ignore those
     if (m.find() && !(name.endsWith(" f.") || name.endsWith(" f"))) {
+      logMatcher(m);
       // use as rank unless we already have a cultivar
       ignoreAuthorship = true;
       if (pn.getCultivarEpithet() == null) {
@@ -569,10 +576,14 @@ class ParsingJob implements Callable<ParsedName> {
     // replace bibliographic in references
     m = REPL_IN_REF.matcher(name);
     if (m.find()) {
-      LOG.debug(name);
-      logMatcher(m);
       pn.addRemark(normNote(m.group(0)));
       name = m.replaceFirst("");
+    }
+
+    // remove superflous epithets with rank markers
+    m = REMOVE_INTER_RANKS.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst("$2");
     }
 
     // remember current rank for later reuse
@@ -976,12 +987,12 @@ class ParsingJob implements Callable<ParsedName> {
     LOG.debug("Parse normed name string: {}", name);
     Matcher matcher = interruptableMatcher(NAME_PATTERN, name);
     if (matcher.find()) {
-      if (StringUtils.isBlank(matcher.group(20))) {
+      if (StringUtils.isBlank(matcher.group(21))) {
         pn.setState(ParsedName.State.COMPLETE);
       } else {
-        LOG.debug("Partial match with unparsed remains \"{}\" for: {}", matcher.group(20), name);
+        LOG.debug("Partial match with unparsed remains \"{}\" for: {}", matcher.group(21), name);
         pn.setState(ParsedName.State.PARTIAL);
-        pn.setUnparsed(matcher.group(20).trim());
+        pn.setUnparsed(matcher.group(21).trim());
       }
       if (LOG.isDebugEnabled()) {
         logMatcher(matcher);
@@ -1012,6 +1023,12 @@ class ParsingJob implements Callable<ParsedName> {
         pn.setInfraspecificEpithet(matcher.group(10));
       }
 
+      // #11 indet rank markers
+      if (matcher.group(11) != null) {
+        setRank(matcher.group(11));
+        ignoreAuthorship = true;
+      }
+
       // make sure (infra)specific epithet is not a rank marker!
       lookForIrregularRankMarker();
 
@@ -1028,8 +1045,8 @@ class ParsingJob implements Callable<ParsedName> {
         ignoreAuthorship = true;
       }
 
-      // #11 is entire authorship, not stored in ParsedName
-      if (!ignoreAuthorship && matcher.group(11) != null) {
+      // #12 is entire authorship, not stored in ParsedName
+      if (!ignoreAuthorship && matcher.group(12) != null) {
         if (bracketSubrankFound
             && pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null
             && infragenericIsAuthor(pn, rank)) {
@@ -1044,15 +1061,15 @@ class ParsingJob implements Callable<ParsedName> {
           LOG.debug("swapped subrank with bracket author: {}", pn.getBasionymAuthorship());
 
         } else {
-          // #12/13/14/15 basionym authorship (ex/auth/sanct/year)
-          pn.setBasionymAuthorship(parseAuthorship(matcher.group(12), matcher.group(13), matcher.group(15)));
+          // #13/14/15/16 basionym authorship (ex/auth/sanct/year)
+          pn.setBasionymAuthorship(parseAuthorship(matcher.group(13), matcher.group(14), matcher.group(16)));
         }
 
-        // #16/17/18/19 authorship (ex/auth/sanct/year)
-        pn.setCombinationAuthorship(parseAuthorship(matcher.group(16), matcher.group(17), matcher.group(19)));
+        // #17/18/19/20 authorship (ex/auth/sanct/year)
+        pn.setCombinationAuthorship(parseAuthorship(matcher.group(17), matcher.group(18), matcher.group(20)));
         // sanctioning author
-        if (matcher.group(18) != null) {
-          pn.setSanctioningAuthor(matcher.group(18));
+        if (matcher.group(19) != null) {
+          pn.setSanctioningAuthor(matcher.group(19));
         }
 
         // 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
