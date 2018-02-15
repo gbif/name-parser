@@ -318,6 +318,20 @@ public class NameFormatterTest {
         "Ptarmica",
         "Achillea sect. Ptarmica (Mill.) W.D.J.Koch"
     );
+
+    pn.setGenus(null);
+    assertName(
+        "Ptarmica",
+        "sect. Ptarmica (Mill.) W.D.J.Koch"
+    );
+
+    pn.setRank(Rank.SUBGENUS);
+    pn.setCode(NomCode.ZOOLOGICAL);
+    assertName(
+        "Ptarmica",
+        "subgen. Ptarmica (Mill.) W.D.J.Koch"
+    );
+
   }
 
   @Test

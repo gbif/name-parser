@@ -34,6 +34,11 @@ public class NameParserGBIFTest {
 
   @Test
   public void species() throws Exception {
+    assertName("Diodia teres Walter", "Diodia teres")
+        .species("Diodia", "teres")
+        .combAuthors(null, "Walter")
+        .nothingElse();
+
     assertName("Dysponetus bulbosus Hartmann-Schroder 1982", "Dysponetus bulbosus")
         .species("Dysponetus", "bulbosus")
         .combAuthors("1982", "Hartmann-Schroder")
@@ -238,8 +243,16 @@ public class NameParserGBIFTest {
 
   @Test
   public void infraGeneric() throws Exception {
-    assertName("subgen. Trematostoma Sacc.", "Trematostoma")
-        .monomial("Trematostoma", SUBGENUS)
+    assertName("Arrhoges (Antarctohoges)", SUBGENUS, "Arrhoges subgen. Antarctohoges")
+        .infraGeneric("Arrhoges", SUBGENUS, "Antarctohoges")
+        .nothingElse();
+
+    assertName("Polygonum", Rank.SUBGENUS, "subgen. Polygonum")
+        .infraGeneric(null, Rank.SUBGENUS, "Polygonum")
+        .nothingElse();
+
+    assertName("subgen. Trematostoma Sacc.", "subgen. Trematostoma")
+        .infraGeneric(null, SUBGENUS, "Trematostoma")
         .combAuthors(null, "Sacc.")
         .nothingElse();
 
@@ -263,10 +276,6 @@ public class NameParserGBIFTest {
     assertName("Arrhoges (Antarctohoges)", "Arrhoges")
         .monomial("Arrhoges")
         .basAuthors(null, "Antarctohoges")
-        .nothingElse();
-
-    assertName("Arrhoges (Antarctohoges)", SUBGENUS,"Arrhoges subgen. Antarctohoges")
-        .infraGeneric("Arrhoges", SUBGENUS, "Antarctohoges")
         .nothingElse();
 
     assertName("Festuca subg. Schedonorus (P. Beauv. ) Peterm.","Festuca subgen. Schedonorus")
@@ -430,6 +439,7 @@ public class NameParserGBIFTest {
       NameAssertion ass = assertName("Achillea millefolium L.", r, "Achillea millefolium")
           .binomial("Achillea", null, "millefolium", r)
           .combAuthors(null, "L.")
+          .type(INFORMAL)
           .doubtful();
       if (r.isRestrictedToCode() != null) {
         ass.code(r.isRestrictedToCode());
@@ -1430,34 +1440,21 @@ public class NameParserGBIFTest {
   }
 
   @Test
-  @Ignore
   public void rankMismatch() throws Exception {
-    //ParsedName pn = parser.parse("Polygonum", Rank.SUBGENUS);
-    //assertEquals("Polygonum", pn.getGenusOrAbove());
-    //assertNull(pn.getSpecificEpithet());
-    //assertEquals(Rank.SUBGENUS, pn.getRank());
-    //assertEquals(NameType.SCIENTIFIC, pn.getType());
-//
-    //pn = parser.parse("Polygonum", Rank.SUBSPECIES);
-    //assertEquals("Polygonum", pn.getGenusOrAbove());
-    //assertNull(pn.getSpecificEpithet());
-    //assertNull(pn.getAuthorship());
-    //assertEquals(Rank.SUBSPECIES, pn.getRank());
-    //assertEquals(NameType.INFORMAL, pn.getType());
-//
-    //pn = parser.parse("Polygonum alba", Rank.GENUS);
-    //assertEquals("Polygonum", pn.getGenusOrAbove());
-    //assertEquals("alba", pn.getSpecificEpithet());
-    //assertNull(pn.getAuthorship());
-    //assertEquals(Rank.GENUS, pn.getRank());
-    //assertEquals(NameType.DOUBTFUL, pn.getType());
-//
-    //pn = parser.parse("Polygonum", Rank.CULTIVAR);
-    //assertEquals("Polygonum", pn.getGenusOrAbove());
-    //assertNull(pn.getSpecificEpithet());
-    //assertNull(pn.getAuthorship());
-    //assertEquals(Rank.CULTIVAR, pn.getRank());
-    //assertEquals(NameType.INFORMAL, pn.getType());
+    assertName("Polygonum", Rank.CULTIVAR, "Polygonum cv.")
+        .cultivar("Polygonum", null)
+        .type(INFORMAL)
+        .nothingElse();
+
+    assertName("Polygonum", Rank.SUBSPECIES, "Polygonum subsp.")
+        .indet("Polygonum", null, Rank.SUBSPECIES)
+        .nothingElse();
+
+    assertName("Polygonum alba", Rank.GENUS, "Polygonum alba")
+        .binomial("Polygonum", null, "alba", Rank.GENUS)
+        .type(INFORMAL)
+        .doubtful()
+        .nothingElse();
   }
 
   /**

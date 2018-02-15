@@ -322,7 +322,6 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   private final String scientificName;
-  private final Rank rank;
   private final ParsedName pn;
   private boolean ignoreAuthorship;
 
@@ -332,8 +331,8 @@ class ParsingJob implements Callable<ParsedName> {
    */
   ParsingJob(String scientificName, Rank rank) {
     this.scientificName = Preconditions.checkNotNull(scientificName);
-    this.rank = Preconditions.checkNotNull(rank);
     pn =  new ParsedName();
+    pn.setRank(Preconditions.checkNotNull(rank));
   }
 
   private ParsedName unparsable(NameType type) throws UnparsableNameException {
@@ -366,7 +365,7 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       pn.setUninomial(m.group(1).toUpperCase());
       pn.setType(NameType.OTU);
-      pn.setRank(rank == null || rank.otherOrUnranked() ? Rank.SPECIES : rank);
+      setRankIfNotContradicting(Rank.SPECIES);
       pn.setState(ParsedName.State.COMPLETE);
 
     } else {
@@ -374,7 +373,10 @@ class ParsingJob implements Callable<ParsedName> {
       parse(name);
     }
 
-    LOG.debug("Parsing time: {}", (System.currentTimeMillis() - start));
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Parsing time: {} for {}", (System.currentTimeMillis() - start), pn);
+    }
+
     // build canonical name
     return pn;
   }
@@ -503,7 +505,7 @@ class ParsingJob implements Callable<ParsedName> {
           // if there was a rank given in the nom status populate the rank marker field
           Matcher rm = NOV_RANK_MARKER.matcher(note);
           if (rm.find()) {
-            setRank(rm.group(1));
+            setRank(rm.group(1), true);
           }
         }
       } while (m.find());
@@ -555,7 +557,6 @@ class ParsingJob implements Callable<ParsedName> {
     // f. is a marker for forms, but more often also found in authorships as "filius" - son of.
     // so ignore those
     if (m.find() && !(name.endsWith(" f.") || name.endsWith(" f"))) {
-      logMatcher(m);
       // use as rank unless we already have a cultivar
       ignoreAuthorship = true;
       if (pn.getCultivarEpithet() == null) {
@@ -583,6 +584,7 @@ class ParsingJob implements Callable<ParsedName> {
     // remove superflous epithets with rank markers
     m = REMOVE_INTER_RANKS.matcher(name);
     if (m.find()) {
+      pn.addWarning("Intermediate classification removed: " + m.group(1));
       name = m.replaceFirst("$2");
     }
 
@@ -907,9 +909,14 @@ class ParsingJob implements Callable<ParsedName> {
         pn.setDoubtful(true);
         setTypeIfNull(pn, NameType.INFORMAL);
 
-      } else if (pn.getRank() != null && pn.getRank().notOtherOrUnranked()) {
+      } else if (pn.getRank().notOtherOrUnranked()) {
         if (pn.getRank().equals(Rank.CULTIVAR) && pn.getCultivarEpithet() == null) {
           pn.addWarning(Warnings.INDET_CULTIVAR);
+          pn.setType(NameType.INFORMAL);
+
+        } else if (pn.getRank().isSupraspecific() && (pn.getSpecificEpithet() != null || pn.getInfraspecificEpithet() != null)) {
+          pn.addWarning(Warnings.RANK_MISMATCH);
+          pn.setDoubtful(true);
           pn.setType(NameType.INFORMAL);
 
         } else if (pn.getRank().isSpeciesOrBelow() && pn.getRank().isRestrictedToCode()!= NomCode.CULTIVARS && !pn.isBinomial()) {
@@ -997,7 +1004,7 @@ class ParsingJob implements Callable<ParsedName> {
       if (LOG.isDebugEnabled()) {
         logMatcher(matcher);
       }
-      // the match can be the genus part of a bi/trinomial or a uninomial
+      // the match can be the genus part of an infrageneric, bi- or trinomial, the uninomial or even the infrageneric epithet!
       setUninomialOrGenus(matcher, pn);
       boolean bracketSubrankFound = false;
       if (matcher.group(2) != null) {
@@ -1032,49 +1039,31 @@ class ParsingJob implements Callable<ParsedName> {
       // make sure (infra)specific epithet is not a rank marker!
       lookForIrregularRankMarker();
 
-      // if no rank was parsed but given externally use it!
-      if (rank != null && !rank.otherOrUnranked() && pn.getRank().otherOrUnranked()) {
-        pn.setRank(rank);
-        if (pn.getGenus() == null && rank.isInfrageneric()) {
-          pn.setGenus(pn.getUninomial());
-          pn.setUninomial(null);
-        }
-      }
-
       if (pn.isIndetermined()) {
         ignoreAuthorship = true;
       }
 
       // #12 is entire authorship, not stored in ParsedName
       if (!ignoreAuthorship && matcher.group(12) != null) {
-        if (bracketSubrankFound
-            && pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null
-            && infragenericIsAuthor(pn, rank)) {
-          // rather an author than a infrageneric rank. Swap in case of monomials
-          pn.setBasionymAuthorship(parseAuthorship(null, pn.getInfragenericEpithet(), null));
-          pn.setInfragenericEpithet(null);
-          // check if we need to move genus to uninomial
-          if (pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null) {
-            pn.setUninomial(pn.getGenus());
-            pn.setGenus(null);
-          }
-          LOG.debug("swapped subrank with bracket author: {}", pn.getBasionymAuthorship());
-
-        } else {
-          // #13/14/15/16 basionym authorship (ex/auth/sanct/year)
-          pn.setBasionymAuthorship(parseAuthorship(matcher.group(13), matcher.group(14), matcher.group(16)));
-        }
-
         // #17/18/19/20 authorship (ex/auth/sanct/year)
         pn.setCombinationAuthorship(parseAuthorship(matcher.group(17), matcher.group(18), matcher.group(20)));
         // sanctioning author
         if (matcher.group(19) != null) {
           pn.setSanctioningAuthor(matcher.group(19));
         }
-
-        // 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
-        checkEpithetVsAuthorPrefx();
-
+        // #13/14/15/16 basionym authorship (ex/auth/sanct/year)
+        pn.setBasionymAuthorship(parseAuthorship(matcher.group(13), matcher.group(14), matcher.group(16)));
+        if (bracketSubrankFound && infragenericIsAuthor(pn)) {
+          // rather an author than a infrageneric rank. Swap in case of monomials
+          pn.setBasionymAuthorship(parseAuthorship(null, pn.getInfragenericEpithet(), null));
+          pn.setInfragenericEpithet(null);
+          // check if we need to move genus to uninomial
+          if (pn.getGenus() != null && pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null) {
+            pn.setUninomial(pn.getGenus());
+            pn.setGenus(null);
+          }
+          LOG.debug("swapped subrank with bracket author: {}", pn.getBasionymAuthorship());
+        }
       }
 
       return true;
@@ -1090,16 +1079,24 @@ class ParsingJob implements Callable<ParsedName> {
     return null;
   }
 
+  private void setRank(String rankMarker) {
+    setRank(rankMarker, false);
+  }
+
   /**
    * Sets the parsed names rank based on a found rank marker
    * Potentially also sets the notho field in case the rank marker indicates a hybrid
    * if the rankMarker cannot be interpreted or is null nothing will be done.
    * @param rankMarker
    */
-  private void setRank(String rankMarker) {
+  private void setRank(String rankMarker, boolean force) {
     Rank rank = parseRank(rankMarker);
-    if (rank != null && !rank.otherOrUnranked()) {
-      pn.setRank(rank);
+    if (rank != null && rank.notOtherOrUnranked()) {
+      if (force) {
+        pn.setRank(rank);
+      } else {
+        setRankIfNotContradicting(rank);
+      }
       if (rankMarker.startsWith(NOTHO)) {
         if (rank.isInfraspecific()) {
           pn.setNotho(NamePart.INFRASPECIFIC);
@@ -1114,28 +1111,67 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
 
+  /**
+   * Sets the rank if the current rank of the parsed name is not contradicting
+   * to the given one. Mostly this is the case to define a Unranked rank.
+   */
+  private void setRankIfNotContradicting(Rank rank) {
+    if (pn.getRank().isUncomparable()) {
+      switch (pn.getRank()) {
+        case INFRAGENERIC_NAME:
+          if (!rank.isInfragenericStrictly()) {
+            break;
+          }
+        case INFRASPECIFIC_NAME:
+          if (!rank.isInfraspecific()) {
+            break;
+          }
+        case INFRASUBSPECIFIC_NAME:
+          if (!rank.isInfrasubspecific()) {
+            break;
+          }
+        default:
+          pn.setRank(rank);
+      }
+    }
+  }
+
   private static Rank parseRank(String rankMarker) {
     return RankUtils.inferRank(StringUtils.trimToNull(rankMarker));
   }
-    private static boolean infragenericIsAuthor(ParsedName pn, Rank rank) {
-        return pn.getBasionymAuthorship().isEmpty()
-            && pn.getSpecificEpithet() == null
-            && (
-                rank != null && !(rank.isInfrageneric() && !rank.isSpeciesOrBelow())
-                   //|| pn.getInfraGeneric().contains(" ")
-                || rank == null && !LATIN_ENDINGS.matcher(pn.getInfragenericEpithet()).find()
-            );
-    }
 
-    private void setUninomialOrGenus(Matcher matcher, ParsedName pn) {
-      // the match can be the genus part of a bi/trinomial or a uninomial
-      if (matcher.group(2) != null || matcher.group(4) != null || matcher.group(5) != null || matcher.group(8) != null
-          || (pn.getRank() != null && pn.getRank().isSpeciesOrBelow() && pn.getRank().isRestrictedToCode() != NomCode.CULTIVARS) ) {
-        pn.setGenus(StringUtils.trimToNull(matcher.group(1)));
-      } else {
-        pn.setUninomial(StringUtils.trimToNull(matcher.group(1)));
-      }
+  private static boolean infragenericIsAuthor(ParsedName pn) {
+      return pn.getBasionymAuthorship().isEmpty()
+          && pn.getSpecificEpithet() == null
+          && pn.getInfraspecificEpithet() == null
+          && !pn.getRank().isInfragenericStrictly()
+          && !LATIN_ENDINGS.matcher(pn.getInfragenericEpithet()).find();
+  }
+
+  /**
+   * The first Capitalized word can be stored in 3 different places in ParsedName.
+   * Figure out where to best keep it:
+   *  a) as the genus part of an infrageneric, bi- or trinomial
+   *  b) the uninomial for names of rank genus or higher
+   *  c) the infrageneric epithet in case its a standalone infrageneric name (which is hard to detect)
+   */
+  private void setUninomialOrGenus(Matcher matcher, ParsedName pn) {
+    // the match can be the genus part of a bi/trinomial or a uninomial
+    String monomial = StringUtils.trimToNull(matcher.group(1));
+    if (matcher.group(2) != null
+        || matcher.group(4) != null
+        || matcher.group(5) != null
+        || matcher.group(8) != null
+        || (pn.getRank().isSpeciesOrBelow()) ) { //  && pn.getRank().isRestrictedToCode() != NomCode.CULTIVARS
+      pn.setGenus(monomial);
+
+    } else if (pn.getRank().isInfragenericStrictly()){
+      pn.setInfragenericEpithet(monomial);
+
+    } else {
+      pn.setUninomial(monomial);
     }
+  }
 
   /**
    * if no rank marker is set, inspect epitheta for wrongly placed rank markers and modify parsed name accordingly.
@@ -1164,36 +1200,6 @@ class ParsingJob implements Callable<ParsedName> {
       pn.setRank(Rank.SUBSPECIES);
       pn.addWarning(Warnings.SUBSPECIES_ASSIGNED);
     }
-  }
-
-  /**
-   * TODO: 2 letter epitheta can also be author prefixes - check that programmatically, not in regex
-   */
-  private void checkEpithetVsAuthorPrefx() {
-      if (pn.getInfraspecificEpithet() != null) {
-        // might be subspecies without rank marker
-        // or short authorship prefix in epithet. test
-        String extendedAuthor = pn.getInfraspecificEpithet() + " " + pn.getCombinationAuthorship();
-        Matcher m = interruptableMatcher(AUTHOR_TEAM_PATTERN, extendedAuthor);
-        if (m.find()) {
-          // matches author. Prefer that
-          LOG.debug("use infraspecific epithet as author prefix");
-          pn.setInfraspecificEpithet(null);
-//TODO
-//          cn.setAuthorship(parseAuthorship(extendedAuthor));
-        }
-      } else {
-        // might be monomial with the author prefix erroneously taken as the species epithet
-        String extendedAuthor = pn.getSpecificEpithet() + " " + pn.getCombinationAuthorship();
-        Matcher m = interruptableMatcher(AUTHOR_TEAM_PATTERN, extendedAuthor);
-        if (m.find()) {
-          // matches author. Prefer that
-          LOG.debug("use specific epithet as author prefix");
-          pn.setSpecificEpithet(null);
-//TODO
-//          cn.setAuthorship(parseAuthorship(extendedAuthor));
-        }
-      }
   }
 
   @VisibleForTesting

@@ -15,6 +15,7 @@ public class Warnings {
   public static final String QUESTION_MARKS_REMOVED = "question marks removed";
   public static final String REPL_ENCLOSING_QUOTE = "removed enclosing quotes";
   public static final String MISSING_GENUS = "epithet without genus";
+  public static final String RANK_MISMATCH = "rank does not fit the parsed name";
   public static final String HTML_ENTITIES = "html entities unescaped";
   public static final String XML_ENTITIES = "xml entities removed";
 }

@@ -74,14 +74,13 @@ public class ParsedName {
   private String uninomial;
 
   /**
-	 * The genus part of a bi- or trinomial name. Not used for genus names which are
-	 * represented by the scientificName alone.
+	 * The genus part of an infrageneric, bi- or trinomial name.
+   * Not used for standalone genus names which are represented as uninomials.
 	 */
 	private String genus;
 
 	/**
-	 * The infrageneric epithet. Used only as the terminal epithet for names at
-	 * infrageneric ranks, not for species
+	 * The infrageneric epithet.
 	 */
 	private String infragenericEpithet;
 

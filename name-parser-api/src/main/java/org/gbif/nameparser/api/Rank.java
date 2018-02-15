@@ -470,10 +470,10 @@ public enum Rank {
   }
 
   /**
-   * @return true if the rank is above rank species.
+   * @return true if the rank is above the rank species aggregate.
    */
   public boolean isSupraspecific() {
-    return ordinal() < SPECIES.ordinal();
+    return ordinal() < SPECIES_AGGREGATE.ordinal();
   }
 
   /**

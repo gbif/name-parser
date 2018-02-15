@@ -162,6 +162,17 @@ public class NameAssertion {
     return add(NP.EPITHETS, NP.RANK);
   }
 
+  NameAssertion indet(String genus, String epithet, Rank rank) {
+    assertNull(n.getUninomial());
+    assertEquals(genus, n.getGenus());
+    assertEquals(epithet, n.getSpecificEpithet());
+    assertNull(n.getInfraspecificEpithet());
+    assertEquals(rank, n.getRank());
+    assertEquals(NameType.INFORMAL, n.getType());
+    assertTrue(n.isIndetermined());
+    return add(NP.EPITHETS, NP.RANK, NP.TYPE);
+  }
+
   NameAssertion combAuthors(String year, String... authors) {
     assertEquals(year, n.getCombinationAuthorship().getYear());
     assertEquals(Lists.newArrayList(authors), n.getCombinationAuthorship().getAuthors());
@@ -204,15 +215,9 @@ public class NameAssertion {
     return cultivar(genus, species, Rank.CULTIVAR, cultivar);
   }
   NameAssertion cultivar(String genus, String species, Rank rank, String cultivar) {
-    if (species == null) {
-      assertEquals(genus, n.getUninomial());
-      assertNull(n.getGenus());
-      assertNull(n.getSpecificEpithet());
-    } else {
-      assertNull(n.getUninomial());
-      assertEquals(genus, n.getGenus());
-      assertEquals(species, n.getSpecificEpithet());
-    }
+    assertNull(n.getUninomial());
+    assertEquals(genus, n.getGenus());
+    assertEquals(species, n.getSpecificEpithet());
     assertNull(n.getInfragenericEpithet());
     assertNull(n.getInfraspecificEpithet());
     assertEquals(cultivar, n.getCultivarEpithet());

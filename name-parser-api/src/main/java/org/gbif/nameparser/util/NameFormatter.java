@@ -120,6 +120,7 @@ public class NameFormatter {
       // bi- or trinomials or infrageneric names
       if (n.getInfragenericEpithet() != null) {
         if ((isUnknown(n.getRank()) && n.getSpecificEpithet() == null) || (n.getRank() != null && n.getRank().isInfragenericStrictly())) {
+          boolean showInfraGen = true;
           // the infrageneric is the terminal rank. Always show it and wrap it with its genus if requested
           if (n.getGenus() != null && genusForinfrageneric) {
             appendGenus(sb, n, hybridMarker);
@@ -130,20 +131,17 @@ public class NameFormatter {
               sb.append("(")
                   .append(n.getInfragenericEpithet())
                   .append(")");
-
-            } else {
-              if (rankMarker) {
-                // If we know the rank we use explicit rank markers
-                // this is how botanical infrageneric names are formed, see http://www.iapt-taxon.org/nomen/main.php?page=art21
-                if (appendRankMarker(sb, n.getRank())) {
-                  sb.append(' ');
-                }
-              }
-              sb.append(n.getInfragenericEpithet());
+              showInfraGen = false;
             }
-
-          } else {
-            // just show the infragen
+          }
+          if (showInfraGen) {
+            if (rankMarker) {
+              // If we know the rank we use explicit rank markers
+              // this is how botanical infrageneric names are formed, see http://www.iapt-taxon.org/nomen/main.php?page=art21
+              if (appendRankMarker(sb, n.getRank())) {
+                sb.append(' ');
+              }
+            }
             sb.append(n.getInfragenericEpithet());
           }
 
