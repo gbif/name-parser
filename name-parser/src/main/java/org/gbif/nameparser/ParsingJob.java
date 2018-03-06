@@ -863,7 +863,7 @@ class ParsingJob implements Callable<ParsedName> {
     m = XML_TAGS.matcher(name);
     if (m.find()) {
       name = m.replaceAll("");
-      pn.addWarning(Warnings.XML_ENTITIES);
+      pn.addWarning(Warnings.XML_TAGS);
     }
 
     // trim

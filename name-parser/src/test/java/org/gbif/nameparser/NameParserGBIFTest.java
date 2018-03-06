@@ -931,17 +931,19 @@ public class NameParserGBIFTest {
   }
 
   /**
-   * Simply test all names in names.txt and make sure they parse without exception.
+   * Simply test all names in names-with-authors.txt and make sure they parse without exception
+   * and have an authorship!
    * This test does not verify if the parsed name was correct in all its pieces,
    * so only use this as a quick way to add names to tests.
    *
    * Exceptional cases should better be tested in a test on its own!
    */
   @Test
-  public void nameFile() throws Exception {
-    for (String name : iterResource("names.txt")) {
+  public void namesWithAuthorFile() throws Exception {
+    for (String name : iterResource("names-with-authors.txt")) {
       ParsedName n = parser.parse(name, null);
       assertTrue(name, n.getState().isParsed());
+      assertTrue(name, n.hasAuthorship());
     }
   }
 
