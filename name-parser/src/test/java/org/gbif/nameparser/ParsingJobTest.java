@@ -267,6 +267,14 @@ public class ParsingJobTest {
   }
 
   @Test
+  public void testTaxonomicNotesPattern() throws Exception {
+    assertTaxNote("auct.amer.", "Ramaria subbotrytis (Coker) Corner 1950 auct. amer.");
+    assertTaxNote("s.l.", "Ramaria subbotrytis s.l.");
+    assertTaxNote("s.ampl.", "Ramaria subbotrytis (Coker) Corner 1950 s. ampl.");
+    assertTaxNote("ss.auct.europ.", "Ramaria subbotrytis (Coker) Corner 1950 ss. auct. europ.");
+  }
+
+  @Test
   public void testNomenclaturalNotesPattern() throws Exception {
     assertNomNote("nom.illeg.",  "Vaucheria longicaulis var. bengalensis Islam, nom. illeg.");
     assertNomNote("nom.correct",  "Dorataspidae nom. correct");
@@ -306,12 +314,21 @@ public class ParsingJobTest {
   }
 
   private void assertNomNote(String expectedNote, String name) {
-    String nomNote = null;
+    String note = null;
     Matcher matcher = ParsingJob.EXTRACT_NOMSTATUS.matcher(JOB.normalize(name));
     if (matcher.find()) {
-      nomNote = (StringUtils.trimToNull(matcher.group(1)));
+      note = (StringUtils.trimToNull(matcher.group(1)));
     }
-    assertEquals(expectedNote, nomNote);
+    assertEquals(expectedNote, note);
+  }
+
+  private void assertTaxNote(String expectedNote, String name) {
+    String note = null;
+    Matcher matcher = ParsingJob.EXTRACT_SENSU.matcher(JOB.normalize(name));
+    if (matcher.find()) {
+      note = (StringUtils.trimToNull(matcher.group(1)));
+    }
+    assertEquals(expectedNote, note);
   }
 
   @Test

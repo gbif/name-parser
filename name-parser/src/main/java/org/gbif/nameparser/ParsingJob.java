@@ -174,13 +174,12 @@ class ParsingJob implements Callable<ParsedName> {
       "[. ]?(?:Ad|Lv)?\\.?" +
       "$");
   // name normalising
-  private static final Pattern EXTRACT_SENSU = Pattern.compile(" ?\\b" +
+  static final Pattern EXTRACT_SENSU = Pattern.compile(" ?\\b" +
       "(" +
         "(?:(?:excl[. ](?:gen|sp|var)|mut.char|p.p)[. ])?" +
         "\\(?(?:" +
-          "s[. ](?:ampl|l|s|str)[. ]" +
-          "|sensu (?:lat|strict|ampl)(?:[uo]|issimo)?" +
-          "|(?:auct|emend|fide|non|nec|sec|sensu|according to)[. ].+" +
+          "ss?[. ](?:(?:ampl|l|s|str)[. ]|(?:ampl|lat|strict)(?:[uo]|issimo)?)" +
+          "|(?:(?:ss[. ])?auct|emend|fide|non|nec|sec|sensu|according to)[. ].+" +
         ")\\)?" +
       ")");
   private static final String NOV_RANKS = "((?:[sS]ub)?(?:[fF]am|[gG]en|[sS]s?p(?:ec)?|[vV]ar|[fF](?:orma?)?))";

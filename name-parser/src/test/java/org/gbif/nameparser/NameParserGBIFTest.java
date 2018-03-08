@@ -1166,6 +1166,19 @@ public class NameParserGBIFTest {
     assertSensu("Achillea millefolium sec. Greuter 2009", "sec. Greuter 2009");
     assertSensu("Globularia cordifolia L. excl. var. (emend. Lam.)", "excl. var. (emend. Lam.)");
 
+    assertName("Ramaria subbotrytis (Coker) Corner 1950 ss. auct. europ.", "Ramaria subbotrytis")
+        .species("Ramaria", "subbotrytis")
+        .basAuthors(null, "Coker")
+        .combAuthors("1950", "Corner")
+        .sensu("ss. auct. europ.")
+        .nothingElse();
+
+    assertName("Thelephora cuticularis Berk. ss. auct. europ.", "Thelephora cuticularis")
+        .species("Thelephora", "cuticularis")
+        .combAuthors(null, "Berk.")
+        .sensu("ss. auct. europ.")
+        .nothingElse();
+
     assertName("Handmannia austriaca f. elliptica Handmann fide Hustedt, 1922", "Handmannia austriaca f. elliptica")
         .infraSpecies("Handmannia", "austriaca", Rank.FORM, "elliptica")
         .combAuthors(null, "Handmann")
@@ -1175,6 +1188,12 @@ public class NameParserGBIFTest {
 
   @Test
   public void nonNames() throws Exception {
+    assertName("Hebeloma album Peck 1900 non ss. auct. europ.", "Hebeloma album")
+        .species("Hebeloma", "album")
+        .combAuthors("1900", "Peck")
+        .sensu("non ss. auct. europ.")
+        .nothingElse();
+
     assertName("Nitocris (Nitocris) similis Breuning, 1956 (nec Gahan, 1893)", "Nitocris similis")
         .binomial("Nitocris", "Nitocris", "similis", Rank.SPECIES)
         .combAuthors("1956", "Breuning")
@@ -1216,7 +1235,6 @@ public class NameParserGBIFTest {
         .species("Mentha", "rotundifolia")
         .sensu("auct. non (L.) Huds. 1762")
         .nothingElse();
-
 
   }
 
