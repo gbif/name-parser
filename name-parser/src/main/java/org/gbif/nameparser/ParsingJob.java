@@ -594,13 +594,13 @@ class ParsingJob implements Callable<ParsedName> {
 
     if (Strings.isNullOrEmpty(nameStrongly)) {
       // we might have parsed out remarks already which we treat as a placeholder
-      if (preparsingRank == null || preparsingRank.otherOrUnranked()) {
-        unparsable(NameType.NO_NAME);
-      } else {
+      if (pn.hasName()) {
         // stop here!
         pn.setState(ParsedName.State.COMPLETE);
         pn.setType(NameType.PLACEHOLDER);
         return;
+      } else {
+        unparsable(NameType.NO_NAME);
       }
     }
 

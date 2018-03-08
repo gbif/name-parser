@@ -1,6 +1,7 @@
 package org.gbif.nameparser.api;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
@@ -367,6 +368,13 @@ public class ParsedName {
    */
   public String getTerminalEpithet() {
     return infraspecificEpithet == null ? specificEpithet : infraspecificEpithet;
+  }
+
+  /**
+   * @return true if the parsed name has non null name properties or a scientific name. Remarks will not count as a name
+   */
+  public boolean hasName() {
+    return ObjectUtils.firstNonNull(uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, strain, cultivarEpithet) != null;
   }
 
   /**

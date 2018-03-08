@@ -322,24 +322,6 @@ public class NameParserGBIFTest {
   }
 
   /**
-   * https://github.com/gbif/checklistbank/issues/48
-   */
-  @Test
-  public void novPlaceholder() throws Exception {
-    assertName("Gen.nov.", null)
-        .type(PLACEHOLDER)
-        .rank(Rank.GENUS)
-        .nomNote("Gen.nov.")
-        .nothingElse();
-
-    assertName("Gen.nov. sp.nov.", null)
-        .type(PLACEHOLDER)
-        .rank(Rank.SPECIES)
-        .nomNote("Gen.nov. sp.nov.")
-        .nothingElse();
-  }
-
-  /**
    * http://dev.gbif.org/issues/browse/POR-2459
    */
   @Test
@@ -353,6 +335,9 @@ public class NameParserGBIFTest {
     assertUnparsable("uncultured virus", PLACEHOLDER);
     // ITIS placeholders:
     assertUnparsable("Temp dummy name", PLACEHOLDER);
+    // https://github.com/gbif/checklistbank/issues/48
+    assertUnparsable("Gen.nov. sp.nov.", NO_NAME);
+    assertUnparsable("Gen.nov.", NO_NAME);
   }
 
   @Test
@@ -1188,6 +1173,9 @@ public class NameParserGBIFTest {
 
   @Test
   public void nonNames() throws Exception {
+    // the entire name ends up as a taxonomic note, consider this as unparsed...
+    assertUnparsable("non  Ramaria fagetorum Maas Geesteranus 1976 nomen nudum = Ramaria subbotrytis sensu auct. europ.", Rank.SPECIES, NameType.NO_NAME);
+
     assertName("Hebeloma album Peck 1900 non ss. auct. europ.", "Hebeloma album")
         .species("Hebeloma", "album")
         .combAuthors("1900", "Peck")
@@ -1656,12 +1644,16 @@ public class NameParserGBIFTest {
   }
 
   private void assertUnparsable(String name, NameType type) {
-    assertUnparsableName(name, type, name);
+    assertUnparsableName(name, Rank.UNRANKED, type, name);
   }
 
-  private void assertUnparsableName(String name, NameType type, String expectedName) {
+  private void assertUnparsable(String name, Rank rank, NameType type) {
+    assertUnparsableName(name, rank, type, name);
+  }
+
+  private void assertUnparsableName(String name, Rank rank, NameType type, String expectedName) {
     try {
-      parser.parse(name);
+      parser.parse(name, rank);
       fail("Expected "+name+" to be unparsable");
 
     } catch (UnparsableNameException ex) {
