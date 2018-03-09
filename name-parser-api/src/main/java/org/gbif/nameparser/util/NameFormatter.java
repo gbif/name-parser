@@ -182,8 +182,7 @@ public class NameFormatter {
           sb.append(HYBRID_MARKER)
             .append(" ");
         }
-        String epi = n.getSpecificEpithet().replaceAll("[ _-]", "-");
-        sb.append(epi);
+        sb.append(n.getSpecificEpithet());
 
         if (n.getInfraspecificEpithet() == null) {
           // Indetermined infraspecies? Only show indet cultivar marker if no cultivar epithet exists
@@ -294,7 +293,7 @@ public class NameFormatter {
       }
     }
     if (n.getInfraspecificEpithet() != null) {
-      sb.append(n.getInfraspecificEpithet().replaceAll("[ _-]", "-"));
+      sb.append(n.getInfraspecificEpithet());
     }
     return sb;
   }
