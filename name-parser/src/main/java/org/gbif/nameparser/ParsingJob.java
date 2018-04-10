@@ -114,9 +114,9 @@ class ParsingJob implements Callable<ParsedName> {
   }
   private static final String INFRAGENERIC =
     "(?:\\(([" + NAME_LETTERS + "][" + name_letters + "-]+)\\)" +
-        "| (" +
+        "| ((?:"+NOTHO+")?(?:" +
           StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRAGENERIC.keySet(), "|") +
-        ")[. ]([" + NAME_LETTERS + "][" + name_letters + "-]+)"
+        "))[. ]([" + NAME_LETTERS + "][" + name_letters + "-]+)"
     + ")";
 
   static final String RANK_MARKER_ALL = "("+NOTHO+")? *(" + StringUtils.join(RankUtils.RANK_MARKER_MAP.keySet(), "|") + ")\\.?";

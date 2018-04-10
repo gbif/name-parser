@@ -243,6 +243,30 @@ public class NameParserGBIFTest {
 
   @Test
   public void infraGeneric() throws Exception {
+    // IPNI notho ranks: https://github.com/gbif/name-parser/issues/15
+    assertName("Aeonium nothosect. Leugalonium", null, "Aeonium nothosect. Leugalonium")
+        .infraGeneric("Aeonium", SECTION, "Leugalonium")
+        .notho(NamePart.INFRAGENERIC)
+        .code(NomCode.BOTANICAL)
+        .nothingElse();
+
+    assertName("Narcissus nothoser. Dubizettae", null, "Narcissus nothoser. Dubizettae")
+        .infraGeneric("Narcissus", SERIES, "Dubizettae")
+        .notho(NamePart.INFRAGENERIC)
+        .code(NomCode.BOTANICAL)
+        .nothingElse();
+
+    assertName("Serapias nothosubsect. Pladiopetalae", null, "Serapias nothosubsect. Pladiopetalae")
+        .infraGeneric("Serapias", SUBSECTION, "Pladiopetalae")
+        .notho(NamePart.INFRAGENERIC)
+        .code(NomCode.BOTANICAL)
+        .nothingElse();
+
+    assertName("Rubus nothosubgen. Cylarubus", null, "Rubus nothosubgen. Cylarubus")
+        .infraGeneric("Rubus", SUBGENUS, "Cylarubus")
+        .notho(NamePart.INFRAGENERIC)
+        .nothingElse();
+
     assertName("Arrhoges (Antarctohoges)", SUBGENUS, "Arrhoges subgen. Antarctohoges")
         .infraGeneric("Arrhoges", SUBGENUS, "Antarctohoges")
         .nothingElse();
@@ -402,6 +426,14 @@ public class NameParserGBIFTest {
     assertName("Abies alba var. ×alpina L.", "Abies alba nothovar. alpina")
         .infraSpecies("Abies", "alba", VARIETY, "alpina")
         .notho(INFRASPECIFIC)
+        .combAuthors(null, "L.")
+        .nothingElse();
+  }
+
+  @Test
+  public void aggregates() throws Exception {
+    assertName("Achillea millefolium agg. L.", "Achillea millefolium")
+        .binomial("Achillea", null, "millefolium", Rank.SPECIES_AGGREGATE)
         .combAuthors(null, "L.")
         .nothingElse();
   }

@@ -12,6 +12,7 @@ import java.util.function.Predicate;
  */
 public class NameFormatter {
   public static final char HYBRID_MARKER = '×';
+  private static final String NOTHO_PREFIX = "notho";
   private static final Joiner AUTHORSHIP_JOINER = Joiner.on(", ").skipNulls();
 
   /**
@@ -128,9 +129,13 @@ public class NameFormatter {
             // we show zoological infragenerics in brackets,
             // but use rank markers for botanical names (unless its no defined rank)
             if (NomCode.ZOOLOGICAL == n.getCode()) {
-              sb.append("(")
-                  .append(n.getInfragenericEpithet())
-                  .append(")");
+              sb.append("(");
+              if (hybridMarker && NamePart.INFRAGENERIC == n.getNotho()) {
+                sb.append(HYBRID_MARKER)
+                  .append(' ');
+              }
+              sb.append(n.getInfragenericEpithet())
+                .append(")");
               showInfraGen = false;
             }
           }
@@ -138,7 +143,7 @@ public class NameFormatter {
             if (rankMarker) {
               // If we know the rank we use explicit rank markers
               // this is how botanical infrageneric names are formed, see http://www.iapt-taxon.org/nomen/main.php?page=art21
-              if (appendRankMarker(sb, n.getRank())) {
+              if (appendRankMarker(sb, n.getRank(), hybridMarker && NamePart.INFRAGENERIC == n.getNotho())) {
                 sb.append(' ');
               }
             }
@@ -288,7 +293,7 @@ public class NameFormatter {
     }
     // hide subsp. from zoological names
     if (forceRankMarker || rankMarker && (!isZoo(n.getCode()) || Rank.SUBSPECIES != n.getRank())) {
-      if (appendRankMarker(sb, n.getRank(), NameFormatter::isInfraspecificMarker) && n.getInfraspecificEpithet() != null) {
+      if (appendRankMarker(sb, n.getRank(), NameFormatter::isInfraspecificMarker, false) && n.getInfraspecificEpithet() != null) {
         sb.append(' ');
       }
     }
@@ -324,18 +329,21 @@ public class NameFormatter {
   /**
    * @return true if rank marker was added
    */
-  private static boolean appendRankMarker(StringBuilder sb, Rank rank) {
-    return appendRankMarker(sb, rank, null);
+  private static boolean appendRankMarker(StringBuilder sb, Rank rank, boolean nothoPrefix) {
+    return appendRankMarker(sb, rank, null, nothoPrefix);
   }
 
   /**
    * @return true if rank marker was added
    */
-  private static boolean appendRankMarker(StringBuilder sb, Rank rank, Predicate<Rank> ifRank) {
+  private static boolean appendRankMarker(StringBuilder sb, Rank rank, Predicate<Rank> ifRank, boolean nothoPrefix) {
     if (rank != null
         && rank.getMarker() != null
         && (ifRank == null || ifRank.test(rank))
       ) {
+      if (nothoPrefix) {
+        sb.append(NOTHO_PREFIX);
+      }
       sb.append(rank.getMarker());
       return true;
     }
