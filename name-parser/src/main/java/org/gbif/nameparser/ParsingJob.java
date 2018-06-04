@@ -628,7 +628,7 @@ class ParsingJob implements Callable<ParsedName> {
       pn.setInfraspecificEpithet(infraspecEpithet);
     }
     // if we established a rank during preparsing make sure we use this not the parsed one
-    if (preparsingRank != null && preparsingRank.notOtherOrUnranked()) {
+    if (preparsingRank != null && !preparsingRank.isUncomparable()) {
       pn.setRank(preparsingRank);
     }
 

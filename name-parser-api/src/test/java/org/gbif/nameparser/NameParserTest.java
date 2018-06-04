@@ -82,7 +82,6 @@ public abstract class NameParserTest {
 
   @Test
   public void infraSpecies() throws Exception {
-
     assertName("Abies alba ssp. alpina Mill.", "Abies alba subsp. alpina")
         .infraSpecies("Abies", "alba", SUBSPECIES, "alpina")
         .combAuthors(null, "Mill.")
@@ -115,6 +114,9 @@ public abstract class NameParserTest {
         .infraSpecies("Achillea", "millefolium", Rank.VARIETY, "pallidotegula")
         .nothingElse();
 
+    assertName("Achillea millefolium var. pallidotegula", Rank.INFRASPECIFIC_NAME, "Achillea millefolium var. pallidotegula")
+        .infraSpecies("Achillea", "millefolium", Rank.VARIETY, "pallidotegula")
+        .nothingElse();
   }
 
   @Test
