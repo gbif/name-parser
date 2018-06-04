@@ -25,7 +25,7 @@ import static org.junit.Assert.*;
 /**
  *
  */
-public class NameParserTest {
+public abstract class NameParserTest {
   private static Logger LOG = LoggerFactory.getLogger(NameParserTest.class);
   private final NameParser parser;
 
