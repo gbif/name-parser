@@ -82,6 +82,12 @@ public abstract class NameParserTest {
 
   @Test
   public void infraSpecies() throws Exception {
+    assertName("Poa pratensis subsp. anceps (Gaudin) Dumort., 1824", Rank.SPECIES, "Poa pratensis subsp. anceps")
+        .infraSpecies("Poa", "pratensis", Rank.SUBSPECIES, "anceps")
+        .basAuthors(null, "Gaudin")
+        .combAuthors("1824", "Dumort.")
+        .nothingElse();
+
     assertName("Abies alba ssp. alpina Mill.", "Abies alba subsp. alpina")
         .infraSpecies("Abies", "alba", SUBSPECIES, "alpina")
         .combAuthors(null, "Mill.")

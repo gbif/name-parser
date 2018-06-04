@@ -321,6 +321,7 @@ class ParsingJob implements Callable<ParsedName> {
     return pattern.matcher(new InterruptibleCharSequence(text));
   }
 
+  private final Rank rank;
   private final String scientificName;
   private final ParsedName pn;
   private boolean ignoreAuthorship;
@@ -331,8 +332,9 @@ class ParsingJob implements Callable<ParsedName> {
    */
   ParsingJob(String scientificName, Rank rank) {
     this.scientificName = Preconditions.checkNotNull(scientificName);
+    this.rank = Preconditions.checkNotNull(rank);
     pn =  new ParsedName();
-    pn.setRank(Preconditions.checkNotNull(rank));
+    pn.setRank(rank);
   }
 
   private ParsedName unparsable(NameType type) throws UnparsableNameException {
@@ -628,7 +630,7 @@ class ParsingJob implements Callable<ParsedName> {
       pn.setInfraspecificEpithet(infraspecEpithet);
     }
     // if we established a rank during preparsing make sure we use this not the parsed one
-    if (preparsingRank != null && !preparsingRank.isUncomparable()) {
+    if (preparsingRank != null && this.rank != preparsingRank) {
       pn.setRank(preparsingRank);
     }
 
