@@ -852,6 +852,18 @@ public abstract class NameParserTest {
 
   @Test
   public void authorVariations() throws Exception {
+    assertName("Modiola caroliniana (L.) G. Don filius", "Modiola caroliniana")
+        .species("Modiola", "caroliniana")
+        .basAuthors(null, "L.")
+        .combAuthors(null, "G.Don filius")
+        .nothingElse();
+
+    assertName("Modiola caroliniana (L.) G. Don fil.", "Modiola caroliniana")
+        .species("Modiola", "caroliniana")
+        .basAuthors(null, "L.")
+        .combAuthors(null, "G.Don fil.")
+        .nothingElse();
+
     assertName("Cirsium creticum d'Urv.", "Cirsium creticum")
         .species("Cirsium", "creticum")
         .combAuthors(null, "d'Urv.")

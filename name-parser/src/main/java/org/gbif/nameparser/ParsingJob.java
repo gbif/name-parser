@@ -52,14 +52,15 @@ class ParsingJob implements Callable<ParsedName> {
   static final String AUTHOR_LETTERS = NAME_LETTERS + "\\p{Lu}"; // upper case unicode letter, not numerical
   // (\W is alphanum)
   static final String author_letters = name_letters + "\\p{Ll}-?"; // lower case unicode letter, not numerical
+  // common 3 char or longer name suffices
+  private static final String AUTHOR_TOKEN_3 = "fil|filius|hort|jun|junior|sen|senior";
   // common name suffices (ms=manuscript, not yet published)
   private static final String AUTHOR_TOKEN = "(?:\\p{Lu}[\\p{Lu}\\p{Ll}'-]*" +
-      "|al|f|fil|filius|hort|j|jr|jun|junior|ms|sr|sen|senior" +
-      "|v|v[ao]n|bis|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|ter|'?t|y" +
-  ")\\.?";
+      "|" + AUTHOR_TOKEN_3 +
+      "|al|f|j|jr|ms|sr|v|v[ao]n|bis|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|ter|'?t|y" +
+    ")\\.?";
   private static final String AUTHOR = AUTHOR_TOKEN + "(?:[ '-]?" + AUTHOR_TOKEN + ")*";
-  private static final String AUTHOR_TEAM = AUTHOR +
-      "(?:[&,;]+" + AUTHOR + ")*";
+  private static final String AUTHOR_TEAM = AUTHOR + "(?:[&,;]+" + AUTHOR + ")*";
   static final String AUTHORSHIP =
       // ex authors
       "(?:(" + AUTHOR_TEAM + ") ?\\bex[. ])?" +
@@ -96,8 +97,8 @@ class ParsingJob implements Callable<ParsedName> {
             // avoid matching to rank markers
             + "(?!"+RANK_MARKER+"\\b)"
             + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
-            // avoid epithets ending with the unallowed endings, e.g. serovar
-            + "(?<!(?:\\bex|\\bl[ae]|\\bv[ao]n|\\bhort|"+ UNALLOWED_EPITHET_ENDING +"))(?=\\b)";
+            // avoid epithets ending with the unallowed endings, e.g. serovar and author suffices like filius
+            + "(?<!(?:\\b(?:ex|l[ae]|v[ao]n|"+AUTHOR_TOKEN_3+")\\.?|"+ UNALLOWED_EPITHET_ENDING +"))(?=\\b)";
   static final String MONOMIAL =
     "[" + NAME_LETTERS + "](?:\\.|[" + name_letters + "]+)(?:-[" + NAME_LETTERS + "]?[" + name_letters + "]+)?";
   // a pattern matching typical latin word endings. Helps identify name parts from authors
@@ -515,7 +516,6 @@ class ParsingJob implements Callable<ParsedName> {
       name = sb.toString();
       pn.setNomenclaturalNotes(notes.toString());
     }
-
 
     // manuscript names (unpublished names)
     // http://splink.cria.org.br/docs/appendix_j.pdf

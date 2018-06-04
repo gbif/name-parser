@@ -129,6 +129,7 @@ public class ParsingJobTest {
     assertAuthorshipPattern("DC.");
     assertAuthorshipPattern("de Chaudoir");
     assertAuthorshipPattern("Hilaire");
+    assertAuthorshipPattern("G.Don fil.");
     assertAuthorshipPattern("St. Hilaire",null,"St.Hilaire");
     assertAuthorshipPattern("Geoffroy St. Hilaire", null, "Geoffroy St.Hilaire");
     assertAuthorshipPattern("Acev.-Rodr.");
