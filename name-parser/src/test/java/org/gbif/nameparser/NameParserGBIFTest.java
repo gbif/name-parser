@@ -713,7 +713,7 @@ public class NameParserGBIFTest {
    * TODO: convert all test cases. Can the strain & manuscript name property be merged ???
    */
   @Test
-  public void testStrainNames() throws Exception {
+  public void strainNames() throws Exception {
     assertName("Candidatus Liberibacter solanacearum", "\"Candidatus Liberibacter solanacearum\"")
         .species("Liberibacter", "solanacearum")
         .candidatus()
@@ -1155,6 +1155,18 @@ public class NameParserGBIFTest {
     parser.parse("Salix taiwanalpina var. chingshuishanensis (S.S.Ying) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp  Y.H.Tseng ", null);
     parser.parse("Salix morrisonicola var. takasagoalpina (Koidz.) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & amp; Y.H.Tseng", null);
     parser.parse("Ficus ernanii Carauta, Pederneir., P.P.Souza, A.F.P.Machado, M.D.M.Vianna & amp; Romaniuc", null);
+  }
+
+  @Test
+  public void nomNotes() throws Exception {
+    //TODO: pro syn.
+    assertName("Combretum Loefl. (1758), nom. cons. [= Grislea L. 1753].", "Combretum")
+        .monomial("Combretum")
+        .combAuthors("1758", "Loefl.")
+        .nomNote("nom.cons.")
+        .doubtful()
+        .partial(")(= Grislea L.1753).")
+        .nothingElse();
   }
 
   @Test
@@ -1608,6 +1620,15 @@ public class NameParserGBIFTest {
   }
 
   @Test
+  public void lowerCaseNames() throws Exception {
+    assertName("abies alba Mill.", "Abies alba")
+        .species("Abies", "alba")
+        .combAuthors(null, "Mill.")
+        .type(SCIENTIFIC)
+        .nothingElse();
+  }
+
+  @Test
   public void manuscriptNames() throws Exception {
     assertName("Lepidoptera sp. JGP0404", "Lepidoptera spec.")
         .species("Lepidoptera", null)
@@ -1647,7 +1668,7 @@ public class NameParserGBIFTest {
   }
 
   @Test
-  public void testUnsupportedAuthors() throws Exception {
+  public void unsupportedAuthors() throws Exception {
     assertName(" Anolis marmoratus girafus LAZELL 1964: 377", "Anolis marmoratus girafus")
         .infraSpecies("Anolis", "marmoratus", Rank.INFRASPECIFIC_NAME, "girafus")
         .combAuthors("1964", "Lazell")

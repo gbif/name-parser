@@ -202,6 +202,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern REPL_GENUS_QUOTE = Pattern.compile("^' *(" + MONOMIAL + ") *'");
   private static final Pattern REPL_ENCLOSING_QUOTE = Pattern.compile("^[',\\s]+|[',\\s]+$");
   private static final Pattern NORM_UPPERCASE_WORDS = Pattern.compile("\\b(\\p{Lu})(\\p{Lu}{2,})\\b");
+  private static final Pattern NORM_LOWERCASE_BINOMIAL = Pattern.compile("^(" + EPHITHET + ") (" + EPHITHET + ")");
   private static final Pattern NORM_WHITESPACE = Pattern.compile("(?:\\\\[nr]|\\s)+");
   private static final Pattern REPL_UNDERSCORE = Pattern.compile("_+");
   private static final Pattern NORM_NO_SQUARE_BRACKETS = Pattern.compile("\\[(.*?)\\]");
@@ -751,8 +752,20 @@ class ParsingJob implements Callable<ParsedName> {
     }
     // capitalize all entire upper case words
     m = NORM_UPPERCASE_WORDS.matcher(name);
-    while (m.find()) {
-      name = name.replaceFirst(m.group(0), m.group(1) + m.group(2).toLowerCase());
+    if (m.find()) {
+      StringBuffer sb = new StringBuffer();
+      m.appendReplacement(sb, m.group(1) + m.group(2).toLowerCase());
+      while (m.find()) {
+        m.appendReplacement(sb, m.group(1) + m.group(2).toLowerCase());
+      }
+      m.appendTail(sb);
+      name = sb.toString();
+    }
+
+    // Capitalize potential owercase genus in binomials
+    m = NORM_LOWERCASE_BINOMIAL.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst(StringUtils.capitalize(m.group(1)) + " " + m.group(2));
     }
 
     // finally whitespace and trimming
