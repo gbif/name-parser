@@ -1,4 +1,4 @@
-// Generated from /Users/markus/code/name-parser/name-parser-grammar/src/main/resources/antlr/SciName.g4 by ANTLR 4.7
+// Generated from /Users/markus/code/name-parser/name-parser-antlr/src/main/resources/antlr/SciName.g4 by ANTLR 4.7
 package org.gbif.nameparser.antlr;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;

@@ -15,7 +15,7 @@ MONOMIAL:               LETTER_NAME_UC LETTER_NAME_LC+;
 EPITHET:                LETTER_NAME_LC LETTER_NAME_LC+;
 AUTHOR_INITIALS:        (LETTER_AUTHOR_UC (DOT|SPACE) SPACE*)+?;
 AUTHOR:                 LETTER_AUTHOR_UC LETTER_AUTHOR_UC* LETTER_AUTHOR_LC* DOT?;
-AUTHOR2:                 AUTHOR_INITIALS? LETTER_AUTHOR_UC LETTER_AUTHOR_UC* LETTER_AUTHOR_LC* DOT?;
+AUTHOR2:                AUTHOR_INITIALS? LETTER_AUTHOR_UC LETTER_AUTHOR_UC* LETTER_AUTHOR_LC* DOT?;
 AUTHOR_DELIM:           ',' | '&';
 YEAR:                   [12] DIGIT DIGIT DIGIT;
 DOT:                    '.';
@@ -69,7 +69,7 @@ alphanum: ALPH  EOF;
 
 // ParserRules
 
-scientificName :
+scientificName:
     otu
     | latin
     | virus
@@ -134,7 +134,6 @@ authorteam:
     AUTHOR
     (AUTHOR_DELIM AUTHOR)*
     ETAL?
-    {a = AUTHOR.text; System.out.println("author: "+a);}
     ;
 
 virus:

@@ -54,6 +54,11 @@
       <groupId>org.gbif</groupId>
       <artifactId>name-parser-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>name-parser-api</artifactId>
+      <classifier>tests</classifier>
+    </dependency>
 
     <!-- Logging -->
     <dependency>

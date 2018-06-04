@@ -44,6 +44,7 @@ public class NameParserANTLR implements org.gbif.nameparser.api.NameParser {
     if (Strings.isNullOrEmpty(scientificName)) {
       unparsable(NameType.NO_NAME, null);
     }
+    System.out.println("\n" + scientificName);
 
     SciNameLexer lexer = new SciNameLexer(CharStreams.fromString(scientificName));
 

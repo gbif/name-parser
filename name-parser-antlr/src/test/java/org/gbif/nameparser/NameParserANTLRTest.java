@@ -11,6 +11,7 @@ public class NameParserANTLRTest {
   @Test
   public void parse() throws UnparsableNameException {
     NameParserANTLR parser = new NameParserANTLR();
+    System.out.println(parser.parse("Abies alba Mill."));
     System.out.println(parser.parse("Abies alba L."));
     System.out.println(parser.parse("BOLD:AAA2176"));
     System.out.println(parser.parse("SH495646.07FU"));

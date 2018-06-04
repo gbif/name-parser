@@ -87,6 +87,12 @@
             </dependency>
             <dependency>
                 <groupId>org.gbif</groupId>
+                <artifactId>name-parser-api</artifactId>
+                <version>${project.version}</version>
+                <classifier>tests</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.gbif</groupId>
                 <artifactId>name-parser-gna</artifactId>
                 <version>${project.version}</version>
             </dependency>
