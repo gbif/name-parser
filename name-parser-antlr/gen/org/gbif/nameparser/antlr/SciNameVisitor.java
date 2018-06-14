@@ -11,6 +11,12 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface SciNameVisitor<T> extends ParseTreeVisitor<T> {
 	/**
+	 * Visit a parse tree produced by {@link SciNameParser#epithet2}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitEpithet2(SciNameParser.Epithet2Context ctx);
+	/**
 	 * Visit a parse tree produced by {@link SciNameParser#author}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

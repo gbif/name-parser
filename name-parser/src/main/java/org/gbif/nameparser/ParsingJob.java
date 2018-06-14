@@ -146,7 +146,18 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern INFRASPEC_UPPER = Pattern.compile("(?<=forma? )([A-Z])\\b");
   private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+[ -]?(?!"+YEAR+")[0-9]+T?)$");
   // this is only used to detect whether we have a virus name
-  public static final Pattern IS_VIRUS_PATTERN = Pattern.compile("virus(es)?\\b|\\b(viroid|(bacterio|viro)?phage(in|s)?|(alpha|beta) ?satellites?|particles?|ictv$)\\b", CASE_INSENSITIVE);
+  public static final Pattern IS_VIRUS_PATTERN = Pattern.compile("virus(es)?\\b|" +
+      "\\b(" +
+          "(bacterio|viro)?phage(in|s)?|" +
+          "particles?|" +
+          "prion|" +
+          "replicon|" +
+          "(alpha|beta|circular) ?satellites|" +
+          "[a-z]+satellite|" +
+          "vector|" +
+          "viroid|" +
+          "ictv$" +
+      ")\\b", CASE_INSENSITIVE);
   // NPV=Nuclear Polyhedrosis Virus
   // GV=Granulovirus
   public static final Pattern IS_VIRUS_PATTERN_CASE_SENSITIVE = Pattern.compile("\\b(:?[MS]?NP|G)V\\b");
@@ -235,7 +246,7 @@ class ParsingJob implements Callable<ParsedName> {
       "[, ] ?(" + YEAR_LOOSE + ")$", CASE_INSENSITIVE
   );
   private static final Pattern PLACEHOLDER_GENUS = Pattern.compile("^(In|Dummy|Missing|Temp|Unknown|Unplaced|Unspecified) (?=[a-z]+)\\b");
-  private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|deleted?|dummy|incertae sedis|mixed|not assigned|not stated|place ?holder|temp|tobedeleted|unaccepted|unallocated|unassigned|uncertain|unclassified|uncultured|undetermined|unknown|unnamed|unplaced|unspecified)";
+  private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|deleted?|dummy|incertae sedis|mixed|not assigned|not stated|place ?holder|temp|tobedeleted|unaccepted|unallocated|unassigned|uncertain|unclassed|unclassified|uncultured|undescribed|undetermined|unknown|unnamed|unplaced|unspecified)";
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
   private static final Pattern PLACEHOLDER = Pattern.compile("\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
   private static final Pattern DOUBTFUL = Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + "\":;&*+\\s,.()\\[\\]/'`´0-9-†]+$");

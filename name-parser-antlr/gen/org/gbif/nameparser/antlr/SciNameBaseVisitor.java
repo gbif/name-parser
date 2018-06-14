@@ -17,6 +17,13 @@ public class SciNameBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitEpithet2(SciNameParser.Epithet2Context ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitAuthor(SciNameParser.AuthorContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

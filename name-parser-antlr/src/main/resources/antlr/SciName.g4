@@ -12,10 +12,10 @@ NOTHO:                  'notho';
 RANK:                   'subsp'|'ssp'|'var'|'form'|'f';
 ETAL:                   ('&' | 'and' | 'et') SPACE 'al' DOT?;
 MONOMIAL:               LETTER_NAME_UC LETTER_NAME_LC+;
-EPITHET:                LETTER_NAME_LC LETTER_NAME_LC+;
+EPITHET:                LETTER_NAME_LC LETTER_NAME_LC*;
 AUTHOR_INITIALS:        (LETTER_AUTHOR_UC (DOT|SPACE) SPACE*)+?;
-AUTHOR:                 LETTER_AUTHOR_UC LETTER_AUTHOR_UC* LETTER_AUTHOR_LC* DOT?;
-AUTHOR2:                AUTHOR_INITIALS? LETTER_AUTHOR_UC LETTER_AUTHOR_UC* LETTER_AUTHOR_LC* DOT?;
+AUTHOR:                 [A-Z]+ DOT?; // LETTER_AUTHOR_LC*
+AUTHOR2:                AUTHOR_INITIALS? LETTER_AUTHOR_UC+ LETTER_AUTHOR_LC* DOT?;
 AUTHOR_DELIM:           ',' | '&';
 YEAR:                   [12] DIGIT DIGIT DIGIT;
 DOT:                    '.';
@@ -34,8 +34,8 @@ OTU_SH:                 'SH' DIGIT DIGIT DIGIT DIGIT DIGIT DIGIT '.' DIGIT DIGIT
 VIRUS:                  'virus';
 
 CONTROL:                [\u0000-\u001F]+    -> skip;
-WS:                     SPACE+    -> skip;
-ANY:                    . ;     // match any char
+//WS:                     SPACE+    -> skip;
+//ANY:                    . ;     // match any char
 
 NUC: LETTER_NAME_UC+;
 NLC: LETTER_NAME_LC+;
@@ -54,6 +54,11 @@ fragment DIGIT:              [0-9];
 fragment ALPHANUM:           [0-9A-Za-z];
 fragment SPACE :             ' ' | '\t' | '\r' | '\n';
 
+
+epithet2:
+    (HYBRID_MARKER? EPITHET)+
+    EOF
+    ;
 
 author:
     AUTHOR
@@ -131,9 +136,7 @@ basauthorship:
     ;
 
 authorteam:
-    AUTHOR
-    (AUTHOR_DELIM AUTHOR)*
-    ETAL?
+    AUTHOR (AUTHOR_DELIM AUTHOR)* ETAL?
     ;
 
 virus:
