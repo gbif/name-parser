@@ -36,7 +36,11 @@ public enum NameType {
   HYBRID_FORMULA,
 
   /**
-   * A scientific name with some informal addition like "cf." or indetermined like Abies spec.
+   * A variation of a scientific name that either adds additional notes or has some shortcomings to be classified as
+   * regular scientific names. Frequent reasons are:
+   *  - informal addition like "cf."
+   *  - indetermined like "Abies spec."
+   *  - abbreviated genus "A. alba Mill"
    */
   INFORMAL,
 
