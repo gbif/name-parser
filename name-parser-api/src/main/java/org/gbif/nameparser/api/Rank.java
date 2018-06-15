@@ -365,8 +365,10 @@ public enum Rank {
       .put(NATIO, NomCode.ZOOLOGICAL)
 
       .put(PROLES, NomCode.BOTANICAL)
+      .put(SUPERSECTION, NomCode.BOTANICAL)
       .put(SECTION, NomCode.BOTANICAL)
       .put(SUBSECTION, NomCode.BOTANICAL)
+      .put(SUPERSERIES, NomCode.BOTANICAL)
       .put(SERIES, NomCode.BOTANICAL)
       .put(SUBSERIES, NomCode.BOTANICAL)
 

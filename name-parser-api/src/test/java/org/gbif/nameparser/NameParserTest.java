@@ -266,6 +266,11 @@ public abstract class NameParserTest {
   @Test
   public void infraGeneric() throws Exception {
     // IPNI notho ranks: https://github.com/gbif/name-parser/issues/15
+    assertName("Pinus suprasect. Taeda", null, "Pinus supersect. Taeda")
+        .infraGeneric("Pinus", SUPERSECTION, "Taeda")
+        .code(NomCode.BOTANICAL)
+        .nothingElse();
+
     assertName("Aeonium nothosect. Leugalonium", null, "Aeonium nothosect. Leugalonium")
         .infraGeneric("Aeonium", SECTION, "Leugalonium")
         .notho(NamePart.INFRAGENERIC)
