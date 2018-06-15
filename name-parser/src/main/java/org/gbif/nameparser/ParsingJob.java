@@ -952,7 +952,7 @@ class ParsingJob implements Callable<ParsedName> {
 
       if (pn.getType() == null) {
         // an abbreviated name?
-        if (pn.isAbbreviated()) {
+        if (pn.isAbbreviated() || pn.isIncomplete()) {
           pn.setType(NameType.INFORMAL);
 
         } else if ("?".equals(pn.getUninomial()) || "?".equals(pn.getGenus()) || "?".equals(pn.getSpecificEpithet())) {

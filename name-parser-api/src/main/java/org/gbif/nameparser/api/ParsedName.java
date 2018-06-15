@@ -409,10 +409,17 @@ public class ParsedName {
    */
   public boolean isIndetermined() {
     return rank.isInfragenericStrictly() && uninomial == null && infragenericEpithet == null && specificEpithet == null
-        || infraspecificEpithet != null && specificEpithet == null
         || rank.isSpeciesOrBelow() && !rank.isCultivarRank() && specificEpithet == null
         || rank.isInfraspecific() && !rank.isCultivarRank() && infraspecificEpithet == null
         || rank.isCultivarRank() && cultivarEpithet == null;
+  }
+
+  /**
+   * @return true if some "higher" epithet of a name is missing, e.g. the genus in case of a species.
+   */
+  public boolean isIncomplete() {
+    return (specificEpithet != null || cultivarEpithet != null) && genus == null
+        || infraspecificEpithet != null && specificEpithet == null;
   }
 
   /**
