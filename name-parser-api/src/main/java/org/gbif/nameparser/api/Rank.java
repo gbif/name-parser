@@ -400,10 +400,10 @@ public enum Rank {
   }
 
   /**
-   * @return true for infraspecific ranks.
+   * @return true for infraspecific ranks excluding species.
    */
   public boolean isInfraspecific() {
-    return this != SPECIES && isSpeciesOrBelow();
+    return ordinal() > SPECIES.ordinal() && notOtherOrUnranked();
   }
 
   /**
@@ -440,10 +440,6 @@ public enum Rank {
   }
 
   public boolean isSpeciesOrBelow() {
-    return ordinal() >= SPECIES.ordinal() && notOtherOrUnranked();
-  }
-
-  public boolean isSpeciesAggregateOrBelow() {
     return ordinal() >= SPECIES_AGGREGATE.ordinal() && notOtherOrUnranked();
   }
 

@@ -29,6 +29,17 @@ public class RankTest {
   }
 
   @Test
+  public void testGenusGroup() {
+    for (Rank r : Rank.values()) {
+      if (r == Rank.GENUS || (r.isInfrageneric() && !r.isSpeciesOrBelow())) {
+        assertTrue(r.name(), r.isGenusGroup());
+      } else {
+        assertFalse(r.name(), r.isGenusGroup());
+      }
+    }
+  }
+
+  @Test
   @Ignore
   public void printPostgresEnum() {
     System.out.print("CREATE TYPE rank AS ENUM (");

@@ -954,7 +954,7 @@ class ParsingJob implements Callable<ParsedName> {
           pn.setDoubtful(true);
           pn.setType(NameType.INFORMAL);
 
-        } else if (!pn.getRank().isSpeciesAggregateOrBelow() && pn.isBinomial()) {
+        } else if (!pn.getRank().isSpeciesOrBelow() && pn.isBinomial()) {
           pn.addWarning(Warnings.HIGHER_RANK_BINOMIAL);
           pn.setDoubtful(true);
         }

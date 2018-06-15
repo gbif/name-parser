@@ -66,87 +66,74 @@ public class RankUtils {
   /**
    * Map of only infrageneric rank markers to their respective rank enum.
    */
-  public static final Map<String, Rank> RANK_MARKER_MAP_INFRAGENERIC;
-  static {
-    Map<String, Rank> ranks = Maps.newHashMap();
-    for (Rank r : Rank.values()) {
-      if (r.isInfrageneric() && !r.isSpeciesOrBelow() && r.getMarker() != null) {
-        ranks.put(r.getMarker().replaceAll("\\.", ""), r);
-      }
-    }
-    ranks.put("sect", SECTION);
-    ranks.put("section", SECTION);
-    ranks.put("ser", SERIES);
-    ranks.put("series", SERIES);
-    ranks.put("subg", SUBGENUS);
-    ranks.put("subgen", SUBGENUS);
-    ranks.put("subgenus", SUBGENUS);
-    ranks.put("subsect", SUBSECTION);
-    ranks.put("subsection", SUBSECTION);
-    ranks.put("subser", SUBSERIES);
-    ranks.put("subseries", SUBSERIES);
-    RANK_MARKER_MAP_INFRAGENERIC = ImmutableMap.copyOf(ranks);
-  }
+  public static final Map<String, Rank> RANK_MARKER_MAP_INFRAGENERIC = buildRankMarkerMap(
+      Arrays.stream(Rank.values()).filter(r -> r.isGenusGroup() && r != GENUS),
+
+      Maps.immutableEntry("suprasect", SUPERSECTION),
+      Maps.immutableEntry("supraser", SUPERSERIES),
+      Maps.immutableEntry("sect", SECTION),
+      Maps.immutableEntry("section", SECTION),
+      Maps.immutableEntry("ser", SERIES),
+      Maps.immutableEntry("series", SERIES),
+      Maps.immutableEntry("subg", SUBGENUS),
+      Maps.immutableEntry("subgen", SUBGENUS),
+      Maps.immutableEntry("subgenus", SUBGENUS),
+      Maps.immutableEntry("subsect", SUBSECTION),
+      Maps.immutableEntry("subsection", SUBSECTION),
+      Maps.immutableEntry("subser", SUBSERIES),
+      Maps.immutableEntry("subseries", SUBSERIES)
+  );
 
   /**
    * Map of species rank markers.
    */
-  public static final Map<String, Rank> RANK_MARKER_MAP_SPECIFIC;
-  static {
-    Map<String, Rank> ranks = Maps.newHashMap();
-    ranks.put("sl", SPECIES_AGGREGATE); // sensu latu
-    ranks.put("agg", SPECIES_AGGREGATE);
-    ranks.put("aggr", SPECIES_AGGREGATE);
-    ranks.put("sp", SPECIES);
-    ranks.put("spec", SPECIES);
-    ranks.put("species", SPECIES);
-    ranks.put("spp", SPECIES);
-    RANK_MARKER_MAP_SPECIFIC = ImmutableMap.copyOf(ranks);
-  }
+  public static final Map<String, Rank> RANK_MARKER_MAP_SPECIFIC = ImmutableMap.<String, Rank>builder()
+      .put("sl", SPECIES_AGGREGATE) // sensu lat
+      .put("agg", SPECIES_AGGREGATE)
+      .put("aggr", SPECIES_AGGREGATE)
+      .put("sp", SPECIES)
+      .put("spec", SPECIES)
+      .put("species", SPECIES)
+      .put("spp", SPECIES)
+      .build();
 
   /**
    * Map of only infraspecific rank markers to their respective rank enum.
    */
-  public static final Map<String, Rank> RANK_MARKER_MAP_INFRASPECIFIC;
-  static {
-    Map<String, Rank> ranks = Maps.newHashMap();
-    for (Rank r : Rank.values()) {
-      if (r.isInfraspecific() && r.getMarker() != null) {
-        ranks.put(r.getMarker().replaceAll("\\.", ""), r);
-      }
-    }
-    ranks.put("aberration", ABERRATION);
-    ranks.put("bv", BIOVAR);
-    ranks.put("conv", CONVARIETY);
-    ranks.put("ct", CHEMOFORM);
-    ranks.put("cv", CULTIVAR);
-    ranks.put("f", FORM);
-    ranks.put("fo", FORM);
-    ranks.put("form", FORM);
-    ranks.put("forma", FORM);
-    ranks.put("fsp", FORMA_SPECIALIS);
-    ranks.put("fspec", FORMA_SPECIALIS);
-    ranks.put("gx", GREX);
-    ranks.put("hort", CULTIVAR);
-    ranks.put("m", MORPH);
-    ranks.put("morpha", MORPH);
-    ranks.put("nat", NATIO);
-    ranks.put("proles", PROLES);
-    ranks.put("pv", PATHOVAR);
-    ranks.put("sf", SUBFORM);
-    ranks.put("ssp", SUBSPECIES);
-    ranks.put("st", STRAIN);
-    ranks.put("subf", SUBFORM);
-    ranks.put("subform", SUBFORM);
-    ranks.put("subsp", SUBSPECIES);
-    ranks.put("subv", SUBVARIETY);
-    ranks.put("subvar", SUBVARIETY);
-    ranks.put("sv", SUBVARIETY);
-    ranks.put("v", VARIETY);
-    ranks.put("var", VARIETY);
-    ranks.put("\\*+", INFRASPECIFIC_NAME);
-    RANK_MARKER_MAP_INFRASPECIFIC = ImmutableMap.copyOf(ranks);
-  }
+  public static final Map<String, Rank> RANK_MARKER_MAP_INFRASPECIFIC = buildRankMarkerMap(
+      Arrays.stream(Rank.values()).filter(Rank::isInfraspecific),
+
+      Maps.immutableEntry("aberration", ABERRATION),
+      Maps.immutableEntry("bv", BIOVAR),
+      Maps.immutableEntry("conv", CONVARIETY),
+      Maps.immutableEntry("ct", CHEMOFORM),
+      Maps.immutableEntry("cv", CULTIVAR),
+      Maps.immutableEntry("f", FORM),
+      Maps.immutableEntry("fo", FORM),
+      Maps.immutableEntry("form", FORM),
+      Maps.immutableEntry("forma", FORM),
+      Maps.immutableEntry("fsp", FORMA_SPECIALIS),
+      Maps.immutableEntry("fspec", FORMA_SPECIALIS),
+      Maps.immutableEntry("gx", GREX),
+      Maps.immutableEntry("hort", CULTIVAR),
+      Maps.immutableEntry("m", MORPH),
+      Maps.immutableEntry("morpha", MORPH),
+      Maps.immutableEntry("nat", NATIO),
+      Maps.immutableEntry("proles", PROLES),
+      Maps.immutableEntry("pv", PATHOVAR),
+      Maps.immutableEntry("sf", SUBFORM),
+      Maps.immutableEntry("ssp", SUBSPECIES),
+      Maps.immutableEntry("st", STRAIN),
+      Maps.immutableEntry("subf", SUBFORM),
+      Maps.immutableEntry("subform", SUBFORM),
+      Maps.immutableEntry("subsp", SUBSPECIES),
+      Maps.immutableEntry("subv", SUBVARIETY),
+      Maps.immutableEntry("subvar", SUBVARIETY),
+      Maps.immutableEntry("sv", SUBVARIETY),
+      Maps.immutableEntry("v", VARIETY),
+      Maps.immutableEntry("var", VARIETY),
+      Maps.immutableEntry("\\*+", INFRASPECIFIC_NAME)
+  );
 
   static class FluentHashMap<K, V> extends java.util.HashMap<K, V> {
     public FluentHashMap<K, V> with(Map<K, V> map) {
