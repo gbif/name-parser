@@ -3,6 +3,7 @@ package org.gbif.nameparser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.exception.UnparsableException;
 import org.gbif.api.model.checklistbank.ParsedName;
@@ -18,6 +19,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Set;
+
 import static org.gbif.nameparser.api.ParsedName.State;
 
 /**
@@ -194,16 +197,21 @@ public class NameParserGbifV1 implements NameParser {
 
   @VisibleForTesting
   static NameType gbifNameType(org.gbif.nameparser.api.ParsedName pn) {
+    NameType t;
     // detect name types that only exist in the GBIF API v1
     if (pn.isCandidatus()) {
-      return NameType.CANDIDATUS;
-    } else if (pn.isDoubtful()) {
-      return NameType.DOUBTFUL;
+      t = NameType.CANDIDATUS;
     } else if (pn.getCode() == NomCode.CULTIVARS || pn.getCultivarEpithet() != null) {
-      return NameType.CULTIVAR;
+      t = NameType.CULTIVAR;
+    } else {
+      // convert all others
+      t = NAME_TYPE_MAP.get(pn.getType());
     }
-    // convert all others
-    return NAME_TYPE_MAP.get(pn.getType());
+    // use doubtful in too good cases
+    if (pn.isDoubtful() && (t == NameType.SCIENTIFIC || t == NameType.CULTIVAR)) {
+      return NameType.DOUBTFUL;
+    }
+    return t;
   }
 
   @VisibleForTesting
