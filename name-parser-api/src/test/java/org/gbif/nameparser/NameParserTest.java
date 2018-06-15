@@ -251,6 +251,19 @@ public abstract class NameParserTest {
   }
 
   @Test
+  public void supraGenericIPNI() throws Exception {
+    assertName("Poaceae subtrib. Scolochloinae Soreng", null, "Scolochloinae")
+        .monomial("Scolochloinae", SUBTRIBE)
+        .combAuthors(null, "Soreng")
+        .nothingElse();
+
+    assertName("subtrib. Scolochloinae Soreng", null, "Scolochloinae")
+        .monomial("Scolochloinae", SUBTRIBE)
+        .combAuthors(null, "Soreng")
+        .nothingElse();
+  }
+
+  @Test
   public void infraGeneric() throws Exception {
     // IPNI notho ranks: https://github.com/gbif/name-parser/issues/15
     assertName("Aeonium nothosect. Leugalonium", null, "Aeonium nothosect. Leugalonium")

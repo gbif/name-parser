@@ -414,7 +414,7 @@ public enum Rank {
   }
 
   /**
-   * @return true for rank is below genus. Also incluse species and infraspecific ranks
+   * @return true for rank is below genus. Also includes species and infraspecific ranks
    */
   public boolean isInfrageneric() {
     return ordinal() > GENUS.ordinal() && notOtherOrUnranked();
@@ -453,6 +453,20 @@ public enum Rank {
 
   public boolean otherOrUnranked() {
     return this == OTHER || this == UNRANKED;
+  }
+
+  /**
+   * @return true if the rank is for family group names, i.e. between family (inclusive) and genus (exclusive).
+   */
+  public boolean isFamilyGroup() {
+    return FAMILY.ordinal() <= ordinal() && ordinal() < GENUS.ordinal();
+  }
+
+  /**
+   * @return true if the rank is for genus group names, i.e. between genus (inclusive) and species aggregate (exclusive).
+   */
+  public boolean isGenusGroup() {
+    return GENUS.ordinal() <= ordinal() && ordinal() < SPECIES_AGGREGATE.ordinal();
   }
 
   /**

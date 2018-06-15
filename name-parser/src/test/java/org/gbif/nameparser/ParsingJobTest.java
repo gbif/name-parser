@@ -16,6 +16,12 @@ public class ParsingJobTest {
   static final Pattern AUTHORSHIP_PATTERN = Pattern.compile("^" + ParsingJob.AUTHORSHIP + "$");
 
   @Test
+  public void testFamilyPrefixPattern() throws Exception {
+    assertFalse(ParsingJob.FAMILY_PREFIX.matcher("Poaceae").find());
+    assertTrue(ParsingJob.FAMILY_PREFIX.matcher("Poaceae subtrib. Cxyz").find());
+  }
+
+  @Test
   public void testEpithetPattern() throws Exception {
     Pattern epi = Pattern.compile("^"+ ParsingJob.EPHITHET+"$");
     assertTrue(epi.matcher("alba").find());

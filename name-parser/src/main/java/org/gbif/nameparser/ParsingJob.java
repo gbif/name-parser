@@ -172,6 +172,10 @@ class ParsingJob implements Callable<ParsedName> {
   private static final String CANDIDATUS = "(Candidatus\\s|Ca\\.)";
   private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS);
   private static final Pattern IS_CANDIDATUS_QUOTE_PATTERN = Pattern.compile("\"" + CANDIDATUS + "(.+)\"", CASE_INSENSITIVE);
+  @VisibleForTesting
+  static final Pattern FAMILY_PREFIX = Pattern.compile("^[A-Z][a-z]*(?:aceae|idae) +(" +
+        StringUtils.join(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.keySet(), "|") +
+      ")\\b");
   private static final Pattern SUPRA_RANK_PREFIX = Pattern.compile("^(" + StringUtils.join(
       ImmutableMap.builder()
           .putAll(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC)
@@ -458,6 +462,12 @@ class ParsingJob implements Callable<ParsedName> {
 
     if (Strings.isNullOrEmpty(name)) {
       unparsable(NameType.NO_NAME);
+    }
+
+    // remove family in front of subfamily ranks
+    m = FAMILY_PREFIX.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst("$1");
     }
 
     // check for supraspecific ranks at the beginning of the name
