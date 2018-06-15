@@ -1168,6 +1168,19 @@ public abstract class NameParserTest {
   }
 
   @Test
+  public void abbreviated() throws Exception {
+    assertName("N. giraldo", "N. giraldo")
+        .species("N.", "giraldo")
+        .type(INFORMAL)
+        .nothingElse();
+
+    assertName("B.", "B.")
+        .monomial("B.")
+        .type(INFORMAL)
+        .nothingElse();
+  }
+
+  @Test
   public void stringIndexOutOfBoundsException() throws Exception {
     parser.parse("Amblyomma americanum (Linnaeus, 1758)", null);
     parser.parse("Salix taiwanalpina var. chingshuishanensis (S.S.Ying) F.Y.Lu, C.H.Ou, Y.C.Chen, Y.S.Chi, K.C.Lu & Y.H.Tseng ", null);

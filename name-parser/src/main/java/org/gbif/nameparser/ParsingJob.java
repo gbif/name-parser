@@ -960,13 +960,25 @@ class ParsingJob implements Callable<ParsedName> {
 
       if (pn.getType() == null) {
         // a placeholder epithet only?
-        if (pn.getGenus() != null && pn.getGenus().equals("?")  ||  pn.getUninomial() != null && pn.getUninomial().equals("?")) {
-          pn.setType(NameType.PLACEHOLDER);
-
-        } else {
-          pn.setType(NameType.SCIENTIFIC);
+        if (pn.getUninomial() != null) {
+          determineMonomialNameType(pn.getUninomial());
+        } else if (pn.getGenus() != null) {
+          determineMonomialNameType(pn.getGenus());
         }
       }
+
+      // anything else looks fine!
+      if (pn.getType() == null) {
+        pn.setType(NameType.SCIENTIFIC);
+      }
+    }
+  }
+
+  private void determineMonomialNameType(String monomial) {
+    if (monomial.equals("?")) {
+      pn.setType(NameType.PLACEHOLDER);
+    } else if (monomial.endsWith(".")){
+      pn.setType(NameType.INFORMAL);
     }
   }
 
