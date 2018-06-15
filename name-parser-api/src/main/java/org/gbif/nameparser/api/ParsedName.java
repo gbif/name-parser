@@ -402,12 +402,26 @@ public class ParsedName {
     return isBinomial() && infraspecificEpithet!= null;
   }
 
+  /**
+   * Checks if a parsed name is missing final epithets compared to what is indicated by its rank.
+   *
+   * @return true if the name is not fully determined
+   */
   public boolean isIndetermined() {
     return rank.isInfragenericStrictly() && uninomial == null && infragenericEpithet == null && specificEpithet == null
-        || rank.isSpeciesOrBelow() && specificEpithet == null
-        || rank.isCultivarRank() && cultivarEpithet == null
+        || infraspecificEpithet != null && specificEpithet == null
+        || rank.isSpeciesOrBelow() && !rank.isCultivarRank() && specificEpithet == null
         || rank.isInfraspecific() && !rank.isCultivarRank() && infraspecificEpithet == null
-        || infraspecificEpithet != null && specificEpithet == null;
+        || rank.isCultivarRank() && cultivarEpithet == null;
+  }
+
+  /**
+   * @return true if the name contains an abbreviated genus or uninomial
+   */
+  public boolean isAbbreviated() {
+    return uninomial != null && uninomial.endsWith(".") ||
+        genus != null && genus.endsWith(".") ||
+        specificEpithet != null && specificEpithet.endsWith(".");
   }
 
   /**

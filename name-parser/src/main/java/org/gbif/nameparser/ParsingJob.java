@@ -935,21 +935,13 @@ class ParsingJob implements Callable<ParsedName> {
         setTypeIfNull(pn, NameType.INFORMAL);
 
       } else if (pn.getRank().notOtherOrUnranked()) {
-        if (pn.getRank().equals(Rank.CULTIVAR) && pn.getCultivarEpithet() == null) {
-          pn.addWarning(Warnings.INDET_CULTIVAR);
+        if (pn.isIndetermined()) {
           pn.setType(NameType.INFORMAL);
+          pn.addWarning(Warnings.INDETERMINED);
 
         } else if (pn.getRank().isSupraspecific() && (pn.getSpecificEpithet() != null || pn.getInfraspecificEpithet() != null)) {
           pn.addWarning(Warnings.RANK_MISMATCH);
           pn.setDoubtful(true);
-          pn.setType(NameType.INFORMAL);
-
-        } else if (pn.getRank().isSpeciesOrBelow() && pn.getRank().isRestrictedToCode()!= NomCode.CULTIVARS && !pn.isBinomial()) {
-          pn.addWarning(Warnings.INDET_SPECIES);
-          pn.setType(NameType.INFORMAL);
-
-        } else if (pn.getRank().isInfraspecific() && pn.getRank().isRestrictedToCode()!= NomCode.CULTIVARS && pn.getInfraspecificEpithet() == null) {
-          pn.addWarning(Warnings.INDET_INFRASPECIES);
           pn.setType(NameType.INFORMAL);
 
         } else if (!pn.getRank().isSpeciesAggregateOrBelow() && pn.isBinomial()) {
@@ -959,26 +951,19 @@ class ParsingJob implements Callable<ParsedName> {
       }
 
       if (pn.getType() == null) {
-        // a placeholder epithet only?
-        if (pn.getUninomial() != null) {
-          determineMonomialNameType(pn.getUninomial());
-        } else if (pn.getGenus() != null) {
-          determineMonomialNameType(pn.getGenus());
+        // an abbreviated name?
+        if (pn.isAbbreviated()) {
+          pn.setType(NameType.INFORMAL);
+
+        } else if ("?".equals(pn.getUninomial()) || "?".equals(pn.getGenus()) || "?".equals(pn.getSpecificEpithet())) {
+          // a placeholder epithet only
+          pn.setType(NameType.PLACEHOLDER);
+
+        } else {
+          // anything else looks fine!
+          pn.setType(NameType.SCIENTIFIC);
         }
       }
-
-      // anything else looks fine!
-      if (pn.getType() == null) {
-        pn.setType(NameType.SCIENTIFIC);
-      }
-    }
-  }
-
-  private void determineMonomialNameType(String monomial) {
-    if (monomial.equals("?")) {
-      pn.setType(NameType.PLACEHOLDER);
-    } else if (monomial.endsWith(".")){
-      pn.setType(NameType.INFORMAL);
     }
   }
 
