@@ -90,7 +90,7 @@ public class ParsedNameTest {
     pn = new ParsedName();
     pn.setGenus("Abies");
     pn.setInfraspecificEpithet("alpina");
-    assertTrue(pn.isIndetermined());
+    assertFalse(pn.isIndetermined());
 
     pn.setSpecificEpithet("alba");
     assertFalse(pn.isIndetermined());
@@ -112,4 +112,18 @@ public class ParsedNameTest {
     assertFalse(pn.isIndetermined());
   }
 
+  @Test
+  public void testIncomplete() throws Exception {
+    ParsedName pn = new ParsedName();
+    assertFalse(pn.isIncomplete());
+
+    pn.setGenus("Abies");
+    assertFalse(pn.isIncomplete());
+
+    pn.setSpecificEpithet("vulgaris");
+    assertFalse(pn.isIncomplete());
+
+    pn.setGenus(null);
+    assertTrue(pn.isIncomplete());
+  }
 }
