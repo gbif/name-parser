@@ -189,6 +189,7 @@ class ParsingJob implements Callable<ParsedName> {
       // allow for larva/adult life stage indicators: http://dev.gbif.org/issues/browse/POR-3000
       "[. ]?(?:Ad|Lv)?\\.?" +
       "$");
+  private static final Pattern FILIUS_AT_END = Pattern.compile("[ .]f\\.?$");
   // name normalising
   static final Pattern EXTRACT_SENSU = Pattern.compile(" ?\\b" +
       "(" +
@@ -579,7 +580,7 @@ class ParsingJob implements Callable<ParsedName> {
     m = RANK_MARKER_AT_END.matcher(name);
     // f. is a marker for forms, but more often also found in authorships as "filius" - son of.
     // so ignore those
-    if (m.find() && !(name.endsWith(" f.") || name.endsWith(" f"))) {
+    if (m.find() && !FILIUS_AT_END.matcher(name).find()) {
       // use as rank unless we already have a cultivar
       ignoreAuthorship = true;
       if (pn.getCultivarEpithet() == null) {

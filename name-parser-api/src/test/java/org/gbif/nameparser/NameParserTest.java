@@ -870,6 +870,11 @@ public abstract class NameParserTest {
 
   @Test
   public void authorVariations() throws Exception {
+    assertName("Modiola caroliniana L.f", "Modiola caroliniana")
+        .species("Modiola", "caroliniana")
+        .combAuthors(null, "L.f")
+        .nothingElse();
+
     assertName("Modiola caroliniana (L.) G. Don filius", "Modiola caroliniana")
         .species("Modiola", "caroliniana")
         .basAuthors(null, "L.")
