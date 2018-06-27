@@ -93,7 +93,7 @@ class ParsingJob implements Callable<ParsedName> {
 
   private static final String UNALLOWED_EPITHET_ENDING =
       "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
-  static final String EPHITHET = "(?:[0-9]+-?|[doml]'|(?:van|novae) [a-z])?"
+  static final String EPHITHET = "(?:[0-9]+-?|[a-z]-|[doml]'|(?:van|novae) [a-z])?"
             // avoid matching to rank markers
             + "(?!"+RANK_MARKER+"\\b)"
             + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"

@@ -73,6 +73,14 @@ public abstract class NameParserTest {
   }
 
   @Test
+  public void specialEpithets() throws Exception {
+    assertName("Gracillaria v-flava Haworth, 1828", "Gracillaria v-flava")
+        .species("Gracillaria", "v-flava")
+        .combAuthors("1828", "Haworth")
+        .nothingElse();
+  }
+
+  @Test
   public void capitalAuthors() throws Exception {
     assertName("Anniella nigra FISCHER 1885", "Anniella nigra")
         .species("Anniella", "nigra")
@@ -870,6 +878,22 @@ public abstract class NameParserTest {
 
   @Test
   public void authorVariations() throws Exception {
+    // turkish chars
+    assertName("Stachys marashica Ilçim, Çenet & Dadandi", "Stachys marashica")
+        .species("Stachys", "marashica")
+        .combAuthors(null, "Ilçim", "Çenet", "Dadandi")
+        .nothingElse();
+
+    assertName("Viola bocquetiana S. Yildirimli", "Viola bocquetiana")
+        .species("Viola", "bocquetiana")
+        .combAuthors(null, "S.Yildirimli")
+        .nothingElse();
+
+    assertName("Anatolidamnicola gloeri subsp. gloeri Şahin, Koca & Yildirim, 2012", "Anatolidamnicola gloeri subsp. gloeri")
+        .infraSpecies("Anatolidamnicola", "gloeri", Rank.SUBSPECIES, "gloeri")
+        .combAuthors("2012", "Şahin", "Koca", "Yildirim")
+        .nothingElse();
+
     assertName("Modiola caroliniana L.f", "Modiola caroliniana")
         .species("Modiola", "caroliniana")
         .combAuthors(null, "L.f")
@@ -1003,6 +1027,7 @@ public abstract class NameParserTest {
       ParsedName n = parser.parse(name, null);
       assertTrue(name, n.getState().isParsed());
       assertTrue(name, n.hasAuthorship());
+      assertEquals(NameType.SCIENTIFIC, n.getType());
     }
   }
 
