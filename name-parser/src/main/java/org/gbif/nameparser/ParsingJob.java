@@ -1012,6 +1012,22 @@ class ParsingJob implements Callable<ParsedName> {
 
       } else if (pn.isCandidatus() || pn.getStrain() != null) {
         pn.setCode(NomCode.BACTERIAL);
+
+      } else if (pn.getBasionymAuthorship().getYear() != null || pn.getCombinationAuthorship().getYear() != null) {
+        // if years are given its a zoological name
+        pn.setCode(NomCode.ZOOLOGICAL);
+
+      } else if (!pn.getBasionymAuthorship().isEmpty()) {
+        if (pn.getCombinationAuthorship().isEmpty()) {
+          // if only the basionym authorship is given its a zoological name!
+          pn.setCode(NomCode.ZOOLOGICAL);
+
+        } else {
+          // if both the basionym and combination authorship is given its a botanical name!
+          pn.setCode(NomCode.BOTANICAL);
+        }
+      } else if (pn.getNomenclaturalNotes() != null && pn.getNomenclaturalNotes().contains("illeg")) {
+        pn.setCode(NomCode.BOTANICAL);
       }
     }
   }

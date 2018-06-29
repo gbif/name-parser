@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import static org.gbif.nameparser.api.NamePart.INFRASPECIFIC;
 import static org.gbif.nameparser.api.NamePart.SPECIFIC;
 import static org.gbif.nameparser.api.NameType.*;
+import static org.gbif.nameparser.api.NomCode.BACTERIAL;
 import static org.gbif.nameparser.api.NomCode.BOTANICAL;
 import static org.gbif.nameparser.api.NomCode.ZOOLOGICAL;
 import static org.gbif.nameparser.api.Rank.*;
@@ -43,11 +44,13 @@ public abstract class NameParserTest {
     assertName("Dysponetus bulbosus Hartmann-Schroder 1982", "Dysponetus bulbosus")
         .species("Dysponetus", "bulbosus")
         .combAuthors("1982", "Hartmann-Schroder")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Zophosis persis (Chatanay 1914)", "Zophosis persis")
         .species("Zophosis", "persis")
         .basAuthors("1914", "Chatanay")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Abies alba Mill.", "Abies alba")
@@ -69,6 +72,7 @@ public abstract class NameParserTest {
         .species("Agrostis", "hyemalis")
         .combAuthors(null, "Britton", "Sterns", "Poggenb.")
         .basAuthors(null, "Walter")
+        .code(BOTANICAL)
         .nothingElse();
   }
 
@@ -77,6 +81,7 @@ public abstract class NameParserTest {
     assertName("Gracillaria v-flava Haworth, 1828", "Gracillaria v-flava")
         .species("Gracillaria", "v-flava")
         .combAuthors("1828", "Haworth")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -85,15 +90,17 @@ public abstract class NameParserTest {
     assertName("Anniella nigra FISCHER 1885", "Anniella nigra")
         .species("Anniella", "nigra")
         .combAuthors("1885", "Fischer")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
   @Test
   public void infraSpecies() throws Exception {
-    assertName("Poa pratensis subsp. anceps (Gaudin) Dumort., 1824", Rank.SPECIES, "Poa pratensis subsp. anceps")
+    assertName("Poa pratensis subsp. anceps (Gaudin) Dumort., 1824", Rank.SPECIES, "Poa pratensis anceps")
         .infraSpecies("Poa", "pratensis", Rank.SUBSPECIES, "anceps")
         .basAuthors(null, "Gaudin")
         .combAuthors("1824", "Dumort.")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Abies alba ssp. alpina Mill.", "Abies alba subsp. alpina")
@@ -109,12 +116,15 @@ public abstract class NameParserTest {
     assertName("Pseudomonas syringae pv. aceris (Ark, 1939) Young, Dye & Wilkie, 1978", "Pseudomonas syringae pv. aceris")
         .infraSpecies("Pseudomonas", "syringae", PATHOVAR, "aceris")
         .combAuthors("1978", "Young", "Dye", "Wilkie")
-        .basAuthors("1939", "Ark");
+        .basAuthors("1939", "Ark")
+        .code(BACTERIAL)
+        .nothingElse();
 
     assertName("Agaricus compactus sarcocephalus (Fr.) Fr. ", "Agaricus compactus sarcocephalus")
         .infraSpecies("Agaricus", "compactus", INFRASPECIFIC_NAME, "sarcocephalus")
         .combAuthors(null, "Fr.")
         .basAuthors(null, "Fr.")
+        .code(BOTANICAL)
         .nothingElse();
 
     assertName("Baccharis microphylla Kunth var. rhomboidea Wedd. ex Sch. Bip. (nom. nud.)", "Baccharis microphylla var. rhomboidea")
@@ -140,6 +150,7 @@ public abstract class NameParserTest {
         .basAuthors(null, "Burm.f.")
         .combExAuthors("hort.")
         .combAuthors(null, "Hoffmanns.")
+        .code(BOTANICAL)
         .nothingElse();
 
     // In botany (99% of ex author use) the ex author comes first, see https://en.wikipedia.org/wiki/Author_citation_(botany)#Usage_of_the_term_.22ex.22
@@ -195,6 +206,7 @@ public abstract class NameParserTest {
         .infraSpecies("Poa", "pratensis", INFRASUBSPECIFIC_NAME, "primula")
         .combAuthors("1913", "Rouy")
         .basAuthors(null, "L.")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Bombus sichelii alticola latofasciatus", "Bombus sichelii latofasciatus")
@@ -227,6 +239,7 @@ public abstract class NameParserTest {
     assertName("Acripeza Guérin-Ménéville 1838", "Acripeza")
         .monomial("Acripeza")
         .combAuthors("1838", "Guérin-Ménéville")
+        .code(NomCode.ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -248,12 +261,14 @@ public abstract class NameParserTest {
         .species("Abies", "denheyeri")
         .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
         .remarks("in Eghbalian, Khanjani & Ueckermann")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Mica Budde-Lund in Voeltzkow, 1908", "Mica")
         .monomial("Mica")
         .combAuthors("1908", "Budde-Lund")
         .remarks("in Voeltzkow")
+        .code(NomCode.ZOOLOGICAL)
         .nothingElse();
 
   }
@@ -330,17 +345,20 @@ public abstract class NameParserTest {
         .infraGeneric("Polygonum", SUBGENUS, "Bistorta")
         .combAuthors(null, "Zernov")
         .basAuthors(null, "L.")
+        .code(BOTANICAL)
         .nothingElse();
 
     assertName("Arrhoges (Antarctohoges)", "Arrhoges")
         .monomial("Arrhoges")
         .basAuthors(null, "Antarctohoges")
+        .code(NomCode.ZOOLOGICAL)
         .nothingElse();
 
     assertName("Festuca subg. Schedonorus (P. Beauv. ) Peterm.","Festuca subgen. Schedonorus")
         .infraGeneric("Festuca", SUBGENUS, "Schedonorus")
         .combAuthors(null, "Peterm.")
         .basAuthors(null, "P.Beauv.")
+        .code(NomCode.BOTANICAL)
         .nothingElse();
 
     assertName("Catapodium subg.Agropyropsis  Trab.", "Catapodium subgen. Agropyropsis")
@@ -357,6 +375,7 @@ public abstract class NameParserTest {
         .monomial("Woodsiaceae", FAMILY)
         .combAuthors(null, "Herter")
         .basAuthors(null, "Hooker")
+        .code(NomCode.BOTANICAL)
         .nothingElse();
   }
 
@@ -366,12 +385,14 @@ public abstract class NameParserTest {
         .infraSpecies("Diatrypella", "favacea", VARIETY, "favacea")
         .combAuthors(null, "Ces.", "De Not.")
         .basAuthors(null, "Fr.")
+        .code(BOTANICAL)
         .nothingElse();
 
     assertName("Protoventuria rosae (De Not.) Berl. & Sacc.", "Protoventuria rosae")
         .species("Protoventuria", "rosae")
         .combAuthors(null, "Berl.", "Sacc.")
         .basAuthors(null, "De Not.")
+        .code(BOTANICAL)
         .nothingElse();
 
     assertName("Hormospora De Not.", "Hormospora")
@@ -406,6 +427,8 @@ public abstract class NameParserTest {
         .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
         .type(PLACEHOLDER)
         .remarks("in Eghbalian, Khanjani & Ueckermann")
+        //hm, is this correct? maybe better not parse the in authorship year???
+        .code(NomCode.ZOOLOGICAL)
         .nothingElse();
 
     assertName("\"? gryphoidis", "? gryphoidis")
@@ -418,12 +441,14 @@ public abstract class NameParserTest {
         .basAuthors("1870", "Bourguignat")
         .combAuthors("1909", "Schoepf.")
         .type(PLACEHOLDER)
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Missing penchinati Bourguignat, 1870", "? penchinati")
         .species("?", "penchinati")
         .combAuthors("1870", "Bourguignat")
         .type(PLACEHOLDER)
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -441,12 +466,14 @@ public abstract class NameParserTest {
         .infraSpecies("Agaricus", "compactus", INFRASPECIFIC_NAME, "sarcocephalus")
         .combAuthors(null, "Fr.")
         .basAuthors(null, "Fr.")
+        .code(BOTANICAL)
         .nothingElse();
 
     assertName("Agaricus compactus sarcocephalus (Fr. : Fr.) Fr. ", "Agaricus compactus sarcocephalus")
         .infraSpecies("Agaricus", "compactus", INFRASPECIFIC_NAME, "sarcocephalus")
         .combAuthors(null, "Fr.")
         .basAuthors(null, "Fr.")
+        .code(BOTANICAL)
         .nothingElse();
   }
 
@@ -566,22 +593,26 @@ public abstract class NameParserTest {
     assertName("Actinomma leptodermum longispinum Cortese & Bjørklund 1998", "Actinomma leptodermum longispinum")
         .infraSpecies("Actinomma", "leptodermum", INFRASPECIFIC_NAME, "longispinum")
         .combAuthors("1998", "Cortese", "Bjørklund")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Arachnosphaera dichotoma  Jørgensen, 1900", "Arachnosphaera dichotoma")
         .species("Arachnosphaera", "dichotoma")
         .combAuthors("1900", "Jørgensen")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Hexaconthium pachydermum forma legitime Cortese & Bjørklund 1998","Hexaconthium pachydermum f. legitime")
         .infraSpecies("Hexaconthium", "pachydermum", FORM, "legitime")
         .combAuthors("1998", "Cortese", "Bjørklund")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Hexaconthium pachydermum form A Cortese & Bjørklund 1998","Hexaconthium pachydermum f. A")
         .infraSpecies("Hexaconthium", "pachydermum", FORM, "A")
         .combAuthors("1998", "Cortese", "Bjørklund")
         .type(INFORMAL)
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Trisulcus aff. nana  (Popofsky, 1913), Petrushevskaya, 1971", "Trisulcus nana")
@@ -590,24 +621,28 @@ public abstract class NameParserTest {
         .combAuthors("1971", "Petrushevskaya")
         .type(INFORMAL)
         .remarks("aff.")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Tripodiscium gephyristes  (Hülseman, 1963) BJ&KR-Atsdatabanken", "Tripodiscium gephyristes")
         .species("Tripodiscium", "gephyristes")
         .basAuthors("1963", "Hülseman")
         .combAuthors(null, "BJ", "KR-Atsdatabanken")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Protocystis xiphodon  (Haeckel, 1887), Borgert, 1901", "Protocystis xiphodon")
         .species("Protocystis", "xiphodon")
         .basAuthors("1887", "Haeckel")
         .combAuthors("1901", "Borgert")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Acrosphaera lappacea  (Haeckel, 1887) Takahashi, 1991", "Acrosphaera lappacea")
         .species("Acrosphaera", "lappacea")
         .basAuthors("1887", "Haeckel")
         .combAuthors("1991", "Takahashi")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -681,6 +716,7 @@ public abstract class NameParserTest {
         .basAuthors(null, "Rothm.")
         .combAuthors(null, "Schidlay")
         .notho(INFRASPECIFIC)
+        .code(NomCode.BOTANICAL)
         .nothingElse();
 
     assertHybridFormula("Asplenium rhizophyllum DC. x ruta-muraria E.L. Braun 1939");
@@ -771,11 +807,13 @@ public abstract class NameParserTest {
     assertName("Huaiyuanella Xing, Yan & Yin, 1984", "Huaiyuanella")
         .monomial("Huaiyuanella")
         .combAuthors("1984", "Xing", "Yan", "Yin")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Caveasphaera Xiao & Knoll, 2000", "Caveasphaera")
         .monomial("Caveasphaera")
         .combAuthors("2000", "Xiao", "Knoll")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -889,9 +927,10 @@ public abstract class NameParserTest {
         .combAuthors(null, "S.Yildirimli")
         .nothingElse();
 
-    assertName("Anatolidamnicola gloeri subsp. gloeri Şahin, Koca & Yildirim, 2012", "Anatolidamnicola gloeri subsp. gloeri")
+    assertName("Anatolidamnicola gloeri subsp. gloeri Şahin, Koca & Yildirim, 2012", "Anatolidamnicola gloeri gloeri")
         .infraSpecies("Anatolidamnicola", "gloeri", Rank.SUBSPECIES, "gloeri")
         .combAuthors("2012", "Şahin", "Koca", "Yildirim")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Modiola caroliniana L.f", "Modiola caroliniana")
@@ -903,12 +942,14 @@ public abstract class NameParserTest {
         .species("Modiola", "caroliniana")
         .basAuthors(null, "L.")
         .combAuthors(null, "G.Don filius")
+        .code(NomCode.BOTANICAL)
         .nothingElse();
 
     assertName("Modiola caroliniana (L.) G. Don fil.", "Modiola caroliniana")
         .species("Modiola", "caroliniana")
         .basAuthors(null, "L.")
         .combAuthors(null, "G.Don fil.")
+        .code(NomCode.BOTANICAL)
         .nothingElse();
 
     assertName("Cirsium creticum d'Urv.", "Cirsium creticum")
@@ -936,6 +977,7 @@ public abstract class NameParserTest {
     assertName("Bolivina albatrossi Cushman Em. Sellier de Civrieux, 1976", "Bolivina albatrossi")
         .species("Bolivina", "albatrossi")
         .combAuthors("1976", "Cushman Em.Sellier de Civrieux")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     // http://dev.gbif.org/issues/browse/POR-101
@@ -963,6 +1005,7 @@ public abstract class NameParserTest {
         .infraSpecies("Navicula", "ambigua", Rank.FORM, "craticularis")
         .combAuthors("1898", "Istvnffi")
         .doubtful()
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Cestodiscus gemmifer F.S.Castracane degli Antelminelli", "Cestodiscus gemmifer")
@@ -997,6 +1040,7 @@ public abstract class NameParserTest {
         .species("Platycarpha", "glomerata")
         .basAuthors(null, "Thunberg")
         .combAuthors(null, "A.P.de Candolle")
+        .code(NomCode.BOTANICAL)
         .nothingElse();
 
   }
@@ -1010,6 +1054,7 @@ public abstract class NameParserTest {
     assertName("† Tuarangiida MacKinnon, 1982", "Tuarangiida")
         .monomial("Tuarangiida")
         .combAuthors("1982", "MacKinnon")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -1212,6 +1257,7 @@ public abstract class NameParserTest {
         .combAuthors("1971", "Petrushevskaya")
         .type(INFORMAL)
         .remarks("aff.")
+        .code(NomCode.ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -1246,6 +1292,7 @@ public abstract class NameParserTest {
         .nomNote("nom.cons.")
         .doubtful()
         .partial(")(= Grislea L.1753).")
+        .code(NomCode.ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -1255,6 +1302,7 @@ public abstract class NameParserTest {
         .monomial("Dyadobacter")
         .basAuthors("2000", "Chelius", "Triplett")
         .sensu("emend. Reddy & Garcia-Pichel, 2005")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Thalassiosira praeconvexa Burckle emend Gersonde & Schrader, 1984", "Thalassiosira praeconvexa")
@@ -1280,6 +1328,7 @@ public abstract class NameParserTest {
         .basAuthors(null, "Coker")
         .combAuthors("1950", "Corner")
         .sensu("ss. auct. europ.")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Thelephora cuticularis Berk. ss. auct. europ.", "Thelephora cuticularis")
@@ -1304,12 +1353,14 @@ public abstract class NameParserTest {
         .species("Hebeloma", "album")
         .combAuthors("1900", "Peck")
         .sensu("non ss. auct. europ.")
+        .code(NomCode.ZOOLOGICAL)
         .nothingElse();
 
     assertName("Nitocris (Nitocris) similis Breuning, 1956 (nec Gahan, 1893)", "Nitocris similis")
         .binomial("Nitocris", "Nitocris", "similis", Rank.SPECIES)
         .combAuthors("1956", "Breuning")
         .sensu("nec Gahan, 1893")
+        .code(NomCode.ZOOLOGICAL)
         .nothingElse();
 
     assertName("Bartlingia Brongn. non Rchb. 1824 nec F.Muell. 1882", "Bartlingia")
@@ -1391,6 +1442,7 @@ public abstract class NameParserTest {
     assertName("Crassatellites janus Hedley, 1906", "Crassatellites janus")
         .species("Crassatellites", "janus")
         .combAuthors("1906", "Hedley")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Ypsolophus satellitella", "Ypsolophus satellitella")
@@ -1417,21 +1469,25 @@ public abstract class NameParserTest {
     assertName("Junellia o'donelli Moldenke, 1946", "Junellia o'donelli")
         .species("Junellia", "o'donelli")
         .combAuthors("1946", "Moldenke")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Trophon d'orbignyi Carcelles, 1946", "Trophon d'orbignyi")
         .species("Trophon", "d'orbignyi")
         .combAuthors("1946", "Carcelles")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Arca m'coyi Tenison-Woods, 1878", "Arca m'coyi")
         .species("Arca", "m'coyi")
         .combAuthors("1878", "Tenison-Woods")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Nucula m'andrewii Hanley, 1860", "Nucula m'andrewii")
         .species("Nucula", "m'andrewii")
         .combAuthors("1860", "Hanley")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Eristalis l'herminierii Macquart", "Eristalis l'herminierii")
@@ -1594,9 +1650,10 @@ public abstract class NameParserTest {
    */
   @Test
   public void vulpes() throws Exception {
-    assertName("Vulpes vulpes sp. silaceus Miller, 1907", "Vulpes vulpes subsp. silaceus")
+    assertName("Vulpes vulpes sp. silaceus Miller, 1907", "Vulpes vulpes silaceus")
         .infraSpecies("Vulpes", "vulpes", Rank.SUBSPECIES, "silaceus")
         .combAuthors("1907", "Miller")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -1613,16 +1670,19 @@ public abstract class NameParserTest {
     assertName("Abaxisotima acuminata (Wang & Liu, 1996)", "Abaxisotima acuminata")
         .species("Abaxisotima", "acuminata")
         .basAuthors("1996", "Wang", "Liu")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Abaxisotima acuminata (Wang, Yuwen & Xian-wei Liu, 1996)", "Abaxisotima acuminata")
         .species("Abaxisotima", "acuminata")
         .basAuthors("1996", "Wang", "Yuwen", "Xian-wei Liu")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Abaxisotima bicolor (Liu, Xian-wei, Z. Zheng & G. Xi, 1991)", "Abaxisotima bicolor")
         .species("Abaxisotima", "bicolor")
         .basAuthors("1991", "Liu", "Xian-wei", "Z.Zheng", "G.Xi")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -1635,6 +1695,7 @@ public abstract class NameParserTest {
         .species("Merulius", "lacrimans")
         .combAuthors(null, "Schum.")
         .basAuthors(null, "Wulfen")
+        .code(BOTANICAL)
         .nothingElse();
 
     assertName("Merulius lacrimans (Wulfen) Schum. : Fr.", "Merulius lacrimans")
@@ -1642,6 +1703,7 @@ public abstract class NameParserTest {
         .combAuthors(null, "Schum.")
         .basAuthors(null, "Wulfen")
         .sanctAuthor("Fr.")
+        .code(BOTANICAL)
         .nothingElse();
 
     //assertParsedParts("", null, "Merulius", "lacrimans", null, null, "Schum.", null, "Wulfen : Fr.", null);
@@ -1656,9 +1718,10 @@ public abstract class NameParserTest {
   @Test
   public void yearVariations() throws Exception {
     assertName("Deudorix epijarbas turbo Fruhstorfer, [1912]", "Deudorix epijarbas turbo")
-          .infraSpecies("Deudorix", "epijarbas", Rank.INFRASPECIFIC_NAME, "turbo")
-          .combAuthors("1912", "Fruhstorfer")
-          .nothingElse();
+        .infraSpecies("Deudorix", "epijarbas", Rank.INFRASPECIFIC_NAME, "turbo")
+        .combAuthors("1912", "Fruhstorfer")
+        .code(NomCode.ZOOLOGICAL)
+        .nothingElse();
   }
 
   @Test
@@ -1666,36 +1729,43 @@ public abstract class NameParserTest {
     assertName("Ophidocampa tapacumae Ehrenberg, 1870, 1869", "Ophidocampa tapacumae")
         .species("Ophidocampa", "tapacumae")
         .combAuthors("1870", "Ehrenberg")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Brachyspira Hovind-Hougen, Birch-Andersen, Henrik-Nielsen, Orholm, Pedersen, Teglbjaerg & Thaysen, 1983, 1982", "Brachyspira")
         .monomial("Brachyspira")
         .combAuthors("1983", "Hovind-Hougen", "Birch-Andersen", "Henrik-Nielsen", "Orholm", "Pedersen", "Teglbjaerg", "Thaysen")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Gyrosigma angulatum var. gamma Griffith & Henfrey, 1860, 1856", "Gyrosigma angulatum var. gamma")
         .infraSpecies("Gyrosigma", "angulatum", Rank.VARIETY, "gamma")
         .combAuthors("1860", "Griffith", "Henfrey")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Ctenotus alacer Storr, 1970 [\"1969\"]", "Ctenotus alacer")
         .species("Ctenotus", "alacer")
         .combAuthors("1970", "Storr")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Ctenotus alacer Storr, 1970 (imprint 1969)", "Ctenotus alacer")
         .species("Ctenotus", "alacer")
         .combAuthors("1970", "Storr")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Ctenotus alacer Storr, 1887 (\"1886-1888\")", "Ctenotus alacer")
         .species("Ctenotus", "alacer")
         .combAuthors("1887", "Storr")
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Melanargia halimede menetriesi Wagener, 1959 & 1961", "Melanargia halimede menetriesi")
         .infraSpecies("Melanargia", "halimede", Rank.INFRASPECIFIC_NAME, "menetriesi")
         .combAuthors("1959", "Wagener")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -1753,6 +1823,7 @@ public abstract class NameParserTest {
         .infraSpecies("Anolis", "marmoratus", Rank.INFRASPECIFIC_NAME, "girafus")
         .combAuthors("1964", "Lazell")
         .partial(":377")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
