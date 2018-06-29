@@ -332,6 +332,7 @@ public enum Rank {
    * so one cannot say if its higher or lower than a species for example.
    */
   private static final Set<Rank> UNCOMPARABLE_RANKS = ImmutableSet.of(
+      SUPRAGENERIC_NAME,
       INFRAGENERIC_NAME,
       INFRASPECIFIC_NAME,
       INFRASUBSPECIFIC_NAME,
