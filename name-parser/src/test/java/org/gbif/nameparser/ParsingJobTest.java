@@ -47,6 +47,7 @@ public class ParsingJobTest {
 
   @Test
   public void testAuthorteam() throws Exception {
+    assertAuthorTeamPattern("van der Wulp",  "van der Wulp");
     assertAuthorTeamPattern("Petzold & G.Kirchn.",  "Petzold", "G.Kirchn.");
     assertAuthorTeamPattern("Britton, Sterns, & Poggenb.",  "Britton", "Sterns", "Poggenb.");
     assertAuthorTeamPattern("Van Heurck & Müll. Arg.",  "Van Heurck", "Müll.Arg.");

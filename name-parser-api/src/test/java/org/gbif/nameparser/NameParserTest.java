@@ -916,6 +916,13 @@ public abstract class NameParserTest {
 
   @Test
   public void authorVariations() throws Exception {
+    // van der
+    assertName("Megistocera tenuis (van der Wulp, 1885)", "Megistocera tenuis")
+        .species("Megistocera", "tenuis")
+        .basAuthors("1885", "van der Wulp")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
     // turkish chars
     assertName("Stachys marashica Ilçim, Çenet & Dadandi", "Stachys marashica")
         .species("Stachys", "marashica")
