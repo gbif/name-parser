@@ -400,9 +400,12 @@ public class NameFormatter {
     if (n.getBasionymAuthorship().exists()) {
       sb.append("(");
       appendAuthorship(sb, n.getBasionymAuthorship(), true);
-      sb.append(") ");
+      sb.append(")");
     }
     if (n.getCombinationAuthorship().exists()) {
+      if (n.getBasionymAuthorship().exists()) {
+        sb.append(" ");
+      }
       appendAuthorship(sb, n.getCombinationAuthorship(), true);
       // Render sanctioning author via colon:
       // http://www.iapt-taxon.org/nomen/main.php?page=r50E

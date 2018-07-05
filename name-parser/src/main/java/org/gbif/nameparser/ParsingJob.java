@@ -255,7 +255,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
   private static final Pattern PLACEHOLDER = Pattern.compile("\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
   private static final Pattern DOUBTFUL = Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + "\":;&*+\\s,.()\\[\\]/'`´0-9-†]+$");
-  private static final Pattern DOUBTFUL2 = Pattern.compile("\\bnull\\b");
+  private static final Pattern DOUBTFUL_NULL = Pattern.compile("\\bnull\\b", CASE_INSENSITIVE);
   private static final Pattern XML_ENTITY_STRIP = Pattern.compile("&\\s*([a-z]+)\\s*;");
   // matches badly formed amoersands which are important in names / authorships
   private static final Pattern AMPERSAND_ENTITY = Pattern.compile("& *amp +");
@@ -986,7 +986,7 @@ class ParsingJob implements Callable<ParsedName> {
       pn.addWarning(Warnings.UNUSUAL_CHARACTERS);
 
     } else if (pn.getType().isParsable()){
-      m = DOUBTFUL2.matcher(scientificName);
+      m = DOUBTFUL_NULL.matcher(scientificName);
       if (m.find()) {
         pn.setDoubtful(true);
         pn.addWarning(Warnings.NULL_EPITHET);

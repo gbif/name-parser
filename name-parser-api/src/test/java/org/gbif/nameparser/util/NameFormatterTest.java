@@ -165,6 +165,17 @@ public class NameFormatterTest {
   }
 
   @Test
+  public void testAuthorship() throws Exception {
+    pn.getBasionymAuthorship().getAuthors().add("Carl.");
+    pn.getBasionymAuthorship().setYear("1999");
+    assertEquals("(Carl., 1999)", NameFormatter.authorshipComplete(pn));
+
+    pn.getCombinationAuthorship().getAuthors().add("Mill.");
+    pn.getCombinationAuthorship().setYear("1887");
+    assertEquals("(Carl., 1999) Mill., 1887", NameFormatter.authorshipComplete(pn));
+  }
+
+  @Test
   public void testCanonicalNames() throws Exception {
     pn.setGenus("Abies");
     assertEquals("Abies", pn.canonicalName());
