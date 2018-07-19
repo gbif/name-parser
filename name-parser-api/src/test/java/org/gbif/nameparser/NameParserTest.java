@@ -494,6 +494,11 @@ public abstract class NameParserTest {
 
   @Test
   public void aggregates() throws Exception {
+    // see https://github.com/gbif/checklistbank/issues/69
+    assertName("Monomorium monomorium group", "Monomorium monomorium")
+        .binomial("Monomorium", null, "monomorium", Rank.SPECIES_AGGREGATE)
+        .nothingElse();
+
     assertName("Achillea millefolium agg. L.", "Achillea millefolium")
         .binomial("Achillea", null, "millefolium", Rank.SPECIES_AGGREGATE)
         .combAuthors(null, "L.")

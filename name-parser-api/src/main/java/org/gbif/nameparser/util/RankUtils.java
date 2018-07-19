@@ -91,6 +91,7 @@ public class RankUtils {
       .put("sl", SPECIES_AGGREGATE) // sensu lat
       .put("agg", SPECIES_AGGREGATE)
       .put("aggr", SPECIES_AGGREGATE)
+      .put("group", SPECIES_AGGREGATE)
       .put("sp", SPECIES)
       .put("spec", SPECIES)
       .put("species", SPECIES)

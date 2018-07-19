@@ -584,7 +584,6 @@ class ParsingJob implements Callable<ParsedName> {
       // use as rank unless we already have a cultivar
       ignoreAuthorship = true;
       if (pn.getCultivarEpithet() == null) {
-        pn.setType(NameType.INFORMAL);
         setRank(m.group(2));
       }
       name = m.replaceAll("");
