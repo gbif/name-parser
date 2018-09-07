@@ -181,9 +181,22 @@ public class NameFormatterTest {
     assertEquals("vulgaris", NameFormatter.canonical(pn));
     assertEquals("vulgaris", NameFormatter.canonicalWithoutAuthorship(pn));
 
+    pn.setSpecificEpithet("carrera");
+    assertEquals("carrera vulgaris", NameFormatter.canonical(pn));
+    assertEquals("carrera vulgaris", NameFormatter.canonicalWithoutAuthorship(pn));
+
+    pn.setRank(Rank.SUBSPECIES);
+    pn.setSpecificEpithet(null);
+    assertEquals("subsp. vulgaris", NameFormatter.canonical(pn));
+    assertEquals("subsp. vulgaris", NameFormatter.canonicalWithoutAuthorship(pn));
+
+    pn.setSpecificEpithet("carrera");
+    assertEquals("carrera subsp. vulgaris", NameFormatter.canonical(pn));
+    assertEquals("carrera subsp. vulgaris", NameFormatter.canonicalWithoutAuthorship(pn));
+
     pn.getCombinationAuthorship().getAuthors().add("Mill.");
     pn.getCombinationAuthorship().setYear("1887");
-    assertEquals("vulgaris Mill., 1887", NameFormatter.canonical(pn));
+    assertEquals("carrera subsp. vulgaris Mill., 1887", NameFormatter.canonical(pn));
   }
 
   @Test
