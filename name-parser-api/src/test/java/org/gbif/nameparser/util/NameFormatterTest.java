@@ -176,6 +176,17 @@ public class NameFormatterTest {
   }
 
   @Test
+  public void testInfraspecOnly() throws Exception {
+    pn.setInfraspecificEpithet("vulgaris");
+    assertEquals("vulgaris", NameFormatter.canonical(pn));
+    assertEquals("vulgaris", NameFormatter.canonicalWithoutAuthorship(pn));
+
+    pn.getCombinationAuthorship().getAuthors().add("Mill.");
+    pn.getCombinationAuthorship().setYear("1887");
+    assertEquals("vulgaris Mill., 1887", NameFormatter.canonical(pn));
+  }
+
+  @Test
   public void testCanonicalNames() throws Exception {
     pn.setGenus("Abies");
     assertEquals("Abies", pn.canonicalName());

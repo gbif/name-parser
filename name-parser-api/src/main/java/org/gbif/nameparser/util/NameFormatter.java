@@ -178,6 +178,8 @@ public class NameFormatter {
             appendInfraspecific(sb, n, hybridMarker, rankMarker, true);
             authorship = false;
           }
+        } else if (n.getInfraspecificEpithet() != null) {
+          appendInfraspecific(sb, n, hybridMarker, rankMarker, false);
         }
 
       } else {
