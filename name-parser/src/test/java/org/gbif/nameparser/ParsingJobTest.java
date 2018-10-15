@@ -13,6 +13,7 @@ import static org.junit.Assert.*;
 
 public class ParsingJobTest {
   final static ParsingJob JOB = new ParsingJob("Abies", Rank.UNRANKED);
+  static final Pattern AUTHOR_PATTERN = Pattern.compile("^" + ParsingJob.AUTHOR + "$");
   static final Pattern AUTHORSHIP_PATTERN = Pattern.compile("^" + ParsingJob.AUTHORSHIP + "$");
 
   @Test
@@ -47,6 +48,8 @@ public class ParsingJobTest {
 
   @Test
   public void testAuthorteam() throws Exception {
+    assertAuthorTeamPattern("YJ Wang & ZQ Liu", "YJ Wang", "ZQ Liu");
+    assertAuthorTeamPattern("Y.-j. Wang & Z.-q. Liu", "Y.-j.Wang", "Z.-q.Liu");
     assertAuthorTeamPattern("van der Wulp",  "van der Wulp");
     assertAuthorTeamPattern("Petzold & G.Kirchn.",  "Petzold", "G.Kirchn.");
     assertAuthorTeamPattern("Britton, Sterns, & Poggenb.",  "Britton", "Sterns", "Poggenb.");
@@ -125,6 +128,7 @@ public class ParsingJobTest {
 
   @Test
   public void testAuthorship() throws Exception {
+    assertAuthorshipPatternFails("Wedd. ex Sch. Bip. (");
     assertAuthorshipPattern("Plesn¡k ex F.Ritter", "Plesnik", "F.Ritter");
     assertAuthorshipPattern("Britton, Sterns, & Poggenb.", null, "Britton", "Sterns", "Poggenb.");
     assertAuthorshipPattern("Van Heurck & Müll. Arg.", null, "Van Heurck", "Müll.Arg.");
@@ -160,10 +164,14 @@ public class ParsingJobTest {
     assertAuthorshipPattern("Monterosato ms.");
     assertAuthorshipPattern("Arn. ms., Grunow", null, "Arn.ms.", "Grunow");
     assertAuthorshipPattern("Griseb. ex. Wedd.", "Griseb.", "Wedd.");
-
-    assertAuthorshipPatternFails("Wedd. ex Sch. Bip. (");
   }
-
+  
+  @Test
+  public void testAuthor(){
+    assertAuthorPattern("Y.-j. Wang");
+    assertAuthorPattern("Z.-q.Liu");
+  }
+  
   @Test
   public void testCultivarPattern() throws Exception {
     testCultivar("'Kentish Belle'");
@@ -255,7 +263,12 @@ public class ParsingJobTest {
   private static void assertAuthorshipPatternFails(String authorship) {
     String normed = JOB.normalize(authorship);
     Matcher m = AUTHORSHIP_PATTERN.matcher(normed);
-    assertFalse(authorship, m.find());
+    if (m.find()) {
+      if (ParsingJob.LOG.isDebugEnabled()) {
+        ParsingJob.logMatcher(m);
+      }
+      fail(authorship);
+    }
   }
 
 
@@ -272,6 +285,15 @@ public class ParsingJobTest {
     }
     Authorship auth = ParsingJob.parseAuthorship(null, m.group(0), null);
     assertEquals(Lists.newArrayList(authors), auth.getAuthors());
+  }
+  
+  private void assertAuthorPattern(String author) {
+    String normed = JOB.normalize(author);
+    Matcher m = AUTHOR_PATTERN.matcher(normed);
+    assertTrue(author, m.find());
+    if (ParsingJob.LOG.isDebugEnabled()) {
+      ParsingJob.logMatcher(m);
+    }
   }
 
   @Test

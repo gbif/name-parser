@@ -55,11 +55,12 @@ class ParsingJob implements Callable<ParsedName> {
   // common 3 char or longer name suffices
   private static final String AUTHOR_TOKEN_3 = "fil|filius|hort|jun|junior|sen|senior";
   // common name suffices (ms=manuscript, not yet published)
-  private static final String AUTHOR_TOKEN = "(?:\\p{Lu}[\\p{Lu}\\p{Ll}'-]*" +
+  private static final String AUTHOR_TOKEN = "(?:(?:\\p{Lu}|-[a-z])[\\p{Lu}\\p{Ll}'-]*" +
       "|" + AUTHOR_TOKEN_3 +
       "|al|f|j|jr|ms|sr|v|v[ao]n|bis|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|ter|'?t|y" +
     ")\\.?";
-  private static final String AUTHOR = AUTHOR_TOKEN + "(?:[ '-]?" + AUTHOR_TOKEN + ")*";
+  @VisibleForTesting
+  static final String AUTHOR = AUTHOR_TOKEN + "(?:[ '-]?" + AUTHOR_TOKEN + ")*";
   private static final String AUTHOR_TEAM = AUTHOR + "(?:[&,;]+" + AUTHOR + ")*";
   static final String AUTHORSHIP =
       // ex authors
