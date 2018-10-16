@@ -1735,6 +1735,30 @@ public abstract class NameParserTest {
         .code(NomCode.ZOOLOGICAL)
         .nothingElse();
   }
+  
+  /**
+   * https://github.com/gbif/name-parser/issues/27
+   */
+  @Test
+  public void hyphens() throws Exception {
+    assertName("Minilimosina v-atrum (Villeneuve, 1917)", "Minilimosina v-atrum")
+        .species("Minilimosina", "v-atrum")
+        .basAuthors("1917", "Villeneuve")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  
+    assertName("Aelurillus v-insignitus", "Aelurillus v-insignitus")
+        .species("Aelurillus", "v-insignitus")
+        .nothingElse();
+  
+    assertName("Desmometopa m-nigrum", "Desmometopa m-nigrum")
+        .species("Desmometopa", "m-nigrum")
+        .nothingElse();
+  
+    assertName("Chloroclystis v-ata", "Chloroclystis v-ata")
+        .species("Chloroclystis", "v-ata")
+        .nothingElse();
+  }
 
   @Test
   public void imprintYears() throws Exception {
