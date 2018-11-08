@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Chars;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
@@ -15,8 +16,7 @@ import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,11 +40,14 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 class ParsingJob implements Callable<ParsedName> {
   static Logger LOG = LoggerFactory.getLogger(ParsingJob.class);
 
+  private static final Splitter WHITESPACE_SPLITTER = Splitter.on(" ").trimResults().omitEmptyStrings();
   private static final CharMatcher AUTHORTEAM_DELIMITER = CharMatcher.anyOf(",&");
   private static final Splitter AUTHORTEAM_SPLITTER = Splitter.on(AUTHORTEAM_DELIMITER).trimResults().omitEmptyStrings();
   private static final Splitter AUTHORTEAM_SEMI_SPLITTER = Splitter.on(";").trimResults().omitEmptyStrings();
   private static final Pattern AUTHOR_INITIAL_SWAP = Pattern.compile("^([^,]+) *, *([^,]+)$");
   private static final Pattern NORM_EX_HORT = Pattern.compile("\\b(?:hort(?:usa?)?|cv)[. ]ex ", CASE_INSENSITIVE);
+  private static final String SPACE_AUTHOR = "\\p{Lu}\\p{Ll}+ \\p{Lu}+";
+  private static final Pattern SPACE_AUTHORTEAM = Pattern.compile("^" + SPACE_AUTHOR +"(?: " + SPACE_AUTHOR + ")*$");
 
   // name parsing
   static final String NAME_LETTERS = "A-ZÏËÖÜÄÉÈČÁÀÆŒ";
@@ -1282,40 +1285,61 @@ class ParsingJob implements Callable<ParsedName> {
       return authors;
 
     } else if(AUTHORTEAM_DELIMITER.matchesAnyOf(team)) {
-      return AUTHORTEAM_SPLITTER.splitToList(normAuthor(team, false));
-
-    } else {
+      return sanitizeAuthors(AUTHORTEAM_SPLITTER.splitToList(team));
+  
+    } else if (SPACE_AUTHORTEAM.matcher(team).find()){
       // we sometimes see space delimited authorteams with the initials consistently at the end of a single author:
       // Balsamo M Fregni E Tongiorgi MA
-      String SPACE_AUTHOR = "(\\p{Lu}\\p{Ll}+ \\p{Lu}+)";
-      Pattern AUTHORTEAM_SPACED = Pattern.compile("^" + SPACE_AUTHOR + "(?: " + SPACE_AUTHOR + ")*$");
-      Pattern AUTHOR_SPACED = Pattern.compile("(\\p{Lu}\\p{Ll}+) (\\p{Lu}+)");
-      Matcher m = AUTHORTEAM_SPACED.matcher(team);
-      if (m.find()) {
-        // We should be able to extract the authors from the first match instead of doing it again
-        Matcher m2 = AUTHOR_SPACED.matcher(team);
-        List<String> authors = Lists.newArrayList();
-        while (m2.find()) {
-          StringBuilder sb = new StringBuilder();
-          for (char initial : m2.group(2).toCharArray()) {
-            sb.append(initial);
-            sb.append('.');
-          }
-          sb.append(m2.group(1));
-          authors.add(sb.toString());
-        }
-        return authors;
-      } else {
-        // no delimiters found, treat as one author
-        return Lists.newArrayList(normAuthor(team, false));
-      }
+      return sanitizeAuthors(WHITESPACE_SPLITTER.splitToList(team));
+    
+    } else {
+      return Lists.newArrayList(normAuthor(team, true));
     }
   }
-
+  
   /**
-   * Author strings are normalized by removing any whitespace following a dot.
-   * See IPNI author standard form recommendations: http://www.ipni.org/standard_forms_author.html
+   * test if we have initials as authors following directly clear surnames
+   * See https://github.com/gbif/name-parser/issues/28
    */
+  private static List<String> sanitizeAuthors(List<String> tokens) {
+    final List<String> authors = new ArrayList<>();
+    final Iterator<String> iter = tokens.iterator();
+    while (iter.hasNext()) {
+      String author = iter.next();
+      if (iter.hasNext() && author.length()>3 && !author.endsWith(".")) {
+        String next = iter.next();
+        if (next.length()<3) {
+          // consider an initial and merge with last author
+          authors.add(normInitials(next) + author);
+        } else {
+          authors.add(author);
+          authors.add(next);
+        }
+      } else {
+        authors.add(author);
+      }
+    }
+    return authors;
+  }
+  
+  private static String normInitials(String initials) {
+    if (initials.endsWith(".")) {
+      return initials;
+    }
+    // treat each character as an initial
+    StringBuilder sb = new StringBuilder();
+    for (char in : initials.toCharArray()) {
+      sb.append(in);
+      sb.append('.');
+    }
+    return sb.toString();
+  }
+    
+    /**
+     * Author strings are normalized by removing any whitespace following a dot.
+     * See IPNI author standard form recommendations:
+     * http://www.ipni.org/standard_forms_author.html
+     */
   private static String normAuthor(String authors, boolean normPunctuation) {
     if (normPunctuation) {
       authors = NORM_PUNCTUATIONS.matcher(authors).replaceAll("$1");

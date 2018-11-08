@@ -1758,6 +1758,11 @@ public abstract class NameParserTest {
     assertName("Chloroclystis v-ata", "Chloroclystis v-ata")
         .species("Chloroclystis", "v-ata")
         .nothingElse();
+  
+    assertName("Cortinarius moenne-loccozii Bidaud", "Cortinarius moenne-loccozii")
+        .species("Cortinarius", "moenne-loccozii")
+        .combAuthors(null, "Bidaud")
+        .nothingElse();
   }
 
   @Test
