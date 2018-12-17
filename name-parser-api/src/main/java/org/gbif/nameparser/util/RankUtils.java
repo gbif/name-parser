@@ -175,6 +175,7 @@ public class RankUtils {
           .put("aceae", FAMILY)
           .put("phyta", PHYLUM)
           .put("oidea", SUPERFAMILY)
+          .put("oidae", EPIFAMILY)
           .put("ineae", SUBORDER)
           .put("anae", SUPERORDER)
           .put("ales", ORDER)

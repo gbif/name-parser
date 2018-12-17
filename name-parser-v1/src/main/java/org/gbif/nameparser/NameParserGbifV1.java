@@ -225,6 +225,10 @@ public class NameParserGbifV1 implements NameParser {
     switch (rank) {
       case SUPERSECTION: return Rank.INFRAGENERIC_NAME;
       case SUPERSERIES: return Rank.INFRAGENERIC_NAME;
+      
+      case MEGAFAMILY: return Rank.SUPRAGENERIC_NAME;
+      case GRANDFAMILY: return Rank.SUPRAGENERIC_NAME;
+      case EPIFAMILY: return Rank.SUPRAGENERIC_NAME;
     }
     return convertEnum(Rank.class, rank);
   }

@@ -83,9 +83,9 @@ public enum Rank {
 
   MAGNORDER("magnord."),
 
-  SUPERORDER("superord."),
-
   GRANDORDER("grandord."),
+  
+  SUPERORDER("superord."),
 
   ORDER("ord."),
 
@@ -94,9 +94,15 @@ public enum Rank {
   INFRAORDER("infraord."),
 
   PARVORDER("parvord."),
+  
+  MEGAFAMILY("megafam."),
+  
+  GRANDFAMILY("grandfam."),
 
   SUPERFAMILY("superfam."),
-
+  
+  EPIFAMILY("epifam."),
+  
   FAMILY("fam."),
 
   SUBFAMILY("subfam."),
@@ -339,7 +345,16 @@ public enum Rank {
       OTHER,
       UNRANKED
   );
-
+  
+  /**
+   * A set of ranks which are treated differently in different groups of organisms and usually between botany and zoology.
+   */
+  private static final Set<Rank> AMBIGUOUS_RANKS = ImmutableSet.of(
+      SECTION,
+      SUBSECTION,
+      SERIES
+  );
+  
   private static final Set<Rank> LEGACY_RANKS = ImmutableSet.of(
       MORPH,
       ABERRATION,
@@ -361,6 +376,9 @@ public enum Rank {
       .put(COHORT, NomCode.ZOOLOGICAL)
       .put(SUBCOHORT, NomCode.ZOOLOGICAL)
       .put(INFRACOHORT, NomCode.ZOOLOGICAL)
+      .put(MEGAFAMILY, NomCode.ZOOLOGICAL)
+      .put(GRANDFAMILY, NomCode.ZOOLOGICAL)
+      .put(EPIFAMILY, NomCode.ZOOLOGICAL)
       .put(MORPH, NomCode.ZOOLOGICAL)
       .put(ABERRATION, NomCode.ZOOLOGICAL)
       .put(NATIO, NomCode.ZOOLOGICAL)
@@ -458,7 +476,7 @@ public enum Rank {
    * @return true if the rank is for family group names, i.e. between family (inclusive) and genus (exclusive).
    */
   public boolean isFamilyGroup() {
-    return FAMILY.ordinal() <= ordinal() && ordinal() < GENUS.ordinal();
+    return MEGAFAMILY.ordinal() <= ordinal() && ordinal() < SUPRAGENERIC_NAME.ordinal();
   }
 
   /**
@@ -498,6 +516,16 @@ public enum Rank {
    */
   public boolean isUncomparable() {
     return UNCOMPARABLE_RANKS.contains(this);
+  }
+  
+  /**
+   * True for ranks which are treated differently in different groups of organisms, usually between botany and zoology.
+   * Example ranks are SERIES or SECTION
+   *
+   * @return true if ambiguous
+   */
+  public boolean isAmbiguous() {
+    return AMBIGUOUS_RANKS.contains(this);
   }
 
   /**
