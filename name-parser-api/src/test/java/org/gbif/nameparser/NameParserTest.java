@@ -744,6 +744,11 @@ public abstract class NameParserTest {
 
   @Test
   public void oTU() throws Exception {
+    assertName("SH191814.07FU", "SH191814.07FU")
+        .monomial("SH191814.07FU", Rank.SPECIES)
+        .type(OTU)
+        .nothingElse();
+
     assertName("BOLD:ACW2100", "BOLD:ACW2100")
         .monomial("BOLD:ACW2100", Rank.SPECIES)
         .type(OTU)

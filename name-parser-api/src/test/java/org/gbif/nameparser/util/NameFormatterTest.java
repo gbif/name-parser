@@ -12,7 +12,6 @@ import static org.junit.Assert.assertNull;
  *
  */
 public class NameFormatterTest {
-  NameFormatter formatter = new NameFormatter();
   ParsedName pn;
 
   @Before
@@ -373,28 +372,35 @@ public class NameFormatterTest {
   public void testBuildName() throws Exception {
     pn.setUninomial("Pseudomonas");
     assertName("Pseudomonas");
+    assertHtml("<i>Pseudomonas</i>");
     
     pn.setUninomial(null);
     pn.setGenus("Pseudomonas");
     pn.setSpecificEpithet("syringae");
     assertName("Pseudomonas syringae");
+    assertHtml("<i>Pseudomonas</i> <i>syringae</i>");
 
     pn.getCombinationAuthorship().getAuthors().add("Van Hall");
     assertName("Pseudomonas syringae", "Pseudomonas syringae Van Hall");
+    assertHtml("<i>Pseudomonas</i> <i>syringae</i> Van Hall");
 
     pn.getCombinationAuthorship().setYear("1904");
     assertName("Pseudomonas syringae", "Pseudomonas syringae Van Hall, 1904");
+    assertHtml("<i>Pseudomonas</i> <i>syringae</i> Van Hall, 1904");
 
     pn.getBasionymAuthorship().getAuthors().add("Carl.");
     assertName("Pseudomonas syringae", "Pseudomonas syringae (Carl.) Van Hall, 1904");
+    assertHtml("<i>Pseudomonas</i> <i>syringae</i> (Carl.) Van Hall, 1904");
 
     pn.setRank(Rank.PATHOVAR);
     pn.setInfraspecificEpithet("aceris");
     pn.getBasionymAuthorship().getAuthors().clear();
     assertName("Pseudomonas syringae aceris", "Pseudomonas syringae pv. aceris Van Hall, 1904");
+    assertHtml("<i>Pseudomonas</i> <i>syringae</i> pv. <i>aceris</i> Van Hall, 1904");
 
     pn.setStrain("CFBP 2339");
     assertName("Pseudomonas syringae aceris", "Pseudomonas syringae pv. aceris Van Hall, 1904 CFBP 2339");
+    assertHtml("<i>Pseudomonas</i> <i>syringae</i> pv. <i>aceris</i> Van Hall, 1904 CFBP 2339");
 
     pn.getCombinationAuthorship().setYear(null);
     pn.getCombinationAuthorship().getAuthors().clear();
@@ -461,6 +467,10 @@ public class NameFormatterTest {
   private void assertName(String name) {
     assertName(name, name, name);
   }
+  
+  private void assertHtml(String html) {
+    assertEquals("wrong html name", html, NameFormatter.canonicalCompleteHtml(pn));
+  }
 
   /**
    * assert a minimal trinomen and a canonical & complete name being the same string
@@ -470,8 +480,8 @@ public class NameFormatterTest {
   }
 
   private void assertName(String trinomen, String canonical, String complete) {
-    assertEquals("wrong trinomen", trinomen, formatter.canonicalMinimal(pn));
-    assertEquals("wrong canonical", canonical, formatter.canonical(pn));
-    assertEquals("wrong canonicalComplete", complete, formatter.canonicalComplete(pn));
+    assertEquals("wrong trinomen", trinomen, NameFormatter.canonicalMinimal(pn));
+    assertEquals("wrong canonical", canonical, NameFormatter.canonical(pn));
+    assertEquals("wrong canonicalComplete", complete, NameFormatter.canonicalComplete(pn));
   }
 }

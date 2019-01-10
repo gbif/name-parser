@@ -14,7 +14,13 @@ public class NameFormatter {
   public static final char HYBRID_MARKER = '×';
   private static final String NOTHO_PREFIX = "notho";
   private static final Joiner AUTHORSHIP_JOINER = Joiner.on(", ").skipNulls();
+  private static final String ITALICS_OPEN  = "<i>";
+  private static final String ITALICS_CLOSE = "</i>";
 
+  private NameFormatter() {
+  
+  }
+  
   /**
    * A full scientific name with authorship from the individual properties in its canonical form.
    * Autonyms are rendered without authorship and subspecies are using the subsp rank marker
@@ -24,14 +30,14 @@ public class NameFormatter {
     // TODO: show authorship for zoological autonyms?
     // TODO: how can we best remove subsp from zoological names?
     // https://github.com/gbif/portal-feedback/issues/640
-    return buildName(n, true, true, true, true, false, true, false, true, false, false, false, true, true);
+    return buildName(n, true, true, true, true, false, true, false, true, false, false, false, true, true, false);
   }
 
   /**
    * A full scientific name just as canonicalName, but without any authorship.
    */
   public static String canonicalWithoutAuthorship(ParsedName n) {
-    return buildName(n, true, true, false, true, false, true, false, true, false, false, false, true, true);
+    return buildName(n, true, true, false, true, false, true, false, true, false, false, false, true, true, false);
   }
 
   /**
@@ -46,14 +52,21 @@ public class NameFormatter {
    * Bracteata
    */
   public static String canonicalMinimal(ParsedName n) {
-    return buildName(n,false, false, false, false, false, true, true, false, false, false, false, false, false);
+    return buildName(n,false, false, false, false, false, true, true, false, false, false, false, false, false, false);
   }
 
   /**
    * Assembles a full name with all details including non code compliant, informal remarks.
    */
   public static String canonicalComplete(ParsedName n) {
-    return buildName(n,true, true, true, true, true, true, false, true, true, true, true, true, true);
+    return buildName(n,true, true, true, true, true, true, false, true, true, true, true, true, true, false);
+  }
+  
+  /**
+   * Assembles a full name with all details including non code compliant, informal remarks and html markup.
+   */
+  public static String canonicalCompleteHtml(ParsedName n) {
+    return buildName(n,true, true, true, true, true, true, false, true, true, true, true, true, true, true);
   }
 
   /**
@@ -74,6 +87,25 @@ public class NameFormatter {
     return sb.length() == 0 ? null : sb.toString();
   }
 
+  private static void openItalics(StringBuilder sb) {
+    sb.append(ITALICS_OPEN);
+  }
+  
+  private static void closeItalics(StringBuilder sb) {
+    sb.append(ITALICS_CLOSE);
+  }
+  
+  private static void appendInItalics(StringBuilder sb, String x, boolean html) {
+    if (html) {
+      sb.append(ITALICS_OPEN)
+        .append(x)
+        .append(ITALICS_CLOSE);
+      
+    } else {
+      sb.append(x);
+    }
+  }
+
   /**
    * build a name controlling all available flags for name parts to be included in the resulting name.
    *
@@ -87,6 +119,7 @@ public class NameFormatter {
    * @param showIndet       if true include the rank marker for incomplete determinations, for example Puma spec.
    * @param nomNote         include nomenclatural notes
    * @param remarks         include informal remarks
+   * @param html            add html markup
    */
   public static String buildName(ParsedName n,
       boolean hybridMarker,
@@ -101,12 +134,21 @@ public class NameFormatter {
       boolean remarks,
       boolean showSensu,
       boolean showCultivar,
-      boolean showStrain
+      boolean showStrain,
+      boolean html
   ) {
     StringBuilder sb = new StringBuilder();
 
+    boolean candidateItalics = false;
     if (n.isCandidatus()) {
-      sb.append("\"Candidatus ");
+      sb.append("\"");
+      if (html) {
+        openItalics(sb);
+        candidateItalics = true;
+        // we turn off html here cause the entire name should be in italics!
+        html = false;
+      }
+      sb.append("Candidatus ");
     }
 
     if (n.getUninomial() != null) {
@@ -115,7 +157,7 @@ public class NameFormatter {
         sb.append(HYBRID_MARKER)
           .append(" ");
       }
-      sb.append(n.getUninomial());
+      appendInItalics(sb, n.getUninomial(), html);
 
     } else {
       // bi- or trinomials or infrageneric names
@@ -124,7 +166,7 @@ public class NameFormatter {
           boolean showInfraGen = true;
           // the infrageneric is the terminal rank. Always show it and wrap it with its genus if requested
           if (n.getGenus() != null && genusForinfrageneric) {
-            appendGenus(sb, n, hybridMarker);
+            appendGenus(sb, n, hybridMarker, html);
             sb.append(" ");
             // we show zoological infragenerics in brackets,
             // but use rank markers for botanical names (unless its no defined rank)
@@ -134,8 +176,8 @@ public class NameFormatter {
                 sb.append(HYBRID_MARKER)
                   .append(' ');
               }
-              sb.append(n.getInfragenericEpithet())
-                .append(")");
+              appendInItalics(sb, n.getInfragenericEpithet(), html);
+              sb.append(")");
               showInfraGen = false;
             }
           }
@@ -147,23 +189,23 @@ public class NameFormatter {
                 sb.append(' ');
               }
             }
-            sb.append(n.getInfragenericEpithet());
+            appendInItalics(sb, n.getInfragenericEpithet(), html);
           }
 
         } else {
           if (n.getGenus() != null) {
-            appendGenus(sb, n, hybridMarker);
+            appendGenus(sb, n, hybridMarker, html);
           }
           if (infrageneric) {
             // additional subgenus shown for binomial. Always shown in brackets
-            sb.append(" (")
-                .append(n.getInfragenericEpithet())
-                .append(")");
+            sb.append(" (");
+            appendInItalics(sb, n.getInfragenericEpithet(), html);
+            sb.append(")");
           }
         }
 
       } else if (n.getGenus() != null) {
-        appendGenus(sb, n, hybridMarker);
+        appendGenus(sb, n, hybridMarker, html);
       }
 
       if (n.getSpecificEpithet() == null) {
@@ -175,11 +217,11 @@ public class NameFormatter {
 
           } else if (n.getRank() != null && n.getRank().isInfraspecific()) {
             // no species epithet given, but rank below species. Indetermined!
-            appendInfraspecific(sb, n, hybridMarker, rankMarker, true);
+            appendInfraspecific(sb, n, hybridMarker, rankMarker, true, html);
             authorship = false;
           }
         } else if (n.getInfraspecificEpithet() != null) {
-          appendInfraspecific(sb, n, hybridMarker, rankMarker, false);
+          appendInfraspecific(sb, n, hybridMarker, rankMarker, false, html);
         }
 
       } else {
@@ -189,7 +231,7 @@ public class NameFormatter {
           sb.append(HYBRID_MARKER)
             .append(" ");
         }
-        sb.append(n.getSpecificEpithet());
+        appendInItalics(sb, n.getSpecificEpithet(), html);
 
         if (n.getInfraspecificEpithet() == null) {
           // Indetermined infraspecies? Only show indet cultivar marker if no cultivar epithet exists
@@ -206,7 +248,7 @@ public class NameFormatter {
 
         } else {
           // infraspecific part
-          appendInfraspecific(sb, n, hybridMarker, rankMarker, false);
+          appendInfraspecific(sb, n, hybridMarker, rankMarker, false, html);
           // non autonym authorship ?
           if (n.isAutonym()) {
             authorship = false;
@@ -214,9 +256,12 @@ public class NameFormatter {
         }
       }
     }
-
+  
     // closing quotes for Candidatus names
     if (n.isCandidatus()) {
+      if (candidateItalics) {
+        closeItalics(sb);
+      }
       sb.append("\"");
     }
 
@@ -282,7 +327,7 @@ public class NameFormatter {
     return Strings.emptyToNull(name);
   }
 
-  private static StringBuilder appendInfraspecific(StringBuilder sb, ParsedName n, boolean hybridMarker, boolean rankMarker, boolean forceRankMarker) {
+  private static StringBuilder appendInfraspecific(StringBuilder sb, ParsedName n, boolean hybridMarker, boolean rankMarker, boolean forceRankMarker, boolean html) {
     // infraspecific part
     sb.append(' ');
     if (hybridMarker && NamePart.INFRASPECIFIC == n.getNotho()) {
@@ -300,7 +345,7 @@ public class NameFormatter {
       }
     }
     if (n.getInfraspecificEpithet() != null) {
-      sb.append(n.getInfraspecificEpithet());
+      appendInItalics(sb, n.getInfraspecificEpithet(), html);
     }
     return sb;
   }
@@ -352,12 +397,12 @@ public class NameFormatter {
     return false;
   }
 
-  private static StringBuilder appendGenus(StringBuilder sb, ParsedName n, boolean hybridMarker) {
+  private static StringBuilder appendGenus(StringBuilder sb, ParsedName n, boolean hybridMarker, boolean html) {
     if (hybridMarker && NamePart.GENERIC == n.getNotho()) {
       sb.append(HYBRID_MARKER)
           .append(" ");
     }
-    sb.append(n.getGenus());
+    appendInItalics(sb, n.getGenus(), html);
     return sb;
   }
 
