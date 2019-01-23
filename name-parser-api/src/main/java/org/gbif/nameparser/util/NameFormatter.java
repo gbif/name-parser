@@ -66,7 +66,7 @@ public class NameFormatter {
    * Assembles a full name with all details including non code compliant, informal remarks and html markup.
    */
   public static String canonicalCompleteHtml(ParsedName n) {
-    return buildName(n,true, true, true, true, true, true, false, true, true, true, true, true, true, true);
+    return buildName(n,true, true, true, true, true, true, false, true, true, false, true, true, true, true);
   }
 
   /**

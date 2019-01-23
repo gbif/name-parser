@@ -1767,6 +1767,14 @@ public abstract class NameParserTest {
         .species("Cortinarius", "moenne-loccozii")
         .combAuthors(null, "Bidaud")
         .nothingElse();
+  
+    assertName("Asarum sieboldii f. non-maculatum (Y.N.Lee) M.Kim", "Asarum sieboldii f. non-maculatum")
+        .infraSpecies("Asarum", "sieboldii", FORM, "non-maculatum")
+        .combAuthors(null, "M.Kim")
+        .basAuthors(null, "Y.N.Lee")
+        .code(BOTANICAL)
+        .nothingElse();
+    
   }
 
   @Test

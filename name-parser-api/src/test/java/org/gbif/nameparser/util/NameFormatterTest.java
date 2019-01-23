@@ -405,7 +405,10 @@ public class NameFormatterTest {
     pn.getCombinationAuthorship().setYear(null);
     pn.getCombinationAuthorship().getAuthors().clear();
     assertName("Pseudomonas syringae aceris", "Pseudomonas syringae pv. aceris CFBP 2339");
-
+  
+    pn.addRemark("remark");
+    pn.setTaxonomicNote("tax note");
+    assertHtml("<i>Pseudomonas</i> <i>syringae</i> pv. <i>aceris</i> CFBP 2339 tax note");
 
     pn = new ParsedName();
     pn.setGenus("Abax");
