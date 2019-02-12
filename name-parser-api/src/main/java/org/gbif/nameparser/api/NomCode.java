@@ -28,21 +28,21 @@ package org.gbif.nameparser.api;
  */
 public enum NomCode {
 
-  BACTERIAL("ICNB",
-      "International Code of Nomenclature of Bacteria",
-      "http://www.ncbi.nlm.nih.gov/books/NBK8808/"),
-  BOTANICAL("ICNafp",
+  BACTERIAL("ICNP",
+      "International Code of Nomenclature of Prokaryotes",
+      "https://doi.org/10.1099/ijsem.0.000778"),
+  BOTANICAL("ICN",
       "International Code of Nomenclature for algae, fungi, and plants",
-      "http://ibot.sav.sk/icbn/main.htm"),
+      "https://www.iapt-taxon.org/nomen/main.php"),
   CULTIVARS("ICNCP",
       "International Code of Nomenclature for Cultivated Plants",
-      ""),
+      "https://www.ishs.org/scripta-horticulturae/international-code-nomenclature-cultivated-plants-ninth-edition"),
   VIRUS("ICVCN",
       "International Code of Virus Classifications and Nomenclature",
-      "http://talk.ICTVonline.org/"),
+      "https://talk.ictvonline.org/information/w/ictv-information/383/ictv-code"),
   ZOOLOGICAL("ICZN",
       "International Code of Zoological Nomenclature",
-      "http://www.nhm.ac.uk/hosted-sites/iczn/code/index.jsp");
+      "http://www.iczn.org/code");
 
   private final String title;
   private final String acronym;
