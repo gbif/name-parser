@@ -1,13 +1,16 @@
 package org.gbif.nameparser.util;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
 import com.google.common.collect.*;
 import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
-
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import static org.gbif.nameparser.api.Rank.*;
 
@@ -20,7 +23,7 @@ public class RankUtils {
    * Matches all dots ("."), underscores ("_") and dashes ("-").
    */
   private static final Pattern NORMALIZE_RANK_MARKER = Pattern.compile("(?:[._ -]+|\\bnotho)");
-
+  
   private static Map<String, Rank> buildRankMarkerMap(Stream<Rank> ranks, Map.Entry<String, Rank>... additions) {
     Map<String, Rank> map = Maps.newHashMap();
     ranks.forEach(r -> {
@@ -33,18 +36,19 @@ public class RankUtils {
     }
     return ImmutableMap.copyOf(map);
   }
-
+  
   public static final List<Rank> INFRASUBSPECIFIC_MICROBIAL_RANKS;
+  
   static {
     List<Rank> microbialRanks = Lists.newArrayList();
     for (Rank r : Rank.values()) {
-      if (r.isRestrictedToCode()== NomCode.BACTERIAL && r.isInfraspecific()) {
+      if (r.isRestrictedToCode() == NomCode.BACTERIAL && r.isInfraspecific()) {
         microbialRanks.add(r);
       }
     }
     INFRASUBSPECIFIC_MICROBIAL_RANKS = ImmutableList.copyOf(microbialRanks);
   }
-
+  
   /**
    * Map of only suprageneric rank markers to their respective rank enum.
    */
@@ -52,7 +56,7 @@ public class RankUtils {
       Arrays.stream(Rank.values())
           .filter(Rank::isFamilyGroup)
   );
-
+  
   /**
    * Map of only suprageneric rank markers to their respective rank enum.
    */
@@ -62,13 +66,13 @@ public class RankUtils {
       Maps.immutableEntry("supersubtrib", SUPRAGENERIC_NAME),
       Maps.immutableEntry("trib", TRIBE)
   );
-
+  
   /**
    * Map of only infrageneric rank markers to their respective rank enum.
    */
   public static final Map<String, Rank> RANK_MARKER_MAP_INFRAGENERIC = buildRankMarkerMap(
       Arrays.stream(Rank.values()).filter(r -> r.isGenusGroup() && r != GENUS),
-
+      
       Maps.immutableEntry("suprasect", SUPERSECTION),
       Maps.immutableEntry("supraser", SUPERSERIES),
       Maps.immutableEntry("sect", SECTION),
@@ -83,7 +87,7 @@ public class RankUtils {
       Maps.immutableEntry("subser", SUBSERIES),
       Maps.immutableEntry("subseries", SUBSERIES)
   );
-
+  
   /**
    * Map of species rank markers.
    */
@@ -97,13 +101,13 @@ public class RankUtils {
       .put("species", SPECIES)
       .put("spp", SPECIES)
       .build();
-
+  
   /**
    * Map of only infraspecific rank markers to their respective rank enum.
    */
   public static final Map<String, Rank> RANK_MARKER_MAP_INFRASPECIFIC = buildRankMarkerMap(
       Arrays.stream(Rank.values()).filter(Rank::isInfraspecific),
-
+      
       Maps.immutableEntry("aberration", ABERRATION),
       Maps.immutableEntry("bv", BIOVAR),
       Maps.immutableEntry("conv", CONVARIETY),
@@ -135,26 +139,26 @@ public class RankUtils {
       Maps.immutableEntry("var", VARIETY),
       Maps.immutableEntry("\\*+", INFRASPECIFIC_NAME)
   );
-
+  
   static class FluentHashMap<K, V> extends java.util.HashMap<K, V> {
     public FluentHashMap<K, V> with(Map<K, V> map) {
       putAll(map);
       return this;
     }
   }
-
+  
   /**
    * Map of rank markers to their respective rank enum.
    */
   public static final Map<String, Rank> RANK_MARKER_MAP = ImmutableMap.copyOf(
       new FluentHashMap<String, Rank>()
-        .with(buildRankMarkerMap(Arrays.stream(Rank.values()), Maps.immutableEntry("subser", SUBSERIES)))
-        .with(RANK_MARKER_MAP_SUPRAGENERIC)
-        .with(RANK_MARKER_MAP_INFRAGENERIC)
-        .with(RANK_MARKER_MAP_SPECIFIC)
-        .with(RANK_MARKER_MAP_INFRASPECIFIC)
+          .with(buildRankMarkerMap(Arrays.stream(Rank.values()), Maps.immutableEntry("subser", SUBSERIES)))
+          .with(RANK_MARKER_MAP_SUPRAGENERIC)
+          .with(RANK_MARKER_MAP_INFRAGENERIC)
+          .with(RANK_MARKER_MAP_SPECIFIC)
+          .with(RANK_MARKER_MAP_INFRASPECIFIC)
   );
-
+  
   /**
    * An immutable map of name suffices to corresponding ranks across all kingdoms.
    * To minimize wrong matches this map is sorted by suffix length with the first suffices being the longest and
@@ -186,7 +190,7 @@ public class RankUtils {
           .put("ini", TRIBE)
           .put("ina", SUBTRIBE)
           .build();
-
+  
   /**
    * Tries its best to infer a rank from a given rank marker such as subsp.
    *
@@ -198,15 +202,16 @@ public class RankUtils {
     }
     return null;
   }
-
+  
   /**
    * Tries its best to infer a rank from an atomised name by just looking at the name parts ignoring any existing rank on the instance.
    * As a final resort for higher monomials the suffices are inspected, but no attempt is made to disambiguate
    * the 2 known homonym suffices -idae and -inae, but instead the far more widespread zoological versions are
    * interpreted.
+   *
    * @return the inferred rank or UNRANKED if it cant be found.
    */
-
+  
   public static Rank inferRank(ParsedName pn) {
     // default if we cant find anything else
     Rank rank = UNRANKED;
@@ -231,5 +236,5 @@ public class RankUtils {
     }
     return rank;
   }
-
+  
 }

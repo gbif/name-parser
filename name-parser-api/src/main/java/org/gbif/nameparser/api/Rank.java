@@ -15,13 +15,13 @@
  */
 package org.gbif.nameparser.api;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * An ordered taxonomic rank enumeration with the most frequently used values.
@@ -30,121 +30,121 @@ import java.util.Set;
  * @see <a href="http://rs.gbif.org/vocabulary/gbif/rank.xml">rs.gbif.org vocabulary</a>
  */
 public enum Rank {
-
+  
   DOMAIN("dom."),
-
+  
   SUPERKINGDOM("superreg."),
-
+  
   KINGDOM("reg."),
-
+  
   SUBKINGDOM("subreg."),
-
+  
   INFRAKINGDOM("infrareg."),
-
+  
   SUPERPHYLUM("superphyl."),
-
+  
   PHYLUM("phyl."),
-
+  
   SUBPHYLUM("subphyl."),
-
+  
   INFRAPHYLUM("infraphyl."),
-
+  
   SUPERCLASS("supercl."),
-
+  
   CLASS("cl."),
-
+  
   SUBCLASS("subcl."),
-
+  
   INFRACLASS("infracl."),
-
+  
   PARVCLASS("parvcl."),
-
+  
   SUPERLEGION("superleg."),
-
+  
   /**
    * Sometimes used in zoology, e.g. for birds and mammals
    */
   LEGION("leg."),
-
+  
   SUBLEGION("subleg."),
-
+  
   INFRALEGION("infraleg."),
-
+  
   SUPERCOHORT("supercohort"),
-
+  
   /**
    * Sometimes used in zoology, e.g. for birds and mammals
    */
   COHORT("cohort"),
-
+  
   SUBCOHORT("subcohort"),
-
+  
   INFRACOHORT("infracohort"),
-
+  
   MAGNORDER("magnord."),
-
+  
   GRANDORDER("grandord."),
   
   SUPERORDER("superord."),
-
+  
   ORDER("ord."),
-
+  
   SUBORDER("subord."),
-
+  
   INFRAORDER("infraord."),
-
+  
   PARVORDER("parvord."),
   
   MEGAFAMILY("megafam."),
   
   GRANDFAMILY("grandfam."),
-
+  
   SUPERFAMILY("superfam."),
   
   EPIFAMILY("epifam."),
   
   FAMILY("fam."),
-
+  
   SUBFAMILY("subfam."),
-
+  
   INFRAFAMILY("infrafam."),
-
+  
   SUPERTRIBE("supertrib."),
-
+  
   TRIBE("trib."),
-
+  
   SUBTRIBE("subtrib."),
-
+  
   INFRATRIBE("infratrib."),
-
+  
   /**
    * Used for any other unspecific rank above genera.
    */
   SUPRAGENERIC_NAME("supragen."),
-
+  
   GENUS("gen."),
-
+  
   SUBGENUS("subgen."),
-
+  
   INFRAGENUS("infrag."),
-
+  
   SUPERSECTION("supersect."),
-
+  
   SECTION("sect."),
-
+  
   SUBSECTION("subsect."),
-
+  
   SUPERSERIES("superser."),
-
+  
   SERIES("ser."),
-
+  
   SUBSERIES("subser."),
-
+  
   /**
    * used for any other unspecific rank below genera and above species aggregates.
    */
   INFRAGENERIC_NAME("infragen."),
-
+  
   /**
    * A loosely defined group of species.
    * Zoology: Aggregate - a group of species, other than a subgenus, within a genus. An aggregate may be denoted by a group name interpolated in parentheses.
@@ -152,14 +152,14 @@ public enum Rank {
    * of the fullname and on the other hand they are necessary for distinguishing the aggregate or species group from the microspecies.
    */
   SPECIES_AGGREGATE("agg."),
-
+  
   SPECIES("sp."),
-
+  
   /**
    * used for any other unspecific rank below species.
    */
   INFRASPECIFIC_NAME("infrasp."),
-
+  
   /**
    * The term grex has been coined to expand botanical nomenclature to describe hybrids of orchids.
    * Grex names are one of the three categories of plant names governed by the International Code of Nomenclature for Cultivated Plants
@@ -168,9 +168,9 @@ public enum Rank {
    * https://en.wikipedia.org/wiki/Grex_(horticulture)
    */
   GREX("gx"),
-
+  
   SUBSPECIES("subsp."),
-
+  
   /**
    * Rank in use from the code for cultivated plants.
    * It does not use a classic rank marker but indicated the Group rank after the actual groups name
@@ -180,7 +180,7 @@ public enum Rank {
    * Sometimes authors also used the words "sort", "type", "selections" or "hybrids" instead of Group which is not legal according to the code.
    */
   CULTIVAR_GROUP,
-
+  
   /**
    * A group of cultivars. These can be roughly comparable to cultivar groups, but convarieties, unlike cultivar groups,
    * do not necessarily contain named varieties, and convarieties are members of traditional "Linnaean" ranks.
@@ -189,40 +189,40 @@ public enum Rank {
    * From Spooner et al., Horticultural Reviews 28 (2003): 1-60
    */
   CONVARIETY("convar."),
-
+  
   /**
    * used also for any other unspecific rank below subspecies.
    */
   INFRASUBSPECIFIC_NAME("infrasubsp."),
-
+  
   /**
    * Botanical legacy rank for a race, recommended in botanical code from 1868
    */
   PROLES("prol."),
-
+  
   /**
    * Zoological legacy rank
    */
   NATIO("natio"),
-
+  
   /**
    * Zoological legacy rank
    */
   ABERRATION("ab."),
-
+  
   /**
    * Zoological legacy rank
    */
   MORPH("morph"),
-
+  
   VARIETY("var."),
-
+  
   SUBVARIETY("subvar."),
-
+  
   FORM("f."),
-
+  
   SUBFORM("subf."),
-
+  
   /**
    * Microbial rank based on pathogenic reactions in one or more hosts.
    * For recommendations on designating pathovars and use of designations when reviving names see
@@ -235,49 +235,49 @@ public enum Rank {
    * For example Pseudomonas syringae pv. lachrymans
    */
   PATHOVAR("pv."),
-
+  
   /**
    * Microbial rank based on biochemical or physiological properties.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Francisella tularensis biovar tularensis
    */
   BIOVAR("biovar"),
-
+  
   /**
    * Microbial rank based on production or amount of production of a particular chemical.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Vibrio alginolyticus chemovar iophagus
    */
   CHEMOVAR("chemovar"),
-
+  
   /**
    * Microbial rank based on morphological characterislics.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Acinetobacter junii morphovar I
    */
   MORPHOVAR("morphovar"),
-
+  
   /**
    * Microbial infrasubspecific rank based on reactions to bacteriophage.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Staphyloccocus aureus phagovar 42D
    */
   PHAGOVAR("phagovar"),
-
+  
   /**
    * Microbial infrasubspecific rank based on antigenic characteristics.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Salmonella enterica serovar Dublin
    */
   SEROVAR("serovar"),
-
+  
   /**
    * Microbial infrasubspecific rank based on chemical constitution.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Thymus vulgaris ct. geraniol
    */
   CHEMOFORM("chemoform"),
-
+  
   /**
    * Microbial infrasubspecific rank.
    * A parasitic, symbiotic, or commensal microorganism distinguished primarily by adaptation to a particular host or habitat.
@@ -286,25 +286,25 @@ public enum Rank {
    * For example Puccinia graminis f. sp. avenae
    */
   FORMA_SPECIALIS("f.sp."),
-
+  
   CULTIVAR("cv."),
-
+  
   /**
    * A microbial strain.
    */
   STRAIN("strain"),
-
+  
   /**
    * Any other rank we cannot map to this enumeration
    */
   OTHER,
-
+  
   /**
    * Rank used for unknown or explicitly not assigned rank.
    * The default if not given instead of null.
    */
   UNRANKED;
-
+  
   /**
    * All main Linnean ranks ordered.
    */
@@ -317,7 +317,7 @@ public enum Rank {
       GENUS,
       SPECIES
   );
-
+  
   /**
    * An ordered list of all ranks that appear in Darwin Core with their own term.
    */
@@ -331,7 +331,7 @@ public enum Rank {
       SUBGENUS,
       SPECIES
   );
-
+  
   /**
    * A set of ranks which cannot clearly be compared to any other rank as they represent rank "ranges".
    * For example a subgeneric rank is anything below genus,
@@ -362,7 +362,7 @@ public enum Rank {
       PROLES,
       CONVARIETY
   );
-
+  
   private static final Map<Rank, NomCode> RANK2CODE = ImmutableMap.<Rank, NomCode>builder()
       .put(PARVCLASS, NomCode.ZOOLOGICAL)
       .put(MAGNORDER, NomCode.ZOOLOGICAL)
@@ -382,7 +382,7 @@ public enum Rank {
       .put(MORPH, NomCode.ZOOLOGICAL)
       .put(ABERRATION, NomCode.ZOOLOGICAL)
       .put(NATIO, NomCode.ZOOLOGICAL)
-
+      
       .put(PROLES, NomCode.BOTANICAL)
       .put(SUPERSECTION, NomCode.BOTANICAL)
       .put(SECTION, NomCode.BOTANICAL)
@@ -390,12 +390,12 @@ public enum Rank {
       .put(SUPERSERIES, NomCode.BOTANICAL)
       .put(SERIES, NomCode.BOTANICAL)
       .put(SUBSERIES, NomCode.BOTANICAL)
-
+      
       .put(CULTIVAR, NomCode.CULTIVARS)
       .put(CULTIVAR_GROUP, NomCode.CULTIVARS)
       .put(CONVARIETY, NomCode.CULTIVARS)
       .put(GREX, NomCode.CULTIVARS)
-
+      
       .put(PATHOVAR, NomCode.BACTERIAL)
       .put(BIOVAR, NomCode.BACTERIAL)
       .put(CHEMOVAR, NomCode.BACTERIAL)
@@ -405,49 +405,49 @@ public enum Rank {
       .put(CHEMOFORM, NomCode.BACTERIAL)
       .put(FORMA_SPECIALIS, NomCode.BACTERIAL)
       .build();
-
+  
   private final String marker;
-
+  
   Rank() {
     this(null);
   }
-
+  
   Rank(String marker) {
     this.marker = marker;
   }
-
+  
   public String getMarker() {
     return marker;
   }
-
+  
   /**
    * @return true for infraspecific ranks excluding species.
    */
   public boolean isInfraspecific() {
     return ordinal() > SPECIES.ordinal() && notOtherOrUnranked();
   }
-
+  
   /**
    * @return true for infra subspecific ranks.
    */
   public boolean isInfrasubspecific() {
     return ordinal() > SUBSPECIES.ordinal() && notOtherOrUnranked();
   }
-
+  
   /**
    * @return true for rank is below genus. Also includes species and infraspecific ranks
    */
   public boolean isInfrageneric() {
     return ordinal() > GENUS.ordinal() && notOtherOrUnranked();
   }
-
+  
   /**
    * @return true for real infrageneric ranks with an infragenericEpithet below genus and above species aggregate.
    */
   public boolean isInfragenericStrictly() {
     return isInfrageneric() && ordinal() < SPECIES_AGGREGATE.ordinal();
   }
-
+  
   /**
    * True for all mayor Linnéan ranks, ie kingdom,phylum,class,order,family,genus and species.
    */
@@ -459,54 +459,54 @@ public enum Rank {
     }
     return false;
   }
-
+  
   public boolean isSpeciesOrBelow() {
     return ordinal() >= SPECIES_AGGREGATE.ordinal() && notOtherOrUnranked();
   }
-
+  
   public boolean notOtherOrUnranked() {
     return this != OTHER && this != UNRANKED;
   }
-
+  
   public boolean otherOrUnranked() {
     return this == OTHER || this == UNRANKED;
   }
-
+  
   /**
    * @return true if the rank is for family group names, i.e. between family (inclusive) and genus (exclusive).
    */
   public boolean isFamilyGroup() {
     return MEGAFAMILY.ordinal() <= ordinal() && ordinal() < SUPRAGENERIC_NAME.ordinal();
   }
-
+  
   /**
    * @return true if the rank is for genus group names, i.e. between genus (inclusive) and species aggregate (exclusive).
    */
   public boolean isGenusGroup() {
     return GENUS.ordinal() <= ordinal() && ordinal() < SPECIES_AGGREGATE.ordinal();
   }
-
+  
   /**
    * @return true if the rank is above genus.
    */
   public boolean isSuprageneric() {
     return ordinal() < GENUS.ordinal();
   }
-
+  
   /**
    * @return true if the rank is above genus.
    */
   public boolean isGenusOrSuprageneric() {
     return ordinal() <= GENUS.ordinal();
   }
-
+  
   /**
    * @return true if the rank is above the rank species aggregate.
    */
   public boolean isSupraspecific() {
     return ordinal() < SPECIES_AGGREGATE.ordinal();
   }
-
+  
   /**
    * True for names of informal ranks that represent a range of ranks really and therefore cannot safely be compared to
    * other ranks in all cases.
@@ -527,28 +527,28 @@ public enum Rank {
   public boolean isAmbiguous() {
     return AMBIGUOUS_RANKS.contains(this);
   }
-
+  
   /**
    * @return true if the rank is considered a legacy rank not used anymore in current nomenclature.
    */
   public boolean isLegacy() {
     return LEGACY_RANKS.contains(this);
   }
-
+  
   /**
    * @return the nomenclatural code if the rank is restricted to just one code or null otherwise
    */
   public NomCode isRestrictedToCode() {
     return RANK2CODE.get(this);
   }
-
+  
   /**
    * @return true if the rank is restricted to Cultivated Plants
    */
   public boolean isCultivarRank() {
     return NomCode.CULTIVARS == isRestrictedToCode();
   }
-
+  
   /**
    * @return true if this rank is higher than the given other
    */

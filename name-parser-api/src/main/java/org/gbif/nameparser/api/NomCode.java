@@ -27,7 +27,7 @@ package org.gbif.nameparser.api;
  * @see <a href="http://en.wikipedia.org/wiki/Nomenclature_codes">Nomenclature codes (Wikipedia)</a>
  */
 public enum NomCode {
-
+  
   BACTERIAL("ICNP",
       "International Code of Nomenclature of Prokaryotes",
       "https://doi.org/10.1099/ijsem.0.000778"),
@@ -43,27 +43,27 @@ public enum NomCode {
   ZOOLOGICAL("ICZN",
       "International Code of Zoological Nomenclature",
       "http://www.iczn.org/code");
-
+  
   private final String title;
   private final String acronym;
   private final String link;
-
+  
   NomCode(String acronym, String title, String link) {
     this.acronym = acronym;
     this.link = link;
     this.title = title;
   }
-
+  
   public String getAcronym() {
     return acronym;
   }
-
+  
   public String getLink() {
     return link;
   }
-
+  
   public String getTitle() {
     return title;
   }
-
+  
 }

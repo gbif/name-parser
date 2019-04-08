@@ -6,7 +6,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class NameTypeTest {
-
+  
   @Test
   public void testIsParsable() throws Exception {
     assertTrue(NameType.SCIENTIFIC.isParsable());
@@ -16,5 +16,5 @@ public class NameTypeTest {
     assertFalse(NameType.HYBRID_FORMULA.isParsable());
     assertFalse(NameType.OTU.isParsable());
   }
-
+  
 }

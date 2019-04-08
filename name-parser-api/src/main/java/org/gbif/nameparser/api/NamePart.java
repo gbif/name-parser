@@ -22,12 +22,12 @@ import com.google.common.base.Strings;
  * Enumeration to indicate a part of a canonical scientific name.
  */
 public enum NamePart {
-
+  
   GENERIC,
   INFRAGENERIC,
   SPECIFIC,
   INFRASPECIFIC;
-
+  
   /**
    * Case insensitive lookup of a NamePart by its name that does not throw an exception but returns null
    * for a not found NamePart.
@@ -45,5 +45,5 @@ public enum NamePart {
     }
     return null;
   }
-
+  
 }

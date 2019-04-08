@@ -19,31 +19,31 @@ package org.gbif.nameparser.api;
  * A short classification of scientific name strings used in Checklist Bank.
  */
 public enum NameType {
-
+  
   /**
    * A scientific latin name that might contain authorship but is not any of the other name types below (virus, hybrid, cultivar, etc).
    */
   SCIENTIFIC,
-
+  
   /**
    * A virus name.
    */
   VIRUS,
-
+  
   /**
    * A hybrid <b>formula</b> (not a hybrid name).
    */
   HYBRID_FORMULA,
-
+  
   /**
    * A variation of a scientific name that either adds additional notes or has some shortcomings to be classified as
    * regular scientific names. Frequent reasons are:
-   *  - informal addition like "cf."
-   *  - indetermined like "Abies spec."
-   *  - abbreviated genus "A. alba Mill"
+   * - informal addition like "cf."
+   * - indetermined like "Abies spec."
+   * - abbreviated genus "A. alba Mill"
    */
   INFORMAL,
-
+  
   /**
    * Operational Taxonomic Unit.
    * An OTU is a pragmatic definition to group individuals by similarity, equivalent to but not necessarily in line
@@ -57,22 +57,22 @@ public enum NameType {
    * Typically, OTU's are based on similar 16S rRNA sequences.
    */
   OTU,
-
+  
   /**
    * A placeholder name like "incertae sedis" or "unknown genus".
    */
   PLACEHOLDER,
-
+  
   /**
    * Surely not a scientific name of any kind.
    */
   NO_NAME;
-
+  
   /**
    * @return true if the GBIF name parser can parse such a name into a ParsedName instance
    */
   public boolean isParsable() {
     return this == SCIENTIFIC || this == INFORMAL;
   }
-
+  
 }

@@ -1,14 +1,14 @@
 package org.gbif.nameparser.util;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.text.Normalizer;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Utilities dealing with unicode strings
  */
 public class UnicodeUtils {
-
+  
   /**
    * Replaces all diacretics with their ascii counterpart.
    */
@@ -18,13 +18,13 @@ public class UnicodeUtils {
     }
     // manually normalize characters not dealt with by the java Normalizer
     x = StringUtils.replaceChars(x, "øØðÐ", "oOdD");
-
+    
     // use java unicode normalizer to remove accents and punctuation
     x = Normalizer.normalize(x, Normalizer.Form.NFD);
     x = x.replaceAll("\\p{M}", "");
     return x;
   }
-
+  
   /**
    * Replaces all digraphs and ligatures with their underlying 2 latin letters.
    *

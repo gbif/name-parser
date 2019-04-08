@@ -1,10 +1,10 @@
 package org.gbif.nameparser;
 
+import java.util.Set;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gbif.nameparser.api.*;
-
-import java.util.Set;
 
 import static org.gbif.nameparser.api.NomCode.BACTERIAL;
 import static org.gbif.nameparser.api.NomCode.BOTANICAL;
@@ -16,16 +16,34 @@ import static org.junit.Assert.*;
 public class NameAssertion {
   private final ParsedName n;
   private Set<NP> tested = Sets.newHashSet();
-
-  private enum NP {TYPE, EPITHETS, INFRAGEN, STRAIN, CULTIVAR, CANDIDATE, NOTHO,
-    AUTH, EXAUTH, BAS, EXBAS, SANCT, RANK,
-    TAXNOTE, NOMNOTE, REMARK, DOUBTFUL, STATE, CODE, REMAINS
+  
+  private enum NP {
+    TYPE,
+    EPITHETS,
+    INFRAGEN,
+    STRAIN,
+    CULTIVAR,
+    CANDIDATE,
+    NOTHO,
+    AUTH,
+    EXAUTH,
+    BAS,
+    EXBAS,
+    SANCT,
+    RANK,
+    TAXNOTE,
+    NOMNOTE,
+    REMARK,
+    DOUBTFUL,
+    STATE,
+    CODE,
+    REMAINS
   }
-
+  
   public NameAssertion(ParsedName n) {
     this.n = n;
   }
-
+  
   void nothingElse() {
     for (NP p : NP.values()) {
       if (!tested.contains(p)) {
@@ -98,18 +116,18 @@ public class NameAssertion {
       }
     }
   }
-
+  
   private NameAssertion add(NP... props) {
     for (NP p : props) {
       tested.add(p);
     }
     return this;
   }
-
+  
   NameAssertion monomial(String monomial) {
     return monomial(monomial, Rank.UNRANKED);
   }
-
+  
   NameAssertion monomial(String monomial, Rank rank) {
     assertEquals(monomial, n.getUninomial());
     assertEquals(rank, n.getRank());
@@ -121,7 +139,7 @@ public class NameAssertion {
     assertNull(n.getStrain());
     return add(NP.EPITHETS, NP.RANK, NP.STRAIN, NP.CULTIVAR);
   }
-
+  
   NameAssertion infraGeneric(String genus, Rank rank, String infraGeneric) {
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());
@@ -133,16 +151,16 @@ public class NameAssertion {
     assertNull(n.getStrain());
     return add(NP.EPITHETS, NP.INFRAGEN, NP.RANK, NP.STRAIN, NP.CULTIVAR);
   }
-
+  
   NameAssertion infraGeneric(String infraGeneric) {
     assertEquals(infraGeneric, n.getInfragenericEpithet());
     return add(NP.INFRAGEN);
   }
-
+  
   NameAssertion species(String genus, String epithet) {
     return binomial(genus, null, epithet, Rank.SPECIES);
   }
-
+  
   NameAssertion binomial(String genus, String infraGeneric, String epithet, Rank rank) {
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());
@@ -152,7 +170,7 @@ public class NameAssertion {
     assertEquals(rank, n.getRank());
     return add(NP.EPITHETS, NP.INFRAGEN, NP.RANK);
   }
-
+  
   NameAssertion infraSpecies(String genus, String epithet, Rank rank, String infraEpithet) {
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());
@@ -161,7 +179,7 @@ public class NameAssertion {
     assertEquals(rank, n.getRank());
     return add(NP.EPITHETS, NP.RANK);
   }
-
+  
   NameAssertion indet(String genus, String epithet, Rank rank) {
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());
@@ -172,48 +190,51 @@ public class NameAssertion {
     assertTrue(n.isIndetermined());
     return add(NP.EPITHETS, NP.RANK, NP.TYPE);
   }
-
+  
   NameAssertion combAuthors(String year, String... authors) {
     assertEquals(year, n.getCombinationAuthorship().getYear());
     assertEquals(Lists.newArrayList(authors), n.getCombinationAuthorship().getAuthors());
     return add(NP.AUTH);
   }
-
+  
   NameAssertion autonym() {
     assertTrue(n.isAutonym());
     return this;
   }
-
+  
   NameAssertion type(NameType type) {
     assertEquals(type, n.getType());
     return add(NP.TYPE);
   }
-
+  
   NameAssertion notho(NamePart notho) {
     assertEquals(notho, n.getNotho());
     return add(NP.NOTHO);
   }
-
+  
   NameAssertion remarks(String remarks) {
     assertEquals(remarks, n.getRemarks());
     return add(NP.REMARK);
   }
-
+  
   NameAssertion partial(String unparsed) {
     assertEquals(ParsedName.State.PARTIAL, n.getState());
     assertEquals(unparsed, n.getUnparsed());
     return add(NP.REMAINS, NP.STATE);
   }
-
+  
   NameAssertion cultivar(String genus, String cultivar) {
     return cultivar(genus, null, Rank.CULTIVAR, cultivar);
   }
+  
   NameAssertion cultivar(String genus, Rank rank, String cultivar) {
     return cultivar(genus, null, rank, cultivar);
   }
+  
   NameAssertion cultivar(String genus, String species, String cultivar) {
     return cultivar(genus, species, Rank.CULTIVAR, cultivar);
   }
+  
   NameAssertion cultivar(String genus, String species, Rank rank, String cultivar) {
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());
@@ -225,68 +246,68 @@ public class NameAssertion {
     assertEquals(NomCode.CULTIVARS, n.getCode());
     return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.CODE);
   }
-
+  
   NameAssertion code(NomCode code) {
     assertEquals(code, n.getCode());
     return add(NP.CODE);
   }
-
+  
   NameAssertion candidatus() {
     assertTrue(n.isCandidatus());
     assertEquals(BACTERIAL, n.getCode());
     return add(NP.CANDIDATE, NP.CODE);
   }
-
+  
   NameAssertion strain(String strain) {
     assertEquals(strain, n.getStrain());
     return add(NP.STRAIN);
   }
-
+  
   NameAssertion sensu(String sensu) {
     assertEquals(sensu, n.getTaxonomicNote());
     return add(NP.TAXNOTE);
   }
-
+  
   NameAssertion nomNote(String nomNote) {
     assertEquals(nomNote, n.getNomenclaturalNotes());
     return add(NP.NOMNOTE);
   }
-
+  
   NameAssertion doubtful() {
     assertTrue(n.isDoubtful());
     return add(NP.DOUBTFUL);
   }
-
+  
   NameAssertion rank(Rank rank) {
     assertEquals(rank, n.getRank());
     return add(NP.RANK);
   }
-
+  
   NameAssertion state(ParsedName.State state) {
     assertEquals(state, n.getState());
     return add(NP.STATE);
   }
-
+  
   NameAssertion sanctAuthor(String author) {
     assertEquals(author, n.getSanctioningAuthor());
     assertEquals(BOTANICAL, n.getCode());
     return add(NP.SANCT, NP.CODE);
   }
-
+  
   NameAssertion combExAuthors(String... authors) {
     assertEquals(Lists.newArrayList(authors), n.getCombinationAuthorship().getExAuthors());
     return add(NP.EXAUTH);
   }
-
+  
   NameAssertion basAuthors(String year, String... authors) {
     assertEquals(year, n.getBasionymAuthorship().getYear());
     assertEquals(Lists.newArrayList(authors), n.getBasionymAuthorship().getAuthors());
     return add(NP.BAS);
   }
-
+  
   NameAssertion basExAuthors(String year, String... authors) {
     assertEquals(Lists.newArrayList(authors), n.getBasionymAuthorship().getExAuthors());
     return add(NP.EXBAS);
   }
-
+  
 }
