@@ -412,6 +412,12 @@ public abstract class NameParserTest {
     assertUnparsable("uncultured virus", PLACEHOLDER);
     // ITIS placeholders:
     assertUnparsable("Temp dummy name", PLACEHOLDER);
+    // https://de.wikipedia.org/wiki/N._N.
+    assertUnparsable("N.N.", PLACEHOLDER);
+    assertUnparsable("N.N. (e.g., Breoghania)", PLACEHOLDER);
+    assertUnparsable("N.N. (Chitinivorax)", PLACEHOLDER);
+    assertUnparsable("N.n. (Chitinivorax)", PLACEHOLDER);
+    
     // https://github.com/gbif/checklistbank/issues/48
     assertUnparsable("Gen.nov. sp.nov.", NO_NAME);
     assertUnparsable("Gen.nov.", NO_NAME);
