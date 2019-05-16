@@ -210,14 +210,15 @@ public class NameFormatter {
       
       if (n.getSpecificEpithet() == null) {
         if (showIndet && n.getGenus() != null && n.getCultivarEpithet() == null) {
-          if (Rank.SPECIES == n.getRank()) {
-            // no species epithet given, but rank=species. Indetermined species!
-            sb.append(" spec.");
-            authorship = false;
-            
-          } else if (n.getRank() != null && n.getRank().isInfraspecific()) {
-            // no species epithet given, but rank below species. Indetermined!
-            appendInfraspecific(sb, n, hybridMarker, rankMarker, true, html);
+          if (n.getRank() != null && n.getRank().isSpeciesOrBelow()) {
+            // no species epithet given, indetermined!
+            if (n.getRank().isInfraspecific()) {
+              // maybe we have an infraspecific epithet? force to show the rank marker
+              appendInfraspecific(sb, n, hybridMarker, rankMarker, true, html);
+            } else {
+              sb.append(" ");
+              sb.append(n.getRank().getMarker());
+            }
             authorship = false;
           }
         } else if (n.getInfraspecificEpithet() != null) {

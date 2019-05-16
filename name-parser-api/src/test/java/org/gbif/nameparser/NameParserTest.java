@@ -1608,7 +1608,7 @@ public abstract class NameParserTest {
 //        .type(NameType.INFORMAL)
 //        .nothingElse();
     
-    assertName("Polygonum spec.", "Polygonum spec.")
+    assertName("Polygonum spec.", "Polygonum sp.")
         .species("Polygonum", null)
         .type(NameType.INFORMAL)
         .nothingElse();
@@ -1618,7 +1618,7 @@ public abstract class NameParserTest {
         .type(NameType.INFORMAL)
         .nothingElse();
     
-    assertName("Mesocricetus sp.", "Mesocricetus spec.")
+    assertName("Mesocricetus sp.", "Mesocricetus sp.")
         .species("Mesocricetus", null)
         .type(NameType.INFORMAL)
         .nothingElse();
@@ -1634,7 +1634,7 @@ public abstract class NameParserTest {
         .type(NameType.INFORMAL)
         .nothingElse();
     
-    assertName("Lepidoptera Hooker", Rank.SPECIES, "Lepidoptera spec.")
+    assertName("Lepidoptera Hooker", Rank.SPECIES, "Lepidoptera sp.")
         .species("Lepidoptera", null)
         .type(NameType.INFORMAL)
         .nothingElse();
@@ -1835,7 +1835,7 @@ public abstract class NameParserTest {
   
   @Test
   public void manuscriptNames() throws Exception {
-    assertName("Lepidoptera sp. JGP0404", "Lepidoptera spec.")
+    assertName("Lepidoptera sp. JGP0404", "Lepidoptera sp.")
         .species("Lepidoptera", null)
         .type(INFORMAL)
         .remarks("sp.JGP0404")
@@ -1847,25 +1847,25 @@ public abstract class NameParserTest {
         .type(INFORMAL)
         .nothingElse();
     
-    assertName("Verticordia sp.1", "Verticordia spec.")
+    assertName("Verticordia sp.1", "Verticordia sp.")
         .species("Verticordia", null)
         .type(INFORMAL)
         .remarks("sp.1")
         .nothingElse();
     
-    assertName("Bryozoan indet. 1", "Bryozoan spec.")
+    assertName("Bryozoan indet. 1", "Bryozoan sp.")
         .species("Bryozoan", null)
         .type(INFORMAL)
         .remarks("indet.1")
         .nothingElse();
     
-    assertName("Bryozoan sp. E", "Bryozoan spec.")
+    assertName("Bryozoan sp. E", "Bryozoan sp.")
         .species("Bryozoan", null)
         .type(INFORMAL)
         .remarks("sp.E")
         .nothingElse();
     
-    assertName("Prostanthera sp. Somersbey (B.J.Conn 4024)", "Prostanthera spec.")
+    assertName("Prostanthera sp. Somersbey (B.J.Conn 4024)", "Prostanthera sp.")
         .species("Prostanthera", null)
         .type(INFORMAL)
         .remarks("sp.Somersbey(B.J.Conn 4024)")

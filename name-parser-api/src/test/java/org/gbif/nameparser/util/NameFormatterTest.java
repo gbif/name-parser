@@ -157,7 +157,7 @@ public class NameFormatterTest {
     assertEquals("Abies", pn.canonicalName());
     
     pn.setRank(Rank.SPECIES);
-    assertEquals("Abies spec.", pn.canonicalName());
+    assertEquals("Abies sp.", pn.canonicalName());
     
     pn.setSpecificEpithet("alba");
     assertEquals("Abies alba", pn.canonicalName());
