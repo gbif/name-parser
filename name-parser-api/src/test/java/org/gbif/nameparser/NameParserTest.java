@@ -93,14 +93,14 @@ public abstract class NameParserTest {
   
   @Test
   public void infraSpecies() throws Exception {
-    assertName("Poa pratensis subsp. anceps (Gaudin) Dumort., 1824", Rank.SPECIES, "Poa pratensis anceps")
+    assertName("Poa pratensis subsp. anceps (Gaudin) Dumort., 1824", Rank.SPECIES, "Poa pratensis subsp. anceps")
         .infraSpecies("Poa", "pratensis", Rank.SUBSPECIES, "anceps")
         .basAuthors(null, "Gaudin")
         .combAuthors("1824", "Dumort.")
-        .code(ZOOLOGICAL)
+        .code(BOTANICAL)
         .nothingElse();
     
-    assertName("Abies alba ssp. alpina Mill.", "Abies alba subsp. alpina")
+    assertName("Abies alba ssp. alpina Mill.", "Abies alba alpina")
         .infraSpecies("Abies", "alba", SUBSPECIES, "alpina")
         .combAuthors(null, "Mill.")
         .nothingElse();
@@ -946,8 +946,8 @@ public abstract class NameParserTest {
         .combAuthors(null, "S.Yildirimli")
         .nothingElse();
     
-    assertName("Anatolidamnicola gloeri subsp. gloeri Şahin, Koca & Yildirim, 2012", "Anatolidamnicola gloeri gloeri")
-        .infraSpecies("Anatolidamnicola", "gloeri", Rank.SUBSPECIES, "gloeri")
+    assertName("Anatolidamnicola gloeri gloeri Şahin, Koca & Yildirim, 2012", "Anatolidamnicola gloeri gloeri")
+        .infraSpecies("Anatolidamnicola", "gloeri", Rank.INFRASPECIFIC_NAME, "gloeri")
         .combAuthors("2012", "Şahin", "Koca", "Yildirim")
         .code(ZOOLOGICAL)
         .nothingElse();
@@ -981,6 +981,7 @@ public abstract class NameParserTest {
         .infraSpecies("Cirsium", "creticum", SUBSPECIES, "creticum")
         //.combAuthors(null, "d'Urv.")
         .autonym()
+        .code(NomCode.BOTANICAL)
         .nothingElse();
     
     assertName("Cirsium creticum Balsamo M Fregni E Tongiorgi P", "Cirsium creticum")
@@ -1402,6 +1403,7 @@ public abstract class NameParserTest {
     assertName("Puntius arulius subsp. tambraparniei (non Silas 1954)", "Puntius arulius subsp. tambraparniei")
         .infraSpecies("Puntius", "arulius", Rank.SUBSPECIES, "tambraparniei")
         .sensu("non Silas 1954")
+        .code(NomCode.BOTANICAL)
         .nothingElse();
     
   }
@@ -1587,7 +1589,7 @@ public abstract class NameParserTest {
         .type(NameType.INFORMAL)
         .nothingElse();
     
-    assertName("Canis lupus subsp. Linnaeus, 1758", "Canis lupus subsp.")
+    assertName("Canis lupus subsp. Linnaeus, 1758", "Canis lupus ssp.")
         .infraSpecies("Canis", "lupus", Rank.SUBSPECIES, null)
         .type(NameType.INFORMAL)
         .nothingElse();
@@ -1613,7 +1615,7 @@ public abstract class NameParserTest {
         .type(NameType.INFORMAL)
         .nothingElse();
     
-    assertName("Polygonum vulgaris ssp.", "Polygonum vulgaris subsp.")
+    assertName("Polygonum vulgaris ssp.", "Polygonum vulgaris ssp.")
         .infraSpecies("Polygonum", "vulgaris", Rank.SUBSPECIES, null)
         .type(NameType.INFORMAL)
         .nothingElse();
@@ -1639,7 +1641,7 @@ public abstract class NameParserTest {
         .type(NameType.INFORMAL)
         .nothingElse();
     
-    assertName("Lepidoptera alba DC.", Rank.SUBSPECIES, "Lepidoptera alba subsp.")
+    assertName("Lepidoptera alba DC.", Rank.SUBSPECIES, "Lepidoptera alba ssp.")
         .infraSpecies("Lepidoptera", "alba", Rank.SUBSPECIES, null)
         .type(NameType.INFORMAL)
         .nothingElse();

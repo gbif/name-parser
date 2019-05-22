@@ -138,6 +138,12 @@ public class NameFormatterTest {
   
   @Test
   public void testIndet() throws Exception {
+    pn.setGenus("Abies");
+    pn.setSpecificEpithet("arnoldi");
+    pn.setRank(Rank.SUBSPECIES);
+    assertEquals("Abies arnoldi ssp.", pn.canonicalName());
+  
+    pn = new ParsedName();
     pn.setGenus("Ocymyrmex");
     pn.setInfragenericEpithet("Weitzaeckeri");
     pn.setInfraspecificEpithet("arnoldi");
@@ -186,6 +192,7 @@ public class NameFormatterTest {
     
     pn.setRank(Rank.SUBSPECIES);
     pn.setSpecificEpithet(null);
+    pn.setCode(NomCode.BOTANICAL);
     assertEquals("subsp. vulgaris", NameFormatter.canonical(pn));
     assertEquals("subsp. vulgaris", NameFormatter.canonicalWithoutAuthorship(pn));
     
@@ -429,10 +436,10 @@ public class NameFormatterTest {
     assertName("Abax carinatus urinatus", "Abax carinatus urinatus (Duftschmid, 1812)");
     
     pn.setRank(Rank.SUBSPECIES);
-    assertName("Abax carinatus urinatus", "Abax carinatus subsp. urinatus (Duftschmid, 1812)");
-    
-    pn.setCode(NomCode.ZOOLOGICAL);
     assertName("Abax carinatus urinatus", "Abax carinatus urinatus (Duftschmid, 1812)");
+    
+    pn.setCode(NomCode.BOTANICAL);
+    assertName("Abax carinatus urinatus", "Abax carinatus subsp. urinatus (Duftschmid, 1812)");
     
     
     pn = new ParsedName();

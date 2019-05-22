@@ -383,6 +383,10 @@ public class ParsedName {
     return combinationAuthorship.exists() || basionymAuthorship.exists();
   }
   
+  public boolean isHybridName() {
+    return notho != null;
+  }
+
   public boolean isAutonym() {
     return specificEpithet != null && infraspecificEpithet != null && specificEpithet.equals(infraspecificEpithet);
   }

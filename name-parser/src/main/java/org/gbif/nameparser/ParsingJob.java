@@ -1013,7 +1013,7 @@ class ParsingJob implements Callable<ParsedName> {
       } else if (pn.getType() == NameType.VIRUS) {
         pn.setCode(NomCode.VIRUS);
 
-      } else if (pn.isCandidatus() || pn.getStrain() != null) {
+      } else if (pn.isCandidatus()) {
         pn.setCode(NomCode.BACTERIAL);
 
       } else if (pn.getBasionymAuthorship().getYear() != null || pn.getCombinationAuthorship().getYear() != null) {
@@ -1138,6 +1138,7 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * Sets the parsed names rank based on a found rank marker
    * Potentially also sets the notho field in case the rank marker indicates a hybrid
+   * and the code to botanical in case of subsp. found
    * if the rankMarker cannot be interpreted or is null nothing will be done.
    * @param rankMarker
    */
@@ -1148,6 +1149,9 @@ class ParsingJob implements Callable<ParsedName> {
         pn.setRank(rank);
       } else {
         setRankIfNotContradicting(rank);
+      }
+      if (rankMarker.toLowerCase().startsWith("subsp")) {
+        pn.setCode(NomCode.BOTANICAL);
       }
       if (rankMarker.startsWith(NOTHO)) {
         if (rank.isInfraspecific()) {

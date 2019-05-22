@@ -242,8 +242,13 @@ public class NameFormatter {
               && (NomCode.CULTIVARS != n.getRank().isRestrictedToCode() || n.getCultivarEpithet() == null)
           ) {
             // no infraspecific epitheton given, but rank below species. Indetermined!
-            sb.append(' ')
-                .append(n.getRank().getMarker());
+            // use ssp. for subspecies in case of indetermined names
+            if (n.getRank() == Rank.SUBSPECIES) {
+              sb.append(" ssp.");
+            } else {
+              sb.append(' ');
+              sb.append(n.getRank().getMarker());
+            }
             authorship = false;
           }
           
@@ -340,7 +345,7 @@ public class NameFormatter {
       }
     }
     // hide subsp. from zoological names
-    if (forceRankMarker || rankMarker && (!isZoo(n.getCode()) || Rank.SUBSPECIES != n.getRank())) {
+    if (forceRankMarker || rankMarker && (isNotZoo(n.getCode()) || Rank.SUBSPECIES != n.getRank() || n.isHybridName())) {
       if (appendRankMarker(sb, n.getRank(), NameFormatter::isInfraspecificMarker, false) && n.getInfraspecificEpithet() != null) {
         sb.append(' ');
       }
@@ -358,10 +363,10 @@ public class NameFormatter {
     return sb;
   }
   
-  private static boolean isZoo(NomCode code) {
-    return code != null && code == NomCode.ZOOLOGICAL;
+  private static boolean isNotZoo(NomCode code) {
+    return code != null && code != NomCode.ZOOLOGICAL;
   }
-  
+
   private static boolean isUnknown(Rank r) {
     return r == null || r.otherOrUnranked();
   }
