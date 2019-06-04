@@ -555,4 +555,11 @@ public enum Rank {
   public boolean higherThan(Rank other) {
     return ordinal() < other.ordinal();
   }
+  
+  /**
+   * @return true if this rank is higher or equal to the given other
+   */
+  public boolean higherOrEqualsTo(Rank other) {
+    return ordinal() <= other.ordinal();
+  }
 }

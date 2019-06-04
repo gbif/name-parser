@@ -162,7 +162,8 @@ public class RankTest {
     assertFalse(Rank.SUPERFAMILY.higherThan(Rank.KINGDOM));
     assertFalse(Rank.SUPERFAMILY.higherThan(Rank.KINGDOM));
     assertFalse(Rank.SPECIES.higherThan(Rank.SUBGENUS));
-    
+    assertFalse(Rank.SPECIES.higherThan(Rank.SPECIES));
+  
     assertTrue(Rank.INFRASPECIFIC_NAME.higherThan(Rank.VARIETY));
     assertTrue(Rank.SUPERFAMILY.higherThan(Rank.FAMILY));
     assertTrue(Rank.SPECIES.higherThan(Rank.VARIETY));
@@ -182,6 +183,31 @@ public class RankTest {
     
     // questionable
     assertFalse(Rank.UNRANKED.higherThan(Rank.VARIETY));
+  }
+  
+  @Test
+  public void testHigherEquals() {
+    assertFalse(Rank.SUPERFAMILY.higherOrEqualsTo(Rank.KINGDOM));
+    assertFalse(Rank.SUPERFAMILY.higherOrEqualsTo(Rank.KINGDOM));
+    assertFalse(Rank.SPECIES.higherOrEqualsTo(Rank.SUBGENUS));
+  
+    assertTrue(Rank.SPECIES.higherOrEqualsTo(Rank.SPECIES));
+    assertTrue(Rank.INFRASPECIFIC_NAME.higherOrEqualsTo(Rank.VARIETY));
+    assertTrue(Rank.SUPERFAMILY.higherOrEqualsTo(Rank.FAMILY));
+    assertTrue(Rank.SPECIES.higherOrEqualsTo(Rank.VARIETY));
+    assertTrue(Rank.GENUS.higherOrEqualsTo(Rank.INFRAGENERIC_NAME));
+    
+    int expectedHigher = Rank.DWC_RANKS.size();
+    for (Rank r : Rank.DWC_RANKS) {
+      int higherCount = 0;
+      for (Rank r2 : Rank.DWC_RANKS) {
+        if (r.higherOrEqualsTo(r2)) {
+          higherCount++;
+        }
+      }
+      assertEquals(expectedHigher, higherCount);
+      expectedHigher--;
+    }
   }
   
   @Test

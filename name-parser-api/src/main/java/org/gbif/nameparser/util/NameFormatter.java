@@ -2,6 +2,7 @@ package org.gbif.nameparser.util;
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -16,6 +17,7 @@ public class NameFormatter {
   private static final Joiner AUTHORSHIP_JOINER = Joiner.on(", ").skipNulls();
   private static final String ITALICS_OPEN = "<i>";
   private static final String ITALICS_CLOSE = "</i>";
+  private static final Pattern AL = Pattern.compile("^al\\.?$");
   
   private NameFormatter() {
   
@@ -412,12 +414,18 @@ public class NameFormatter {
     return sb;
   }
   
-  private static String joinAuthors(List<String> authors, boolean useEtAl) {
-    if (useEtAl && authors.size() > 2) {
+  private static String joinAuthors(List<String> authors, boolean abbrevWithEtAl) {
+    if (abbrevWithEtAl && authors.size() > 2) {
       return AUTHORSHIP_JOINER.join(authors.subList(0, 1)) + " et al.";
       
     } else if (authors.size() > 1) {
-      return AUTHORSHIP_JOINER.join(authors.subList(0, authors.size() - 1)) + " & " + authors.get(authors.size() - 1);
+      String end;
+      if (AL.matcher(authors.get(authors.size() - 1)).find()) {
+        end = " et al.";
+      } else {
+        end = " & " + authors.get(authors.size() - 1);
+      }
+      return AUTHORSHIP_JOINER.join(authors.subList(0, authors.size() - 1)) + end;
       
     } else {
       return AUTHORSHIP_JOINER.join(authors);

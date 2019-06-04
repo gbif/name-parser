@@ -137,6 +137,25 @@ public class NameFormatterTest {
   }
   
   @Test
+  public void testEtAl() throws Exception {
+    pn.setGenus("Abies");
+    pn.setSpecificEpithet("arnoldi");
+    pn.setRank(Rank.SPECIES);
+    assertEquals("Abies arnoldi", pn.canonicalNameComplete());
+    
+    pn.getCombinationAuthorship().getAuthors().add("Peter");
+    pn.getCombinationAuthorship().getAuthors().add("Fränzl");
+    pn.getCombinationAuthorship().getAuthors().add("Jung");
+    assertEquals("Abies arnoldi Peter, Fränzl & Jung", pn.canonicalNameComplete());
+  
+    pn.getCombinationAuthorship().getAuthors().add("al");
+    assertEquals("Abies arnoldi Peter, Fränzl, Jung et al.", pn.canonicalNameComplete());
+  
+    pn.getCombinationAuthorship().getAuthors().add("al.");
+    assertEquals("Abies arnoldi Peter, Fränzl, Jung, al et al.", pn.canonicalNameComplete());
+  }
+  
+  @Test
   public void testIndet() throws Exception {
     pn.setGenus("Abies");
     pn.setSpecificEpithet("arnoldi");
