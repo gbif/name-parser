@@ -5,7 +5,6 @@ import com.google.common.base.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.primitives.Chars;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
@@ -18,7 +17,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -224,7 +222,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_APOSTROPHES = Pattern.compile("([\u0060\u00B4\u2018\u2019]+)");
   private static final Pattern NORM_QUOTES = Pattern.compile("([\"'`´]+)");
   private static final Pattern REPL_GENUS_QUOTE = Pattern.compile("^' *(" + MONOMIAL + ") *'");
-  private static final Pattern REPL_ENCLOSING_QUOTE = Pattern.compile("^[',\\s]+|[',\\s]+$");
+  private static final Pattern REPL_ENCLOSING_QUOTE = Pattern.compile("^$");//Pattern.compile("^[',\\s]+|[',\\s]+$");
   private static final Pattern NORM_UPPERCASE_WORDS = Pattern.compile("\\b(\\p{Lu})(\\p{Lu}{2,})\\b");
   private static final Pattern NORM_LOWERCASE_BINOMIAL = Pattern.compile("^(" + EPHITHET + ") (" + EPHITHET + ")");
   private static final Pattern NORM_WHITESPACE = Pattern.compile("(?:\\\\[nr]|\\s)+");
@@ -271,9 +269,11 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern STARTING_EPITHET = Pattern.compile("^\\s*(" + EPHITHET + ")\\b");
   private static final Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\. *sp(?:ec)?\\b");
   private static final Pattern SENSU_LATU = Pattern.compile("\\bs\\.l\\.\\b");
+
   
   private static final Pattern NOM_REFS = Pattern.compile("[,;.]?[\\p{Lu}\\p{Ll}\\s]*\\b(?:Proceedings|Journal|Annals|Bulletin|Systematics|Taxonomy|Series)\\b.+$");
-
+  // 4(2): 611
+  private static final Pattern NOM_REF_VOLUME = Pattern.compile("[,;.]?[\\p{Lu}\\p{Ll}\\s]*\\b\\d+\\s*(//(\\d+//))?:\\s*\\d+\\b.+$");
   // many names still use outdated xxxtype rank marker, e.g. serotype instead of serovar
   private static final Pattern TYPE_TO_VAR;
   static {
@@ -425,6 +425,12 @@ class ParsingJob implements Callable<ParsedName> {
     return pn;
   }
 
+  private String stripNomRef(Matcher m) {
+    pn.setUnparsed(m.group());
+    pn.addWarning(Warnings.NOMENCLATURAL_REFERENCE);
+    return m.replaceFirst("");
+  }
+  
   private void parse(String name) throws UnparsableNameException {
 
     // remove extinct markers
@@ -441,10 +447,14 @@ class ParsingJob implements Callable<ParsedName> {
     ParsedName.State preParseState = null;
     m = NOM_REFS.matcher(name);
     if (m.find()) {
-      name = m.replaceFirst("");
+      name = stripNomRef(m);
       preParseState = ParsedName.State.PARTIAL;
-      pn.setUnparsed(m.group());
-      pn.addWarning(Warnings.NOMENCLATURAL_REFERENCE);
+    } else {
+      m = NOM_REF_VOLUME.matcher(name);
+      if (m.find()) {
+        name = stripNomRef(m);
+        preParseState = ParsedName.State.PARTIAL;
+      }
     }
 
     // normalize bacterial rank markers

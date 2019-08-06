@@ -1,4 +1,4 @@
-package org.gbif.nameparser;
+package org.gbif.nameparser.api;
 
 /**
  * Standard warning strings as used by the parser

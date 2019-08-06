@@ -2,6 +2,7 @@ package org.gbif.nameparser;
 
 import java.util.Set;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gbif.nameparser.api.*;
@@ -37,7 +38,8 @@ public class NameAssertion {
     DOUBTFUL,
     STATE,
     CODE,
-    REMAINS
+    REMAINS,
+    WARNING
   }
   
   public NameAssertion(ParsedName n) {
@@ -112,6 +114,9 @@ public class NameAssertion {
           case REMAINS:
             assertNull(n.getUnparsed());
             break;
+          case WARNING:
+            String warn = Joiner.on("; ").join(n.getWarnings());
+            assertTrue("contains warnings: "+warn, n.getWarnings().isEmpty());
         }
       }
     }
@@ -217,6 +222,11 @@ public class NameAssertion {
     return add(NP.REMARK);
   }
   
+  NameAssertion warning(String... warnings) {
+    assertEquals(Lists.newArrayList(warnings), n.getWarnings());
+    return add(NP.WARNING);
+  }
+
   NameAssertion partial(String unparsed) {
     assertEquals(ParsedName.State.PARTIAL, n.getState());
     assertEquals(unparsed, n.getUnparsed());

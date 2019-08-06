@@ -40,27 +40,40 @@ public abstract class NameParserTest {
         .species("Passiflora", "plumosa")
         .combAuthors(null, "Feuillet", "Cremers")
         .partial(", Proceedings of the Koninklijke Nederlandse Akademie van Wetenschappen, Series C: Biological and Medical Sciences 87(3): 381, f. 2. 1984. Fig. 2I, J")
+        .warning(Warnings.NOMENCLATURAL_REFERENCE)
         .nothingElse();
   
     assertName("Passiflora jussieui Feuillet, Journal of the Botanical Research Institute of Texas 4(2): 611, f. 1. 2010. Figs 2E, F, 3E, F", "Passiflora jussieui")
         .species("Passiflora", "jussieui")
         .combAuthors(null, "Feuillet")
         .partial(", Journal of the Botanical Research Institute of Texas 4(2): 611, f. 1. 2010. Figs 2E, F, 3E, F")
+        .warning(Warnings.NOMENCLATURAL_REFERENCE)
         .nothingElse();
   
     assertName("Passiflora eglandulosa J.M. MacDougal. Annals of the Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa")
         .species("Passiflora", "eglandulosa")
         .combAuthors(null, "J.M.MacDougal")
         .partial(". Annals of the Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37")
+        .warning(Warnings.NOMENCLATURAL_REFERENCE)
         .nothingElse();
   
     // this is wrong, but expected if we dont recognize the nom reference
     // make at least sure we blacklist the shit epithet
-    assertName("Passiflora eglandulosa J.M. MacDougal. Lingua shit de Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa shit")
+    assertName("Passiflora eglandulosa J.M. MacDougal. Lingua shit de Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa")
+        .species("Passiflora", "eglandulosa")
+        .combAuthors(null, "J.M.MacDougal")
+        .partial(". Lingua shit de Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37")
+        .warning(Warnings.NOMENCLATURAL_REFERENCE)
+        .nothingElse();
+  
+    // this is wrong, but expected if we dont recognize the nom reference
+    // make at least sure we blacklist the shit epithet
+    assertName("Passiflora eglandulosa J.M. MacDougal. Lingua shit de Missouri Botanical Garden 75. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa shit")
         .infraSpecies("Passiflora", "eglandulosa", INFRASPECIFIC_NAME, "shit")
         .combAuthors(null, "de Missouri Botanical Garden")
         .doubtful()
-        .partial("75:1658-1662.figs 1,2B,&3.1988.Figs 36-37")
+        .partial("75.figs 1,2B,&3.1988.Figs 36-37")
+        .warning(Warnings.BLACKLISTED_EPITHET)
         .nothingElse();
   }
   
@@ -131,6 +144,7 @@ public abstract class NameParserTest {
         .basAuthors(null, "Gaudin")
         .combAuthors("1824", "Dumort.")
         .code(BOTANICAL)
+        .warning(Warnings.SUBSPECIES_ASSIGNED)
         .nothingElse();
     
     assertName("Abies alba ssp. alpina Mill.", "Abies alba alpina")
@@ -166,6 +180,7 @@ public abstract class NameParserTest {
     
     assertName("Achillea millefolium subsp. pallidotegula B. Boivin var. pallidotegula", "Achillea millefolium var. pallidotegula")
         .infraSpecies("Achillea", "millefolium", Rank.VARIETY, "pallidotegula")
+        .warning("Intermediate classification removed: subsp.pallidotegula B.Boivin ")
         .nothingElse();
     
     assertName("Achillea millefolium var. pallidotegula", Rank.INFRASPECIFIC_NAME, "Achillea millefolium var. pallidotegula")
@@ -189,6 +204,7 @@ public abstract class NameParserTest {
         .combAuthors(null, "F.Ritter")
         .combExAuthors("Plesnik")
         .doubtful()
+        .warning(Warnings.UNUSUAL_CHARACTERS) // the ¡ in Plesn¡k is not a regular i
         .nothingElse();
     
     assertName("Abutilon bastardioides Baker f. ex Rose", "Abutilon bastardioides")
@@ -465,6 +481,7 @@ public abstract class NameParserTest {
         .remarks("in Eghbalian, Khanjani & Ueckermann")
         //hm, is this correct? maybe better not parse the in authorship year???
         .code(NomCode.ZOOLOGICAL)
+        .warning(Warnings.MISSING_GENUS)
         .nothingElse();
     
     assertName("\"? gryphoidis", "? gryphoidis")
@@ -564,6 +581,7 @@ public abstract class NameParserTest {
       if (r.isRestrictedToCode() != null) {
         ass.code(r.isRestrictedToCode());
       }
+      ass.warning(Warnings.RANK_MISMATCH);
       ass.nothingElse();
     }
   }
@@ -1059,6 +1077,7 @@ public abstract class NameParserTest {
         .combAuthors("1898", "Istvnffi")
         .doubtful()
         .code(ZOOLOGICAL)
+        .warning(Warnings.QUESTION_MARKS_REMOVED)
         .nothingElse();
     
     assertName("Cestodiscus gemmifer F.S.Castracane degli Antelminelli", "Cestodiscus gemmifer")
@@ -1346,6 +1365,7 @@ public abstract class NameParserTest {
         .doubtful()
         .partial(")(= Grislea L.1753).")
         .code(NomCode.ZOOLOGICAL)
+        .warning(Warnings.UNUSUAL_CHARACTERS)
         .nothingElse();
   }
   
@@ -1568,6 +1588,7 @@ public abstract class NameParserTest {
     assertName("Austrorhynchus pectatus null pectatus", "Austrorhynchus pectatus pectatus")
         .infraSpecies("Austrorhynchus", "pectatus", Rank.INFRASPECIFIC_NAME, "pectatus")
         .doubtful()
+        .warning(Warnings.NULL_EPITHET)
         .nothingElse();
     
     //assertName("Poa pratensis null proles (L.) Rouy, 1913", "Poa pratensis proles")
@@ -1620,11 +1641,13 @@ public abstract class NameParserTest {
     assertName("Nitzschia sinuata var. (Grunow) Lange-Bert.", "Nitzschia sinuata var.")
         .infraSpecies("Nitzschia", "sinuata", Rank.VARIETY, null)
         .type(NameType.INFORMAL)
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
     
     assertName("Canis lupus subsp. Linnaeus, 1758", "Canis lupus ssp.")
         .infraSpecies("Canis", "lupus", Rank.SUBSPECIES, null)
         .type(NameType.INFORMAL)
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
 
 //    assertName("Aphaenogaster (Ichnomyrmex) Schwammerdami var. spinipes", "Aphaenogaster var. spinipes")
@@ -1646,16 +1669,19 @@ public abstract class NameParserTest {
     assertName("Polygonum spec.", "Polygonum sp.")
         .species("Polygonum", null)
         .type(NameType.INFORMAL)
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
     
     assertName("Polygonum vulgaris ssp.", "Polygonum vulgaris ssp.")
         .infraSpecies("Polygonum", "vulgaris", Rank.SUBSPECIES, null)
         .type(NameType.INFORMAL)
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
     
     assertName("Mesocricetus sp.", "Mesocricetus sp.")
         .species("Mesocricetus", null)
         .type(NameType.INFORMAL)
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
     
     // dont treat these authorships as forms
@@ -1667,16 +1693,19 @@ public abstract class NameParserTest {
     assertName("Melastoma vacillans Blume var.", "Melastoma vacillans var.")
         .infraSpecies("Melastoma", "vacillans", Rank.VARIETY, null)
         .type(NameType.INFORMAL)
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
     
     assertName("Lepidoptera Hooker", Rank.SPECIES, "Lepidoptera sp.")
         .species("Lepidoptera", null)
         .type(NameType.INFORMAL)
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
     
     assertName("Lepidoptera alba DC.", Rank.SUBSPECIES, "Lepidoptera alba ssp.")
         .infraSpecies("Lepidoptera", "alba", Rank.SUBSPECIES, null)
         .type(NameType.INFORMAL)
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
   }
   
@@ -1685,16 +1714,19 @@ public abstract class NameParserTest {
     assertName("Polygonum", Rank.CULTIVAR, "Polygonum cv.")
         .cultivar("Polygonum", null)
         .type(INFORMAL)
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
     
     assertName("Polygonum", Rank.SUBSPECIES, "Polygonum subsp.")
         .indet("Polygonum", null, Rank.SUBSPECIES)
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
     
     assertName("Polygonum alba", Rank.GENUS, "Polygonum alba")
         .binomial("Polygonum", null, "alba", Rank.GENUS)
         .type(INFORMAL)
         .doubtful()
+        .warning(Warnings.RANK_MISMATCH)
         .nothingElse();
   }
   
@@ -1706,6 +1738,7 @@ public abstract class NameParserTest {
     assertName("Vulpes vulpes sp. silaceus Miller, 1907", "Vulpes vulpes silaceus")
         .infraSpecies("Vulpes", "vulpes", Rank.SUBSPECIES, "silaceus")
         .combAuthors("1907", "Miller")
+        .warning(Warnings.SUBSPECIES_ASSIGNED)
         .code(ZOOLOGICAL)
         .nothingElse();
   }
@@ -1873,6 +1906,7 @@ public abstract class NameParserTest {
     assertName("Lepidoptera sp. JGP0404", "Lepidoptera sp.")
         .species("Lepidoptera", null)
         .type(INFORMAL)
+        .warning(Warnings.INDETERMINED)
         .remarks("sp.JGP0404")
         .nothingElse();
     
@@ -1886,24 +1920,28 @@ public abstract class NameParserTest {
         .species("Verticordia", null)
         .type(INFORMAL)
         .remarks("sp.1")
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
     
     assertName("Bryozoan indet. 1", "Bryozoan sp.")
         .species("Bryozoan", null)
         .type(INFORMAL)
         .remarks("indet.1")
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
     
     assertName("Bryozoan sp. E", "Bryozoan sp.")
         .species("Bryozoan", null)
         .type(INFORMAL)
         .remarks("sp.E")
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
     
     assertName("Prostanthera sp. Somersbey (B.J.Conn 4024)", "Prostanthera sp.")
         .species("Prostanthera", null)
         .type(INFORMAL)
         .remarks("sp.Somersbey(B.J.Conn 4024)")
+        .warning(Warnings.INDETERMINED)
         .nothingElse();
   }
   
