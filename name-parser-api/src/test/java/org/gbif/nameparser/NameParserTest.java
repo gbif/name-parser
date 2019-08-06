@@ -58,7 +58,7 @@ public abstract class NameParserTest {
         .nothingElse();
   
     // this is wrong, but expected if we dont recognize the nom reference
-    // make at least sure we blacklist the shit epithet
+    // make sure we at least blacklist the shit epithet, as we have received such data in the past
     assertName("Passiflora eglandulosa J.M. MacDougal. Lingua shit de Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa")
         .species("Passiflora", "eglandulosa")
         .combAuthors(null, "J.M.MacDougal")
@@ -67,7 +67,7 @@ public abstract class NameParserTest {
         .nothingElse();
   
     // this is wrong, but expected if we dont recognize the nom reference
-    // make at least sure we blacklist the shit epithet
+    // make sure we at least blacklist the shit epithet, as we have received such data in the past
     assertName("Passiflora eglandulosa J.M. MacDougal. Lingua shit de Missouri Botanical Garden 75. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa shit")
         .infraSpecies("Passiflora", "eglandulosa", INFRASPECIFIC_NAME, "shit")
         .combAuthors(null, "de Missouri Botanical Garden")
