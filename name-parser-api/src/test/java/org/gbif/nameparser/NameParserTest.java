@@ -31,6 +31,39 @@ public abstract class NameParserTest {
     this.parser = parser;
   }
   
+  /**
+   * https://github.com/gbif/checklistbank/issues/87
+   */
+  @Test
+  public void nomRefs() throws Exception {
+    assertName("Passiflora plumosa Feuillet & Cremers, Proceedings of the Koninklijke Nederlandse Akademie van Wetenschappen, Series C: Biological and Medical Sciences 87(3): 381, f. 2. 1984. Fig. 2I, J", "Passiflora plumosa")
+        .species("Passiflora", "plumosa")
+        .combAuthors(null, "Feuillet", "Cremers")
+        .partial(", Proceedings of the Koninklijke Nederlandse Akademie van Wetenschappen, Series C: Biological and Medical Sciences 87(3): 381, f. 2. 1984. Fig. 2I, J")
+        .nothingElse();
+  
+    assertName("Passiflora jussieui Feuillet, Journal of the Botanical Research Institute of Texas 4(2): 611, f. 1. 2010. Figs 2E, F, 3E, F", "Passiflora jussieui")
+        .species("Passiflora", "jussieui")
+        .combAuthors(null, "Feuillet")
+        .partial(", Journal of the Botanical Research Institute of Texas 4(2): 611, f. 1. 2010. Figs 2E, F, 3E, F")
+        .nothingElse();
+  
+    assertName("Passiflora eglandulosa J.M. MacDougal. Annals of the Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa")
+        .species("Passiflora", "eglandulosa")
+        .combAuthors(null, "J.M.MacDougal")
+        .partial(". Annals of the Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37")
+        .nothingElse();
+  
+    // this is wrong, but expected if we dont recognize the nom reference
+    // make at least sure we blacklist the shit epithet
+    assertName("Passiflora eglandulosa J.M. MacDougal. Lingua shit de Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa shit")
+        .infraSpecies("Passiflora", "eglandulosa", INFRASPECIFIC_NAME, "shit")
+        .combAuthors(null, "de Missouri Botanical Garden")
+        .doubtful()
+        .partial("75:1658-1662.figs 1,2B,&3.1988.Figs 36-37")
+        .nothingElse();
+  }
+  
   @Test
   public void species() throws Exception {
     assertName("Diodia teres Walter", "Diodia teres")

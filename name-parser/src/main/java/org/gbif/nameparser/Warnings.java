@@ -16,4 +16,6 @@ public class Warnings {
   public static final String RANK_MISMATCH = "rank does not fit the parsed name";
   public static final String HTML_ENTITIES = "html entities unescaped";
   public static final String XML_TAGS = "xml tags removed";
+  public static final String BLACKLISTED_EPITHET = "blacklisted epithet used";
+  public static final String NOMENCLATURAL_REFERENCE = "nomenclatural reference removed";
 }

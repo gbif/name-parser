@@ -3,6 +3,7 @@ package org.gbif.nameparser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.*;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Chars;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -17,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -94,15 +96,16 @@ class ParsingJob implements Callable<ParsedName> {
             }
         ), "|") +
     ")";
-
+  
+  private static final String UNALLOWED_EPITHETS = "the|and|of|where|from";
   private static final String UNALLOWED_EPITHET_ENDING =
       "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
   static final String EPHITHET = "(?:[0-9]+-?|[a-z]-|[doml]'|(?:van|novae) [a-z])?"
             // avoid matching to rank markers
             + "(?!"+RANK_MARKER+"\\b)"
             + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
-            // avoid epithets ending with the unallowed endings, e.g. serovar and author suffices like filius
-            + "(?<!(?:\\b(?:ex|l[ae]|v[ao]n|"+AUTHOR_TOKEN_3+")\\.?|"+ UNALLOWED_EPITHET_ENDING +"))(?=\\b)";
+            // avoid epithets and those ending with the unallowed endings, e.g. serovar and author suffices like filius
+            + "(?<!(?:\\b(?:ex|l[ae]|v[ao]n|"+AUTHOR_TOKEN_3+")\\.?|\\b(?:"+UNALLOWED_EPITHETS+")|"+ UNALLOWED_EPITHET_ENDING +"))(?=\\b)";
   static final String MONOMIAL =
     "[" + NAME_LETTERS + "](?:\\.|[" + name_letters + "]+)(?:-[" + NAME_LETTERS + "]?[" + name_letters + "]+)?";
   // a pattern matching typical latin word endings. Helps identify name parts from authors
@@ -268,6 +271,8 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern STARTING_EPITHET = Pattern.compile("^\\s*(" + EPHITHET + ")\\b");
   private static final Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\. *sp(?:ec)?\\b");
   private static final Pattern SENSU_LATU = Pattern.compile("\\bs\\.l\\.\\b");
+  
+  private static final Pattern NOM_REFS = Pattern.compile("[,;.]?[\\p{Lu}\\p{Ll}\\s]*\\b(?:Proceedings|Journal|Annals)\\b.+$");
 
   // many names still use outdated xxxtype rank marker, e.g. serotype instead of serovar
   private static final Pattern TYPE_TO_VAR;
@@ -285,7 +290,23 @@ class ParsingJob implements Callable<ParsedName> {
     sb.append(")type\\b");
     TYPE_TO_VAR = Pattern.compile(sb.toString());
   }
-
+  private static final Set<String> BLACKLIST_EPITHETS;
+  static {
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(
+        ParsingJob.class.getResourceAsStream("/nameparser/blacklist-epithets.txt")
+    ))) {
+      Set<String> blacklist = br.lines()
+          .map(String::toLowerCase)
+          .map(String::trim)
+          .filter(x -> !StringUtils.isBlank(x))
+          .collect(Collectors.toSet());
+      BLACKLIST_EPITHETS = ImmutableSet.copyOf(blacklist);
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to read epithet blacklist from classpath resources", e);
+    }
+  }
+  
+  
   @VisibleForTesting
   static final Pattern POTENTIAL_NAME_PATTERN = Pattern.compile("^×?" + MONOMIAL + "\\b");
   private static final Pattern REMOVE_INTER_RANKS = Pattern.compile("\\b((?:subsp|ssp|var)[ .].+)\\b("+RANK_MARKER+")\\b");
@@ -414,6 +435,16 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       pn.setCandidatus(true);
       name = m.replaceFirst(m.group(2));
+    }
+  
+    // preparse nomenclatural references
+    ParsedName.State preParseState = null;
+    m = NOM_REFS.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst("");
+      preParseState = ParsedName.State.PARTIAL;
+      pn.setUnparsed(m.group());
+      pn.addWarning(Warnings.NOMENCLATURAL_REFERENCE);
     }
 
     // normalize bacterial rank markers
@@ -654,10 +685,14 @@ class ParsingJob implements Callable<ParsedName> {
     if (infraspecEpithet != null) {
       pn.setInfraspecificEpithet(infraspecEpithet);
     }
-    // if we established a rank during preparsing make sure we use this not the parsed one
+    // if we established a rank or state during preparsing make sure we use this not the parsed one
     if (preparsingRank != null && this.rank != preparsingRank) {
       pn.setRank(preparsingRank);
     }
+    if (preParseState != null) {
+      pn.setState(preParseState);
+    }
+    
 
     // determine name type
     determineNameType(name);
@@ -982,6 +1017,13 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   private void applyDoubtfulFlag(String scientificName) {
+    // check epithet blacklist
+    for (String epi : pn.listEpithets()) {
+      if (BLACKLIST_EPITHETS.contains(epi)) {
+        pn.addWarning(Warnings.BLACKLISTED_EPITHET);
+        pn.setDoubtful(true);
+      }
+    }
     // all rules below do not apply to unparsable names
     Matcher m = DOUBTFUL.matcher(scientificName);
     if (!m.find()) {
@@ -1051,7 +1093,7 @@ class ParsingJob implements Callable<ParsedName> {
       } else {
         LOG.debug("Partial match with unparsed remains \"{}\" for: {}", matcher.group(21), name);
         pn.setState(ParsedName.State.PARTIAL);
-        pn.setUnparsed(matcher.group(21).trim());
+        pn.addUnparsed(matcher.group(21).trim());
       }
       if (LOG.isDebugEnabled()) {
         logMatcher(matcher);

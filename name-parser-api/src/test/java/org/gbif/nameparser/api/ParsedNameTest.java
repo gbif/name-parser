@@ -1,6 +1,9 @@
 package org.gbif.nameparser.api;
 
 
+import java.util.Collections;
+
+import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -19,6 +22,19 @@ public class ParsedNameTest {
     
     n.setRank(null);
     assertEquals(Rank.UNRANKED, n.getRank());
+  }
+  
+  @Test
+  public void testListEpithet() throws Exception {
+    ParsedName pn = new ParsedName();
+    pn.setUninomial("Abies");
+    assertEquals(Collections.EMPTY_LIST, pn.listEpithets());
+    
+    pn.setInfraspecificEpithet("abieta");
+    assertEquals(Lists.newArrayList("abieta"), pn.listEpithets());
+
+    pn.setSpecificEpithet("vulgaris");
+    assertEquals(Lists.newArrayList("vulgaris", "abieta"), pn.listEpithets());
   }
   
   @Test

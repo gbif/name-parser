@@ -2,6 +2,7 @@ package org.gbif.nameparser.api;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.Lists;
@@ -327,6 +328,12 @@ public class ParsedName {
     this.unparsed = unparsed;
   }
   
+  public void addUnparsed(String unparsed) {
+    if (!StringUtils.isBlank(unparsed)) {
+      this.unparsed = this.unparsed == null ? unparsed : this.unparsed + unparsed;
+    }
+  }
+
   public State getState() {
     return state;
   }
@@ -367,6 +374,12 @@ public class ParsedName {
    */
   public String getTerminalEpithet() {
     return infraspecificEpithet == null ? specificEpithet : infraspecificEpithet;
+  }
+  
+  public List<String> listEpithets() {
+    return Lists.newArrayList(infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet).stream()
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
   
   /**
