@@ -271,7 +271,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern SENSU_LATU = Pattern.compile("\\bs\\.l\\.\\b");
 
   
-  private static final Pattern NOM_REFS = Pattern.compile("[,;.]?[\\p{Lu}\\p{Ll}\\s]*\\b(?:Proceedings|Journal|Annals|Bulletin|Systematics|Taxonomy|Series)\\b.+$");
+  private static final Pattern NOM_REFS = Pattern.compile("[,;.]?[\\p{Lu}\\p{Ll}\\s]*\\b(?:Proceedings|Journal|Annals|Bulletin|Systematics|Taxonomy|Series|Memoirs|Mitteilungen|Berichte)\\b.+$");
   // 4(2): 611
   private static final Pattern NOM_REF_VOLUME = Pattern.compile("[,;.]?[\\p{Lu}\\p{Ll}\\s]*\\b\\d+\\s*(//(\\d+//))?:\\s*\\d+\\b.+$");
   // many names still use outdated xxxtype rank marker, e.g. serotype instead of serovar
