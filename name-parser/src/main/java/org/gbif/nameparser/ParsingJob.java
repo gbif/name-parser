@@ -1034,6 +1034,11 @@ class ParsingJob implements Callable<ParsedName> {
         pn.setDoubtful(true);
       }
     }
+    // also look at genus
+    if (pn.getGenus() != null && BLACKLIST_EPITHETS.contains(pn.getGenus().toLowerCase())) {
+      pn.addWarning(Warnings.BLACKLISTED_EPITHET);
+      pn.setDoubtful(true);
+    }
     // all rules below do not apply to unparsable names
     Matcher m = DOUBTFUL.matcher(scientificName);
     if (!m.find()) {
