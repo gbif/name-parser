@@ -16,7 +16,6 @@ at
 autre
 aux
 avec
-be
 because
 before
 below
