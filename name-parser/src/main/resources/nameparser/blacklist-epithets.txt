@@ -30,6 +30,7 @@ ces
 cet
 cher
 class
+classified
 com
 comme
 das
@@ -56,7 +57,6 @@ ever
 except
 familie
 family
-far
 first
 flac
 for

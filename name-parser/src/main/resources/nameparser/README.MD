@@ -7,3 +7,14 @@ The query used was:
 To sort the suffices by their ending linux provides a nice tool:
 
    $ cat latin-endings.txt | rev | sort | rev > latin-endings.txt2
+
+
+
+
+# Epithet Blacklist
+The list of blacklisted epithets is used by the parser to flag doubtful names.
+A little python script blacklist-test.py can be used to query the current GBIF ChecklistBank API for each epithet and report number of matches.
+
+## Notes on some blacklisted epithets that still yield matches in GBIF
+
+ - die: 'Anticharis die Isiana Pilg.' is a bad name based on 'Anticharis dielsiana Pilg.'
