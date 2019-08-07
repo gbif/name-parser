@@ -39,3 +39,4 @@ A little python script blacklist-test.py can be used to query the current GBIF C
 'qui' Willowsia qui Zhang, Chen & Deharveng, 2011
 'that' Xerolinus that (Steiner, 2006)
 'this' Xerolinus this (Steiner, 2006)
+'une' Trechiama une Ueno, 2001
