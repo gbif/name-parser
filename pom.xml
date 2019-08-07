@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>name-parser-motherpom</artifactId>
-    <version>3.2.0</version>
+    <version>3.2.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>GBIF Name Parser Motherpom</name>
@@ -20,7 +20,7 @@
         <connection>scm:git:git@github.com:gbif/name-parser.git</connection>
         <url>https://github.com/gbif/name-parser</url>
         <developerConnection>scm:git:git@github.com:gbif/name-parser.git</developerConnection>
-        <tag>name-parser-motherpom-3.2.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <modules>
