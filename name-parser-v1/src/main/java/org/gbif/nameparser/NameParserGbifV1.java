@@ -13,6 +13,7 @@ import org.gbif.api.vocabulary.Rank;
 import org.gbif.nameparser.api.NamePart;
 import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.UnparsableNameException;
+import org.gbif.nameparser.api.Warnings;
 import org.gbif.nameparser.util.NameFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -199,7 +200,9 @@ public class NameParserGbifV1 implements NameParser {
   static NameType gbifNameType(org.gbif.nameparser.api.ParsedName pn) {
     NameType t;
     // detect name types that only exist in the GBIF API v1
-    if (pn.isCandidatus()) {
+    if (pn.isDoubtful() && pn.getWarnings().contains(Warnings.BLACKLISTED_EPITHET)) {
+      t = NameType.BLACKLISTED;
+    } else if (pn.isCandidatus()) {
       t = NameType.CANDIDATUS;
     } else if (pn.getCode() == NomCode.CULTIVARS || pn.getCultivarEpithet() != null) {
       t = NameType.CULTIVAR;

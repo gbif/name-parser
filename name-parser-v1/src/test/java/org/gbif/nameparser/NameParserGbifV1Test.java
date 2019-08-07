@@ -5,6 +5,7 @@ import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.NamePart;
 import org.gbif.api.vocabulary.NameType;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.nameparser.api.Warnings;
 import org.junit.Test;
 
 import java.lang.management.ManagementFactory;
@@ -37,6 +38,9 @@ public class NameParserGbifV1Test {
 
     pn.setDoubtful(true);
     assertEquals(NameType.DOUBTFUL, NameParserGbifV1.gbifNameType(pn));
+  
+    pn.addWarning(Warnings.BLACKLISTED_EPITHET);
+    assertEquals(NameType.BLACKLISTED, NameParserGbifV1.gbifNameType(pn));
   }
 
   @Test
