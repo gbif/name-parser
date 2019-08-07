@@ -18,3 +18,4 @@ A little python script blacklist-test.py can be used to query the current GBIF C
 ## Notes on some blacklisted epithets that still yield matches in GBIF
 
  - die: 'Anticharis die Isiana Pilg.' is a bad name based on 'Anticharis dielsiana Pilg.'
+ - mon: 'Euchroeus mon' is a bad name based on [Euchroeus mongolicus in Pensoft](https://zookeys.pensoft.net/article/4271/list/13/)
