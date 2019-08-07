@@ -127,7 +127,6 @@ or
 order
 ordnung
 other
-our
 ours
 over
 pas
