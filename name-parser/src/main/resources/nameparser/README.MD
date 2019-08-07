@@ -36,3 +36,4 @@ A little python script blacklist-test.py can be used to query the current GBIF C
 'our' Mugil our Forsskål, 1775
 'pas' Cantabroplectus pas Struyve, 2018
 'plus' Rubus plus L.H.Bailey
+'qui' Willowsia qui Zhang, Chen & Deharveng, 2011
