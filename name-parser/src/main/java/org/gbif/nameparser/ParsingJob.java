@@ -196,7 +196,7 @@ class ParsingJob implements Callable<ParsedName> {
       "$");
   private static final Pattern FILIUS_AT_END = Pattern.compile("[ .]f\\.?$");
   // name normalising
-  static final Pattern EXTRACT_SENSU = Pattern.compile(" ?\\b" +
+  static final Pattern EXTRACT_SENSU = Pattern.compile("[;, ]?\\b" +
       "(" +
         "(?:(?:excl[. ](?:gen|sp|var)|mut.char|p.p)[. ])?" +
         "\\(?(?:" +
@@ -244,6 +244,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_HYBRIDS_EPITH = Pattern.compile("^\\s*(×?" + MONOMIAL + ")\\s+(?:×|√ó|[xX]\\s)\\s*(" + EPHITHET + ")");
   private static final Pattern NORM_HYBRIDS_FORM = Pattern.compile("\\b([×xX]|√ó) ");
   private static final Pattern NORM_TF_GENUS = Pattern.compile("^([" + NAME_LETTERS + "])\\(([" + name_letters + "-]+)\\)\\.? ");
+  private static final Pattern REPL_FINAL_PUNCTUATIONS = Pattern.compile("[,;:]+$");
   private static final Pattern REPL_IN_REF = Pattern.compile("[, ]?\\b(?:in|IN|apud) (" + AUTHOR_TEAM + ")");
   private static final Pattern REPL_RANK_PREFIXES = Pattern.compile("^(sub)?(fossil|" +
       StringUtils.join(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
@@ -917,6 +918,7 @@ class ParsingJob implements Callable<ParsedName> {
     // finally NORMALIZE PUNCTUATION AND WHITESPACE again
     name = NORM_PUNCTUATIONS.matcher(name).replaceAll("$1");
     name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
+    name = REPL_FINAL_PUNCTUATIONS.matcher(name).replaceAll("");
     return StringUtils.trimToEmpty(name);
   }
 

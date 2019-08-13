@@ -1385,6 +1385,15 @@ public abstract class NameParserTest {
   
   @Test
   public void nomNotes() throws Exception {
+  
+    assertName("Anthurium lanceum Engl., nom. illeg., non. A. lancea.", "Anthurium lanceum")
+        .species("Anthurium", "lanceum")
+        .combAuthors(null, "Engl.")
+        .nomNote("nom.illeg.")
+        .code(BOTANICAL)
+        .sensu("non. A.lancea.")
+        .nothingElse();
+    
     //TODO: pro syn.
     assertName("Combretum Loefl. (1758), nom. cons. [= Grislea L. 1753].", "Combretum")
         .monomial("Combretum")
@@ -1395,6 +1404,14 @@ public abstract class NameParserTest {
         .code(NomCode.ZOOLOGICAL)
         .warning(Warnings.UNUSUAL_CHARACTERS)
         .nothingElse();
+  
+    assertName("Anthurium lanceum Engl. nom.illeg.", "Anthurium lanceum")
+        .species("Anthurium", "lanceum")
+        .combAuthors(null, "Engl.")
+        .nomNote("nom.illeg.")
+        .code(BOTANICAL)
+        .nothingElse();
+
   }
   
   @Test
