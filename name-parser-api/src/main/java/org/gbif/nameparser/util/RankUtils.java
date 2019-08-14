@@ -1,12 +1,12 @@
 package org.gbif.nameparser.util;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.*;
 import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
@@ -160,36 +160,88 @@ public class RankUtils {
   );
   
   /**
-   * An immutable map of name suffices to corresponding ranks across all kingdoms.
+   * An immutable map of name suffices to corresponding ranks for each code.
    * To minimize wrong matches this map is sorted by suffix length with the first suffices being the longest and
    * therefore most accurate matches.
-   * See http://www.nhm.ac.uk/hosted-sites/iczn/code/index.jsp?nfv=true&article=29
+   * See https://code.iczn.org/formation-and-treatment-of-names/article-29-family-group-names/#art-29-2
+   * and https://en.wikipedia.org/wiki/Taxonomic_rank#Terminations_of_names
    */
-  public static final SortedMap<String, Rank> SUFFICES_RANK_MAP =
-      new ImmutableSortedMap.Builder<String, Rank>(Ordering.natural())
-          .put("mycetidae", SUBCLASS)
-          .put("phycidae", SUBCLASS)
-          .put("mycotina", SUBPHYLUM)
-          .put("phytina", SUBPHYLUM)
-          .put("phyceae", CLASS)
-          .put("mycetes", CLASS)
-          .put("mycota", PHYLUM)
-          .put("opsida", CLASS)
-          .put("oideae", SUBFAMILY)
-          .put("aceae", FAMILY)
-          .put("phyta", PHYLUM)
-          .put("oidea", SUPERFAMILY)
-          .put("oidae", EPIFAMILY)
-          .put("ineae", SUBORDER)
-          .put("anae", SUPERORDER)
-          .put("ales", ORDER)
-          .put("acea", SUPERFAMILY)
-          .put("idae", FAMILY)
-          .put("inae", SUBFAMILY)
-          .put("eae", TRIBE)
-          .put("ini", TRIBE)
-          .put("ina", SUBTRIBE)
-          .build();
+  public static final Map<NomCode, Map<String, Rank>> SUFFICES_RANK_MAP =
+      // ImmutableMap keeps insertion order
+      ImmutableMap.of(
+          NomCode.BACTERIAL, new ImmutableMap.Builder<String, Rank>()
+              .put("oideae", SUBFAMILY)
+              .put("aceae", FAMILY)
+              .put("ineae", SUBORDER)
+              .put("ales", ORDER)
+              .put("idae", SUBCLASS)
+              .put("inae", SUBTRIBE)
+              .put("eae", TRIBE)
+              .put("ia", CLASS)
+              .build(),
+          NomCode.BOTANICAL, new ImmutableMap.Builder<String, Rank>()
+              .put("mycetidae", SUBCLASS)
+              .put("phycidae", SUBCLASS)
+              .put("mycotina", SUBPHYLUM)
+              .put("phytina", SUBPHYLUM)
+              .put("mycetes", CLASS)
+              .put("phyceae", CLASS)
+              .put("mycota", PHYLUM)
+              .put("opsida", CLASS)
+              .put("oideae", SUBFAMILY)
+              .put("phyta", PHYLUM)
+              .put("ineae", SUBORDER)
+              .put("aceae", FAMILY)
+              .put("idae", SUBCLASS)
+              .put("anae", SUPERORDER)
+              .put("acea", SUPERFAMILY)
+              .put("aria", INFRAORDER)
+              .put("ales", ORDER)
+              .put("inae", SUBTRIBE)
+              .put("eae", TRIBE)
+              .build(),
+          NomCode.ZOOLOGICAL, new ImmutableMap.Builder<String, Rank>()
+              .put("oidea", SUPERFAMILY)
+              .put("oidae", EPIFAMILY)
+              .put("idae", FAMILY)
+              .put("inae", SUBFAMILY)
+              .put("ini", TRIBE)
+              .put("ina", SUBTRIBE)
+              .build()
+      );
+  
+  private static final Map<String, Rank> GLOBAL_SUFFICES_RANK_MAP;
+  static {
+    Set<String> nonUnique = new HashSet<>();
+    Map<String, Rank> suffices = new TreeMap<>(new Comparator<String>() {
+      @Override
+      public int compare(String s1, String s2) {
+        if (s1.length() > s2.length()) {
+          return -1;
+        } else if (s1.length() < s2.length()) {
+          return 1;
+        } else {
+          return s1.compareTo(s2);
+        }
+      }
+    });
+    SUFFICES_RANK_MAP.values().forEach(map -> {
+      for (Map.Entry<String, Rank> e : map.entrySet()) {
+        if (e.getKey().length() > 4) {
+          if (!nonUnique.contains(e.getKey())) {
+            if (e.getValue() != suffices.getOrDefault(e.getKey(), e.getValue())) {
+              nonUnique.add(e.getKey());
+              suffices.remove(e.getKey());
+            } else {
+              suffices.put(e.getKey(), e.getValue());
+            }
+          }
+        }
+      }
+    });
+    GLOBAL_SUFFICES_RANK_MAP = ImmutableMap.copyOf(suffices);
+  }
+  
   
   /**
    * Tries its best to infer a rank from a given rank marker such as subsp.
@@ -204,37 +256,52 @@ public class RankUtils {
   }
   
   /**
-   * Tries its best to infer a rank from an atomised name by just looking at the name parts ignoring any existing rank on the instance.
-   * As a final resort for higher monomials the suffices are inspected, but no attempt is made to disambiguate
-   * the 2 known homonym suffices -idae and -inae, but instead the far more widespread zoological versions are
-   * interpreted.
+   * @deprecated use infer rank with given nomenclatural code instead for better results
    *
    * @return the inferred rank or UNRANKED if it cant be found.
    */
-  
+  @Deprecated
   public static Rank inferRank(ParsedName pn) {
-    // default if we cant find anything else
-    Rank rank = UNRANKED;
+    return inferRank(pn, null);
+  }
+  
+  /**
+   * Tries its best to infer a rank from an atomised name by just looking at the name parts ignoring any existing rank on the instance.
+   * As a final resort for higher monomials the suffices are inspected with the help of the supplied nomenclatural code.
+   * If no code is given certain suffices are ambiguous (e.g. -idae and -inae) and cannot be inferred!
+   *
+   * @return the inferred rank or UNRANKED if it cant be found.
+   */
+  public static Rank inferRank(ParsedName pn, @Nullable NomCode code) {
     // detect rank based on parsed name
     if (pn.getInfraspecificEpithet() != null) {
       // some infraspecific name
-      rank = INFRASPECIFIC_NAME;
+      return INFRASPECIFIC_NAME;
+      
     } else if (pn.getSpecificEpithet() != null) {
       // a species
-      rank = SPECIES;
+      return SPECIES;
+      
     } else if (pn.getInfragenericEpithet() != null) {
       // some infrageneric name
-      rank = INFRAGENERIC_NAME;
+      return INFRAGENERIC_NAME;
+      
     } else if (pn.getUninomial() != null) {
       // a suprageneric name, check suffices
-      for (String suffix : SUFFICES_RANK_MAP.keySet()) {
-        if (pn.getUninomial().endsWith(suffix)) {
-          rank = SUFFICES_RANK_MAP.get(suffix);
-          break;
+      Map<String, Rank> suffices;
+      if (code == null) {
+        suffices = GLOBAL_SUFFICES_RANK_MAP;
+      } else {
+        suffices = SUFFICES_RANK_MAP.getOrDefault(code, Collections.EMPTY_MAP);
+      }
+      for (Map.Entry<String, Rank> e : suffices.entrySet()) {
+        if (pn.getUninomial().endsWith(e.getKey())) {
+          return e.getValue();
         }
       }
     }
-    return rank;
+    // default if we cant find anything else
+    return UNRANKED;
   }
   
 }

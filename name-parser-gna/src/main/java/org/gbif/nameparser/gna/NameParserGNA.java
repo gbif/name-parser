@@ -15,6 +15,7 @@ import scala.collection.Map;
 
 import java.util.List;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 /**
  * Wrapper around the GNA Name parser to deal with ParsedName and API.
@@ -34,20 +35,25 @@ public class NameParserGNA implements NameParser {
 
   @Override
   public ParsedName parse(String scientificName, Rank rank) throws UnparsableNameException {
+    return parse(scientificName, null, null);
+  }
+  
+  @Override
+  public ParsedName parse(String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException {
     if (scientificName == null || EMPTY.matchesAllOf(scientificName)) {
       return null;
     }
-
+  
     ScientificNameParser.Result sn = parser.fromString(scientificName);
     ParsedName n = convert(scientificName, sn);
-
+  
     NameType type = preparse(scientificName);
     if (type != null) {
       n.setType(type);
     }
     return n;
   }
-
+  
   /**
    * Catch known parsing oddities the GNA Parser does to expect or tries to capture.
    * E.g. placeholder names

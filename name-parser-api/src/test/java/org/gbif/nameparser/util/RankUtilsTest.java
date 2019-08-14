@@ -1,8 +1,8 @@
-package org.gbif.nameparser;
+package org.gbif.nameparser.util;
 
+import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
-import org.gbif.nameparser.util.RankUtils;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -16,46 +16,50 @@ import static org.junit.Assert.assertTrue;
  *
  */
 public class RankUtilsTest {
-  private static final Map<String, Rank> NAMES = new HashMap<String, Rank>();
-
-  static {
-    NAMES.put("Asteraceae", Rank.FAMILY);
-    NAMES.put("Magnoliophyta", Rank.PHYLUM);
-    NAMES.put("Fabales", Rank.ORDER);
-    NAMES.put("Hominidae", Rank.FAMILY);
-    NAMES.put("Drosophilinae", Rank.SUBFAMILY);
-    NAMES.put("Agaricomycetes", Rank.CLASS);
-  }
-
+  
   @Test
   public void testFamilyGroup() {
     assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.SUBTRIBE));
     assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.TRIBE));
     assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.INFRAFAMILY));
     assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.SUPERFAMILY));
-
+    
     assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.ORDER));
     assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.SECTION));
     assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.GENUS));
   }
-
+  
+  private void assertInferred(String uninomial, NomCode code, Rank rank) {
+    ParsedName pn = new ParsedName();
+    pn.setUninomial(uninomial);
+    assertEquals(rank, RankUtils.inferRank(pn, code));
+  }
+  
   @Test
   public void testInferRank() {
-    for (Map.Entry<String, Rank> stringRankEntry : NAMES.entrySet()) {
-      ParsedName pn = new ParsedName();
-      pn.setUninomial(stringRankEntry.getKey());
-      assertEquals(stringRankEntry.getValue(), RankUtils.inferRank(pn));
-    }
-
+  
+    assertInferred("Asteraceae", NomCode.BOTANICAL, Rank.FAMILY);
+    assertInferred("Asteraceae", null, Rank.FAMILY);
+    assertInferred("Asteraceae", NomCode.ZOOLOGICAL, Rank.UNRANKED);
+    assertInferred("Magnoliophyta", NomCode.BOTANICAL, Rank.PHYLUM);
+    assertInferred("Fabales", NomCode.BOTANICAL, Rank.ORDER);
+    assertInferred("Hominidae", NomCode.ZOOLOGICAL, Rank.FAMILY);
+    assertInferred("Drosophilinae", NomCode.ZOOLOGICAL, Rank.SUBFAMILY);
+    assertInferred("Agaricomycetes", NomCode.BOTANICAL, Rank.CLASS);
+    assertInferred("Agaricomycetes", null, Rank.CLASS);
+    assertInferred("Woodsioideae", null, Rank.SUBFAMILY);
+    assertInferred("Antrophyoideae", null, Rank.SUBFAMILY);
+    assertInferred("Protowoodsioideae", null, Rank.SUBFAMILY);
+    
     assertEquals(Rank.SPECIES, RankUtils.inferRank(build("Abies","Abies", "alba")));
     assertEquals(Rank.SPECIES, RankUtils.inferRank(build("Abies", null, "alba")));
     assertEquals(Rank.INFRAGENERIC_NAME, RankUtils.inferRank(build(null, "Abies", null)));
     assertEquals(Rank.INFRAGENERIC_NAME, RankUtils.inferRank(build("", "Abies", null)));
-    assertEquals(Rank.SUBFAMILY, RankUtils.inferRank(build("Neurolaenodinae", null, null)));
+    assertEquals(Rank.SUBFAMILY, RankUtils.inferRank(build("Neurolaenodinae", null, null), NomCode.ZOOLOGICAL));
     // should not be able to infer the correct family
-    assertEquals(Rank.UNRANKED, RankUtils.inferRank(build("Compositae", null, null)));
+    assertEquals(Rank.UNRANKED, RankUtils.inferRank(build("Compositae", null, null), NomCode.BOTANICAL));
   }
-
+  
   private static ParsedName build(String genus, String infragen, String spec) {
     ParsedName pn = new ParsedName();
     pn.setUninomial(genus);
@@ -72,24 +76,8 @@ public class RankUtilsTest {
       }
     }
   }
-
-
-  @Test
-  public void testSuffixMap() {
-   
-    for (Map.Entry<String, Rank> stringRankEntry : NAMES.entrySet()) {
-      Rank r = null;
-      for (String suffix : RankUtils.SUFFICES_RANK_MAP.keySet()) {
-        if (stringRankEntry.getKey().endsWith(suffix)) {
-          r = RankUtils.SUFFICES_RANK_MAP.get(suffix);
-          break;
-        }
-      }
-      assertEquals(stringRankEntry.getValue(), r);
-    }
-  }
-
-
+  
+  
   @Test
   public void testRankMarkers() {
     for (Rank r : Rank.values()) {

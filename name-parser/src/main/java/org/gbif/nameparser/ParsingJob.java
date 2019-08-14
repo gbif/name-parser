@@ -17,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -365,6 +366,7 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   private final Rank rank;
+  private final NomCode code;
   private final String scientificName;
   private final ParsedName pn;
   private boolean ignoreAuthorship;
@@ -373,9 +375,10 @@ class ParsingJob implements Callable<ParsedName> {
    * @param scientificName the full scientific name to parse
    * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
    */
-  ParsingJob(String scientificName, Rank rank) {
+  ParsingJob(String scientificName, Rank rank, NomCode code) {
     this.scientificName = Preconditions.checkNotNull(scientificName);
     this.rank = Preconditions.checkNotNull(rank);
+    this.code = code;
     pn =  new ParsedName();
     pn.setRank(rank);
   }
@@ -713,7 +716,7 @@ class ParsingJob implements Callable<ParsedName> {
 
     // determine rank if not yet assigned
     if (pn.getRank().otherOrUnranked()) {
-      pn.setRank(RankUtils.inferRank(pn));
+      pn.setRank(RankUtils.inferRank(pn, code));
     }
 
     // determine code if not yet assigned
@@ -1090,6 +1093,10 @@ class ParsingJob implements Callable<ParsedName> {
         }
       } else if (pn.getNomenclaturalNotes() != null && pn.getNomenclaturalNotes().contains("illeg")) {
         pn.setCode(NomCode.BOTANICAL);
+      
+      } else {
+        // otherwise use code given
+        pn.setCode(code);
       }
     }
   }

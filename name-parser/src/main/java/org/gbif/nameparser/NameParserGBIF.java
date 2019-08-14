@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.*;
+import javax.annotation.Nullable;
 
 /**
  * The default GBIF name parser build on regular expressions.
@@ -47,11 +48,23 @@ public class NameParserGBIF implements NameParser {
     LOG.debug("Create new name parser with timeout={}", timeout);
     this.timeout = timeout;  // max default parsing time is one second;
   }
-
+  
+  /**
+   * @deprecated provide rank and code parameters
+   */
+  @Deprecated
   public ParsedName parse(String scientificName) throws UnparsableNameException {
     return parse(scientificName, Rank.UNRANKED);
   }
 
+  /**
+   * @deprecated provide rank and code parameters
+   */
+  @Deprecated
+  public ParsedName parse(final String scientificName, Rank rank) throws UnparsableNameException {
+    return parse(scientificName, rank, null);
+  }
+  
   /**
    * Fully parse the supplied name also trying to extract authorships, a conceptual sec reference, remarks or notes
    * on the nomenclatural status. In some cases the authorship parsing proves impossible and this nameparser will
@@ -63,40 +76,40 @@ public class NameParserGBIF implements NameParser {
    *
    * @param scientificName the full scientific name to parse
    * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
+   * @param code the nomenclatural code the name falls into. Null if unknown
    *
    * @throws UnparsableNameException
    */
-  public ParsedName parse(final String scientificName, Rank rank) throws UnparsableNameException {
+  public ParsedName parse(final String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException {
     if (Strings.isNullOrEmpty(scientificName)) {
       throw new UnparsableNameException(NameType.NO_NAME, scientificName);
     }
-
-    FutureTask<ParsedName> task = new FutureTask<ParsedName>(new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank));
+    
+    FutureTask<ParsedName> task = new FutureTask<ParsedName>(new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank, code));
     EXEC.execute(task);
-
+    
     try {
       return task.get(timeout, TimeUnit.MILLISECONDS);
-
+      
     } catch (InterruptedException e) {
       LOG.warn("Thread got interrupted, shutdown executor", e);
       EXEC.shutdown();
-
+      
     } catch (ExecutionException e) {
       // unwrap UnparsableNameException
       if (e.getCause() instanceof UnparsableNameException) {
         throw (UnparsableNameException) e.getCause();
-
+        
       } else {
         LOG.warn("ExecutionException for name: {}", scientificName, e);
       }
-
+      
     } catch (TimeoutException e) {
       // parsing timeout
       LOG.warn("Parsing timeout for name: {}", scientificName);
       task.cancel(true);
     }
-
+    
     throw new UnparsableNameException(NameType.SCIENTIFIC, scientificName);
   }
-
 }

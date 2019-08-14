@@ -1,14 +1,13 @@
 package org.gbif.nameparser;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Strings;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.gbif.nameparser.antlr.SciNameLexer;
 import org.gbif.nameparser.antlr.SciNameParser;
-import org.gbif.nameparser.api.NameType;
-import org.gbif.nameparser.api.ParsedName;
-import org.gbif.nameparser.api.Rank;
-import org.gbif.nameparser.api.UnparsableNameException;
+import org.gbif.nameparser.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +24,12 @@ public class NameParserANTLR implements org.gbif.nameparser.api.NameParser {
   public ParsedName parse(String scientificName) throws UnparsableNameException {
     return parse(scientificName, Rank.UNRANKED);
   }
-
+  
+  @Override
+  public ParsedName parse(final String scientificName, Rank rank) throws UnparsableNameException {
+    return parse(scientificName, Rank.UNRANKED, null);
+  }
+  
   /**
    * Fully parse the supplied name also trying to extract authorships, a conceptual sec reference, remarks or notes
    * on the nomenclatural status. In some cases the authorship parsing proves impossible and this nameparser will
@@ -40,7 +44,7 @@ public class NameParserANTLR implements org.gbif.nameparser.api.NameParser {
    *
    * @throws UnparsableNameException
    */
-  public ParsedName parse(final String scientificName, Rank rank) throws UnparsableNameException {
+  public ParsedName parse(String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException {
     if (Strings.isNullOrEmpty(scientificName)) {
       unparsable(NameType.NO_NAME, null);
     }
@@ -58,5 +62,5 @@ public class NameParserANTLR implements org.gbif.nameparser.api.NameParser {
     return visitor.visit(parser.scientificName());
 
   }
-
+  
 }

@@ -292,7 +292,11 @@ public abstract class NameParserTest {
         .monomial("Polychaeta")
         .nothingElse();
     assertName("Chrysopetalidae", "Chrysopetalidae")
+        .monomial("Chrysopetalidae")
+        .nothingElse();
+    assertName("Chrysopetalidae", null, ZOOLOGICAL, "Chrysopetalidae")
         .monomial("Chrysopetalidae", Rank.FAMILY)
+        .code(ZOOLOGICAL)
         .nothingElse();
     assertName("Acripeza Guérin-Ménéville 1838", "Acripeza")
         .monomial("Acripeza")
@@ -333,12 +337,12 @@ public abstract class NameParserTest {
   
   @Test
   public void supraGenericIPNI() throws Exception {
-    assertName("Poaceae subtrib. Scolochloinae Soreng", null, "Scolochloinae")
+    assertName("Poaceae subtrib. Scolochloinae Soreng", "Scolochloinae")
         .monomial("Scolochloinae", SUBTRIBE)
         .combAuthors(null, "Soreng")
         .nothingElse();
     
-    assertName("subtrib. Scolochloinae Soreng", null, "Scolochloinae")
+    assertName("subtrib. Scolochloinae Soreng", "Scolochloinae")
         .monomial("Scolochloinae", SUBTRIBE)
         .combAuthors(null, "Soreng")
         .nothingElse();
@@ -347,30 +351,30 @@ public abstract class NameParserTest {
   @Test
   public void infraGeneric() throws Exception {
     // IPNI notho ranks: https://github.com/gbif/name-parser/issues/15
-    assertName("Pinus suprasect. Taeda", null, "Pinus supersect. Taeda")
+    assertName("Pinus suprasect. Taeda", "Pinus supersect. Taeda")
         .infraGeneric("Pinus", SUPERSECTION, "Taeda")
         .code(NomCode.BOTANICAL)
         .nothingElse();
     
-    assertName("Aeonium nothosect. Leugalonium", null, "Aeonium nothosect. Leugalonium")
+    assertName("Aeonium nothosect. Leugalonium", "Aeonium nothosect. Leugalonium")
         .infraGeneric("Aeonium", SECTION, "Leugalonium")
         .notho(NamePart.INFRAGENERIC)
         .code(NomCode.BOTANICAL)
         .nothingElse();
     
-    assertName("Narcissus nothoser. Dubizettae", null, "Narcissus nothoser. Dubizettae")
+    assertName("Narcissus nothoser. Dubizettae", "Narcissus nothoser. Dubizettae")
         .infraGeneric("Narcissus", SERIES, "Dubizettae")
         .notho(NamePart.INFRAGENERIC)
         .code(NomCode.BOTANICAL)
         .nothingElse();
     
-    assertName("Serapias nothosubsect. Pladiopetalae", null, "Serapias nothosubsect. Pladiopetalae")
+    assertName("Serapias nothosubsect. Pladiopetalae", "Serapias nothosubsect. Pladiopetalae")
         .infraGeneric("Serapias", SUBSECTION, "Pladiopetalae")
         .notho(NamePart.INFRAGENERIC)
         .code(NomCode.BOTANICAL)
         .nothingElse();
     
-    assertName("Rubus nothosubgen. Cylarubus", null, "Rubus nothosubgen. Cylarubus")
+    assertName("Rubus nothosubgen. Cylarubus", "Rubus nothosubgen. Cylarubus")
         .infraGeneric("Rubus", SUBGENUS, "Cylarubus")
         .notho(NamePart.INFRAGENERIC)
         .nothingElse();
@@ -1730,9 +1734,10 @@ public abstract class NameParserTest {
         .nothingElse();
     
     // dont treat these authorships as forms
-    assertName("Dioscoreales Hooker f.", "Dioscoreales")
+    assertName("Dioscoreales Hooker f.", BOTANICAL, "Dioscoreales")
         .monomial("Dioscoreales", Rank.ORDER)
         .combAuthors(null, "Hooker f.")
+        .code(BOTANICAL)
         .nothingElse();
     
     assertName("Melastoma vacillans Blume var.", "Melastoma vacillans var.")
@@ -2030,7 +2035,7 @@ public abstract class NameParserTest {
   
   private void assertUnparsableName(String name, Rank rank, NameType type, String expectedName) {
     try {
-      parser.parse(name, rank);
+      parser.parse(name, rank, null);
       fail("Expected " + name + " to be unparsable");
       
     } catch (UnparsableNameException ex) {
@@ -2040,11 +2045,19 @@ public abstract class NameParserTest {
   }
   
   NameAssertion assertName(String rawName, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
-    return assertName(rawName, null, expectedCanonicalWithoutAuthors);
+    return assertName(rawName, null, null, expectedCanonicalWithoutAuthors);
   }
   
   NameAssertion assertName(String rawName, Rank rank, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
-    ParsedName n = parser.parse(rawName, rank);
+    return assertName(rawName, rank, null, expectedCanonicalWithoutAuthors);
+  }
+  
+  NameAssertion assertName(String rawName, NomCode code, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
+    return assertName(rawName, null, code, expectedCanonicalWithoutAuthors);
+  }
+
+  NameAssertion assertName(String rawName, Rank rank, NomCode code, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
+    ParsedName n = parser.parse(rawName, rank, code);
     assertEquals(expectedCanonicalWithoutAuthors, n.canonicalNameWithoutAuthorship());
     return new NameAssertion(n);
   }

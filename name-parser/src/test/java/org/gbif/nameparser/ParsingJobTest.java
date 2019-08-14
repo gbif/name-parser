@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import static org.junit.Assert.*;
 
 public class ParsingJobTest {
-  final static ParsingJob JOB = new ParsingJob("Abies", Rank.UNRANKED);
+  final static ParsingJob JOB = new ParsingJob("Abies", Rank.UNRANKED, null);
   static final Pattern AUTHOR_PATTERN = Pattern.compile("^" + ParsingJob.AUTHOR + "$");
   static final Pattern AUTHORSHIP_PATTERN = Pattern.compile("^" + ParsingJob.AUTHORSHIP + "$");
 

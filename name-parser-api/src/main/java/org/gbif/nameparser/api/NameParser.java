@@ -1,12 +1,24 @@
 package org.gbif.nameparser.api;
 
+import javax.annotation.Nullable;
+
 /**
  * The basic Name parser contract.
  * Implementations for the GBIF and GNA parser are provided.
  */
 public interface NameParser {
   
+  /**
+   * @deprecated provide rank and code parameters
+   */
+  @Deprecated
   ParsedName parse(String scientificName) throws UnparsableNameException;
+  
+  /**
+   * @deprecated provide rank and code parameters
+   */
+  @Deprecated
+  ParsedName parse(String scientificName, Rank rank) throws UnparsableNameException;
   
   /**
    * Fully parse the supplied name also trying to extract authorships, a conceptual sec reference, remarks or notes
@@ -19,8 +31,10 @@ public interface NameParser {
    *
    * @param scientificName the full scientific name to parse
    * @param rank           the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
+   * @param code           the nomenclatural code the name falls into. Null if unknown
+   *
    * @throws UnparsableNameException
-   */
-  ParsedName parse(String scientificName, Rank rank) throws UnparsableNameException;
+  */
+  ParsedName parse(String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException;
   
 }
