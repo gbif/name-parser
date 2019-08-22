@@ -1634,17 +1634,15 @@ public abstract class NameParserTest {
    */
   @Test
   public void boldPlaceholder() throws Exception {
-    assertName("OdontellidaeGEN", GENUS, "Odontellidae")
-        .monomial("Odontellidae", GENUS)
+    assertName("OdontellidaeGEN", GENUS, "OdontellidaeGEN")
+        .monomial("OdontellidaeGEN", GENUS)
         .type(PLACEHOLDER)
-        .remarks("GEN")
         .nothingElse();
   
-    assertName("EusiridaeNZD", ZOOLOGICAL,"Eusiridae")
-        .monomial("Eusiridae", FAMILY)
+    assertName("EusiridaeNZD", ZOOLOGICAL,"EusiridaeNZD")
+        .monomial("EusiridaeNZD", FAMILY)
         .type(PLACEHOLDER)
         .code(ZOOLOGICAL)
-        .remarks("NZD")
         .nothingElse();
   }
   

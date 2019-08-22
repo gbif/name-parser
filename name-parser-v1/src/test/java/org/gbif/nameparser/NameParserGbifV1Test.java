@@ -10,6 +10,10 @@ import org.junit.Test;
 
 import java.lang.management.ManagementFactory;
 
+import static org.gbif.nameparser.api.NameType.PLACEHOLDER;
+import static org.gbif.nameparser.api.NomCode.ZOOLOGICAL;
+import static org.gbif.nameparser.api.Rank.FAMILY;
+import static org.gbif.nameparser.api.Rank.GENUS;
 import static org.junit.Assert.*;
 
 
@@ -116,8 +120,18 @@ public class NameParserGbifV1Test {
     assertNull(pn.getGenusOrAbove());
     assertNull(pn.getRank());
     assertNull(pn.getSpecificEpithet());
+    
+    // https://github.com/gbif/name-parser/issues/45
+    pn = parser.parseQuietly("OdontellidaeGEN");
+    assertEquals(NameType.PLACEHOLDER, pn.getType());
+    assertEquals("OdontellidaeGEN", pn.getScientificName());
+    assertEquals("OdontellidaeGEN", pn.canonicalName());
+    assertEquals("OdontellidaeGEN", pn.getGenusOrAbove());
+    assertNull(pn.getRank());
+    assertNull(pn.getSpecificEpithet());
+    assertNull(pn.getAuthorship());
   }
-
+  
   @Test
   public void unparsable() throws Exception {
     String[] unparsables = new String[]{"BOLD:AAX3687", "Potatoe virus", "Pinus alba × Abies picea Mill."};

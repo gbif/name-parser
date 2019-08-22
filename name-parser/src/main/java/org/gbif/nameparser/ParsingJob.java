@@ -450,12 +450,13 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       pn.setType(NameType.PLACEHOLDER);
       pn.setUninomial(m.group(1));
-      pn.setRemarks(m.group(2));
       pn.setState(ParsedName.State.COMPLETE);
       determineCode();
       if (pn.getRank().otherOrUnranked()) {
         pn.setRank(RankUtils.inferRank(pn, code));
       }
+      // use the full name as the uninomial - we just use the parsed bit until here to determine code & rank
+      pn.setUninomial(name);
       return true;
     }
     return false;
