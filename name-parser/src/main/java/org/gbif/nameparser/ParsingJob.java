@@ -147,7 +147,8 @@ class ParsingJob implements Callable<ParsedName> {
   @VisibleForTesting
   protected static final Pattern CULTIVAR = Pattern.compile("(?:([. ])cv[. ])?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
   private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex|gx)\\b");
-
+  
+  private static final Pattern BOLD_PLACEHOLDERS = Pattern.compile("^([A-Z][a-z]+)([A-Z]{1,5})$");
   // TODO: replace with more generic manuscript name parsing: https://github.com/gbif/name-parser/issues/8
   private static final Pattern INFRASPEC_UPPER = Pattern.compile("(?<=forma? )([A-Z])\\b");
   private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+[ -]?(?!"+YEAR+")[0-9]+T?)$");
@@ -409,14 +410,8 @@ class ParsingJob implements Callable<ParsedName> {
     String name = preClean(scientificName);
 
     // before further cleaning/parsing try if we have known OTU formats, i.e. BIN or SH numbers
-    Matcher m = OTU_PATTERN.matcher(name);
-    if (m.find()) {
-      pn.setUninomial(m.group(1).toUpperCase());
-      pn.setType(NameType.OTU);
-      setRankIfNotContradicting(Rank.SPECIES);
-      pn.setState(ParsedName.State.COMPLETE);
-
-    } else {
+    // test for special cases they do not need any further parsing
+    if (!specialCases(name)) {
       // do the main incremental parsing
       parse(name);
     }
@@ -435,8 +430,38 @@ class ParsingJob implements Callable<ParsedName> {
     return m.replaceFirst("");
   }
   
+  /**
+   * Parse very special cases and return true if the parsing succeeded and has thereby ended completely!
+   */
+  private boolean specialCases(String name) {
+    // BOLD/UNITE OTU names
+    Matcher m = OTU_PATTERN.matcher(name);
+    if (m.find()) {
+      pn.setUninomial(m.group(1).toUpperCase());
+      pn.setType(NameType.OTU);
+      setRankIfNotContradicting(Rank.SPECIES);
+      pn.setState(ParsedName.State.COMPLETE);
+      return true;
+    }
+    
+    // BOLD style placeholders
+    // https://github.com/gbif/name-parser/issues/45
+    m = BOLD_PLACEHOLDERS.matcher(name);
+    if (m.find()) {
+      pn.setType(NameType.PLACEHOLDER);
+      pn.setUninomial(m.group(1));
+      pn.setRemarks(m.group(2));
+      pn.setState(ParsedName.State.COMPLETE);
+      determineCode();
+      if (pn.getRank().otherOrUnranked()) {
+        pn.setRank(RankUtils.inferRank(pn, code));
+      }
+      return true;
+    }
+    return false;
+  }
+  
   private void parse(String name) throws UnparsableNameException {
-
     // remove extinct markers
     name = EXTINCT_PATTERN.matcher(name).replaceFirst("");
 

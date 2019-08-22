@@ -1630,6 +1630,25 @@ public abstract class NameParserTest {
   }
   
   /**
+   * https://github.com/gbif/name-parser/issues/45
+   */
+  @Test
+  public void boldPlaceholder() throws Exception {
+    assertName("OdontellidaeGEN", GENUS, "Odontellidae")
+        .monomial("Odontellidae", GENUS)
+        .type(PLACEHOLDER)
+        .remarks("GEN")
+        .nothingElse();
+  
+    assertName("EusiridaeNZD", ZOOLOGICAL,"Eusiridae")
+        .monomial("Eusiridae", FAMILY)
+        .type(PLACEHOLDER)
+        .code(ZOOLOGICAL)
+        .remarks("NZD")
+        .nothingElse();
+  }
+  
+  /**
    * http://dev.gbif.org/issues/browse/POR-3069
    */
   @Test
