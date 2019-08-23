@@ -148,7 +148,7 @@ class ParsingJob implements Callable<ParsedName> {
   protected static final Pattern CULTIVAR = Pattern.compile("(?:([. ])cv[. ])?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
   private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex|gx)\\b");
   
-  private static final Pattern BOLD_PLACEHOLDERS = Pattern.compile("^([A-Z][a-z]+)_?([A-Z]{1,5})$");
+  private static final Pattern BOLD_PLACEHOLDERS = Pattern.compile("^([A-Z][a-z]+)_?([A-Z]{1,5}(_\\d+)?)$");
   // TODO: replace with more generic manuscript name parsing: https://github.com/gbif/name-parser/issues/8
   private static final Pattern INFRASPEC_UPPER = Pattern.compile("(?<=forma? )([A-Z])\\b");
   private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+[ -]?(?!"+YEAR+")[0-9]+T?)$");

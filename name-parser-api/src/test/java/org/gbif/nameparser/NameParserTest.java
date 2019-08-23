@@ -1652,6 +1652,13 @@ public abstract class NameParserTest {
         .strain("SB")
         .type(PLACEHOLDER)
         .nothingElse();
+  
+    assertName("GenusANIC_3","Genus ANIC_3")
+        .monomial("Genus")
+        .strain("ANIC_3")
+        .type(PLACEHOLDER)
+        //.warning(Warnings.BLACKLISTED_EPITHET)
+        .nothingElse();
   }
   
   /**
