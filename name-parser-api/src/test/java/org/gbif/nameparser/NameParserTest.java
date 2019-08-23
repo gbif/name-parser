@@ -1420,6 +1420,12 @@ public abstract class NameParserTest {
   
   @Test
   public void taxonomicNotes() throws Exception {
+    // from Dyntaxa
+    assertName("Pycnophyes Auctt., non Zelinka, 1907", "Pycnophyes")
+        .monomial("Pycnophyes")
+        .sensu("auctt., non Zelinka, 1907")
+        .nothingElse();
+
     assertName("Dyadobacter (Chelius & Triplett, 2000) emend. Reddy & Garcia-Pichel, 2005", "Dyadobacter")
         .monomial("Dyadobacter")
         .basAuthors("2000", "Chelius", "Triplett")

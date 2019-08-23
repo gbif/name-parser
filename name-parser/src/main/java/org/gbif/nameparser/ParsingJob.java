@@ -203,7 +203,7 @@ class ParsingJob implements Callable<ParsedName> {
         "(?:(?:excl[. ](?:gen|sp|var)|mut.char|p.p)[. ])?" +
         "\\(?(?:" +
           "ss?[. ](?:(?:ampl|l|s|str)[. ]|(?:ampl|lat|strict)(?:[uo]|issimo)?)" +
-          "|(?:(?:ss[. ])?auct|emend|fide|non|nec|sec|sensu|according to)[. ].+" +
+          "|(?:(?:ss[. ])?[aA]uctt?|[eE]mend|[fF]ide|[nN]on|[nN]ec|[sS]ec|[sS]ensu|[aA]ccording to)[. ].+" +
         ")\\)?" +
       ")");
   private static final String NOV_RANKS = "((?:[sS]ub)?(?:[fF]am|[gG]en|[sS]s?p(?:ec)?|[vV]ar|[fF](?:orma?)?))";
@@ -639,7 +639,7 @@ class ParsingJob implements Callable<ParsedName> {
     // extract sec reference
     m = EXTRACT_SENSU.matcher(name);
     if (m.find()) {
-      pn.setTaxonomicNote(normNote(m.group(1)));
+      pn.setTaxonomicNote(lowerCaseFirstChar(normNote(m.group(1))));
       name = m.replaceFirst("");
     }
     // extract other remarks
@@ -746,7 +746,14 @@ class ParsingJob implements Callable<ParsedName> {
     // determine code if not yet assigned
     determineCode();
   }
-
+  
+  private static String lowerCaseFirstChar(String x) {
+    if (x != null && x.length() > 0) {
+      return x.substring(0, 1).toLowerCase() + x.substring(1);
+    }
+    return x;
+  }
+  
   private static String normNote(String note) {
     if (note.startsWith("(") && note.endsWith(")")) {
       note = note.substring(1, note.length()-1);
