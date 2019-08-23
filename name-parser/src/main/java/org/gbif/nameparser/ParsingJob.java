@@ -149,6 +149,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex|gx)\\b");
   
   private static final Pattern BOLD_PLACEHOLDERS = Pattern.compile("^([A-Z][a-z]+)_?([A-Z]{1,5}(_\\d+)?)$");
+  private static final Pattern UNPARSABLE_GROUP  = Pattern.compile("^([A-Z][a-z]+)[ _-]group$");
   // TODO: replace with more generic manuscript name parsing: https://github.com/gbif/name-parser/issues/8
   private static final Pattern INFRASPEC_UPPER = Pattern.compile("(?<=forma? )([A-Z])\\b");
   private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+[ -]?(?!"+YEAR+")[0-9]+T?)$");
@@ -433,7 +434,7 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * Parse very special cases and return true if the parsing succeeded and has thereby ended completely!
    */
-  private boolean specialCases(String name) {
+  private boolean specialCases(String name) throws UnparsableNameException {
     // BOLD/UNITE OTU names
     Matcher m = OTU_PATTERN.matcher(name);
     if (m.find()) {
@@ -456,6 +457,11 @@ class ParsingJob implements Callable<ParsedName> {
       determineCode();
       determineRank();
       return true;
+    }
+    // unparsable BOLD style placeholder: Iteaphila-group
+    m = UNPARSABLE_GROUP.matcher(name);
+    if (m.find()) {
+      unparsable(NameType.PLACEHOLDER);
     }
     return false;
   }

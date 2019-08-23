@@ -1640,6 +1640,8 @@ public abstract class NameParserTest {
    */
   @Test
   public void boldPlaceholder() throws Exception {
+    assertUnparsable("Iteaphila-group", PLACEHOLDER);
+
     assertName("OdontellidaeGEN", GENUS, "Odontellidae GEN")
         .monomial("Odontellidae", GENUS)
         .strain("GEN")
