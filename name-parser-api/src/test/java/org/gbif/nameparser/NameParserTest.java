@@ -564,14 +564,33 @@ public abstract class NameParserTest {
   @Test
   public void aggregates() throws Exception {
     // see https://github.com/gbif/checklistbank/issues/69
-    assertName("Monomorium monomorium group", "Monomorium monomorium")
-        .binomial("Monomorium", null, "monomorium", Rank.SPECIES_AGGREGATE)
-        .nothingElse();
-    
     assertName("Achillea millefolium agg. L.", "Achillea millefolium")
         .binomial("Achillea", null, "millefolium", Rank.SPECIES_AGGREGATE)
         .combAuthors(null, "L.")
         .nothingElse();
+
+    assertName("Strumigenys koningsbergeri-group", "Strumigenys koningsbergeri")
+        .binomial("Strumigenys", null, "koningsbergeri", Rank.SPECIES_AGGREGATE)
+        .nothingElse();
+
+    assertName("Selenophorus parumpunctatus species group", "Selenophorus parumpunctatus")
+        .binomial("Selenophorus", null, "parumpunctatus", Rank.SPECIES_AGGREGATE)
+        .nothingElse();
+
+    assertName("Monomorium monomorium group", "Monomorium monomorium")
+        .binomial("Monomorium", null, "monomorium", Rank.SPECIES_AGGREGATE)
+        .nothingElse();
+  }
+  
+  
+  /**
+   * BOLD NCBI have lots of these aggregates.
+   * As it can be on any level we do not want them to be parsed properly with rank=SpeciesAggregate
+   */
+  @Test
+  public void unparsablePlaceholders() throws Exception {
+    assertUnparsable("Iteaphila-group", PLACEHOLDER);
+    assertUnparsable("Bartonella group", PLACEHOLDER);
   }
   
   @Test
@@ -1640,8 +1659,6 @@ public abstract class NameParserTest {
    */
   @Test
   public void boldPlaceholder() throws Exception {
-    assertUnparsable("Iteaphila-group", PLACEHOLDER);
-
     assertName("OdontellidaeGEN", GENUS, "Odontellidae GEN")
         .monomial("Odontellidae", GENUS)
         .strain("GEN")

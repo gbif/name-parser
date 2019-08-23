@@ -149,7 +149,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex|gx)\\b");
   
   private static final Pattern BOLD_PLACEHOLDERS = Pattern.compile("^([A-Z][a-z]+)_?([A-Z]{1,5}(_\\d+)?)$");
-  private static final Pattern UNPARSABLE_GROUP  = Pattern.compile("^([A-Z][a-z]+)[ _-]group$");
+  private static final Pattern UNPARSABLE_GROUP  = Pattern.compile("^([A-Z][a-z]+)( [a-z]+?)?( species)?[ _-]group$");
   // TODO: replace with more generic manuscript name parsing: https://github.com/gbif/name-parser/issues/8
   private static final Pattern INFRASPEC_UPPER = Pattern.compile("(?<=forma? )([A-Z])\\b");
   private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+[ -]?(?!"+YEAR+")[0-9]+T?)$");
@@ -461,7 +461,20 @@ class ParsingJob implements Callable<ParsedName> {
     // unparsable BOLD style placeholder: Iteaphila-group
     m = UNPARSABLE_GROUP.matcher(name);
     if (m.find()) {
-      unparsable(NameType.PLACEHOLDER);
+      // can we parse out a species group?
+      if (m.group(2) != null) {
+        pn.setGenus(m.group(1));
+        pn.setSpecificEpithet(m.group(2).trim());
+        pn.setState(ParsedName.State.COMPLETE);
+        pn.setRank(Rank.SPECIES_AGGREGATE);
+        pn.setType(NameType.SCIENTIFIC);
+        checkBlacklist(); // check blacklist
+        determineCode();
+        return true;
+        
+      } else {
+        unparsable(NameType.PLACEHOLDER);
+      }
     }
     return false;
   }
