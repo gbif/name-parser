@@ -816,42 +816,42 @@ public abstract class NameParserTest {
   public void oTU() throws Exception {
     
     assertName("SH1508347.08FU", "SH1508347.08FU")
-        .monomial("SH1508347.08FU", Rank.SPECIES)
+        .monomial("SH1508347.08FU")
         .type(OTU)
         .nothingElse();
     
     assertName("SH19186714.17FU", "SH19186714.17FU")
-        .monomial("SH19186714.17FU", Rank.SPECIES)
+        .monomial("SH19186714.17FU")
         .type(OTU)
         .nothingElse();
   
     assertName("SH191814.08FU", "SH191814.08FU")
-        .monomial("SH191814.08FU", Rank.SPECIES)
+        .monomial("SH191814.08FU")
         .type(OTU)
         .nothingElse();
   
     assertName("SH191814.04FU", "SH191814.04FU")
-        .monomial("SH191814.04FU", Rank.SPECIES)
+        .monomial("SH191814.04FU")
         .type(OTU)
         .nothingElse();
   
     assertName("BOLD:ACW2100", "BOLD:ACW2100")
-        .monomial("BOLD:ACW2100", Rank.SPECIES)
+        .monomial("BOLD:ACW2100")
         .type(OTU)
         .nothingElse();
     
     assertName("SH460441.07FU", "SH460441.07FU")
-        .monomial("SH460441.07FU", Rank.SPECIES)
+        .monomial("SH460441.07FU")
         .type(OTU)
         .nothingElse();
     
     assertName("sh460441.07fu", "SH460441.07FU")
-        .monomial("SH460441.07FU", Rank.SPECIES)
+        .monomial("SH460441.07FU")
         .type(OTU)
         .nothingElse();
     
     assertName("Festuca sp. BOLD:ACW2100", "BOLD:ACW2100")
-        .monomial("BOLD:ACW2100", Rank.SPECIES)
+        .monomial("BOLD:ACW2100")
         .type(OTU)
         .nothingElse();
     
@@ -1634,15 +1634,23 @@ public abstract class NameParserTest {
    */
   @Test
   public void boldPlaceholder() throws Exception {
-    assertName("OdontellidaeGEN", GENUS, "OdontellidaeGEN")
-        .monomial("OdontellidaeGEN", GENUS)
+    assertName("OdontellidaeGEN", GENUS, "Odontellidae GEN")
+        .monomial("Odontellidae", GENUS)
+        .strain("GEN")
         .type(PLACEHOLDER)
         .nothingElse();
   
-    assertName("EusiridaeNZD", ZOOLOGICAL,"EusiridaeNZD")
-        .monomial("EusiridaeNZD", FAMILY)
+    assertName("EusiridaeNZD", ZOOLOGICAL,"Eusiridae NZD")
+        .monomial("Eusiridae", FAMILY)
+        .strain("NZD")
         .type(PLACEHOLDER)
         .code(ZOOLOGICAL)
+        .nothingElse();
+  
+    assertName("Blattellinae_SB","Blattellinae SB")
+        .monomial("Blattellinae")
+        .strain("SB")
+        .type(PLACEHOLDER)
         .nothingElse();
   }
   

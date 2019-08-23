@@ -148,7 +148,7 @@ class ParsingJob implements Callable<ParsedName> {
   protected static final Pattern CULTIVAR = Pattern.compile("(?:([. ])cv[. ])?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
   private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex|gx)\\b");
   
-  private static final Pattern BOLD_PLACEHOLDERS = Pattern.compile("^([A-Z][a-z]+)([A-Z]{1,5})$");
+  private static final Pattern BOLD_PLACEHOLDERS = Pattern.compile("^([A-Z][a-z]+)_?([A-Z]{1,5})$");
   // TODO: replace with more generic manuscript name parsing: https://github.com/gbif/name-parser/issues/8
   private static final Pattern INFRASPEC_UPPER = Pattern.compile("(?<=forma? )([A-Z])\\b");
   private static final Pattern STRAIN = Pattern.compile("([a-z]\\.?) +([A-Z]+[ -]?(?!"+YEAR+")[0-9]+T?)$");
@@ -439,7 +439,7 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       pn.setUninomial(m.group(1).toUpperCase());
       pn.setType(NameType.OTU);
-      setRankIfNotContradicting(Rank.SPECIES);
+      pn.setRank(Rank.UNRANKED);
       pn.setState(ParsedName.State.COMPLETE);
       return true;
     }
@@ -448,15 +448,13 @@ class ParsingJob implements Callable<ParsedName> {
     // https://github.com/gbif/name-parser/issues/45
     m = BOLD_PLACEHOLDERS.matcher(name);
     if (m.find()) {
-      pn.setType(NameType.PLACEHOLDER);
       pn.setUninomial(m.group(1));
+      pn.setStrain(m.group(2));
       pn.setState(ParsedName.State.COMPLETE);
+      checkBlacklist(); // check blacklist
+      pn.setType(NameType.PLACEHOLDER);
       determineCode();
-      if (pn.getRank().otherOrUnranked()) {
-        pn.setRank(RankUtils.inferRank(pn, code));
-      }
-      // use the full name as the uninomial - we just use the parsed bit until here to determine code & rank
-      pn.setUninomial(name);
+      determineRank();
       return true;
     }
     return false;
@@ -733,17 +731,17 @@ class ParsingJob implements Callable<ParsedName> {
       pn.setState(preParseState);
     }
     
-
     // determine name type
     determineNameType(name);
 
+    // raise warnings for blacklisted epithets
+    checkBlacklist();
+    
     // flag names that match doubtful patterns
     applyDoubtfulFlag(scientificName);
 
     // determine rank if not yet assigned
-    if (pn.getRank().otherOrUnranked()) {
-      pn.setRank(RankUtils.inferRank(pn, code));
-    }
+    determineRank();
 
     // determine code if not yet assigned
     determineCode();
@@ -1056,8 +1054,8 @@ class ParsingJob implements Callable<ParsedName> {
       }
     }
   }
-
-  private void applyDoubtfulFlag(String scientificName) {
+  
+  private void checkBlacklist() {
     // check epithet blacklist
     for (String epi : pn.listEpithets()) {
       if (BLACKLIST_EPITHETS.contains(epi)) {
@@ -1070,6 +1068,9 @@ class ParsingJob implements Callable<ParsedName> {
       pn.addWarning(Warnings.BLACKLISTED_EPITHET);
       pn.setDoubtful(true);
     }
+  }
+  
+  private void applyDoubtfulFlag(String scientificName) {
     // all rules below do not apply to unparsable names
     Matcher m = DOUBTFUL.matcher(scientificName);
     if (!m.find()) {
@@ -1084,7 +1085,13 @@ class ParsingJob implements Callable<ParsedName> {
       }
     }
   }
-
+  
+  private void determineRank() {
+    if (pn.getRank().otherOrUnranked()) {
+      pn.setRank(RankUtils.inferRank(pn, code));
+    }
+  }
+  
   private void determineCode() {
     if (pn.getCode() == null) {
       // does the rank tell us sth?

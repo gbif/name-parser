@@ -141,8 +141,7 @@ public class NameAssertion {
     assertNull(n.getSpecificEpithet());
     assertNull(n.getInfraspecificEpithet());
     assertNull(n.getCultivarEpithet());
-    assertNull(n.getStrain());
-    return add(NP.EPITHETS, NP.RANK, NP.STRAIN, NP.CULTIVAR);
+    return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR);
   }
   
   NameAssertion infraGeneric(String genus, Rank rank, String infraGeneric) {
@@ -153,8 +152,7 @@ public class NameAssertion {
     assertNull(n.getInfraspecificEpithet());
     assertEquals(rank, n.getRank());
     assertNull(n.getCultivarEpithet());
-    assertNull(n.getStrain());
-    return add(NP.EPITHETS, NP.INFRAGEN, NP.RANK, NP.STRAIN, NP.CULTIVAR);
+    return add(NP.EPITHETS, NP.INFRAGEN, NP.RANK, NP.CULTIVAR);
   }
   
   NameAssertion infraGeneric(String infraGeneric) {
