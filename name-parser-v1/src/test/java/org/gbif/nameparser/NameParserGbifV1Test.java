@@ -125,8 +125,9 @@ public class NameParserGbifV1Test {
     pn = parser.parseQuietly("OdontellidaeGEN");
     assertEquals(NameType.PLACEHOLDER, pn.getType());
     assertEquals("OdontellidaeGEN", pn.getScientificName());
-    assertEquals("OdontellidaeGEN", pn.canonicalName());
-    assertEquals("OdontellidaeGEN", pn.getGenusOrAbove());
+    assertEquals("Odontellidae", pn.canonicalName());
+    assertEquals("Odontellidae", pn.getGenusOrAbove());
+    assertEquals("GEN", pn.getStrain());
     assertNull(pn.getRank());
     assertNull(pn.getSpecificEpithet());
     assertNull(pn.getAuthorship());
