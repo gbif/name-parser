@@ -2010,6 +2010,25 @@ public abstract class NameParserTest {
   
   @Test
   public void manuscriptNames() throws Exception {
+    assertName("Acranthera virescens (Ridl.) ined.", "Acranthera virescens")
+        .species("Acranthera", "virescens")
+        .basAuthors(null, "Ridl.")
+        .type(SCIENTIFIC)
+        .nomNote("ined.")
+        .manuscript()
+        .nothingElse();
+    
+    // real authorship is Siliç
+    assertName("Micromeria cristata subsp. kosaninii ( ilic) ined.", "Micromeria cristata subsp. kosaninii")
+        .infraSpecies("Micromeria", "cristata", SUBSPECIES, "kosaninii")
+        //.basAuthors(null, "ilic")
+        .partial("(ilic)")
+        .type(SCIENTIFIC)
+        .nomNote("ined.")
+        .manuscript()
+        .code(BOTANICAL)
+        .nothingElse();
+    
     assertName("Lepidoptera sp. JGP0404", "Lepidoptera sp.")
         .species("Lepidoptera", null)
         .type(INFORMAL)
@@ -2020,7 +2039,9 @@ public abstract class NameParserTest {
     assertName("Genoplesium vernalis D.L.Jones ms.", "Genoplesium vernalis")
         .species("Genoplesium", "vernalis")
         .combAuthors(null, "D.L.Jones")
-        .type(INFORMAL)
+        .type(SCIENTIFIC)
+        .manuscript()
+        .nomNote("ms.")
         .nothingElse();
     
     assertName("Verticordia sp.1", "Verticordia sp.")

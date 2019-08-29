@@ -39,7 +39,8 @@ public class NameAssertion {
     STATE,
     CODE,
     REMAINS,
-    WARNING
+    WARNING,
+    MANUSCRIPT
   }
   
   public NameAssertion(ParsedName n) {
@@ -117,6 +118,10 @@ public class NameAssertion {
           case WARNING:
             String warn = Joiner.on("; ").join(n.getWarnings());
             assertTrue("contains warnings: "+warn, n.getWarnings().isEmpty());
+            break;
+          case MANUSCRIPT:
+            assertFalse(n.isManuscript());
+            
         }
       }
     }
@@ -203,6 +208,11 @@ public class NameAssertion {
   NameAssertion autonym() {
     assertTrue(n.isAutonym());
     return this;
+  }
+  
+  NameAssertion manuscript() {
+    assertTrue(n.isManuscript());
+    return add(NP.MANUSCRIPT);
   }
   
   NameAssertion type(NameType type) {

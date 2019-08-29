@@ -41,6 +41,7 @@ public enum NameType {
    * - informal addition like "cf."
    * - indetermined like "Abies spec."
    * - abbreviated genus "A. alba Mill"
+   * - manuscript names lacking latin species names, e.g. Verticordia sp.1
    */
   INFORMAL,
   

@@ -209,11 +209,13 @@ class ParsingJob implements Callable<ParsedName> {
       ")");
   private static final String NOV_RANKS = "((?:[sS]ub)?(?:[fF]am|[gG]en|[sS]s?p(?:ec)?|[vV]ar|[fF](?:orma?)?))";
   private static final Pattern NOV_RANK_MARKER = Pattern.compile("(" + NOV_RANKS + ")");
+  static final String MANUSCRIPT_STATUS = "(?:ined|ms).?($|\\s)";
+  static final Pattern MANUSCRIPT_STATUS_PATTERN = Pattern.compile(MANUSCRIPT_STATUS);
   static final Pattern EXTRACT_NOMSTATUS = Pattern.compile("[;, ]?"
       + "\\(?"
       + "\\b("
         + "(?:comb|"+NOV_RANKS+")[. ]nov\\b[. ]?(?:ined[. ])?"
-        + "|ined[. ]"
+        + "|"+MANUSCRIPT_STATUS
         + "|nom(?:en)?[. ]"
           + "(?:utiq(?:ue)?[. ])?"
           + "(?:ambig|alter|alt|correct|cons|dubium|dub|herb|illeg|invalid|inval|negatum|neg|novum|nov|nudum|nud|oblitum|obl|praeoccup|prov|prot|transf|superfl|super|rejic|rej)\\b[. ]?"
@@ -252,7 +254,6 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern REPL_RANK_PREFIXES = Pattern.compile("^(sub)?(fossil|" +
       StringUtils.join(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
   private static final Pattern MANUSCRIPT_NAMES = Pattern.compile("\\b(indet|spp?)[. ](?:nov\\.)?[A-Z0-9][a-zA-Z0-9-]*(?:\\(.+?\\))?");
-  private static final Pattern MANUSCRIPT_SUFFIX = Pattern.compile("\\bms\\.?$");
   private static final Pattern REPL_AFF = Pattern.compile("\\b(undet|indet|aff|cf)[?.]?\\b", CASE_INSENSITIVE);
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
   private static final Pattern REMOVE_PLACEHOLDER_AUTHOR = Pattern.compile("\\b"+
@@ -607,42 +608,38 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // extract nom.illeg. and other nomen status notes
+    // includes manuscript notes, e.g. ined.
     m = EXTRACT_NOMSTATUS.matcher(name);
     if (m.find()) {
-      StringBuilder notes = new StringBuilder();
       StringBuffer sb = new StringBuffer();
       do {
-        if (notes.length() > 0) {
-          notes.append(" ");
-        }
         String note = StringUtils.trimToNull(m.group(1));
         if (note != null) {
-          notes.append(note);
+          pn.addNomenclaturalNote(note);
           m.appendReplacement(sb, "");
           // if there was a rank given in the nom status populate the rank marker field
           Matcher rm = NOV_RANK_MARKER.matcher(note);
           if (rm.find()) {
             setRank(rm.group(1), true);
           }
+          // was this a manuscript note?
+          Matcher man = MANUSCRIPT_STATUS_PATTERN.matcher(note);
+          if (man.find()) {
+            pn.setManuscript(true);
+          }
         }
       } while (m.find());
       m.appendTail(sb);
       name = sb.toString();
-      pn.setNomenclaturalNotes(notes.toString());
     }
 
-    // manuscript names (unpublished names)
-    // http://splink.cria.org.br/docs/appendix_j.pdf
+    // manuscript (unpublished) names  without a full scientific name, e.g. Verticordia sp.1
+    // http://splink.cria.org.br/documentos/appendix_j.pdf
     m = MANUSCRIPT_NAMES.matcher(name);
     if (m.find()) {
       pn.setType(NameType.INFORMAL);
       pn.addRemark(m.group(0));
       setRank(m.group(1).replace("indet", "sp"));
-      name = m.replaceFirst("");
-    }
-    m = MANUSCRIPT_SUFFIX.matcher(name);
-    if (m.find()) {
-      pn.setType(NameType.INFORMAL);
       name = m.replaceFirst("");
     }
 
@@ -1137,13 +1134,13 @@ class ParsingJob implements Callable<ParsedName> {
       } else if (pn.isCandidatus()) {
         pn.setCode(NomCode.BACTERIAL);
 
-      } else if (pn.getBasionymAuthorship().getYear() != null || pn.getCombinationAuthorship().getYear() != null) {
+      } else if (!pn.isManuscript() && (pn.getBasionymAuthorship().getYear() != null || pn.getCombinationAuthorship().getYear() != null)) {
         // if years are given its a zoological name
         pn.setCode(NomCode.ZOOLOGICAL);
 
-      } else if (!pn.getBasionymAuthorship().isEmpty()) {
+      } else if (!pn.isManuscript() && !pn.getBasionymAuthorship().isEmpty()) {
         if (pn.getCombinationAuthorship().isEmpty()) {
-          // if only the basionym authorship is given its a zoological name!
+          // if only the basionym authorship is given its likely a zoological name!
           pn.setCode(NomCode.ZOOLOGICAL);
 
         } else {

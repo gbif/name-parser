@@ -62,6 +62,19 @@ public class NameFormatterTest {
   }
   
   @Test
+  public void inedNames() throws Exception {
+    pn.setGenus("Acranthera");
+    pn.setSpecificEpithet("virescens");
+    pn.getBasionymAuthorship().getAuthors().add("Ridl.");
+    pn.setCode(NomCode.BOTANICAL);
+    pn.setManuscript(true);
+    pn.setNomenclaturalNotes("ined.");
+    assertEquals("Acranthera virescens (Ridl.)", pn.canonicalName());
+    assertEquals("Acranthera virescens (Ridl.), ined.", pn.canonicalNameComplete());
+    assertEquals("<i>Acranthera</i> <i>virescens</i> (Ridl.), ined.", NameFormatter.canonicalCompleteHtml(pn));
+  }
+
+  @Test
   public void testCultivar() throws Exception {
     pn.setUninomial("Symphoricarpos");
     pn.setCode(NomCode.CULTIVARS);

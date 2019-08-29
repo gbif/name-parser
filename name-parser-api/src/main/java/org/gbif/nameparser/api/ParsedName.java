@@ -148,6 +148,12 @@ public class ParsedName {
    */
   private boolean doubtful;
   
+  /**
+   * Indicates a manuscript name identified by ined. or ms.
+   * Can be either of type scientific name or informal
+   */
+  private boolean manuscript;
+
   private State state = State.NONE;
   
   private List<String> warnings = Lists.newArrayList();
@@ -298,6 +304,12 @@ public class ParsedName {
     this.nomenclaturalNotes = nomenclaturalNotes;
   }
   
+  public void addNomenclaturalNote(String note) {
+    if (!StringUtils.isBlank(note)) {
+      this.nomenclaturalNotes = nomenclaturalNotes == null ? note.trim() : nomenclaturalNotes + " " + note.trim();
+    }
+  }
+  
   public String getTaxonomicNote() {
     return taxonomicNote;
   }
@@ -318,6 +330,14 @@ public class ParsedName {
     if (!StringUtils.isBlank(remark)) {
       this.remarks = remarks == null ? remark.trim() : remarks + "; " + remark.trim();
     }
+  }
+  
+  public boolean isManuscript() {
+    return manuscript;
+  }
+  
+  public void setManuscript(boolean manuscript) {
+    this.manuscript = manuscript;
   }
   
   public String getUnparsed() {
@@ -507,13 +527,14 @@ public class ParsedName {
         Objects.equals(nomenclaturalNotes, that.nomenclaturalNotes) &&
         Objects.equals(remarks, that.remarks) &&
         Objects.equals(unparsed, that.unparsed) &&
+        manuscript == that.manuscript &&
         type == that.type &&
         Objects.equals(warnings, that.warnings);
   }
   
   @Override
   public int hashCode() {
-    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, taxonomicNote, nomenclaturalNotes, remarks, unparsed, type, doubtful, state, warnings);
+    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, taxonomicNote, nomenclaturalNotes, remarks, unparsed, type, doubtful, manuscript, state, warnings);
   }
   
   @Override
