@@ -32,14 +32,14 @@ public class NameFormatter {
     // TODO: show authorship for zoological autonyms?
     // TODO: how can we best remove subsp from zoological names?
     // https://github.com/gbif/portal-feedback/issues/640
-    return buildName(n, true, true, true, true, false, true, false, true, false, false, false, true, true, false, false);
+    return buildName(n, true, true, true, true, false, true, false, true, false, false, false, true, true, false);
   }
   
   /**
    * A full scientific name just as canonicalName, but without any authorship.
    */
   public static String canonicalWithoutAuthorship(ParsedName n) {
-    return buildName(n, true, true, false, true, false, true, false, true, false, false, false, true, true, false, false);
+    return buildName(n, true, true, false, true, false, true, false, true, false, false, false, true, true,  false);
   }
   
   /**
@@ -54,21 +54,21 @@ public class NameFormatter {
    * Bracteata
    */
   public static String canonicalMinimal(ParsedName n) {
-    return buildName(n, false, false, false, false, false, true, true, false, false, false, false, false, false, false, false);
+    return buildName(n, false, false, false, false, false, true, true, false, false, false, false, false, false, false);
   }
   
   /**
    * Assembles a full name with all details including non code compliant, informal remarks.
    */
   public static String canonicalComplete(ParsedName n) {
-    return buildName(n, true, true, true, true, true, true, false, true, true, true, true, true, true, true,false);
+    return buildName(n, true, true, true, true, true, true, false, true, true, true, true, true, true, false);
   }
   
   /**
    * Assembles a full name with all details including non code compliant, informal remarks and html markup.
    */
   public static String canonicalCompleteHtml(ParsedName n) {
-    return buildName(n, true, true, true, true, true, true, false, true, true, false, true, true, true, true, true);
+    return buildName(n, true, true, true, true, true, true, false, true, true, false, true, true, true, true);
   }
   
   /**
@@ -137,7 +137,6 @@ public class NameFormatter {
                                  boolean showSensu,
                                  boolean showCultivar,
                                  boolean showStrain,
-                                 boolean showIned,
                                  boolean html
   ) {
     StringBuilder sb = new StringBuilder();
@@ -316,12 +315,7 @@ public class NameFormatter {
       appendIfNotEmpty(sb, ", ")
           .append(n.getNomenclaturalNotes());
     }
-  
-    // add nom status
-    if (showIned && n.isManuscript()) {
-      //sb.append(" ined.");
-    }
-    
+
     // add remarks
     if (remarks && n.getRemarks() != null) {
       appendIfNotEmpty(sb, " ")
