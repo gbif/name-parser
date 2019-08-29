@@ -268,6 +268,30 @@ public class NameFormatterTest {
   }
   
   @Test
+  public void epithetQualifiers() throws Exception {
+    pn.setGenus("Abies");
+    pn.setSpecificEpithet("alba");
+    pn.setEpithetQualifier(NamePart.SPECIFIC, "aff.");
+    assertEquals("Abies alba", NameFormatter.canonicalMinimal(pn));
+    assertEquals("Abies aff. alba", pn.canonicalName());
+    assertEquals("Abies aff. alba", pn.canonicalNameComplete());
+  
+    pn.getEpithetQualifier().clear();
+    pn.setEpithetQualifier(NamePart.INFRASPECIFIC, "cf.");
+    pn.setInfraspecificEpithet("alpina");
+    pn.setRank(Rank.VARIETY);
+    pn.getCombinationAuthorship().getAuthors().add("Mill.");
+    pn.getCombinationAuthorship().setYear("1887");
+    pn.getBasionymAuthorship().getAuthors().add("Carl.");
+    pn.setNotho(NamePart.GENERIC);
+    pn.setNomenclaturalNotes("nom. illeg.");
+    
+    assertEquals("Abies alba alpina", NameFormatter.canonicalMinimal(pn));
+    assertEquals("× Abies alba cf. var. alpina (Carl.) Mill., 1887", NameFormatter.canonical(pn));
+    assertEquals("× Abies alba cf. var. alpina (Carl.) Mill., 1887, nom. illeg.", NameFormatter.canonicalComplete(pn));
+  }
+  
+  @Test
   public void testCanonicalName() throws Exception {
     assertNull(pn.canonicalName());
     

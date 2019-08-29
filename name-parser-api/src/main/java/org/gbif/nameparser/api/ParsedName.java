@@ -1,6 +1,8 @@
 package org.gbif.nameparser.api;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -115,6 +117,11 @@ public class ParsedName {
    */
   private NamePart notho;
   
+  /**
+   * Optional qualifiers like cf. or aff. that can precede an epithet.
+   */
+  private Map<NamePart, String> epithetQualifier;
+
   /**
    * Nomenclatural status remarks of the name.
    */
@@ -291,6 +298,27 @@ public class ParsedName {
     this.notho = notho;
   }
   
+  public Map<NamePart, String> getEpithetQualifier() {
+    return epithetQualifier;
+  }
+  
+  public boolean hasEpithetQualifier(NamePart part) {
+    return epithetQualifier != null && epithetQualifier.containsKey(part);
+  }
+
+  public void setEpithetQualifier(Map<NamePart, String> epithetQualifier) {
+    this.epithetQualifier = epithetQualifier;
+  }
+  
+  public void setEpithetQualifier(NamePart part, String qualifier) {
+    if (part != null && qualifier != null) {
+      if (epithetQualifier == null) {
+        epithetQualifier = new HashMap<>();
+      }
+      epithetQualifier.put(part, qualifier);
+    }
+  }
+
   public String getNomenclaturalNotes() {
     return nomenclaturalNotes;
   }
