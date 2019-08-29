@@ -310,26 +310,26 @@ public abstract class NameParserTest {
     assertName("Xolisma turquini Small apud Britton & Wilson", "Xolisma turquini")
         .species("Xolisma", "turquini")
         .combAuthors(null, "Small")
-        .remarks("apud Britton & Wilson")
+        .nomNote("apud Britton & Wilson")
         .nothingElse();
     
     assertName("Negundo aceroides var. violaceum G.Kirchn. in Petzold & G.Kirchn.", "Negundo aceroides var. violaceum")
         .infraSpecies("Negundo", "aceroides", Rank.VARIETY, "violaceum")
         .combAuthors(null, "G.Kirchn.")
-        .remarks("in Petzold & G.Kirchn.")
+        .nomNote("in Petzold & G.Kirchn.")
         .nothingElse();
     
     assertName("Abies denheyeri Eghbalian, Khanjani and Ueckermann in Eghbalian, Khanjani & Ueckermann, 2017", "Abies denheyeri")
         .species("Abies", "denheyeri")
         .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
-        .remarks("in Eghbalian, Khanjani & Ueckermann")
+        .nomNote("in Eghbalian, Khanjani & Ueckermann")
         .code(ZOOLOGICAL)
         .nothingElse();
     
     assertName("Mica Budde-Lund in Voeltzkow, 1908", "Mica")
         .monomial("Mica")
         .combAuthors("1908", "Budde-Lund")
-        .remarks("in Voeltzkow")
+        .nomNote("in Voeltzkow")
         .code(NomCode.ZOOLOGICAL)
         .nothingElse();
     
@@ -494,7 +494,7 @@ public abstract class NameParserTest {
         .species("?", "denheyeri")
         .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
         .type(PLACEHOLDER)
-        .remarks("in Eghbalian, Khanjani & Ueckermann")
+        .nomNote("in Eghbalian, Khanjani & Ueckermann")
         //hm, is this correct? maybe better not parse the in authorship year???
         .code(NomCode.ZOOLOGICAL)
         .warning(Warnings.MISSING_GENUS)
@@ -714,7 +714,7 @@ public abstract class NameParserTest {
         .basAuthors("1913", "Popofsky")
         .combAuthors("1971", "Petrushevskaya")
         .type(INFORMAL)
-        .remarks("aff.")
+        //.remarks("aff.")
         .code(ZOOLOGICAL)
         .nothingElse();
     
@@ -1242,7 +1242,7 @@ public abstract class NameParserTest {
         ParsedName pn = parser.parse(name);
         fail("Expected " + name + " to be unparsable");
       } catch (UnparsableNameException ex) {
-        assertEquals(NameType.NO_NAME, ex.getType());
+        assertEquals("Bad name type for: "+name, NameType.NO_NAME, ex.getType());
         assertEquals(name, ex.getName());
       }
     }
@@ -1379,7 +1379,7 @@ public abstract class NameParserTest {
         .species("Trisulcus", "nana")
         .combAuthors("1971", "Petrushevskaya")
         .type(INFORMAL)
-        .remarks("aff.")
+//        .remarks("aff.")
         .code(NomCode.ZOOLOGICAL)
         .nothingElse();
   }
@@ -2029,11 +2029,10 @@ public abstract class NameParserTest {
         .code(BOTANICAL)
         .nothingElse();
     
-    assertName("Lepidoptera sp. JGP0404", "Lepidoptera sp.")
-        .species("Lepidoptera", null)
+    assertName("Lepidoptera sp. JGP0404", "Lepidoptera sp.JGP0404")
+        .species("Lepidoptera", "sp.JGP0404")
         .type(INFORMAL)
-        .warning(Warnings.INDETERMINED)
-        .remarks("sp.JGP0404")
+        .manuscript()
         .nothingElse();
     
     assertName("Genoplesium vernalis D.L.Jones ms.", "Genoplesium vernalis")
@@ -2044,32 +2043,28 @@ public abstract class NameParserTest {
         .nomNote("ms.")
         .nothingElse();
     
-    assertName("Verticordia sp.1", "Verticordia sp.")
-        .species("Verticordia", null)
+    assertName("Verticordia sp.1", "Verticordia sp.1")
+        .species("Verticordia", "sp.1")
         .type(INFORMAL)
-        .remarks("sp.1")
-        .warning(Warnings.INDETERMINED)
+        .manuscript()
         .nothingElse();
     
-    assertName("Bryozoan indet. 1", "Bryozoan sp.")
-        .species("Bryozoan", null)
+    assertName("Bryozoan indet. 1", "Bryozoan indet.1")
+        .species("Bryozoan", "indet.1")
         .type(INFORMAL)
-        .remarks("indet.1")
-        .warning(Warnings.INDETERMINED)
+        .manuscript()
         .nothingElse();
     
-    assertName("Bryozoan sp. E", "Bryozoan sp.")
-        .species("Bryozoan", null)
+    assertName("Bryozoan sp. E", "Bryozoan sp.E")
+        .species("Bryozoan", "sp.E")
         .type(INFORMAL)
-        .remarks("sp.E")
-        .warning(Warnings.INDETERMINED)
+        .manuscript()
         .nothingElse();
     
-    assertName("Prostanthera sp. Somersbey (B.J.Conn 4024)", "Prostanthera sp.")
-        .species("Prostanthera", null)
+    assertName("Prostanthera sp. Somersbey (B.J.Conn 4024)", "Prostanthera sp.Somersbey(B.J.Conn 4024)")
+        .species("Prostanthera", "sp.Somersbey(B.J.Conn 4024)")
         .type(INFORMAL)
-        .remarks("sp.Somersbey(B.J.Conn 4024)")
-        .warning(Warnings.INDETERMINED)
+        .manuscript()
         .nothingElse();
   }
   

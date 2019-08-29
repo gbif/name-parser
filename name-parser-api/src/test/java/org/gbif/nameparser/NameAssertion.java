@@ -34,7 +34,6 @@ public class NameAssertion {
     RANK,
     TAXNOTE,
     NOMNOTE,
-    REMARK,
     DOUBTFUL,
     STATE,
     CODE,
@@ -96,9 +95,6 @@ public class NameAssertion {
             break;
           case NOMNOTE:
             assertNull(n.getNomenclaturalNotes());
-            break;
-          case REMARK:
-            assertNull(n.getRemarks());
             break;
           case DOUBTFUL:
             assertFalse(n.isDoubtful());
@@ -223,11 +219,6 @@ public class NameAssertion {
   NameAssertion notho(NamePart notho) {
     assertEquals(notho, n.getNotho());
     return add(NP.NOTHO);
-  }
-  
-  NameAssertion remarks(String remarks) {
-    assertEquals(remarks, n.getRemarks());
-    return add(NP.REMARK);
   }
   
   NameAssertion warning(String... warnings) {

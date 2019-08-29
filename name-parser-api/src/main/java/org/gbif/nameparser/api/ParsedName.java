@@ -126,11 +126,6 @@ public class ParsedName {
   private String nomenclaturalNotes;
   
   /**
-   * Any informal remarks found in the name
-   */
-  private String remarks;
-  
-  /**
    * Any additional unparsed string found at the end of the name.
    * Only ever set when state=PARTIAL
    */
@@ -316,20 +311,6 @@ public class ParsedName {
   
   public void setTaxonomicNote(String taxonomicNote) {
     this.taxonomicNote = taxonomicNote;
-  }
-  
-  public String getRemarks() {
-    return remarks;
-  }
-  
-  public void setRemarks(String remarks) {
-    this.remarks = remarks;
-  }
-  
-  public void addRemark(String remark) {
-    if (!StringUtils.isBlank(remark)) {
-      this.remarks = remarks == null ? remark.trim() : remarks + "; " + remark.trim();
-    }
   }
   
   public boolean isManuscript() {
@@ -525,7 +506,6 @@ public class ParsedName {
         notho == that.notho &&
         Objects.equals(taxonomicNote, that.taxonomicNote) &&
         Objects.equals(nomenclaturalNotes, that.nomenclaturalNotes) &&
-        Objects.equals(remarks, that.remarks) &&
         Objects.equals(unparsed, that.unparsed) &&
         manuscript == that.manuscript &&
         type == that.type &&
@@ -534,7 +514,7 @@ public class ParsedName {
   
   @Override
   public int hashCode() {
-    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, taxonomicNote, nomenclaturalNotes, remarks, unparsed, type, doubtful, manuscript, state, warnings);
+    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, taxonomicNote, nomenclaturalNotes, unparsed, type, doubtful, manuscript, state, warnings);
   }
   
   @Override

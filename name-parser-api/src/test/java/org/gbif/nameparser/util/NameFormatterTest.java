@@ -72,6 +72,10 @@ public class NameFormatterTest {
     assertEquals("Acranthera virescens (Ridl.)", pn.canonicalName());
     assertEquals("Acranthera virescens (Ridl.), ined.", pn.canonicalNameComplete());
     assertEquals("<i>Acranthera</i> <i>virescens</i> (Ridl.), ined.", NameFormatter.canonicalCompleteHtml(pn));
+    
+    assertEquals("Acranthera virescens (Ridl.)", pn.canonicalName());
+    assertEquals("Acranthera virescens (Ridl.), ined.", pn.canonicalNameComplete());
+    assertEquals("<i>Acranthera</i> <i>virescens</i> (Ridl.), ined.", NameFormatter.canonicalCompleteHtml(pn));
   }
 
   @Test
@@ -255,13 +259,12 @@ public class NameFormatterTest {
     pn.setNotho(NamePart.GENERIC);
     pn.setInfraspecificEpithet("alpina");
     pn.setTaxonomicNote("Döring");
-    pn.setRemarks("lost");
     pn.setNomenclaturalNotes("nom. illeg.");
     
     assertEquals("Abies alba alpina", NameFormatter.canonicalMinimal(pn));
     assertEquals("× Abies alba var. alpina", NameFormatter.canonicalWithoutAuthorship(pn));
     assertEquals("× Abies alba var. alpina (Carl.) Mill., 1887", NameFormatter.canonical(pn));
-    assertEquals("× Abies alba var. alpina (Carl.) Mill., 1887 Döring, nom. illeg. [lost]", NameFormatter.canonicalComplete(pn));
+    assertEquals("× Abies alba var. alpina (Carl.) Mill., 1887 Döring, nom. illeg.", NameFormatter.canonicalComplete(pn));
   }
   
   @Test
@@ -445,7 +448,6 @@ public class NameFormatterTest {
     pn.getCombinationAuthorship().getAuthors().clear();
     assertName("Pseudomonas syringae aceris", "Pseudomonas syringae pv. aceris CFBP 2339");
     
-    pn.addRemark("remark");
     pn.setTaxonomicNote("tax note");
     assertHtml("<i>Pseudomonas</i> <i>syringae</i> pv. <i>aceris</i> CFBP 2339 tax note");
     

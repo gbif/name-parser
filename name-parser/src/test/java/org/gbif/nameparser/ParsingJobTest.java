@@ -24,7 +24,7 @@ public class ParsingJobTest {
 
   @Test
   public void testEpithetPattern() throws Exception {
-    Pattern epi = Pattern.compile("^"+ ParsingJob.EPHITHET+"$");
+    Pattern epi = Pattern.compile("^"+ ParsingJob.EPITHET +"$");
     assertTrue(epi.matcher("alba").find());
     assertTrue(epi.matcher("biovas").find());
     assertTrue(epi.matcher("serovat").find());
