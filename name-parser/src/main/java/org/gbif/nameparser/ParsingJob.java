@@ -1249,7 +1249,7 @@ class ParsingJob implements Callable<ParsedName> {
   private void setEpithetQualifier(NamePart part, String qualifier) {
     if (qualifier != null) {
       pn.setType(NameType.INFORMAL);
-      pn.setEpithetQualifier(part, qualifier);
+      pn.setEpithetQualifier(part, qualifier+".");
     }
   }
   

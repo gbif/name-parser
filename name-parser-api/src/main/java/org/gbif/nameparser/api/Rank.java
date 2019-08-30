@@ -33,6 +33,10 @@ public enum Rank {
   
   DOMAIN("dom."),
   
+    REALM ("realm"),
+  
+  SUBREALM ("subrealm"),
+
   SUPERKINGDOM("superreg."),
   
   KINGDOM("reg."),
@@ -404,6 +408,9 @@ public enum Rank {
       .put(SEROVAR, NomCode.BACTERIAL)
       .put(CHEMOFORM, NomCode.BACTERIAL)
       .put(FORMA_SPECIALIS, NomCode.BACTERIAL)
+    
+      .put(REALM, NomCode.VIRUS)
+      .put(SUBREALM, NomCode.VIRUS)
       .build();
   
   private final String marker;

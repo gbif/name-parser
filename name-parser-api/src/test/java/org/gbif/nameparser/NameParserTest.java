@@ -709,15 +709,6 @@ public abstract class NameParserTest {
         .code(ZOOLOGICAL)
         .nothingElse();
     
-    assertName("Trisulcus aff. nana  (Popofsky, 1913), Petrushevskaya, 1971", "Trisulcus nana")
-        .species("Trisulcus", "nana")
-        .basAuthors("1913", "Popofsky")
-        .combAuthors("1971", "Petrushevskaya")
-        .type(INFORMAL)
-        //.remarks("aff.")
-        .code(ZOOLOGICAL)
-        .nothingElse();
-    
     assertName("Tripodiscium gephyristes  (Hülseman, 1963) BJ&KR-Atsdatabanken", "Tripodiscium gephyristes")
         .species("Tripodiscium", "gephyristes")
         .basAuthors("1963", "Hülseman")
@@ -1375,12 +1366,13 @@ public abstract class NameParserTest {
   
   @Test
   public void informal() throws Exception {
-    assertName("Trisulcus aff. nana  Petrushevskaya, 1971", "Trisulcus nana")
+    assertName("Trisulcus aff. nana  (Popofsky, 1913), Petrushevskaya, 1971", "Trisulcus aff. nana")
         .species("Trisulcus", "nana")
+        .basAuthors("1913", "Popofsky")
         .combAuthors("1971", "Petrushevskaya")
         .type(INFORMAL)
-//        .remarks("aff.")
-        .code(NomCode.ZOOLOGICAL)
+        .qualifiers(SPECIFIC, "aff.")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
   

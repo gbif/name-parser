@@ -207,6 +207,20 @@ public class RankUtils {
               .put("inae", SUBFAMILY)
               .put("ini", TRIBE)
               .put("ina", SUBTRIBE)
+              .build(),
+          NomCode.VIRUS, new ImmutableMap.Builder<String, Rank>()
+              .put("viria", REALM)
+              .put("vira", SUBREALM)
+              .put("viriae", KINGDOM)
+              .put("virites", SUBKINGDOM)
+              .put("viricota", PHYLUM)
+              .put("viricotina", SUBPHYLUM)
+              .put("viricetes", CLASS)
+              .put("viricetidae", SUBCLASS)
+              .put("virales", ORDER)
+              .put("virineae", SUBORDER)
+              .put("viridae", FAMILY)
+              .put("virinae", SUBFAMILY)
               .build()
       );
   

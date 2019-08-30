@@ -3,6 +3,7 @@ package org.gbif.nameparser;
 import java.util.Set;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gbif.nameparser.api.*;
@@ -39,7 +40,8 @@ public class NameAssertion {
     CODE,
     REMAINS,
     WARNING,
-    MANUSCRIPT
+    MANUSCRIPT,
+    QUALIFIERS
   }
   
   public NameAssertion(ParsedName n) {
@@ -117,6 +119,9 @@ public class NameAssertion {
             break;
           case MANUSCRIPT:
             assertFalse(n.isManuscript());
+            break;
+          case QUALIFIERS:
+            assertTrue(n.getEpithetQualifier() == null || n.getEpithetQualifier().isEmpty());
             
         }
       }
@@ -317,6 +322,19 @@ public class NameAssertion {
   NameAssertion basExAuthors(String year, String... authors) {
     assertEquals(Lists.newArrayList(authors), n.getBasionymAuthorship().getExAuthors());
     return add(NP.EXBAS);
+  }
+  
+  /**
+   * @param partQuals list of part/value pairs
+   */
+  NameAssertion qualifiers(Object... partQuals) {
+    for (int idx = 0; idx < partQuals.length; idx+=2) {
+      NamePart part = (NamePart) partQuals[idx];
+      String qualifier = (String) partQuals[idx+1];
+      assertEquals(qualifier, n.getEpithetQualifier().get(part));
+    }
+    assertEquals(partQuals.length/2, n.getEpithetQualifier().size());
+    return add(NP.QUALIFIERS);
   }
   
 }

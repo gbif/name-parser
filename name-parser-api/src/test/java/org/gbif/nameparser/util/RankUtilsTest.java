@@ -37,7 +37,6 @@ public class RankUtilsTest {
   
   @Test
   public void testInferRank() {
-  
     assertInferred("Asteraceae", NomCode.BOTANICAL, Rank.FAMILY);
     assertInferred("Asteraceae", null, Rank.FAMILY);
     assertInferred("Asteraceae", NomCode.ZOOLOGICAL, Rank.UNRANKED);
@@ -50,7 +49,12 @@ public class RankUtilsTest {
     assertInferred("Woodsioideae", null, Rank.SUBFAMILY);
     assertInferred("Antrophyoideae", null, Rank.SUBFAMILY);
     assertInferred("Protowoodsioideae", null, Rank.SUBFAMILY);
-    
+  
+    assertInferred("Negarnaviricota", NomCode.VIRUS, Rank.PHYLUM);
+    assertInferred("Negarnaviricota", null, Rank.PHYLUM);
+    assertInferred("Picornavirales", null, Rank.ORDER);
+    assertInferred("Riboviria", null, Rank.REALM);
+  
     assertEquals(Rank.SPECIES, RankUtils.inferRank(build("Abies","Abies", "alba")));
     assertEquals(Rank.SPECIES, RankUtils.inferRank(build("Abies", null, "alba")));
     assertEquals(Rank.INFRAGENERIC_NAME, RankUtils.inferRank(build(null, "Abies", null)));
