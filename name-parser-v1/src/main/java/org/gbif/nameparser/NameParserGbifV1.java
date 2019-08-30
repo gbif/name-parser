@@ -187,7 +187,18 @@ public class NameParserGbifV1 implements NameParser {
     gbif.setBracketYear(pn.getBasionymAuthorship().getYear());
 
     gbif.setNomStatus(pn.getNomenclaturalNotes());
-    gbif.setRemarks(pn.getRemarks());
+    if (pn.getEpithetQualifier() != null && !pn.getEpithetQualifier().isEmpty()) {
+      StringBuilder sb = new StringBuilder();
+      for (Map.Entry<NamePart, String> pq : pn.getEpithetQualifier().entrySet()) {
+        if (sb.length() < 1) {
+          sb.append(" ");
+        }
+        sb.append(pq.getValue())
+          .append(" ")
+          .append(pn.getEpithet(pq.getKey()));
+      }
+      gbif.setRemarks(sb.toString());
+    }
 
     // we throw UnparsableException above already for State.NONE
     gbif.setParsed(true);
@@ -232,6 +243,9 @@ public class NameParserGbifV1 implements NameParser {
       case MEGAFAMILY: return Rank.SUPRAGENERIC_NAME;
       case GRANDFAMILY: return Rank.SUPRAGENERIC_NAME;
       case EPIFAMILY: return Rank.SUPRAGENERIC_NAME;
+  
+      case REALM: return Rank.SUPRAGENERIC_NAME;
+      case SUBREALM: return Rank.SUPRAGENERIC_NAME;
     }
     return convertEnum(Rank.class, rank);
   }

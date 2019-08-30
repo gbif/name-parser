@@ -298,10 +298,28 @@ public class ParsedName {
     this.notho = notho;
   }
   
+  public String getEpithet(NamePart part) {
+    switch (part) {
+      case GENERIC:
+        return getGenus();
+      case INFRAGENERIC:
+        return getInfragenericEpithet();
+      case SPECIFIC:
+        return getSpecificEpithet();
+      case INFRASPECIFIC:
+        return getInfraspecificEpithet();
+    }
+    return null;
+  }
+
   public Map<NamePart, String> getEpithetQualifier() {
     return epithetQualifier;
   }
   
+  public String getEpithetQualifier(NamePart part) {
+    return epithetQualifier.getOrDefault(part, null);
+  }
+
   public boolean hasEpithetQualifier(NamePart part) {
     return epithetQualifier != null && epithetQualifier.containsKey(part);
   }
