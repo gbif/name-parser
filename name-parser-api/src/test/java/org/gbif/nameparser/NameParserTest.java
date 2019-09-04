@@ -1374,6 +1374,18 @@ public abstract class NameParserTest {
         .qualifiers(SPECIFIC, "aff.")
         .code(ZOOLOGICAL)
         .nothingElse();
+  
+    assertName("Cerapachys mayeri cf. var. brachynodus", "Cerapachys mayeri cf. var. brachynodus")
+        .infraSpecies("Cerapachys", "mayeri", VARIETY, "brachynodus")
+        .type(INFORMAL)
+        .qualifiers(INFRASPECIFIC, "cf.")
+        .nothingElse();
+  
+    assertName("Solenopsis cf fugax", "Solenopsis cf. fugax")
+        .species("Solenopsis", "fugax")
+        .type(INFORMAL)
+        .qualifiers(SPECIFIC, "cf.")
+        .nothingElse();
   }
   
   @Test

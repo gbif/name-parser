@@ -95,7 +95,7 @@ class ParsingJob implements Callable<ParsedName> {
         ), "|") +
     ")";
   
-  private static final String UNALLOWED_EPITHETS = "the|and|of|where|from";
+  private static final String UNALLOWED_EPITHETS = "aff|and|cf|from|of|the|where";
   private static final String UNALLOWED_EPITHET_ENDING =
       "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
   // allow for cf/aff markers before epithets
@@ -329,10 +329,12 @@ class ParsingJob implements Callable<ParsedName> {
                 "(?:.*?)" +
                 // #7 superfluous subspecies epithet
                 "( ×?" + EPITHET + ")?" +
-                // #8 infraspecies rank
+                // #8 infraspecies qualifier
+                " ?"+ EPI_QUALIFIER +
+                // #9 infraspecies rank
                 "[. ]?(" + RANK_MARKER + ")?" +
-                // #9+10 infraspecies epitheton, avoid matching to degli which is part of Italian author names
-                "[. ]"+ EPI_QUALIFIER +"(×?\"?(?!(?:degli|de[rn]?)\\b)" + EPITHET + "\"?)" +
+                // #10 infraspecies epitheton, avoid matching to degli which is part of Italian author names
+                "[. ](×?\"?(?!(?:degli|de[rn]?)\\b)" + EPITHET + "\"?)" +
                 ")?" +
               ")?" +
 
@@ -1194,8 +1196,8 @@ class ParsingJob implements Callable<ParsedName> {
         // 4 parted name, so its below subspecies
         pn.setRank(Rank.INFRASUBSPECIFIC_NAME);
       }
-      setRank(matcher.group(8));
-      setEpithetQualifier(NamePart.SPECIFIC, matcher.group(9));
+      setEpithetQualifier(NamePart.INFRASPECIFIC, matcher.group(8));
+      setRank(matcher.group(9));
       pn.setInfraspecificEpithet(StringUtils.trimToNull(matcher.group(10)));
 
       // microbial ranks
