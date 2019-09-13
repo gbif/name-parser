@@ -113,6 +113,7 @@
       <groupId>org.gbif</groupId>
       <artifactId>name-parser-api</artifactId>
       <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>

@@ -42,8 +42,8 @@
         <gbif-api.version>0.84</gbif-api.version>
         <guava.version>28.0-jre</guava.version>
         <junit.version>4.12</junit.version>
-        <logback.version>1.1.7</logback.version>
-        <slf4j.version>1.7.21</slf4j.version>
+        <logback.version>1.2.3</logback.version>
+        <slf4j.version>1.7.24</slf4j.version>
         <!-- GNA Parser deps -->
         <gnparser.version>0.4.3</gnparser.version>
         <json4s.version>3.5.2</json4s.version>
@@ -84,12 +84,6 @@
                 <groupId>org.gbif</groupId>
                 <artifactId>name-parser-api</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.gbif</groupId>
-                <artifactId>name-parser-api</artifactId>
-                <version>${project.version}</version>
-                <classifier>tests</classifier>
             </dependency>
             <dependency>
                 <groupId>org.gbif</groupId>
@@ -151,6 +145,13 @@
             </dependency>
 
             <!-- Test -->
+            <dependency>
+                <groupId>org.gbif</groupId>
+                <artifactId>name-parser-api</artifactId>
+                <version>${project.version}</version>
+                <classifier>tests</classifier>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
