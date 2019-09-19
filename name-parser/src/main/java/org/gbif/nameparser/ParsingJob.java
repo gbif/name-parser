@@ -48,6 +48,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_EX_HORT = Pattern.compile("\\b(?:hort(?:usa?)?|cv)[. ]ex ", CASE_INSENSITIVE);
   private static final String SPACE_AUTHOR = "\\p{Lu}\\p{Ll}+ \\p{Lu}+";
   private static final Pattern SPACE_AUTHORTEAM = Pattern.compile("^" + SPACE_AUTHOR +"(?: " + SPACE_AUTHOR + ")*$");
+  private static final Pattern INITIALS = Pattern.compile("^\\p{Lu}{1,2}(?:[. ]\\p{Lu}{1,2}){0,2}\\.?$");
 
   // name parsing
   static final String NAME_LETTERS = "A-ZÏËÖÜÄÉÈČÁÀÆŒ";
@@ -1443,7 +1444,7 @@ class ParsingJob implements Callable<ParsedName> {
       String author = iter.next();
       if (iter.hasNext() && author.length()>3 && !author.endsWith(".")) {
         String next = iter.next();
-        if (next.length()<3) {
+        if (next.length()<3 || INITIALS.matcher(next).find()) {
           // consider an initial and merge with last author
           authors.add(normInitials(next) + author);
         } else {

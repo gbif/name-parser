@@ -368,6 +368,26 @@ public class NameFormatterTest {
   }
   
   /**
+   * https://github.com/Sp2000/colplus-backend/issues/478
+   */
+  @Test
+  public void bacterialInfraspec() throws Exception {
+    pn.setGenus("Spirulina");
+    pn.setSpecificEpithet("subsalsa");
+    pn.setInfraspecificEpithet("subsalsa");
+    pn.setRank(Rank.INFRASPECIFIC_NAME);
+    assertName(
+        "Spirulina subsalsa subsalsa",
+        "Spirulina subsalsa subsalsa"
+    );
+    pn.setCode(NomCode.BACTERIAL);
+    assertName(
+        "Spirulina subsalsa subsalsa",
+        "Spirulina subsalsa subsalsa"
+    );
+  }
+  
+  /**
    * http://dev.gbif.org/issues/browse/POR-2624
    */
   @Test

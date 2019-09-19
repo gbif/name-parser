@@ -1659,6 +1659,23 @@ public abstract class NameParserTest {
   }
   
   /**
+   * https://github.com/gbif/name-parser/issues/28
+   */
+  @Test
+  public void initialsAfterSurname() throws Exception {
+    assertName("Purana guttularis (Walker, F., 1858)", "Purana guttularis")
+        .species("Purana", "guttularis")
+        .basAuthors("1858", "F.Walker")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  
+    assertName("Physomerinus septemfoveolatus Schaufuss, L. W.", "Physomerinus septemfoveolatus")
+        .species("Physomerinus", "septemfoveolatus")
+        .combAuthors(null, "L.W.Schaufuss")
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/name-parser/issues/45
    */
   @Test
