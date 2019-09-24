@@ -2031,6 +2031,14 @@ public abstract class NameParserTest {
   
   @Test
   public void manuscriptNames() throws Exception {
+    assertName("Abrodictyum caespifrons (C. Chr.) comb. ined.", "Abrodictyum caespifrons")
+        .species("Abrodictyum", "caespifrons")
+        .basAuthors(null, "C.Chr.")
+        .type(SCIENTIFIC)
+        .nomNote("comb.ined.")
+        .manuscript()
+        .nothingElse();
+
     assertName("Acranthera virescens (Ridl.) ined.", "Acranthera virescens")
         .species("Acranthera", "virescens")
         .basAuthors(null, "Ridl.")
