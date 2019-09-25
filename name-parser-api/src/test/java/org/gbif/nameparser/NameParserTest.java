@@ -1673,6 +1673,18 @@ public abstract class NameParserTest {
         .species("Physomerinus", "septemfoveolatus")
         .combAuthors(null, "L.W.Schaufuss")
         .nothingElse();
+    
+    assertName("Physomerinus septemfoveolatus Schaufuss, L. W., 1877", "Physomerinus septemfoveolatus")
+        .species("Physomerinus", "septemfoveolatus")
+        .combAuthors("1877", "L.W.Schaufuss")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  
+    assertName("Euplectus cavicollis LeConte, J. L., 1878", "Euplectus cavicollis")
+        .species("Euplectus", "cavicollis")
+        .combAuthors("1878", "J.L.LeConte")
+        .code(ZOOLOGICAL)
+        .nothingElse();
   }
 
   /**
