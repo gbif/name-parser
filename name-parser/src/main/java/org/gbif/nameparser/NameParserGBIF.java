@@ -21,7 +21,7 @@ public class NameParserGBIF implements NameParser {
   public static final String THREAD_NAME = "NameParser-worker";
   private static Logger LOG = LoggerFactory.getLogger(NameParserGBIF.class);
   /**
-   * We use a cached threadpool to run the parsing in the background so we can control
+   * We use a cached daemon threadpool to run the parsing in the background so we can control
    * timeouts. If idle the pool shrinks to no threads after 10 seconds.
    */
   private static final ExecutorService EXEC = new ThreadPoolExecutor(0, 100,
@@ -87,13 +87,12 @@ public class NameParserGBIF implements NameParser {
     
     FutureTask<ParsedName> task = new FutureTask<ParsedName>(new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank, code));
     EXEC.execute(task);
-    
+
     try {
       return task.get(timeout, TimeUnit.MILLISECONDS);
       
     } catch (InterruptedException e) {
-      LOG.warn("Thread got interrupted, shutdown executor", e);
-      EXEC.shutdown();
+      LOG.warn("Thread got interrupted. Stop parse job {} {}", rank, scientificName, e);
       
     } catch (ExecutionException e) {
       // unwrap UnparsableNameException
@@ -101,7 +100,7 @@ public class NameParserGBIF implements NameParser {
         throw (UnparsableNameException) e.getCause();
         
       } else {
-        LOG.warn("ExecutionException for name: {}", scientificName, e);
+        LOG.warn("ExecutionException when parsing name: {}", scientificName, e);
       }
       
     } catch (TimeoutException e) {
@@ -111,5 +110,17 @@ public class NameParserGBIF implements NameParser {
     }
     
     throw new UnparsableNameException(NameType.SCIENTIFIC, scientificName);
+  }
+  
+  @Override
+  public void close() throws Exception {
+    LOG.info("Shutting down name parser worker threads");
+    EXEC.shutdown();
+    if (EXEC.awaitTermination(1, TimeUnit.SECONDS)) {
+      LOG.info("shutdown succeeded orderly");
+    } else {
+      int count = EXEC.shutdownNow().size();
+      LOG.warn("forced shutdown of name parser workers, discarding {} queued parsing tasks", count);
+    }
   }
 }

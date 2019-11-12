@@ -1,10 +1,13 @@
 package org.gbif.nameparser;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.io.Closeables;
+import org.apache.commons.io.IOUtils;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.nameparser.gna.NameParserGNA;
+import org.gbif.nameparser.utils.Closer;
 import org.gbif.utils.file.csv.CSVReader;
 import org.gbif.utils.file.csv.CSVReaderFactory;
 import org.gbif.utils.text.StringUtils;
@@ -60,9 +63,15 @@ public class ParserComparison implements Runnable {
             System.out.println(String.format("GNA  - total time parsing %s names: %s", counter, gnaTime));
             System.out.println(String.format("GBIF - total time parsing %s names: %s ms", counter, gbifTime/1000));
             System.out.println(String.format("GNA  - total time parsing %s names: %s ms", counter, gnaTime/1000));
+            shutdown();
         }
     }
 
+    public void shutdown(){
+      Closer.closeQuitely(gbif);
+      Closer.closeQuitely(gna);
+    }
+    
     private void parse(boolean isGbif, String name) {
         NameParser parser = isGbif ? gbif : gna;
         watch.reset();

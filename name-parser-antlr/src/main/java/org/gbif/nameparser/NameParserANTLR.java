@@ -63,4 +63,8 @@ public class NameParserANTLR implements org.gbif.nameparser.api.NameParser {
 
   }
   
+  @Override
+  public void close() throws Exception {
+    // nothing to do
+  }
 }

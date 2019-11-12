@@ -202,5 +202,9 @@ public class NameParserGNA implements NameParser {
     }
     return NameType.NO_NAME;
   }
-
+  
+  @Override
+  public void close() throws Exception {
+    // nothing to do
+  }
 }

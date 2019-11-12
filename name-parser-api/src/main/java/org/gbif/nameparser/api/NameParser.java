@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
  * The basic Name parser contract.
  * Implementations for the GBIF and GNA parser are provided.
  */
-public interface NameParser {
+public interface NameParser extends AutoCloseable {
   
   /**
    * @deprecated provide rank and code parameters
