@@ -43,21 +43,21 @@ public abstract class NameParserTest {
         .partial(", Proceedings of the Koninklijke Nederlandse Akademie van Wetenschappen, Series C: Biological and Medical Sciences 87(3): 381, f. 2. 1984. Fig. 2I, J")
         .warning(Warnings.NOMENCLATURAL_REFERENCE)
         .nothingElse();
-  
+    
     assertName("Passiflora jussieui Feuillet, Journal of the Botanical Research Institute of Texas 4(2): 611, f. 1. 2010. Figs 2E, F, 3E, F", "Passiflora jussieui")
         .species("Passiflora", "jussieui")
         .combAuthors(null, "Feuillet")
         .partial(", Journal of the Botanical Research Institute of Texas 4(2): 611, f. 1. 2010. Figs 2E, F, 3E, F")
         .warning(Warnings.NOMENCLATURAL_REFERENCE)
         .nothingElse();
-  
+    
     assertName("Passiflora eglandulosa J.M. MacDougal. Annals of the Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa")
         .species("Passiflora", "eglandulosa")
         .combAuthors(null, "J.M.MacDougal")
         .partial(". Annals of the Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37")
         .warning(Warnings.NOMENCLATURAL_REFERENCE)
         .nothingElse();
-  
+    
     assertName("Passiflora eglandulosa J.M. MacDougal. Lingua franca de Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa")
         .species("Passiflora", "eglandulosa")
         .combAuthors(null, "J.M.MacDougal")
@@ -569,15 +569,15 @@ public abstract class NameParserTest {
         .binomial("Achillea", null, "millefolium", Rank.SPECIES_AGGREGATE)
         .combAuthors(null, "L.")
         .nothingElse();
-
+    
     assertName("Strumigenys koningsbergeri-group", "Strumigenys koningsbergeri")
         .binomial("Strumigenys", null, "koningsbergeri", Rank.SPECIES_AGGREGATE)
         .nothingElse();
-
+    
     assertName("Selenophorus parumpunctatus species group", "Selenophorus parumpunctatus")
         .binomial("Selenophorus", null, "parumpunctatus", Rank.SPECIES_AGGREGATE)
         .nothingElse();
-
+    
     assertName("Monomorium monomorium group", "Monomorium monomorium")
         .binomial("Monomorium", null, "monomorium", Rank.SPECIES_AGGREGATE)
         .nothingElse();
@@ -817,9 +817,12 @@ public abstract class NameParserTest {
     assertHybridFormula("Mentha aquatica L. × M. arvensis L. × M. spicata L.");
     assertHybridFormula("Polypodium vulgare subsp. prionodes (Asch.) Rothm. × subsp. vulgare");
     assertHybridFormula("Tilletia caries (Bjerk.) Tul. × T. foetida (Wallr.) Liro.");
+    assertHybridFormula("Cirsium acaulon x arvense");
+    assertHybridFormula("Juncus effusus × inflexus");
+    assertHybridFormula("Symphytum caucasicum x uplandicum");
   }
   
-  private void assertHybridFormula(String name) {
+  protected void assertHybridFormula(String name) {
     assertUnparsable(name, HYBRID_FORMULA);
   }
   
@@ -835,17 +838,17 @@ public abstract class NameParserTest {
         .monomial("SH19186714.17FU")
         .type(OTU)
         .nothingElse();
-  
+    
     assertName("SH191814.08FU", "SH191814.08FU")
         .monomial("SH191814.08FU")
         .type(OTU)
         .nothingElse();
-  
+    
     assertName("SH191814.04FU", "SH191814.04FU")
         .monomial("SH191814.04FU")
         .type(OTU)
         .nothingElse();
-  
+    
     assertName("BOLD:ACW2100", "BOLD:ACW2100")
         .monomial("BOLD:ACW2100")
         .type(OTU)
@@ -1375,13 +1378,13 @@ public abstract class NameParserTest {
         .qualifiers(SPECIFIC, "aff.")
         .code(ZOOLOGICAL)
         .nothingElse();
-  
+    
     assertName("Cerapachys mayeri cf. var. brachynodus", "Cerapachys mayeri cf. var. brachynodus")
         .infraSpecies("Cerapachys", "mayeri", VARIETY, "brachynodus")
         .type(INFORMAL)
         .qualifiers(INFRASPECIFIC, "cf.")
         .nothingElse();
-  
+    
     assertName("Solenopsis cf fugax", "Solenopsis cf. fugax")
         .species("Solenopsis", "fugax")
         .type(INFORMAL)
@@ -1413,7 +1416,7 @@ public abstract class NameParserTest {
   
   @Test
   public void nomNotes() throws Exception {
-  
+    
     assertName("Anthurium lanceum Engl., nom. illeg., non. A. lancea.", "Anthurium lanceum")
         .species("Anthurium", "lanceum")
         .combAuthors(null, "Engl.")
@@ -1432,14 +1435,14 @@ public abstract class NameParserTest {
         .code(NomCode.ZOOLOGICAL)
         .warning(Warnings.UNUSUAL_CHARACTERS)
         .nothingElse();
-  
+    
     assertName("Anthurium lanceum Engl. nom.illeg.", "Anthurium lanceum")
         .species("Anthurium", "lanceum")
         .combAuthors(null, "Engl.")
         .nomNote("nom.illeg.")
         .code(BOTANICAL)
         .nothingElse();
-
+    
   }
   
   @Test
@@ -1449,7 +1452,7 @@ public abstract class NameParserTest {
         .monomial("Pycnophyes")
         .sensu("auctt., non Zelinka, 1907")
         .nothingElse();
-
+    
     assertName("Dyadobacter (Chelius & Triplett, 2000) emend. Reddy & Garcia-Pichel, 2005", "Dyadobacter")
         .monomial("Dyadobacter")
         .basAuthors("2000", "Chelius", "Triplett")
@@ -1669,7 +1672,7 @@ public abstract class NameParserTest {
         .basAuthors("1858", "F.Walker")
         .code(ZOOLOGICAL)
         .nothingElse();
-  
+    
     assertName("Physomerinus septemfoveolatus Schaufuss, L. W.", "Physomerinus septemfoveolatus")
         .species("Physomerinus", "septemfoveolatus")
         .combAuthors(null, "L.W.Schaufuss")
@@ -1680,14 +1683,14 @@ public abstract class NameParserTest {
         .combAuthors("1877", "L.W.Schaufuss")
         .code(ZOOLOGICAL)
         .nothingElse();
-  
+    
     assertName("Euplectus cavicollis LeConte, J. L., 1878", "Euplectus cavicollis")
         .species("Euplectus", "cavicollis")
         .combAuthors("1878", "J.L.LeConte")
         .code(ZOOLOGICAL)
         .nothingElse();
   }
-
+  
   /**
    * https://github.com/gbif/name-parser/issues/45
    */
@@ -1698,20 +1701,20 @@ public abstract class NameParserTest {
         .strain("GEN")
         .type(PLACEHOLDER)
         .nothingElse();
-  
+    
     assertName("EusiridaeNZD", ZOOLOGICAL,"Eusiridae NZD")
         .monomial("Eusiridae", FAMILY)
         .strain("NZD")
         .type(PLACEHOLDER)
         .code(ZOOLOGICAL)
         .nothingElse();
-  
+    
     assertName("Blattellinae_SB","Blattellinae SB")
         .monomial("Blattellinae")
         .strain("SB")
         .type(PLACEHOLDER)
         .nothingElse();
-  
+    
     assertName("GenusANIC_3","Genus ANIC_3")
         .monomial("Genus")
         .strain("ANIC_3")
@@ -2051,7 +2054,7 @@ public abstract class NameParserTest {
         .nomNote("comb.ined.")
         .manuscript()
         .nothingElse();
-
+    
     assertName("Acranthera virescens (Ridl.) ined.", "Acranthera virescens")
         .species("Acranthera", "virescens")
         .basAuthors(null, "Ridl.")
@@ -2170,7 +2173,7 @@ public abstract class NameParserTest {
   NameAssertion assertName(String rawName, NomCode code, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
     return assertName(rawName, null, code, expectedCanonicalWithoutAuthors);
   }
-
+  
   NameAssertion assertName(String rawName, Rank rank, NomCode code, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
     ParsedName n = parser.parse(rawName, rank, code);
     assertEquals(expectedCanonicalWithoutAuthors, n.canonicalNameWithoutAuthorship());
