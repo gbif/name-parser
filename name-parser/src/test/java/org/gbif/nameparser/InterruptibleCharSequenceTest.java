@@ -22,7 +22,16 @@ public class InterruptibleCharSequenceTest {
    */
   static class LongRegxJob implements Callable<Long> {
     private static Logger LOG = LoggerFactory.getLogger(LongRegxJob.class);
-    private static final String TEMPLATE = "00000000000000000000000000000";
+    private static final String TEMPLATE;
+    private static final Pattern PATTERN = Pattern.compile("(0*)*A");
+    static {
+      StringBuilder sb = new StringBuilder();
+      for (int i=1; i<10000; i++) {
+        sb.append("0");
+      }
+      TEMPLATE = sb.toString();
+    }
+
     private final CharSequence input;
 
     static LongRegxJob interruptable() {
@@ -38,11 +47,11 @@ public class InterruptibleCharSequenceTest {
 
     @Override
     public Long call() throws Exception {
-      final Pattern pattern = Pattern.compile("(0*)*A");
 
       long startTime = System.currentTimeMillis();
-      Matcher matcher = pattern.matcher(input);
+      Matcher matcher = PATTERN.matcher(input);
       matcher.find(); // runs for roughly a minute!
+      System.out.println(matcher.group());
       long duration = System.currentTimeMillis() - startTime;
       LOG.info("Regex finished in {}ms", duration);
       return duration;
@@ -61,7 +70,7 @@ public class InterruptibleCharSequenceTest {
       System.out.println("Executing task " + x);
       Future<Long> task = EXEC.submit(LongRegxJob.interruptable());
       try {
-        Long duration = task.get(250, TimeUnit.MILLISECONDS);
+        Long duration = task.get(100, TimeUnit.MILLISECONDS);
         fail("Expected to timeout but parsed in " + duration + "ms");
 
       } catch (TimeoutException e) {
