@@ -15,6 +15,8 @@
  */
 package org.gbif.nameparser.api;
 
+import java.net.URI;
+
 /**
  * Enumeration representing the different nomenclatoral codes found in biology for scientific names.
  * <p/>
@@ -28,37 +30,43 @@ package org.gbif.nameparser.api;
  */
 public enum NomCode {
   
-  BACTERIAL("ICNP",
+  BACTERIAL('P', "ICNP",
       "International Code of Nomenclature of Prokaryotes",
       "https://doi.org/10.1099/ijsem.0.000778"),
-  BOTANICAL("ICN",
+  BOTANICAL('B', "ICN",
       "International Code of Nomenclature for algae, fungi, and plants",
       "https://www.iapt-taxon.org/nomen/main.php"),
-  CULTIVARS("ICNCP",
+  CULTIVARS('C', "ICNCP",
       "International Code of Nomenclature for Cultivated Plants",
       "https://www.ishs.org/scripta-horticulturae/international-code-nomenclature-cultivated-plants-ninth-edition"),
-  VIRUS("ICVCN",
+  VIRUS('V', "ICVCN",
       "International Code of Virus Classifications and Nomenclature",
       "https://talk.ictvonline.org/information/w/ictv-information/383/ictv-code"),
-  ZOOLOGICAL("ICZN",
+  ZOOLOGICAL('Z', "ICZN",
       "International Code of Zoological Nomenclature",
       "http://www.iczn.org/code");
   
   private final String title;
+  private final Character abbrev;
   private final String acronym;
-  private final String link;
+  private final URI link;
   
-  NomCode(String acronym, String title, String link) {
+  NomCode(Character abbrev, String acronym, String title, String link) {
+    this.abbrev = abbrev;
     this.acronym = acronym;
-    this.link = link;
+    this.link = URI.create(link);
     this.title = title;
   }
-  
+
+  public Character getAbbrev() {
+    return abbrev;
+  }
+
   public String getAcronym() {
     return acronym;
   }
   
-  public String getLink() {
+  public URI getLink() {
     return link;
   }
   
