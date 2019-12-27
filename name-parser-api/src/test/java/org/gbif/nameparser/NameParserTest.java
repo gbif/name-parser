@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 import com.google.common.collect.Iterables;
 import org.apache.commons.io.LineIterator;
 import org.checkerframework.checker.units.qual.A;
+import org.checkerframework.checker.units.qual.C;
 import org.gbif.nameparser.api.*;
 import org.junit.AfterClass;
 import org.junit.Ignore;
@@ -1187,12 +1188,6 @@ public abstract class NameParserTest {
         .combExAuthors("hort.")
         .nothingElse();
 
-    //assertName("Pitcairnia pruinosa ex DC.", "Pitcairnia pruinosa")
-    //    .species("Pitcairnia", "pruinosa")
-    //    .combAuthors(null, "K.Koch")
-    //    .combExAuthors("hort.")
-    //    .nothingElse();
-
     assertName("Platycarpha glomerata (Thunberg) A.P.de Candolle", "Platycarpha glomerata")
         .species("Platycarpha", "glomerata")
         .basAuthors(null, "Thunberg")
@@ -1207,9 +1202,29 @@ public abstract class NameParserTest {
         .code(NomCode.BOTANICAL)
         .nothingElse();
 
-    
+    assertName("Sida kohautiana var. corchorifolia (H. da C. Monteiro Filho) H. da C. Monteiro Filho", "Sida kohautiana var. corchorifolia")
+        .infraSpecies("Sida", "kohautiana", VARIETY, "corchorifolia")
+        .basAuthors(null, "H.da C.Monteiro Filho")
+        .combAuthors(null, "H.da C.Monteiro Filho")
+        .code(NomCode.BOTANICAL)
+        .nothingElse();
   }
-  
+
+  /**
+   * https://github.com/gbif/name-parser/issues/49
+   */
+  @Test
+  public void unparsableAuthors() throws Exception {
+    assertAuthorship("Allemão")
+        .combAuthors(null, "Allemão")
+        .nothingElse();
+    //assertAuthorship("ex DC.")
+    //    .combAuthors(null, "DC.")
+    //    .nothingElse();
+
+    //TODO: https://github.com/gbif/name-parser/issues/49
+  }
+
   @Test
   public void extinctNames() throws Exception {
     assertName("†Titanoptera", "Titanoptera")
@@ -2208,7 +2223,13 @@ public abstract class NameParserTest {
       assertEquals(expectedName, ex.getName());
     }
   }
-  
+
+  NameAssertion assertAuthorship(String rawAuthorship) throws UnparsableNameException {
+    NameAssertion na = assertName("Abies alba " + rawAuthorship, SPECIES, null, "Abies alba");
+    na.species("Abies", "alba");
+    return na;
+  }
+
   NameAssertion assertName(String rawName, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
     return assertName(rawName, null, null, expectedCanonicalWithoutAuthors);
   }
