@@ -6,8 +6,8 @@ import org.gbif.nameparser.api.Authorship;
 import org.gbif.nameparser.api.Rank;
 import org.junit.Test;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
 
 import static org.junit.Assert.*;
 

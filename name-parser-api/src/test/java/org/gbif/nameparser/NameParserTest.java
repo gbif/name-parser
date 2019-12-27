@@ -1193,7 +1193,16 @@ public abstract class NameParserTest {
       assertEquals(NameType.SCIENTIFIC, n.getType());
     }
   }
-  
+
+  @Test
+  public void authorTimeout() throws Exception {
+    assertName("Abies alba de Puytorac, Batisse, Bohatier, Corliss, Deroux, Didier, Dragesco, Fryd-Versavel, Grain, Grollere, Horasse, Mode, Laval, Roque, Savoie & Tuffrau, 1974", "Abies alba")
+        .species("Abies", "alba")
+        .combAuthors("1974","de Puytorac", "Batisse", "Bohatier", "Corliss", "Deroux", "Didier", "Dragesco", "Fryd-Versavel", "Grain", "Grollere", "Horasse", "Mode", "Laval", "Roque", "Savoie", "Tuffrau")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
   /**
    * Test all names in doubtful.txt and make sure they parse without exception,
    * but have a doubtful flag set.
