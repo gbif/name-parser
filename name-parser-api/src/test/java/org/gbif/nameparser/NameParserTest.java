@@ -1026,8 +1026,13 @@ public abstract class NameParserTest {
   
   @Test
   public void authorVariations() throws Exception {
-    // bis
+    // bis and ter as author suffix
     // https://github.com/Sp2000/colplus-backend/issues/591
+    assertName("Lagenophora queenslandica Jian Wang ter & A.R.Bean", "Lagenophora queenslandica")
+        .species("Lagenophora", "queenslandica")
+        .combAuthors(null, "Jian Wang ter", "A.R.Bean")
+        .nothingElse();
+
     assertName("Abies arctica A.Murray bis", "Abies arctica")
         .species("Abies", "arctica")
         .combAuthors(null, "A.Murray bis")
@@ -1181,7 +1186,13 @@ public abstract class NameParserTest {
         .combAuthors(null, "K.Koch")
         .combExAuthors("hort.")
         .nothingElse();
-    
+
+    //assertName("Pitcairnia pruinosa ex DC.", "Pitcairnia pruinosa")
+    //    .species("Pitcairnia", "pruinosa")
+    //    .combAuthors(null, "K.Koch")
+    //    .combExAuthors("hort.")
+    //    .nothingElse();
+
     assertName("Platycarpha glomerata (Thunberg) A.P.de Candolle", "Platycarpha glomerata")
         .species("Platycarpha", "glomerata")
         .basAuthors(null, "Thunberg")

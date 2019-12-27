@@ -65,6 +65,9 @@ class ParsingJob implements Callable<ParsedName> {
     ")\\.?";
   @VisibleForTesting
   static final String AUTHOR = AUTHOR_TOKEN + "(?:[ '-]?" + AUTHOR_TOKEN + ")*";
+  // common author suffices that can be mistaken for epithets
+  static final String AUTHOR_SUFFIX = "(?:bis|ter|degli|de[rn]?)";
+  private static final Pattern AUTHOR_SUFFIX_P = Pattern.compile("^" + AUTHOR_SUFFIX + "$");
   private static final String AUTHOR_TEAM = AUTHOR + "(?:[&,;]+" + AUTHOR + ")*";
   static final String AUTHORSHIP =
       // ex authors
@@ -335,7 +338,7 @@ class ParsingJob implements Callable<ParsedName> {
                 // #9 infraspecies rank
                 "[. ]?(" + RANK_MARKER + ")?" +
                 // #10 infraspecies epitheton, avoid matching to bis and degli which is part of (Italian) author names
-                "[. ](×?\"?(?!(?:bis|degli|de[rn]?)\\b)" + EPITHET + "\"?)" +
+                "[. ](×?\"?(?!" + AUTHOR_SUFFIX + "\\b)" + EPITHET + "\"?)" +
                 ")?" +
               ")?" +
 
@@ -962,8 +965,8 @@ class ParsingJob implements Callable<ParsedName> {
     // add parenthesis around subgenus if missing
     m = NORM_SUBGENUS.matcher(name);
     if (m.find()) {
-      // make sure epithet is not a rank mismatch
-      if (parseRank(m.group(3)) == null){
+      // make sure epithet is not a rank mismatch or author suffix
+      if (parseRank(m.group(3)) == null && !AUTHOR_SUFFIX_P.matcher(m.group(3)).find()){
         name = m.replaceAll("$1($2)$3");
       }
     }
