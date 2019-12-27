@@ -7,6 +7,7 @@ import java.io.UnsupportedEncodingException;
 
 import com.google.common.collect.Iterables;
 import org.apache.commons.io.LineIterator;
+import org.checkerframework.checker.units.qual.A;
 import org.gbif.nameparser.api.*;
 import org.junit.AfterClass;
 import org.junit.Ignore;
@@ -1025,6 +1026,33 @@ public abstract class NameParserTest {
   
   @Test
   public void authorVariations() throws Exception {
+    // bis
+    // https://github.com/Sp2000/colplus-backend/issues/591
+    assertName("Abies arctica A.Murray bis", "Abies arctica")
+        .species("Abies", "arctica")
+        .combAuthors(null, "A.Murray bis")
+        .nothingElse();
+
+    assertName("Abies lowiana (Gordon) A.Murray bis", "Abies lowiana")
+        .species("Abies", "lowiana")
+        .basAuthors(null, "Gordon")
+        .combAuthors(null, "A.Murray bis")
+        .code(BOTANICAL)
+        .nothingElse();
+
+    assertName("Trappeindia Castellano, S.L. Mill., L. Singh bis & T.N. Lakh. 2012", "Trappeindia")
+        .monomial("Trappeindia")
+        .combAuthors("2012", "Castellano", "S.L.Mill.", "L.Singh bis", "T.N.Lakh.")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    assertName("Trichosporon cutaneum (Beurm., Gougerot & Vaucher bis) M. Ota", "Trichosporon cutaneum")
+        .species("Trichosporon", "cutaneum")
+        .basAuthors(null, "Beurm.", "Gougerot", "Vaucher bis")
+        .combAuthors(null, "M.Ota")
+        .code(BOTANICAL)
+        .nothingElse();
+
     // van der
     assertName("Megistocera tenuis (van der Wulp, 1885)", "Megistocera tenuis")
         .species("Megistocera", "tenuis")

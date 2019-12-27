@@ -334,8 +334,8 @@ class ParsingJob implements Callable<ParsedName> {
                 " ?"+ EPI_QUALIFIER +
                 // #9 infraspecies rank
                 "[. ]?(" + RANK_MARKER + ")?" +
-                // #10 infraspecies epitheton, avoid matching to degli which is part of Italian author names
-                "[. ](×?\"?(?!(?:degli|de[rn]?)\\b)" + EPITHET + "\"?)" +
+                // #10 infraspecies epitheton, avoid matching to bis and degli which is part of (Italian) author names
+                "[. ](×?\"?(?!(?:bis|degli|de[rn]?)\\b)" + EPITHET + "\"?)" +
                 ")?" +
               ")?" +
 
