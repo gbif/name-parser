@@ -66,7 +66,7 @@ class ParsingJob implements Callable<ParsedName> {
   @VisibleForTesting
   static final String AUTHOR = AUTHOR_TOKEN + "(?:[ '-]?" + AUTHOR_TOKEN + ")*";
   // common author suffices that can be mistaken for epithets
-  static final String AUTHOR_SUFFIX = "(?:bis|ter|degli|de[rnl]?)";
+  static final String AUTHOR_SUFFIX = "(?:bis|ter|d(?:[ae][rnl]?|egli))";
   private static final Pattern AUTHOR_SUFFIX_P = Pattern.compile("^" + AUTHOR_SUFFIX + "$");
   private static final String AUTHOR_TEAM = AUTHOR + "(?:[&,;]+" + AUTHOR + ")*";
   static final String AUTHORSHIP =
