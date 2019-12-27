@@ -1199,6 +1199,14 @@ public abstract class NameParserTest {
         .combAuthors(null, "A.P.de Candolle")
         .code(NomCode.BOTANICAL)
         .nothingElse();
+
+    assertName("Abies alba (Huguet del Villar) S. Rivas-Martínez, F. Fernández González & D. Sánchez-Mata", "Abies alba")
+        .species("Abies", "alba")
+        .basAuthors(null, "Huguet del Villar")
+        .combAuthors(null, "S.Rivas-Martínez", "F.Fernández González", "D.Sánchez-Mata")
+        .code(NomCode.BOTANICAL)
+        .nothingElse();
+
     
   }
   
