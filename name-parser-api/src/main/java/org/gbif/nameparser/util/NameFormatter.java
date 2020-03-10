@@ -74,7 +74,7 @@ public class NameFormatter {
   /**
    * The full concatenated authorship for parsed names including the sanctioning author.
    */
-  public static String authorshipComplete(ParsedName n) {
+  public static String authorshipComplete(ParsedAuthorship n) {
     StringBuilder sb = new StringBuilder();
     appendAuthorship(n, sb);
     return sb.length() == 0 ? null : sb.toString();
@@ -462,23 +462,23 @@ public class NameFormatter {
     }
   }
   
-  private static void appendAuthorship(ParsedName n, StringBuilder sb) {
-    if (n.getBasionymAuthorship().exists()) {
+  private static void appendAuthorship(ParsedAuthorship a, StringBuilder sb) {
+    if (a.getBasionymAuthorship().exists()) {
       sb.append("(");
-      appendAuthorship(sb, n.getBasionymAuthorship(), true);
+      appendAuthorship(sb, a.getBasionymAuthorship(), true);
       sb.append(")");
     }
-    if (n.getCombinationAuthorship().exists()) {
-      if (n.getBasionymAuthorship().exists()) {
+    if (a.getCombinationAuthorship().exists()) {
+      if (a.getBasionymAuthorship().exists()) {
         sb.append(" ");
       }
-      appendAuthorship(sb, n.getCombinationAuthorship(), true);
+      appendAuthorship(sb, a.getCombinationAuthorship(), true);
       // Render sanctioning author via colon:
       // http://www.iapt-taxon.org/nomen/main.php?page=r50E
       //TODO: remove rendering of sanctioning author according to Paul Kirk!
-      if (n.getSanctioningAuthor() != null) {
+      if (a.getSanctioningAuthor() != null) {
         sb.append(" : ");
-        sb.append(n.getSanctioningAuthor());
+        sb.append(a.getSanctioningAuthor());
       }
     }
   }

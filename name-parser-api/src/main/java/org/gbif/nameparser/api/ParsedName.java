@@ -17,7 +17,7 @@ import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
 /**
  *
  */
-public class ParsedName {
+public class ParsedName extends ParsedAuthorship {
   
   /**
    * Degree of parsing this instance reflects.
@@ -46,23 +46,6 @@ public class ParsedName {
       return this != NONE;
     }
   }
-  
-  /**
-   * Authorship with years of the name, but excluding any basionym authorship.
-   * For binomials the combination authors.
-   */
-  private Authorship combinationAuthorship = new Authorship();
-  
-  /**
-   * Basionym authorship with years of the name
-   */
-  private Authorship basionymAuthorship = new Authorship();
-  
-  /**
-   * The sanctioning author for sanctioned fungal names.
-   * Fr. or Pers.
-   */
-  private String sanctioningAuthor;
   
   /**
    * Rank of the name from enumeration
@@ -121,69 +104,16 @@ public class ParsedName {
    * Optional qualifiers like cf. or aff. that can precede an epithet.
    */
   private Map<NamePart, String> epithetQualifier;
-
-  /**
-   * Nomenclatural status remarks of the name.
-   */
-  private String taxonomicNote;
-  
-  /**
-   * Nomenclatural status remarks of the name.
-   */
-  private String nomenclaturalNotes;
-  
-  /**
-   * Any additional unparsed string found at the end of the name.
-   * Only ever set when state=PARTIAL
-   */
-  private String unparsed;
   
   /**
    * The kind of name classified in broad catagories based on their syntactical
    * structure
    */
   private NameType type;
-  
-  /**
-   * Indicates some doubts that this is a name of the given type.
-   * Usually indicates the existance of unusual characters not normally found in scientific names.
-   */
-  private boolean doubtful;
-  
-  /**
-   * Indicates a manuscript name identified by ined. or ms.
-   * Can be either of type scientific name or informal
-   */
-  private boolean manuscript;
 
   private State state = State.NONE;
   
   private List<String> warnings = Lists.newArrayList();
-  
-  
-  public Authorship getCombinationAuthorship() {
-    return combinationAuthorship;
-  }
-  
-  public void setCombinationAuthorship(Authorship combinationAuthorship) {
-    this.combinationAuthorship = combinationAuthorship;
-  }
-  
-  public Authorship getBasionymAuthorship() {
-    return basionymAuthorship;
-  }
-  
-  public void setBasionymAuthorship(Authorship basionymAuthorship) {
-    this.basionymAuthorship = basionymAuthorship;
-  }
-  
-  public String getSanctioningAuthor() {
-    return sanctioningAuthor;
-  }
-  
-  public void setSanctioningAuthor(String sanctioningAuthor) {
-    this.sanctioningAuthor = sanctioningAuthor;
-  }
   
   public Rank getRank() {
     return rank;
@@ -337,50 +267,6 @@ public class ParsedName {
     }
   }
 
-  public String getNomenclaturalNotes() {
-    return nomenclaturalNotes;
-  }
-  
-  public void setNomenclaturalNotes(String nomenclaturalNotes) {
-    this.nomenclaturalNotes = nomenclaturalNotes;
-  }
-  
-  public void addNomenclaturalNote(String note) {
-    if (!StringUtils.isBlank(note)) {
-      this.nomenclaturalNotes = nomenclaturalNotes == null ? note.trim() : nomenclaturalNotes + " " + note.trim();
-    }
-  }
-  
-  public String getTaxonomicNote() {
-    return taxonomicNote;
-  }
-  
-  public void setTaxonomicNote(String taxonomicNote) {
-    this.taxonomicNote = taxonomicNote;
-  }
-  
-  public boolean isManuscript() {
-    return manuscript;
-  }
-  
-  public void setManuscript(boolean manuscript) {
-    this.manuscript = manuscript;
-  }
-  
-  public String getUnparsed() {
-    return unparsed;
-  }
-  
-  public void setUnparsed(String unparsed) {
-    this.unparsed = unparsed;
-  }
-  
-  public void addUnparsed(String unparsed) {
-    if (!StringUtils.isBlank(unparsed)) {
-      this.unparsed = this.unparsed == null ? unparsed : this.unparsed + unparsed;
-    }
-  }
-
   public State getState() {
     return state;
   }
@@ -396,15 +282,7 @@ public class ParsedName {
   public void setType(NameType type) {
     this.type = type;
   }
-  
-  public boolean isDoubtful() {
-    return doubtful;
-  }
-  
-  public void setDoubtful(boolean doubtful) {
-    this.doubtful = doubtful;
-  }
-  
+
   public List<String> getWarnings() {
     return warnings;
   }
@@ -435,14 +313,7 @@ public class ParsedName {
   public boolean hasName() {
     return ObjectUtils.firstNonNull(uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, strain, cultivarEpithet) != null;
   }
-  
-  /**
-   * @return true if any kind of authorship exists
-   */
-  public boolean hasAuthorship() {
-    return combinationAuthorship.exists() || basionymAuthorship.exists();
-  }
-  
+
   public boolean isHybridName() {
     return notho != null;
   }
@@ -528,18 +399,14 @@ public class ParsedName {
   public String authorshipComplete() {
     return NameFormatter.authorshipComplete(this);
   }
-  
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
+    if (!super.equals(o)) return false;
     ParsedName that = (ParsedName) o;
     return candidatus == that.candidatus &&
-        doubtful == that.doubtful &&
-        state == that.state &&
-        Objects.equals(combinationAuthorship, that.combinationAuthorship) &&
-        Objects.equals(basionymAuthorship, that.basionymAuthorship) &&
-        Objects.equals(sanctioningAuthor, that.sanctioningAuthor) &&
         rank == that.rank &&
         code == that.code &&
         Objects.equals(uninomial, that.uninomial) &&
@@ -550,19 +417,18 @@ public class ParsedName {
         Objects.equals(cultivarEpithet, that.cultivarEpithet) &&
         Objects.equals(strain, that.strain) &&
         notho == that.notho &&
-        Objects.equals(taxonomicNote, that.taxonomicNote) &&
-        Objects.equals(nomenclaturalNotes, that.nomenclaturalNotes) &&
-        Objects.equals(unparsed, that.unparsed) &&
-        manuscript == that.manuscript &&
+        Objects.equals(epithetQualifier, that.epithetQualifier) &&
         type == that.type &&
+        state == that.state &&
         Objects.equals(warnings, that.warnings);
   }
-  
+
   @Override
   public int hashCode() {
-    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, strain, candidatus, notho, taxonomicNote, nomenclaturalNotes, unparsed, type, doubtful, manuscript, state, warnings);
+    return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet,
+        cultivarEpithet, strain, candidatus, notho, epithetQualifier, type, state, warnings);
   }
-  
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
@@ -595,11 +461,11 @@ public class ParsedName {
     if (strain != null) {
       sb.append(" STR:").append(strain);
     }
-    if (combinationAuthorship != null) {
-      sb.append(" A:").append(combinationAuthorship);
+    if (getCombinationAuthorship() != null) {
+      sb.append(" A:").append(getCombinationAuthorship());
     }
-    if (basionymAuthorship != null) {
-      sb.append(" BA:").append(basionymAuthorship);
+    if (getBasionymAuthorship() != null) {
+      sb.append(" BA:").append(getBasionymAuthorship());
     }
     return sb.toString();
   }

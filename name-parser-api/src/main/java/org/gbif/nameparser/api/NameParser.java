@@ -13,7 +13,11 @@ public interface NameParser extends AutoCloseable {
    */
   @Deprecated
   ParsedName parse(String scientificName) throws UnparsableNameException;
-  
+
+  default ParsedAuthorship parseAuthorship(String authorship) throws UnparsableNameException {
+    return parse("Abies alba " + authorship, Rank.SPECIES, null);
+  }
+
   /**
    * @deprecated provide rank and code parameters
    */

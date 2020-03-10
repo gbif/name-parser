@@ -33,7 +33,7 @@ public enum Rank {
   
   DOMAIN("dom."),
   
-    REALM ("realm"),
+  REALM ("realm"),
   
   SUBREALM ("subrealm"),
 
