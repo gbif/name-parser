@@ -375,7 +375,6 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   private final Rank rank;
-  private final NomCode code;
   private final String scientificName;
   private final ParsedName pn;
   private final ParserConfigs configs;
@@ -389,9 +388,9 @@ class ParsingJob implements Callable<ParsedName> {
     this.scientificName = Preconditions.checkNotNull(scientificName);
     this.configs = Preconditions.checkNotNull(configs);
     this.rank = Preconditions.checkNotNull(rank);
-    this.code = code;
     pn =  new ParsedName();
     pn.setRank(rank);
+    pn.setCode(code);
   }
 
   private ParsedName unparsable(NameType type) throws UnparsableNameException {
@@ -1138,11 +1137,12 @@ class ParsingJob implements Callable<ParsedName> {
   
   private void determineRank() {
     if (pn.getRank().otherOrUnranked()) {
-      pn.setRank(RankUtils.inferRank(pn, code));
+      pn.setRank(RankUtils.inferRank(pn));
     }
   }
   
   private void determineCode() {
+    // no code given?
     if (pn.getCode() == null) {
       // does the rank tell us sth?
       if (pn.getRank().isRestrictedToCode() != null) {
@@ -1176,10 +1176,6 @@ class ParsingJob implements Callable<ParsedName> {
         }
       } else if (pn.getNomenclaturalNotes() != null && pn.getNomenclaturalNotes().contains("illeg")) {
         pn.setCode(NomCode.BOTANICAL);
-      
-      } else {
-        // otherwise use code given
-        pn.setCode(code);
       }
     }
   }

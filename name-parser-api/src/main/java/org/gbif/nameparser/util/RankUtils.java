@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.*;
+import org.gbif.nameparser.api.LinneanName;
 import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
@@ -268,25 +269,15 @@ public class RankUtils {
     }
     return null;
   }
-  
-  /**
-   * @deprecated use infer rank with given nomenclatural code instead for better results
-   *
-   * @return the inferred rank or UNRANKED if it cant be found.
-   */
-  @Deprecated
-  public static Rank inferRank(ParsedName pn) {
-    return inferRank(pn, null);
-  }
-  
+
   /**
    * Tries its best to infer a rank from an atomised name by just looking at the name parts ignoring any existing rank on the instance.
-   * As a final resort for higher monomials the suffices are inspected with the help of the supplied nomenclatural code.
+   * As a final resort for higher monomials the suffices are inspected with the help of the supplied nomenclatural code (see LinneanName instance).
    * If no code is given certain suffices are ambiguous (e.g. -idae and -inae) and cannot be inferred!
    *
    * @return the inferred rank or UNRANKED if it cant be found.
    */
-  public static Rank inferRank(ParsedName pn, @Nullable NomCode code) {
+  public static Rank inferRank(LinneanName pn) {
     // detect rank based on parsed name
     if (pn.getInfraspecificEpithet() != null) {
       // some infraspecific name
@@ -303,10 +294,10 @@ public class RankUtils {
     } else if (pn.getUninomial() != null) {
       // a suprageneric name, check suffices
       Map<String, Rank> suffices;
-      if (code == null) {
+      if (pn.getCode() == null) {
         suffices = GLOBAL_SUFFICES_RANK_MAP;
       } else {
-        suffices = SUFFICES_RANK_MAP.getOrDefault(code, Collections.EMPTY_MAP);
+        suffices = SUFFICES_RANK_MAP.getOrDefault(pn.getCode(), Collections.EMPTY_MAP);
       }
       for (Map.Entry<String, Rank> e : suffices.entrySet()) {
         if (pn.getUninomial().endsWith(e.getKey())) {

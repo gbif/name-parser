@@ -9,7 +9,6 @@ import javax.annotation.Nonnull;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
 import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
@@ -17,7 +16,7 @@ import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
 /**
  *
  */
-public class ParsedName extends ParsedAuthorship {
+public class ParsedName extends ParsedAuthorship implements LinneanName {
   
   /**
    * Degree of parsing this instance reflects.
@@ -132,26 +131,32 @@ public class ParsedName extends ParsedAuthorship {
     type = pn.type;
   }
 
+  @Override
   public Rank getRank() {
     return rank;
   }
   
+  @Override
   public void setRank(Rank rank) {
     this.rank = rank == null ? Rank.UNRANKED : rank;
   }
   
+  @Override
   public NomCode getCode() {
     return code;
   }
   
+  @Override
   public void setCode(NomCode code) {
     this.code = code;
   }
   
+  @Override
   public String getUninomial() {
     return uninomial;
   }
   
+  @Override
   public void setUninomial(String uni) {
     if (uni != null && !uni.isEmpty() && uni.charAt(0) == HYBRID_MARKER) {
       this.uninomial = uni.substring(1);
@@ -161,10 +166,12 @@ public class ParsedName extends ParsedAuthorship {
     }
   }
   
+  @Override
   public String getGenus() {
     return genus;
   }
   
+  @Override
   public void setGenus(String genus) {
     if (genus != null && !genus.isEmpty() && genus.charAt(0) == HYBRID_MARKER) {
       this.genus = genus.substring(1);
@@ -174,10 +181,12 @@ public class ParsedName extends ParsedAuthorship {
     }
   }
   
+  @Override
   public String getInfragenericEpithet() {
     return infragenericEpithet;
   }
   
+  @Override
   public void setInfragenericEpithet(String infraGeneric) {
     if (infraGeneric != null && !infraGeneric.isEmpty() && infraGeneric.charAt(0) == HYBRID_MARKER) {
       this.infragenericEpithet = infraGeneric.substring(1);
@@ -187,10 +196,12 @@ public class ParsedName extends ParsedAuthorship {
     }
   }
   
+  @Override
   public String getSpecificEpithet() {
     return specificEpithet;
   }
   
+  @Override
   public void setSpecificEpithet(String species) {
     if (species != null && !species.isEmpty() && species.charAt(0) == HYBRID_MARKER) {
       specificEpithet = species.substring(1);
@@ -200,10 +211,12 @@ public class ParsedName extends ParsedAuthorship {
     }
   }
   
+  @Override
   public String getInfraspecificEpithet() {
     return infraspecificEpithet;
   }
   
+  @Override
   public void setInfraspecificEpithet(String infraSpecies) {
     if (infraSpecies != null && !infraSpecies.isEmpty() && infraSpecies.charAt(0) == HYBRID_MARKER) {
       this.infraspecificEpithet = infraSpecies.substring(1);
@@ -237,10 +250,12 @@ public class ParsedName extends ParsedAuthorship {
     this.candidatus = candidatus;
   }
   
+  @Override
   public NamePart getNotho() {
     return notho;
   }
   
+  @Override
   public void setNotho(NamePart notho) {
     this.notho = notho;
   }

@@ -32,7 +32,8 @@ public class RankUtilsTest {
   private void assertInferred(String uninomial, NomCode code, Rank rank) {
     ParsedName pn = new ParsedName();
     pn.setUninomial(uninomial);
-    assertEquals(rank, RankUtils.inferRank(pn, code));
+    pn.setCode(code);
+    assertEquals(rank, RankUtils.inferRank(pn));
   }
   
   @Test
@@ -59,17 +60,22 @@ public class RankUtilsTest {
     assertEquals(Rank.SPECIES, RankUtils.inferRank(build("Abies", null, "alba")));
     assertEquals(Rank.INFRAGENERIC_NAME, RankUtils.inferRank(build(null, "Abies", null)));
     assertEquals(Rank.INFRAGENERIC_NAME, RankUtils.inferRank(build("", "Abies", null)));
-    assertEquals(Rank.SUBFAMILY, RankUtils.inferRank(build("Neurolaenodinae", null, null), NomCode.ZOOLOGICAL));
+    assertEquals(Rank.SUBFAMILY, RankUtils.inferRank(build("Neurolaenodinae", null, null, NomCode.ZOOLOGICAL)));
     // should not be able to infer the correct family
-    assertEquals(Rank.UNRANKED, RankUtils.inferRank(build("Compositae", null, null), NomCode.BOTANICAL));
+    assertEquals(Rank.UNRANKED, RankUtils.inferRank(build("Compositae", null, null, NomCode.BOTANICAL)));
   }
-  
+
   private static ParsedName build(String genus, String infragen, String spec) {
+    return build(genus, infragen, spec, null);
+  }
+
+  private static ParsedName build(String genus, String infragen, String spec, NomCode code) {
     ParsedName pn = new ParsedName();
     pn.setUninomial(genus);
     pn.setGenus(genus);
     pn.setInfragenericEpithet(infragen);
     pn.setSpecificEpithet(spec);
+    pn.setCode(code);
     return pn;
   }
   @Test
