@@ -12,28 +12,30 @@ public class ParserConfigs {
   private final Map<String, ParsedAuthorship> authorships = new HashMap<>();
 
   public ParsedName forName(String name) {
-    name = ParsingJob.preClean(name, null);
-    return names.get(name);
+    return names.get(norm(name));
   }
 
   public ParsedAuthorship forAuthorship(String authorship) {
-    authorship = ParsingJob.preClean(authorship, null);
-    return authorships.get(authorship);
+    return authorships.get(norm(authorship));
   }
 
-  public void setName(String sciname, ParsedName pn) {
-    names.put(ParsingJob.preClean(sciname, null), pn);
+  public void setName(String name, ParsedName pn) {
+    names.put(norm(name), pn);
   }
 
   public ParsedName deleteName(String name) {
-    return names.remove(ParsingJob.preClean(name, null));
+    return names.remove(norm(name));
   }
 
   public void setAuthorship(String authorship, ParsedAuthorship pn) {
-    authorships.put(ParsingJob.preClean(authorship, null), pn);
+    authorships.put(norm(authorship), pn);
   }
 
   public ParsedAuthorship deleteAuthorship(String authorship) {
-    return authorships.remove(ParsingJob.preClean(authorship, null));
+    return authorships.remove(norm(authorship));
+  }
+
+  private static String norm(String x) {
+    return ParsingJob.preClean(x, null).toLowerCase();
   }
 }
