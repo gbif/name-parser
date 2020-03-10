@@ -111,10 +111,27 @@ public class ParsedName extends ParsedAuthorship {
    */
   private NameType type;
 
-  private State state = State.NONE;
-  
-  private List<String> warnings = Lists.newArrayList();
-  
+
+  /**
+   * Copies all values from the given parsed authorship
+   */
+  public void copy(ParsedName pn) {
+    super.copy(pn);
+    rank = pn.rank;
+    code = pn.code;
+    uninomial = pn.uninomial;
+    genus = pn.genus;
+    infragenericEpithet = pn.infragenericEpithet;
+    specificEpithet = pn.specificEpithet;
+    infraspecificEpithet = pn.infraspecificEpithet;
+    cultivarEpithet = pn.cultivarEpithet;
+    strain = pn.strain;
+    candidatus = pn.candidatus;
+    notho = pn.notho;
+    epithetQualifier = pn.epithetQualifier;
+    type = pn.type;
+  }
+
   public Rank getRank() {
     return rank;
   }
@@ -267,14 +284,6 @@ public class ParsedName extends ParsedAuthorship {
     }
   }
 
-  public State getState() {
-    return state;
-  }
-  
-  public void setState(State state) {
-    this.state = state;
-  }
-  
   public NameType getType() {
     return type;
   }
@@ -282,17 +291,6 @@ public class ParsedName extends ParsedAuthorship {
   public void setType(NameType type) {
     this.type = type;
   }
-
-  public List<String> getWarnings() {
-    return warnings;
-  }
-  
-  public void addWarning(String... warnings) {
-    for (String warn : warnings) {
-      this.warnings.add(warn);
-    }
-  }
-  
   
   /**
    * @return the terminal epithet. Infraspecific epithet if existing, the species epithet or null
@@ -418,15 +416,13 @@ public class ParsedName extends ParsedAuthorship {
         Objects.equals(strain, that.strain) &&
         notho == that.notho &&
         Objects.equals(epithetQualifier, that.epithetQualifier) &&
-        type == that.type &&
-        state == that.state &&
-        Objects.equals(warnings, that.warnings);
+        type == that.type;
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet,
-        cultivarEpithet, strain, candidatus, notho, epithetQualifier, type, state, warnings);
+        cultivarEpithet, strain, candidatus, notho, epithetQualifier, type);
   }
 
   @Override

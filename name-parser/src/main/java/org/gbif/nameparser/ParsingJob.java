@@ -378,14 +378,16 @@ class ParsingJob implements Callable<ParsedName> {
   private final NomCode code;
   private final String scientificName;
   private final ParsedName pn;
+  private final ParserConfigs configs;
   private boolean ignoreAuthorship;
 
   /**
    * @param scientificName the full scientific name to parse
    * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
    */
-  ParsingJob(String scientificName, Rank rank, NomCode code) {
+  ParsingJob(String scientificName, Rank rank, NomCode code, ParserConfigs configs) {
     this.scientificName = Preconditions.checkNotNull(scientificName);
+    this.configs = Preconditions.checkNotNull(configs);
     this.rank = Preconditions.checkNotNull(rank);
     this.code = code;
     pn =  new ParsedName();
@@ -442,6 +444,14 @@ class ParsingJob implements Callable<ParsedName> {
    * Parse very special cases and return true if the parsing succeeded and has thereby ended completely!
    */
   private boolean specialCases(String name) throws UnparsableNameException {
+    // override exists?
+    ParsedName over = configs.forName(name);
+    if (over != null) {
+      pn.copy(over);
+      LOG.debug("Manual override found for name: {}", name);
+      return true;
+    }
+
     // BOLD/UNITE OTU names
     Matcher m = OTU_PATTERN.matcher(name);
     if (m.find()) {
@@ -983,6 +993,13 @@ class ParsingJob implements Callable<ParsedName> {
    */
   @VisibleForTesting
   String preClean(String name) {
+    return preClean(name, pn.getWarnings());
+  }
+
+  /**
+   * basic careful cleaning, trying to preserve all parsable name parts
+   */
+  public static String preClean(String name, @Nullable List<String> warnings) {
     // remove bad whitespace in html entities
     Matcher m = XML_ENTITY_STRIP.matcher(name);
     if (m.find()) {
@@ -991,21 +1008,25 @@ class ParsingJob implements Callable<ParsedName> {
     // unescape html entities
     int length = name.length();
     name = StringEscapeUtils.unescapeHtml4(name);
-    if (length > name.length()) {
-      pn.addWarning(Warnings.HTML_ENTITIES);
+    if (warnings != null && length > name.length()) {
+      warnings.add(Warnings.HTML_ENTITIES);
     }
     // finally remove still existing bad ampersands missing the closing ;
     m = AMPERSAND_ENTITY.matcher(name);
     if (m.find()) {
       name = m.replaceAll("&");
-      pn.addWarning(Warnings.HTML_ENTITIES);
+      if (warnings != null) {
+        warnings.add(Warnings.HTML_ENTITIES);
+      }
     }
 
     // replace xml tags
     m = XML_TAGS.matcher(name);
     if (m.find()) {
       name = m.replaceAll("");
-      pn.addWarning(Warnings.XML_TAGS);
+      if (warnings != null) {
+        warnings.add(Warnings.XML_TAGS);
+      }
     }
 
     // trim

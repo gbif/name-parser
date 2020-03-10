@@ -31,7 +31,7 @@ public class NameParserGBIF implements NameParser {
       new ThreadPoolExecutor.CallerRunsPolicy());
 
   private final long timeout;  // max parsing time in milliseconds
-
+  private final ParserConfigs configs = new ParserConfigs();
 
   /**
    * The default name parser without an explicit monomials list using the default timeout of 1s for parsing.
@@ -55,6 +55,17 @@ public class NameParserGBIF implements NameParser {
   @Deprecated
   public ParsedName parse(String scientificName) throws UnparsableNameException {
     return parse(scientificName, Rank.UNRANKED);
+  }
+
+  @Override
+  public ParsedAuthorship parseAuthorship(String authorship) throws UnparsableNameException {
+    // override exists?
+    ParsedAuthorship over = configs.forAuthorship(authorship);
+    if (over != null) {
+      LOG.debug("Manual override found for authorship: {}", authorship);
+      return over;
+    }
+    return NameParser.super.parseAuthorship(authorship);
   }
 
   /**
@@ -85,7 +96,7 @@ public class NameParserGBIF implements NameParser {
       throw new UnparsableNameException(NameType.NO_NAME, scientificName);
     }
     
-    FutureTask<ParsedName> task = new FutureTask<ParsedName>(new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank, code));
+    FutureTask<ParsedName> task = new FutureTask<ParsedName>(new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank, code, configs));
     EXEC.execute(task);
 
     try {
@@ -111,7 +122,11 @@ public class NameParserGBIF implements NameParser {
     
     throw new UnparsableNameException(NameType.SCIENTIFIC, scientificName);
   }
-  
+
+  public ParserConfigs getConfigs() {
+    return configs;
+  }
+
   @Override
   public void close() throws Exception {
     LOG.info("Shutting down name parser worker threads");

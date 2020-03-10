@@ -67,8 +67,23 @@ public class ParsedAuthorship {
   private ParsedName.State state = ParsedName.State.NONE;
   
   private List<String> warnings = Lists.newArrayList();
-  
-  
+
+  /**
+   * Copies all values from the given parsed authorship
+   */
+  public void copy(ParsedAuthorship pa) {
+    combinationAuthorship = pa.combinationAuthorship;
+    basionymAuthorship = pa.basionymAuthorship;
+    sanctioningAuthor = pa.sanctioningAuthor;
+    taxonomicNote = pa.taxonomicNote;
+    nomenclaturalNotes = pa.nomenclaturalNotes;
+    unparsed = pa.unparsed;
+    doubtful = pa.doubtful;
+    manuscript = pa.manuscript;
+    state = pa.state;
+    warnings = pa.warnings;
+  }
+
   public Authorship getCombinationAuthorship() {
     return combinationAuthorship;
   }
@@ -193,7 +208,7 @@ public class ParsedAuthorship {
         manuscript == that.manuscript &&
         Objects.equals(warnings, that.warnings);
   }
-  
+
   @Override
   public int hashCode() {
     return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNotes, unparsed,
