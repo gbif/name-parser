@@ -68,7 +68,7 @@ public class NameFormatterTest {
     pn.getBasionymAuthorship().getAuthors().add("Ridl.");
     pn.setCode(NomCode.BOTANICAL);
     pn.setManuscript(true);
-    pn.setNomenclaturalNotes("ined.");
+    pn.setNomenclaturalNote("ined.");
     assertEquals("Acranthera virescens (Ridl.)", pn.canonicalName());
     assertEquals("Acranthera virescens (Ridl.), ined.", pn.canonicalNameComplete());
     assertEquals("<i>Acranthera</i> <i>virescens</i> (Ridl.), ined.", NameFormatter.canonicalCompleteHtml(pn));
@@ -187,7 +187,7 @@ public class NameFormatterTest {
     assertEquals("Ocymyrmex subsp. arnoldi", pn.canonicalName());
     pn = new ParsedName();
     
-    pn.setNomenclaturalNotes("sp.nov.");
+    pn.setNomenclaturalNote("sp.nov.");
     for (Rank r : Rank.values()) {
       pn.setRank(r);
       assertNull(pn.canonicalName());
@@ -259,7 +259,7 @@ public class NameFormatterTest {
     pn.setNotho(NamePart.GENERIC);
     pn.setInfraspecificEpithet("alpina");
     pn.setTaxonomicNote("Döring");
-    pn.setNomenclaturalNotes("nom. illeg.");
+    pn.setNomenclaturalNote("nom. illeg.");
     
     assertEquals("Abies alba alpina", NameFormatter.canonicalMinimal(pn));
     assertEquals("× Abies alba var. alpina", NameFormatter.canonicalWithoutAuthorship(pn));
@@ -284,7 +284,7 @@ public class NameFormatterTest {
     pn.getCombinationAuthorship().setYear("1887");
     pn.getBasionymAuthorship().getAuthors().add("Carl.");
     pn.setNotho(NamePart.GENERIC);
-    pn.setNomenclaturalNotes("nom. illeg.");
+    pn.setNomenclaturalNote("nom. illeg.");
     
     assertEquals("Abies alba alpina", NameFormatter.canonicalMinimal(pn));
     assertEquals("× Abies alba cf. var. alpina (Carl.) Mill., 1887", NameFormatter.canonical(pn));

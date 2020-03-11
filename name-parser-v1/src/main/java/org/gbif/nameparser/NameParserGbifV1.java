@@ -3,7 +3,6 @@ package org.gbif.nameparser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.exception.UnparsableException;
 import org.gbif.api.model.checklistbank.ParsedName;
@@ -20,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.Set;
 
 import static org.gbif.nameparser.api.ParsedName.State;
 
@@ -186,7 +184,7 @@ public class NameParserGbifV1 implements NameParser {
     gbif.setBracketAuthorship(NameFormatter.authorString(pn.getBasionymAuthorship(), false));
     gbif.setBracketYear(pn.getBasionymAuthorship().getYear());
 
-    gbif.setNomStatus(pn.getNomenclaturalNotes());
+    gbif.setNomStatus(pn.getNomenclaturalNote());
     if (pn.getEpithetQualifier() != null && !pn.getEpithetQualifier().isEmpty()) {
       StringBuilder sb = new StringBuilder();
       for (Map.Entry<NamePart, String> pq : pn.getEpithetQualifier().entrySet()) {

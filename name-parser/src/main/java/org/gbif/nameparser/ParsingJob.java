@@ -1174,7 +1174,7 @@ class ParsingJob implements Callable<ParsedName> {
           // if both the basionym and combination authorship is given its a botanical name!
           pn.setCode(NomCode.BOTANICAL);
         }
-      } else if (pn.getNomenclaturalNotes() != null && pn.getNomenclaturalNotes().contains("illeg")) {
+      } else if (pn.getNomenclaturalNote() != null && pn.getNomenclaturalNote().contains("illeg")) {
         pn.setCode(NomCode.BOTANICAL);
       }
     }

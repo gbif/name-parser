@@ -3,7 +3,6 @@ package org.gbif.nameparser;
 import java.util.Set;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gbif.nameparser.api.*;
@@ -96,7 +95,7 @@ public class NameAssertion {
             assertNull(n.getTaxonomicNote());
             break;
           case NOMNOTE:
-            assertNull(n.getNomenclaturalNotes());
+            assertNull(n.getNomenclaturalNote());
             break;
           case DOUBTFUL:
             assertFalse(n.isDoubtful());
@@ -283,7 +282,7 @@ public class NameAssertion {
   }
   
   NameAssertion nomNote(String nomNote) {
-    assertEquals(nomNote, n.getNomenclaturalNotes());
+    assertEquals(nomNote, n.getNomenclaturalNote());
     return add(NP.NOMNOTE);
   }
   

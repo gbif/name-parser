@@ -315,9 +315,9 @@ public class NameFormatter {
     }
     
     // add nom status
-    if (nomNote && n.getNomenclaturalNotes() != null) {
+    if (nomNote && n.getNomenclaturalNote() != null) {
       appendIfNotEmpty(sb, ", ")
-          .append(n.getNomenclaturalNotes());
+          .append(n.getNomenclaturalNote());
     }
     
     // final char transformations

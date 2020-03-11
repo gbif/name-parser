@@ -1,18 +1,11 @@
 package org.gbif.nameparser.api;
 
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
-import javax.annotation.Nonnull;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
-
-import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
 
 /**
  *
@@ -37,14 +30,15 @@ public class ParsedAuthorship {
   private String sanctioningAuthor;
 
   /**
-   * Nomenclatural status remarks of the name.
+   * Taxonomic concept remarks of the name.
+   * For example sensu Miller, sec. Pyle 2007, s.l., etc.
    */
   private String taxonomicNote;
   
   /**
    * Nomenclatural status remarks of the name.
    */
-  private String nomenclaturalNotes;
+  private String nomenclaturalNote;
   
   /**
    * Any additional unparsed string found at the end of the name.
@@ -76,7 +70,7 @@ public class ParsedAuthorship {
     basionymAuthorship = pa.basionymAuthorship;
     sanctioningAuthor = pa.sanctioningAuthor;
     taxonomicNote = pa.taxonomicNote;
-    nomenclaturalNotes = pa.nomenclaturalNotes;
+    nomenclaturalNote = pa.nomenclaturalNote;
     unparsed = pa.unparsed;
     doubtful = pa.doubtful;
     manuscript = pa.manuscript;
@@ -108,17 +102,17 @@ public class ParsedAuthorship {
     this.sanctioningAuthor = sanctioningAuthor;
   }
 
-  public String getNomenclaturalNotes() {
-    return nomenclaturalNotes;
+  public String getNomenclaturalNote() {
+    return nomenclaturalNote;
   }
   
-  public void setNomenclaturalNotes(String nomenclaturalNotes) {
-    this.nomenclaturalNotes = nomenclaturalNotes;
+  public void setNomenclaturalNote(String nomenclaturalNote) {
+    this.nomenclaturalNote = nomenclaturalNote;
   }
   
   public void addNomenclaturalNote(String note) {
     if (!StringUtils.isBlank(note)) {
-      this.nomenclaturalNotes = nomenclaturalNotes == null ? note.trim() : nomenclaturalNotes + " " + note.trim();
+      this.nomenclaturalNote = nomenclaturalNote == null ? note.trim() : nomenclaturalNote + " " + note.trim();
     }
   }
   
@@ -203,7 +197,7 @@ public class ParsedAuthorship {
         Objects.equals(basionymAuthorship, that.basionymAuthorship) &&
         Objects.equals(sanctioningAuthor, that.sanctioningAuthor) &&
         Objects.equals(taxonomicNote, that.taxonomicNote) &&
-        Objects.equals(nomenclaturalNotes, that.nomenclaturalNotes) &&
+        Objects.equals(nomenclaturalNote, that.nomenclaturalNote) &&
         Objects.equals(unparsed, that.unparsed) &&
         manuscript == that.manuscript &&
         Objects.equals(warnings, that.warnings);
@@ -211,7 +205,7 @@ public class ParsedAuthorship {
 
   @Override
   public int hashCode() {
-    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNotes, unparsed,
+    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, unparsed,
         doubtful, manuscript, state, warnings);
   }
   
