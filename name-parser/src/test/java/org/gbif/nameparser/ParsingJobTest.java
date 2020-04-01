@@ -252,7 +252,7 @@ public class ParsingJobTest {
       }
       Authorship auth = ParsingJob.parseAuthorship(m.group(1), m.group(2), m.group(3));
       if (exAuthor == null) {
-        assertTrue(auth.getExAuthors().isEmpty());
+        assertNull(auth.getExAuthors());
       } else {
         assertEquals(exAuthor, auth.getExAuthors().get(0));
         assertEquals(1, auth.getExAuthors().size());

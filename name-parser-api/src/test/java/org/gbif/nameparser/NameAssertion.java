@@ -72,18 +72,26 @@ public class NameAssertion {
             assertNull(n.getNotho());
             break;
           case AUTH:
-            assertNull(n.getCombinationAuthorship().getYear());
-            assertTrue(n.getCombinationAuthorship().getAuthors().isEmpty());
+            if (n.getCombinationAuthorship() != null) {
+              assertNull(n.getCombinationAuthorship().getYear());
+              assertFalse(n.getCombinationAuthorship().hasAuthors());
+            }
             break;
           case EXAUTH:
-            assertTrue(n.getCombinationAuthorship().getExAuthors().isEmpty());
+            if (n.getCombinationAuthorship() != null) {
+              assertFalse(n.getCombinationAuthorship().hasExAuthors());
+            }
             break;
           case BAS:
-            assertNull(n.getBasionymAuthorship().getYear());
-            assertTrue(n.getBasionymAuthorship().getAuthors().isEmpty());
+            if (n.getBasionymAuthorship() != null) {
+              assertNull(n.getBasionymAuthorship().getYear());
+              assertFalse(n.getBasionymAuthorship().hasAuthors());
+            }
             break;
           case EXBAS:
-            assertTrue(n.getBasionymAuthorship().getExAuthors().isEmpty());
+            if (n.getBasionymAuthorship() != null) {
+              assertFalse(n.getBasionymAuthorship().hasExAuthors());
+            }
             break;
           case SANCT:
             assertNull(n.getSanctioningAuthor());

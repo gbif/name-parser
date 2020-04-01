@@ -1,9 +1,13 @@
 package org.gbif.nameparser.util;
 
+import com.google.common.collect.Lists;
 import org.gbif.nameparser.api.*;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -23,11 +27,11 @@ public class NameFormatterTest {
   @Test
   public void testFullAuthorship() throws Exception {
     assertNull(pn.authorshipComplete());
-    
-    pn.getCombinationAuthorship().getAuthors().add("L.");
+
+    pn.setCombinationAuthorship(Authorship.authors("L."));
     assertEquals("L.", pn.authorshipComplete());
-    
-    pn.getBasionymAuthorship().getAuthors().add("Bassier");
+
+    pn.setBasionymAuthorship(Authorship.authors("Bassier"));
     assertEquals("(Bassier) L.", pn.authorshipComplete());
     assertEquals("(Bassier) L.", pn.authorshipComplete());
     
@@ -41,7 +45,7 @@ public class NameFormatterTest {
   
   @Test
   public void testFullAuthorshipSanctioning() throws Exception {
-    pn.getCombinationAuthorship().getAuthors().add("L.");
+    pn.setCombinationAuthorship(Authorship.authors("L."));
     pn.setSanctioningAuthor("Pers.");
     assertEquals("L. : Pers.", pn.authorshipComplete());
   }
@@ -56,8 +60,7 @@ public class NameFormatterTest {
     pn.setGenus("Protochlamydia");
     pn.setSpecificEpithet("amoebophila");
     pn.setCandidatus(true);
-    pn.getCombinationAuthorship().getAuthors().add("Collingro");
-    pn.getCombinationAuthorship().setYear("2005");
+    pn.setCombinationAuthorship(Authorship.yearAuthors("2005", "Collingro"));
     assertEquals("\"Candidatus Protochlamydia amoebophila\" Collingro, 2005", pn.canonicalName());
   }
   
@@ -65,7 +68,7 @@ public class NameFormatterTest {
   public void inedNames() throws Exception {
     pn.setGenus("Acranthera");
     pn.setSpecificEpithet("virescens");
-    pn.getBasionymAuthorship().getAuthors().add("Ridl.");
+    pn.setBasionymAuthorship(Authorship.authors("Ridl."));
     pn.setCode(NomCode.BOTANICAL);
     pn.setManuscript(true);
     pn.setNomenclaturalNote("ined.");
@@ -131,10 +134,10 @@ public class NameFormatterTest {
     pn.setUninomial("Abies");
     assertEquals("Abies", pn.canonicalName());
     
-    pn.getCombinationAuthorship().setYear("1877");
+    pn.setCombinationAuthorship(Authorship.yearAuthors("1877"));
     assertEquals("Abies 1877", pn.canonicalName());
     
-    pn.getCombinationAuthorship().getAuthors().add("Mill.");
+    pn.getCombinationAuthorship().setAuthors(Lists.newArrayList("Mill."));
     assertEquals("Abies Mill., 1877", pn.canonicalName());
     
     pn.setNotho(NamePart.GENERIC);
@@ -159,10 +162,8 @@ public class NameFormatterTest {
     pn.setSpecificEpithet("arnoldi");
     pn.setRank(Rank.SPECIES);
     assertEquals("Abies arnoldi", pn.canonicalNameComplete());
-    
-    pn.getCombinationAuthorship().getAuthors().add("Peter");
-    pn.getCombinationAuthorship().getAuthors().add("Fränzl");
-    pn.getCombinationAuthorship().getAuthors().add("Jung");
+
+    pn.setCombinationAuthorship(Authorship.authors("Peter", "Fränzl", "Jung"));
     assertEquals("Abies arnoldi Peter, Fränzl & Jung", pn.canonicalNameComplete());
   
     pn.getCombinationAuthorship().getAuthors().add("al");
@@ -207,12 +208,10 @@ public class NameFormatterTest {
   
   @Test
   public void testAuthorship() throws Exception {
-    pn.getBasionymAuthorship().getAuthors().add("Carl.");
-    pn.getBasionymAuthorship().setYear("1999");
+    pn.setBasionymAuthorship(Authorship.yearAuthors("1999", "Carl."));
     assertEquals("(Carl., 1999)", NameFormatter.authorshipComplete(pn));
-    
-    pn.getCombinationAuthorship().getAuthors().add("Mill.");
-    pn.getCombinationAuthorship().setYear("1887");
+
+    pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill."));
     assertEquals("(Carl., 1999) Mill., 1887", NameFormatter.authorshipComplete(pn));
   }
   
@@ -235,9 +234,8 @@ public class NameFormatterTest {
     pn.setSpecificEpithet("carrera");
     assertEquals("carrera subsp. vulgaris", NameFormatter.canonical(pn));
     assertEquals("carrera subsp. vulgaris", NameFormatter.canonicalWithoutAuthorship(pn));
-    
-    pn.getCombinationAuthorship().getAuthors().add("Mill.");
-    pn.getCombinationAuthorship().setYear("1887");
+
+    pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill."));
     assertEquals("carrera subsp. vulgaris Mill., 1887", NameFormatter.canonical(pn));
   }
   
@@ -253,9 +251,8 @@ public class NameFormatterTest {
     pn.setGenus("Abies");
     pn.setSpecificEpithet("alba");
     pn.setRank(Rank.VARIETY);
-    pn.getCombinationAuthorship().getAuthors().add("Mill.");
-    pn.getCombinationAuthorship().setYear("1887");
-    pn.getBasionymAuthorship().getAuthors().add("Carl.");
+    pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill."));
+    pn.setBasionymAuthorship(Authorship.authors("Carl."));
     pn.setNotho(NamePart.GENERIC);
     pn.setInfraspecificEpithet("alpina");
     pn.setTaxonomicNote("Döring");
@@ -280,9 +277,8 @@ public class NameFormatterTest {
     pn.setEpithetQualifier(NamePart.INFRASPECIFIC, "cf.");
     pn.setInfraspecificEpithet("alpina");
     pn.setRank(Rank.VARIETY);
-    pn.getCombinationAuthorship().getAuthors().add("Mill.");
-    pn.getCombinationAuthorship().setYear("1887");
-    pn.getBasionymAuthorship().getAuthors().add("Carl.");
+    pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill."));
+    pn.setBasionymAuthorship(Authorship.authors("Carl."));
     pn.setNotho(NamePart.GENERIC);
     pn.setNomenclaturalNote("nom. illeg.");
     
@@ -301,7 +297,7 @@ public class NameFormatterTest {
     
     pn.setUninomial("Abies");
     pn.setRank(Rank.GENUS);
-    pn.getCombinationAuthorship().getAuthors().add("Mill.");
+    pn.setCombinationAuthorship(Authorship.authors("Mill."));
     assertEquals("Abies Mill.", pn.canonicalName());
     
     pn.setRank(Rank.UNRANKED);
@@ -426,8 +422,8 @@ public class NameFormatterTest {
     pn.setCode(NomCode.BOTANICAL);
     pn.setGenus("Achillea");
     pn.setInfragenericEpithet("Ptarmica");
-    pn.getCombinationAuthorship().getAuthors().add("W.D.J.Koch");
-    pn.getBasionymAuthorship().getAuthors().add("Mill.");
+    pn.setCombinationAuthorship(Authorship.authors("W.D.J.Koch"));
+    pn.setBasionymAuthorship(Authorship.authors("Mill."));
     assertName(
         "Ptarmica",
         "Achillea Ptarmica (Mill.) W.D.J.Koch"
@@ -465,16 +461,16 @@ public class NameFormatterTest {
     pn.setSpecificEpithet("syringae");
     assertName("Pseudomonas syringae");
     assertHtml("<i>Pseudomonas</i> <i>syringae</i>");
-    
-    pn.getCombinationAuthorship().getAuthors().add("Van Hall");
+
+    pn.setCombinationAuthorship(Authorship.authors("Van Hall"));
     assertName("Pseudomonas syringae", "Pseudomonas syringae Van Hall");
     assertHtml("<i>Pseudomonas</i> <i>syringae</i> Van Hall");
     
     pn.getCombinationAuthorship().setYear("1904");
     assertName("Pseudomonas syringae", "Pseudomonas syringae Van Hall, 1904");
     assertHtml("<i>Pseudomonas</i> <i>syringae</i> Van Hall, 1904");
-    
-    pn.getBasionymAuthorship().getAuthors().add("Carl.");
+
+    pn.setBasionymAuthorship(Authorship.authors("Carl."));
     assertName("Pseudomonas syringae", "Pseudomonas syringae (Carl.) Van Hall, 1904");
     assertHtml("<i>Pseudomonas</i> <i>syringae</i> (Carl.) Van Hall, 1904");
     
@@ -499,8 +495,7 @@ public class NameFormatterTest {
     pn.setGenus("Abax");
     pn.setSpecificEpithet("carinatus");
     pn.setInfraspecificEpithet("carinatus");
-    pn.getBasionymAuthorship().getAuthors().add("Duftschmid");
-    pn.getBasionymAuthorship().setYear("1812");
+    pn.setBasionymAuthorship(Authorship.yearAuthors("1812", "Duftschmid"));
     pn.setRank(Rank.UNRANKED);
     assertName("Abax carinatus carinatus");
     
@@ -524,8 +519,8 @@ public class NameFormatterTest {
     pn.setGenus("Polypodium");
     pn.setSpecificEpithet("vulgare");
     pn.setInfraspecificEpithet("mantoniae");
-    pn.getBasionymAuthorship().getAuthors().add("Rothm.");
-    pn.getCombinationAuthorship().getAuthors().add("Schidlay");
+    pn.setBasionymAuthorship(Authorship.authors("Rothm."));
+    pn.setCombinationAuthorship(Authorship.authors("Schidlay"));
     pn.setRank(Rank.SUBSPECIES);
     pn.setNotho(NamePart.INFRASPECIFIC);
     assertName(
@@ -538,8 +533,8 @@ public class NameFormatterTest {
   private Authorship authorship(String year, String... authors) {
     Authorship a = new Authorship();
     a.setYear(year);
-    for (String au : authors) {
-      a.getAuthors().add(au);
+    if (authors != null) {
+      a.setAuthors(new ArrayList<>(Arrays.asList(authors)));
     }
     return a;
   }

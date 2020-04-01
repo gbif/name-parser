@@ -442,14 +442,14 @@ public class NameFormatter {
    * @param sb StringBuilder to append to
    */
   public static void appendAuthorship(StringBuilder sb, Authorship auth, boolean includeYear) {
-    if (auth.exists()) {
+    if (auth != null && auth.exists()) {
       boolean authorsAppended = false;
-      if (!auth.getExAuthors().isEmpty()) {
+      if (auth.getExAuthors() != null && !auth.getExAuthors().isEmpty()) {
         sb.append(joinAuthors(auth.getExAuthors(), false));
         sb.append(" ex ");
         authorsAppended = true;
       }
-      if (!auth.getAuthors().isEmpty()) {
+      if (auth.getAuthors() != null && !auth.getAuthors().isEmpty()) {
         sb.append(joinAuthors(auth.getAuthors(), false));
         authorsAppended = true;
       }

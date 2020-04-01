@@ -78,6 +78,10 @@ public class ParsedAuthorship {
     warnings = pa.warnings;
   }
 
+  public boolean hasCombinationAuthorship() {
+    return combinationAuthorship != null && !combinationAuthorship.isEmpty();
+  }
+
   public Authorship getCombinationAuthorship() {
     return combinationAuthorship;
   }
@@ -85,7 +89,11 @@ public class ParsedAuthorship {
   public void setCombinationAuthorship(Authorship combinationAuthorship) {
     this.combinationAuthorship = combinationAuthorship;
   }
-  
+
+  public boolean hasBasionymAuthorship() {
+    return basionymAuthorship != null && !basionymAuthorship.isEmpty();
+  }
+
   public Authorship getBasionymAuthorship() {
     return basionymAuthorship;
   }
@@ -176,7 +184,7 @@ public class ParsedAuthorship {
    * @return true if any kind of authorship exists
    */
   public boolean hasAuthorship() {
-    return combinationAuthorship.exists() || basionymAuthorship.exists();
+    return (combinationAuthorship != null && combinationAuthorship.exists()) || (basionymAuthorship != null && basionymAuthorship.exists());
   }
 
   /**

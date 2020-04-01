@@ -1,9 +1,12 @@
 package org.gbif.nameparser.api;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 import com.google.common.collect.Lists;
+import org.checkerframework.checker.units.qual.A;
 import org.gbif.nameparser.util.NameFormatter;
 
 /**
@@ -19,19 +22,64 @@ public class Authorship {
   /**
    * list of authors.
    */
-  private List<String> authors = Lists.newArrayList();
+  private List<String> authors;
   
   /**
    * list of authors excluding ex- authors
    */
-  private List<String> exAuthors = Lists.newArrayList();
+  private List<String> exAuthors;
   
   /**
    * The year the combination or basionym was first published, usually the same as the publishedIn reference.
    * It is used for sorting names and ought to be populated even for botanical names which do not use it in the complete authorship string.
    */
   private String year;
-  
+
+  public static Builder create() {
+    return new Builder();
+  }
+
+  public static Authorship authors(String... authors) {
+    return yearAuthors(null, authors);
+  }
+
+  public static Authorship yearAuthors(String year, String... authors) {
+    List<String> authorList = authors == null ? null : new ArrayList<>(Arrays.asList(authors));
+    return new Authorship(authorList, year);
+  }
+
+
+  public Authorship() {
+  }
+
+  private Authorship(Builder builder) {
+    setAuthors(builder.authors);
+    setExAuthors(builder.exAuthors);
+    setYear(builder.year);
+  }
+
+  public Authorship(List<String> authors) {
+    this.authors = authors;
+  }
+
+  public Authorship(List<String> authors, String year) {
+    this.authors = authors;
+    this.year = year;
+  }
+
+  public Authorship(List<String> authors, List<String> exAuthors, String year) {
+    this.authors = authors;
+    this.exAuthors = exAuthors;
+    this.year = year;
+  }
+
+  /**
+   * Returns {@code true} if the authors are null or an empty list, false otherwise
+   */
+  public boolean hasAuthors() {
+    return authors != null && !authors.isEmpty();
+  }
+
   public List<String> getAuthors() {
     return authors;
   }
@@ -39,7 +87,14 @@ public class Authorship {
   public void setAuthors(List<String> authors) {
     this.authors = authors;
   }
-  
+
+  /**
+   * Returns {@code true} if the ex authorship is null or an empty list, false otherwise
+   */
+  public boolean hasExAuthors() {
+    return exAuthors != null && !exAuthors.isEmpty();
+  }
+
   public List<String> getExAuthors() {
     return exAuthors;
   }
@@ -57,11 +112,11 @@ public class Authorship {
   }
   
   public boolean isEmpty() {
-    return authors.isEmpty() && year == null;
+    return (authors == null || authors.isEmpty()) && year == null;
   }
   
   public boolean exists() {
-    return !authors.isEmpty() || year != null;
+    return !isEmpty();
   }
   
   @Override
@@ -90,5 +145,49 @@ public class Authorship {
       return sb.toString();
     }
     return null;
+  }
+
+  public static final class Builder {
+    private List<String> authors;
+    private List<String> exAuthors;
+    private String year;
+
+    public Builder() {
+    }
+
+    public Builder(Authorship copy) {
+      this.authors = copy.getAuthors();
+      this.exAuthors = copy.getExAuthors();
+      this.year = copy.getYear();
+    }
+
+    public Builder authors(List<String> val) {
+      authors = val;
+      return this;
+    }
+
+    public Builder authors(String... authors) {
+      this.authors = authors == null ? null : new ArrayList<>(Arrays.asList(authors));;
+      return this;
+    }
+
+    public Builder exAuthors(List<String> val) {
+      exAuthors = val;
+      return this;
+    }
+
+    public Builder exAuthors(String... authors) {
+      this.exAuthors = authors == null ? null : new ArrayList<>(Arrays.asList(authors));;
+      return this;
+    }
+
+    public Builder year(String val) {
+      year = val;
+      return this;
+    }
+
+    public Authorship build() {
+      return new Authorship(this);
+    }
   }
 }
