@@ -444,12 +444,12 @@ public class NameFormatter {
   public static void appendAuthorship(StringBuilder sb, Authorship auth, boolean includeYear) {
     if (auth != null && auth.exists()) {
       boolean authorsAppended = false;
-      if (auth.getExAuthors() != null && !auth.getExAuthors().isEmpty()) {
+      if (auth.hasExAuthors()) {
         sb.append(joinAuthors(auth.getExAuthors(), false));
         sb.append(" ex ");
         authorsAppended = true;
       }
-      if (auth.getAuthors() != null && !auth.getAuthors().isEmpty()) {
+      if (auth.hasAuthors()) {
         sb.append(joinAuthors(auth.getAuthors(), false));
         authorsAppended = true;
       }
@@ -463,13 +463,13 @@ public class NameFormatter {
   }
   
   private static void appendAuthorship(ParsedAuthorship a, StringBuilder sb) {
-    if (a.getBasionymAuthorship().exists()) {
+    if (a.hasBasionymAuthorship()) {
       sb.append("(");
       appendAuthorship(sb, a.getBasionymAuthorship(), true);
       sb.append(")");
     }
-    if (a.getCombinationAuthorship().exists()) {
-      if (a.getBasionymAuthorship().exists()) {
+    if (a.hasCombinationAuthorship()) {
+      if (a.hasBasionymAuthorship()) {
         sb.append(" ");
       }
       appendAuthorship(sb, a.getCombinationAuthorship(), true);

@@ -5,8 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import org.checkerframework.checker.units.qual.A;
 import org.gbif.nameparser.util.NameFormatter;
 
 /**
@@ -83,7 +83,14 @@ public class Authorship {
   public List<String> getAuthors() {
     return authors;
   }
-  
+
+  public void addAuthor(String author) {
+    if (Strings.isNullOrEmpty(author)) {
+      if (authors == null) authors = new ArrayList<>();
+      authors.add(author);
+    }
+  }
+
   public void setAuthors(List<String> authors) {
     this.authors = authors;
   }
@@ -98,7 +105,13 @@ public class Authorship {
   public List<String> getExAuthors() {
     return exAuthors;
   }
-  
+
+  public void addExAuthor(String author) {
+    if (com.google.common.base.Strings.isNullOrEmpty(author)) {
+      if (exAuthors == null) exAuthors = new ArrayList<>();
+      exAuthors.add(author);
+    }
+  }
   public void setExAuthors(List<String> exAuthors) {
     this.exAuthors = exAuthors;
   }
