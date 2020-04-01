@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Objects;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import org.gbif.nameparser.util.NameFormatter;
 
 /**
@@ -22,22 +21,18 @@ public class Authorship {
   /**
    * list of authors.
    */
-  private List<String> authors;
+  private List<String> authors = new ArrayList<>();
   
   /**
    * list of authors excluding ex- authors
    */
-  private List<String> exAuthors;
+  private List<String> exAuthors = new ArrayList<>();
   
   /**
    * The year the combination or basionym was first published, usually the same as the publishedIn reference.
    * It is used for sorting names and ought to be populated even for botanical names which do not use it in the complete authorship string.
    */
   private String year;
-
-  public static Builder create() {
-    return new Builder();
-  }
 
   public static Authorship authors(String... authors) {
     return yearAuthors(null, authors);
@@ -50,12 +45,6 @@ public class Authorship {
 
 
   public Authorship() {
-  }
-
-  private Authorship(Builder builder) {
-    setAuthors(builder.authors);
-    setExAuthors(builder.exAuthors);
-    setYear(builder.year);
   }
 
   public Authorship(List<String> authors) {
@@ -160,47 +149,4 @@ public class Authorship {
     return null;
   }
 
-  public static final class Builder {
-    private List<String> authors;
-    private List<String> exAuthors;
-    private String year;
-
-    public Builder() {
-    }
-
-    public Builder(Authorship copy) {
-      this.authors = copy.getAuthors();
-      this.exAuthors = copy.getExAuthors();
-      this.year = copy.getYear();
-    }
-
-    public Builder authors(List<String> val) {
-      authors = val;
-      return this;
-    }
-
-    public Builder authors(String... authors) {
-      this.authors = authors == null ? null : new ArrayList<>(Arrays.asList(authors));;
-      return this;
-    }
-
-    public Builder exAuthors(List<String> val) {
-      exAuthors = val;
-      return this;
-    }
-
-    public Builder exAuthors(String... authors) {
-      this.exAuthors = authors == null ? null : new ArrayList<>(Arrays.asList(authors));;
-      return this;
-    }
-
-    public Builder year(String val) {
-      year = val;
-      return this;
-    }
-
-    public Authorship build() {
-      return new Authorship(this);
-    }
-  }
 }
