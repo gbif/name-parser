@@ -44,7 +44,11 @@ public enum NomCode {
       "https://talk.ictvonline.org/information/w/ictv-information/383/ictv-code"),
   ZOOLOGICAL('Z', "ICZN",
       "International Code of Zoological Nomenclature",
-      "http://www.iczn.org/code");
+      "http://www.iczn.org/code"),
+  // S for Syntaxonomy
+  PHYTOSOCIOLOGICAL('S', "ICPN",
+      "International Code of Phytosociological Nomenclature",
+      "https://doi.org/10.2307/3236580");
   
   private final String title;
   private final Character abbrev;
