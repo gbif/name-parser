@@ -84,21 +84,31 @@ public enum Rank {
   SUBCOHORT("subcohort"),
   
   INFRACOHORT("infracohort"),
-  
+
+  GIGAORDER("gigaord."),
+
   MAGNORDER("magnord."),
   
   GRANDORDER("grandord."),
-  
+
+  MIRORDER("mirord."),
+
   SUPERORDER("superord."),
-  
+
   ORDER("ord."),
-  
+
+  NANORDER("nanord."),
+
+  HYPOORDER("hypoord."),
+
+  MINORDER("minord."),
+
   SUBORDER("subord."),
   
   INFRAORDER("infraord."),
   
   PARVORDER("parvord."),
-  
+
   MEGAFAMILY("megafam."),
   
   GRANDFAMILY("grandfam."),
@@ -369,8 +379,13 @@ public enum Rank {
   
   private static final Map<Rank, NomCode> RANK2CODE = ImmutableMap.<Rank, NomCode>builder()
       .put(PARVCLASS, NomCode.ZOOLOGICAL)
+      .put(GIGAORDER, NomCode.ZOOLOGICAL)
       .put(MAGNORDER, NomCode.ZOOLOGICAL)
       .put(GRANDORDER, NomCode.ZOOLOGICAL)
+      .put(MIRORDER, NomCode.ZOOLOGICAL)
+      .put(NANORDER, NomCode.ZOOLOGICAL)
+      .put(HYPOORDER, NomCode.ZOOLOGICAL)
+      .put(MINORDER, NomCode.ZOOLOGICAL)
       .put(PARVORDER, NomCode.ZOOLOGICAL)
       .put(SUPERLEGION, NomCode.ZOOLOGICAL)
       .put(LEGION, NomCode.ZOOLOGICAL)
