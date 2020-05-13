@@ -39,16 +39,15 @@ public enum NomCode {
   CULTIVARS('C', "ICNCP",
       "International Code of Nomenclature for Cultivated Plants",
       "https://www.ishs.org/scripta-horticulturae/international-code-nomenclature-cultivated-plants-ninth-edition"),
+  PHYTOSOCIOLOGICAL('S', "ICPN", // S for Syntaxonomy
+      "International Code of Phytosociological Nomenclature",
+      "https://doi.org/10.2307/3236580"),
   VIRUS('V', "ICVCN",
       "International Code of Virus Classifications and Nomenclature",
       "https://talk.ictvonline.org/information/w/ictv-information/383/ictv-code"),
   ZOOLOGICAL('Z', "ICZN",
       "International Code of Zoological Nomenclature",
-      "http://www.iczn.org/code"),
-  // S for Syntaxonomy
-  PHYTOSOCIOLOGICAL('S', "ICPN",
-      "International Code of Phytosociological Nomenclature",
-      "https://doi.org/10.2307/3236580");
+      "http://www.iczn.org/code");
   
   private final String title;
   private final Character abbrev;
