@@ -234,7 +234,7 @@ public class NameAssertion {
   }
   
   NameAssertion warning(String... warnings) {
-    assertEquals(Lists.newArrayList(warnings), n.getWarnings());
+    assertEquals(Sets.newHashSet(warnings), n.getWarnings());
     return add(NP.WARNING);
   }
 

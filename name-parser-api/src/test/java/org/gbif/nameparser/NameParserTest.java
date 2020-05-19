@@ -74,6 +74,26 @@ public abstract class NameParserTest {
    */
   @Test
   public void blacklisted() throws Exception {
+    assertName("Abies null Hood", "Abies null")
+        .species("Abies", "null")
+        .combAuthors(null, "Hood")
+        .doubtful()
+        .warning(Warnings.NULL_EPITHET)
+        .nothingElse();
+
+    assertName("Unidentified unidentified Hood", "Unidentified unidentified")
+        .species("Unidentified", "unidentified")
+        .combAuthors(null, "Hood")
+        .doubtful()
+        .warning(Warnings.BLACKLISTED_EPITHET)
+        .nothingElse();
+
+    assertName("Abies unidentified", "Abies unidentified")
+        .species("Abies", "unidentified")
+        .doubtful()
+        .warning(Warnings.BLACKLISTED_EPITHET)
+        .nothingElse();
+
     assertName("Passiflora possible Müller", "Passiflora possible")
         .species("Passiflora", "possible")
         .combAuthors(null, "Müller")

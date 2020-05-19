@@ -4,8 +4,10 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  *
@@ -60,7 +62,7 @@ public class ParsedAuthorship {
 
   private ParsedName.State state = ParsedName.State.NONE;
   
-  private List<String> warnings = Lists.newArrayList();
+  private Set<String> warnings = new HashSet<>();
 
   /**
    * Copies all values from the given parsed authorship
@@ -170,7 +172,7 @@ public class ParsedAuthorship {
     this.doubtful = doubtful;
   }
   
-  public List<String> getWarnings() {
+  public Set<String> getWarnings() {
     return warnings;
   }
   

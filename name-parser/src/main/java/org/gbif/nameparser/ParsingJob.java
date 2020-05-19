@@ -265,9 +265,15 @@ class ParsingJob implements Callable<ParsedName> {
       "[, ] ?(" + YEAR_LOOSE + ")$", CASE_INSENSITIVE
   );
   private static final Pattern PLACEHOLDER_GENUS = Pattern.compile("^(In|Dummy|Missing|Temp|Unknown|Unplaced|Unspecified) (?=[a-z]+)\\b");
-  private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|deleted?|dummy|incertae sedis|indetermined|mixed|not assigned|not stated|place ?holder|temp|tobedeleted|unaccepted|unallocated|unassigned|uncertain|unclassed|unclassified|uncultured|undescribed|undet(?:ermined)?|unknown|unnamed|unplaced|unspecified)";
+  private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|" +
+    "deleted?|dummy|incertae sedis|indetermined|mixed|" +
+    "not (?:assigned|stated)|" +
+    "place ?holder|temp|tobedeleted|" +
+    "un(?:accepted|allocated|assigned|certain|classed|classified|cultured|described|det(?:ermined)?|known|named|placed|specified)" +
+  ")";
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
-  private static final Pattern PLACEHOLDER = Pattern.compile("^N\\.\\s*N\\.|\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
+  @VisibleForTesting
+  static final Pattern PLACEHOLDER = Pattern.compile("^N\\.\\s*N\\.|\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
   private static final Pattern DOUBTFUL = Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + "\":;&*+\\s,.()\\[\\]/'`´0-9-†]+$");
   private static final Pattern DOUBTFUL_NULL = Pattern.compile("\\bnull\\b", CASE_INSENSITIVE);
   private static final Pattern XML_ENTITY_STRIP = Pattern.compile("&\\s*([a-z]+)\\s*;");
@@ -998,7 +1004,7 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * basic careful cleaning, trying to preserve all parsable name parts
    */
-  public static String preClean(String name, @Nullable List<String> warnings) {
+  public static String preClean(String name, @Nullable Set<String> warnings) {
     // remove bad whitespace in html entities
     Matcher m = XML_ENTITY_STRIP.matcher(name);
     if (m.find()) {

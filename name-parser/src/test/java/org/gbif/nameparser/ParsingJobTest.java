@@ -23,6 +23,12 @@ public class ParsingJobTest {
   }
 
   @Test
+  public void testPlaceholders() throws Exception {
+    assertTrue(ParsingJob.PLACEHOLDER.matcher("Asteraceae incertae sedis").find());
+    assertTrue(ParsingJob.PLACEHOLDER.matcher("unassigned Abies").find());
+  }
+
+  @Test
   public void testEpithetPattern() throws Exception {
     Pattern epi = Pattern.compile("^"+ ParsingJob.EPITHET +"$");
     assertTrue(epi.matcher("alba").find());
