@@ -269,7 +269,7 @@ class ParsingJob implements Callable<ParsedName> {
     "deleted?|dummy|incertae sedis|indetermined|mixed|" +
     "not (?:assigned|stated)|" +
     "place ?holder|temp|tobedeleted|" +
-    "un(?:accepted|allocated|assigned|certain|classed|classified|cultured|described|det(?:ermined)?|known|named|placed|specified)" +
+    "un(?:accepted|allocated|assigned|certain|classed|classified|cultured|described|det(?:ermined)?|ident|known|named|placed|specified)" +
   ")";
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
   @VisibleForTesting
