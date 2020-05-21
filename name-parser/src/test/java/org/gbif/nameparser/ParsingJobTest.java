@@ -28,6 +28,7 @@ public class ParsingJobTest {
     assertTrue(ParsingJob.PLACEHOLDER.matcher("unassigned Abies").find());
     assertTrue(ParsingJob.PLACEHOLDER.matcher("Unident-Boraginaceae").find());
     assertTrue(ParsingJob.PLACEHOLDER.matcher("Unident").find());
+    assertTrue(ParsingJob.PLACEHOLDER.matcher("IncertaeSedis justi").find());
   }
 
   @Test
