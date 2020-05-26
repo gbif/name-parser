@@ -34,6 +34,7 @@ public class NameAssertion {
     RANK,
     TAXNOTE,
     NOMNOTE,
+    PUBLISHEDIN,
     DOUBTFUL,
     STATE,
     CODE,
@@ -104,6 +105,9 @@ public class NameAssertion {
             break;
           case NOMNOTE:
             assertNull(n.getNomenclaturalNote());
+            break;
+          case PUBLISHEDIN:
+            assertNull(n.getPublishedIn());
             break;
           case DOUBTFUL:
             assertFalse(n.isDoubtful());
@@ -288,7 +292,12 @@ public class NameAssertion {
     assertEquals(sensu, n.getTaxonomicNote());
     return add(NP.TAXNOTE);
   }
-  
+
+  NameAssertion publishedIn(String publishedIn) {
+    assertEquals(publishedIn, n.getPublishedIn());
+    return add(NP.PUBLISHEDIN);
+  }
+
   NameAssertion nomNote(String nomNote) {
     assertEquals(nomNote, n.getNomenclaturalNote());
     return add(NP.NOMNOTE);

@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.regex.Pattern.matches;
 
 /**
  * Core parser class of the name parser that tries to take a clean name into its pieces by using regular expressions.
@@ -255,7 +256,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_HYBRIDS_FORM = Pattern.compile("\\b([×xX]|√ó) ");
   private static final Pattern NORM_TF_GENUS = Pattern.compile("^([" + NAME_LETTERS + "])\\(([" + name_letters + "-]+)\\)\\.? ");
   private static final Pattern REPL_FINAL_PUNCTUATIONS = Pattern.compile("[,;:]+$");
-  private static final Pattern REPL_IN_REF = Pattern.compile("[, ]?\\b(?:in|IN|apud) (" + AUTHOR_TEAM + ")");
+  private static final Pattern REPL_IN_REF = Pattern.compile("[, ]?\\b(in|IN|apud) (" + AUTHOR_TEAM + ")(.*?)$");
   private static final Pattern REPL_RANK_PREFIXES = Pattern.compile("^(sub)?(fossil|" +
       StringUtils.join(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
   private static final Pattern MANUSCRIPT_NAMES = Pattern.compile("\\b(indet|spp?)[. ](?:nov\\.)?[A-Z0-9][a-zA-Z0-9-]*(?:\\(.+?\\))?");
@@ -637,7 +638,7 @@ class ParsingJob implements Callable<ParsedName> {
         String note = StringUtils.trimToNull(m.group(1));
         if (note != null) {
           pn.addNomenclaturalNote(note);
-          m.appendReplacement(sb, "");
+          m.appendReplacement(sb, " ");
           // if there was a rank given in the nom status populate the rank marker field
           Matcher rm = NOV_RANK_MARKER.matcher(note);
           if (rm.find()) {
@@ -697,8 +698,8 @@ class ParsingJob implements Callable<ParsedName> {
     // replace bibliographic in references
     m = REPL_IN_REF.matcher(name);
     if (m.find()) {
-      pn.addNomenclaturalNote(normNote(m.group(0)));
-      name = m.replaceFirst("");
+      pn.setPublishedIn(normNote(concat(m.group(2), m.group(3))));
+      name = m.replaceFirst(m.group(3));
     }
 
     // remove superflous epithets with rank markers
@@ -785,14 +786,31 @@ class ParsingJob implements Callable<ParsedName> {
     }
     return x;
   }
-  
+
+  private static String concat(String... x) {
+    if (x == null) return null;
+
+    StringBuilder sb = new StringBuilder();
+    for (String s : x) {
+      if (s != null) {
+        sb.append(s);
+      }
+    }
+    return sb.toString();
+  }
+
+    private static String trimNote(String note) {
+    note = normNote(note);
+    return note.replaceAll("^[,;]\\s*", "");
+  }
+
   private static String normNote(String note) {
     if (note.startsWith("(") && note.endsWith(")")) {
       note = note.substring(1, note.length()-1);
     }
     return StringUtils.trimToNull(
         note
-        // punctuation followed by a space, dots are special because of author initials
+        // punctuation to be followed by a space. Dots are special because of author initials
         .replaceAll("([,;)])(?!= )", "$1 ")
         // opening brackets with space
         .replaceAll("(?<! )([(])", " $1")
@@ -802,6 +820,7 @@ class ParsingJob implements Callable<ParsedName> {
         .replaceAll("&", " & ")
     );
   }
+
   /**
    * Carefully normalizes a scientific name trying to maintain the original as close as possible.
    * In particular the string is normalized by:

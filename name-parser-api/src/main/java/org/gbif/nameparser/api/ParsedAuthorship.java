@@ -41,7 +41,12 @@ public class ParsedAuthorship {
    * Nomenclatural status remarks of the name.
    */
   private String nomenclaturalNote;
-  
+
+  /**
+   * In reference stripped from the authorship
+   */
+  private String publishedIn;
+
   /**
    * Any additional unparsed string found at the end of the name.
    * Only ever set when state=PARTIAL
@@ -125,7 +130,15 @@ public class ParsedAuthorship {
       this.nomenclaturalNote = nomenclaturalNote == null ? note.trim() : nomenclaturalNote + " " + note.trim();
     }
   }
-  
+
+  public String getPublishedIn() {
+    return publishedIn;
+  }
+
+  public void setPublishedIn(String publishedIn) {
+    this.publishedIn = publishedIn;
+  }
+
   public String getTaxonomicNote() {
     return taxonomicNote;
   }
@@ -195,30 +208,30 @@ public class ParsedAuthorship {
   public String authorshipComplete() {
     return NameFormatter.authorshipComplete(this);
   }
-  
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (!(o instanceof ParsedAuthorship)) return false;
     ParsedAuthorship that = (ParsedAuthorship) o;
     return doubtful == that.doubtful &&
-        state == that.state &&
+        manuscript == that.manuscript &&
         Objects.equals(combinationAuthorship, that.combinationAuthorship) &&
         Objects.equals(basionymAuthorship, that.basionymAuthorship) &&
         Objects.equals(sanctioningAuthor, that.sanctioningAuthor) &&
         Objects.equals(taxonomicNote, that.taxonomicNote) &&
         Objects.equals(nomenclaturalNote, that.nomenclaturalNote) &&
+        Objects.equals(publishedIn, that.publishedIn) &&
         Objects.equals(unparsed, that.unparsed) &&
-        manuscript == that.manuscript &&
+        state == that.state &&
         Objects.equals(warnings, that.warnings);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, unparsed,
-        doubtful, manuscript, state, warnings);
+    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, publishedIn, unparsed, doubtful, manuscript, state, warnings);
   }
-  
+
   @Override
   public String toString() {
     return authorshipComplete();

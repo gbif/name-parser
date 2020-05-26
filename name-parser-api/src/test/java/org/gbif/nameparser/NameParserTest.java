@@ -330,29 +330,38 @@ public abstract class NameParserTest {
   
   @Test
   public void inReferences() throws Exception {
+
+    assertName("Amathia tricornis Busk ms in Chimonides, 1987", "Amathia tricornis")
+        .species("Amathia", "tricornis")
+        .combAuthors("1987", "Busk")
+        .publishedIn("Chimonides, 1987")
+        .nomNote("ms")
+        .manuscript()
+        .nothingElse();
+
     assertName("Xolisma turquini Small apud Britton & Wilson", "Xolisma turquini")
         .species("Xolisma", "turquini")
         .combAuthors(null, "Small")
-        .nomNote("apud Britton & Wilson")
+        .publishedIn("Britton & Wilson")
         .nothingElse();
     
     assertName("Negundo aceroides var. violaceum G.Kirchn. in Petzold & G.Kirchn.", "Negundo aceroides var. violaceum")
         .infraSpecies("Negundo", "aceroides", Rank.VARIETY, "violaceum")
         .combAuthors(null, "G.Kirchn.")
-        .nomNote("in Petzold & G.Kirchn.")
+        .publishedIn("Petzold & G.Kirchn.")
         .nothingElse();
     
     assertName("Abies denheyeri Eghbalian, Khanjani and Ueckermann in Eghbalian, Khanjani & Ueckermann, 2017", "Abies denheyeri")
         .species("Abies", "denheyeri")
         .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
-        .nomNote("in Eghbalian, Khanjani & Ueckermann")
+        .publishedIn("Eghbalian, Khanjani & Ueckermann, 2017")
         .code(ZOOLOGICAL)
         .nothingElse();
     
     assertName("Mica Budde-Lund in Voeltzkow, 1908", "Mica")
         .monomial("Mica")
         .combAuthors("1908", "Budde-Lund")
-        .nomNote("in Voeltzkow")
+        .publishedIn("Voeltzkow, 1908")
         .code(NomCode.ZOOLOGICAL)
         .nothingElse();
     
@@ -517,8 +526,7 @@ public abstract class NameParserTest {
         .species("?", "denheyeri")
         .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
         .type(PLACEHOLDER)
-        .nomNote("in Eghbalian, Khanjani & Ueckermann")
-        //hm, is this correct? maybe better not parse the in authorship year???
+        .publishedIn("Eghbalian, Khanjani & Ueckermann, 2017")
         .code(NomCode.ZOOLOGICAL)
         .warning(Warnings.MISSING_GENUS)
         .nothingElse();
