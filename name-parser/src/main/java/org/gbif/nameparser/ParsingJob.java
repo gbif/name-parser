@@ -100,7 +100,7 @@ class ParsingJob implements Callable<ParsedName> {
         ), "|") +
     ")";
   
-  private static final String UNALLOWED_EPITHETS = "aff|and|cf|from|of|the|where";
+  private static final String UNALLOWED_EPITHETS = "aff|and|cf|from|ms|of|the|where";
   private static final String UNALLOWED_EPITHET_ENDING =
       "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
   // allow for cf/aff markers before epithets
@@ -797,11 +797,6 @@ class ParsingJob implements Callable<ParsedName> {
       }
     }
     return sb.toString();
-  }
-
-    private static String trimNote(String note) {
-    note = normNote(note);
-    return note.replaceAll("^[,;]\\s*", "");
   }
 
   private static String normNote(String note) {

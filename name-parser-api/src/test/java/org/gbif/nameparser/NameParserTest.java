@@ -2169,7 +2169,7 @@ public abstract class NameParserTest {
         .type(INFORMAL)
         .manuscript()
         .nothingElse();
-    
+
     assertName("Genoplesium vernalis D.L.Jones ms.", "Genoplesium vernalis")
         .species("Genoplesium", "vernalis")
         .combAuthors(null, "D.L.Jones")
@@ -2177,7 +2177,7 @@ public abstract class NameParserTest {
         .manuscript()
         .nomNote("ms.")
         .nothingElse();
-    
+
     assertName("Verticordia sp.1", "Verticordia sp.1")
         .species("Verticordia", "sp.1")
         .type(INFORMAL)
