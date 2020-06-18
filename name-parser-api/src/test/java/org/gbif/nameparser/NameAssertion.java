@@ -24,6 +24,7 @@ public class NameAssertion {
     INFRAGEN,
     STRAIN,
     CULTIVAR,
+    EXTINCT,
     CANDIDATE,
     NOTHO,
     AUTH,
@@ -68,6 +69,9 @@ public class NameAssertion {
             break;
           case CANDIDATE:
             assertFalse(n.isCandidatus());
+            break;
+          case EXTINCT:
+            assertFalse(n.isExtinct());
             break;
           case NOTHO:
             assertNull(n.getNotho());
@@ -276,7 +280,12 @@ public class NameAssertion {
     assertEquals(code, n.getCode());
     return add(NP.CODE);
   }
-  
+
+  NameAssertion extinct() {
+    assertTrue(n.isExtinct());
+    return add(NP.EXTINCT);
+  }
+
   NameAssertion candidatus() {
     assertTrue(n.isCandidatus());
     assertEquals(BACTERIAL, n.getCode());

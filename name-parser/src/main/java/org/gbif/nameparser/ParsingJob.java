@@ -148,7 +148,7 @@ class ParsingJob implements Callable<ParsedName> {
   public static final String HYBRID_MARKER = "×";
   public static final Pattern HYBRID_FORMULA_PATTERN = Pattern.compile("[. ]" + HYBRID_MARKER + " ");
   public static final String EXTINCT_MARKER = "†";
-  private static final Pattern EXTINCT_PATTERN = Pattern.compile(EXTINCT_MARKER + "\\s*");
+  private static final Pattern EXTINCT_PATTERN = Pattern.compile("[†‡✝]+\\s*");
 
   @VisibleForTesting
   protected static final Pattern CULTIVAR = Pattern.compile("(?:([. ])cv[. ])?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
@@ -504,10 +504,14 @@ class ParsingJob implements Callable<ParsedName> {
   
   private void parse(String name) throws UnparsableNameException {
     // remove extinct markers
-    name = EXTINCT_PATTERN.matcher(name).replaceFirst("");
+    Matcher m = EXTINCT_PATTERN.matcher(name);
+    if (m.find()) {
+      pn.setExtinct(true);
+      name = m.replaceFirst("");
+    }
 
     // before any cleaning test for properly quoted candidate names
-    Matcher m = IS_CANDIDATUS_QUOTE_PATTERN.matcher(scientificName);
+    m = IS_CANDIDATUS_QUOTE_PATTERN.matcher(scientificName);
     if (m.find()) {
       pn.setCandidatus(true);
       name = m.replaceFirst(m.group(2));

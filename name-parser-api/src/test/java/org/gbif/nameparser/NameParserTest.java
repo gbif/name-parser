@@ -33,7 +33,7 @@ public abstract class NameParserTest {
   protected NameParserTest(NameParser parser) {
     this.parser = parser;
   }
-  
+
   /**
    * https://github.com/gbif/checklistbank/issues/87
    */
@@ -1255,13 +1255,27 @@ public abstract class NameParserTest {
 
   @Test
   public void extinctNames() throws Exception {
+    assertName("Sicyoniidae † Ortmann, 1898", "Sicyoniidae")
+        .monomial("Sicyoniidae")
+        .combAuthors("1898", "Ortmann")
+        .extinct()
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
     assertName("†Titanoptera", "Titanoptera")
         .monomial("Titanoptera")
+        .extinct()
         .nothingElse();
-    
+
+    assertName("†††Titanoptera", "Titanoptera")
+        .monomial("Titanoptera")
+        .extinct()
+        .nothingElse();
+
     assertName("† Tuarangiida MacKinnon, 1982", "Tuarangiida")
         .monomial("Tuarangiida")
         .combAuthors("1982", "MacKinnon")
+        .extinct()
         .code(ZOOLOGICAL)
         .nothingElse();
   }
