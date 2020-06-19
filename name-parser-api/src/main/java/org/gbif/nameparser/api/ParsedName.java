@@ -111,11 +111,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   private NameType type;
 
   /**
-   * Extinct dagger symbol found
-   */
-  private boolean extinct;
-
-  /**
    * Copies all values from the given parsed authorship
    */
   public void copy(ParsedName pn) {
@@ -133,7 +128,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     notho = pn.notho;
     epithetQualifier = pn.epithetQualifier;
     type = pn.type;
-    extinct = pn.extinct;
   }
 
   @Override
@@ -302,14 +296,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
       }
       epithetQualifier.put(part, qualifier);
     }
-  }
-
-  public boolean isExtinct() {
-    return extinct;
-  }
-
-  public void setExtinct(boolean extinct) {
-    this.extinct = extinct;
   }
 
   public NameType getType() {

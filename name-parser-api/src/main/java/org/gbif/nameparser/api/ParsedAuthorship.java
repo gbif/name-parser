@@ -15,6 +15,11 @@ import java.util.Set;
 public class ParsedAuthorship {
 
   /**
+   * Extinct dagger symbol found
+   */
+  protected boolean extinct;
+
+  /**
    * Authorship with years of the name, but excluding any basionym authorship.
    * For binomials the combination authors.
    */
@@ -83,6 +88,7 @@ public class ParsedAuthorship {
     manuscript = pa.manuscript;
     state = pa.state;
     warnings = pa.warnings;
+    extinct = pa.extinct;
   }
 
   public boolean hasCombinationAuthorship() {
@@ -202,6 +208,14 @@ public class ParsedAuthorship {
     return (combinationAuthorship != null && combinationAuthorship.exists()) || (basionymAuthorship != null && basionymAuthorship.exists());
   }
 
+  public boolean isExtinct() {
+    return extinct;
+  }
+
+  public void setExtinct(boolean extinct) {
+    this.extinct = extinct;
+  }
+
   /**
    * @See NameFormatter.authorshipComplete()
    */
@@ -214,7 +228,8 @@ public class ParsedAuthorship {
     if (this == o) return true;
     if (!(o instanceof ParsedAuthorship)) return false;
     ParsedAuthorship that = (ParsedAuthorship) o;
-    return doubtful == that.doubtful &&
+    return extinct == that.extinct &&
+        doubtful == that.doubtful &&
         manuscript == that.manuscript &&
         Objects.equals(combinationAuthorship, that.combinationAuthorship) &&
         Objects.equals(basionymAuthorship, that.basionymAuthorship) &&
@@ -229,7 +244,7 @@ public class ParsedAuthorship {
 
   @Override
   public int hashCode() {
-    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, publishedIn, unparsed, doubtful, manuscript, state, warnings);
+    return Objects.hash(extinct, combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, publishedIn, unparsed, doubtful, manuscript, state, warnings);
   }
 
   @Override
