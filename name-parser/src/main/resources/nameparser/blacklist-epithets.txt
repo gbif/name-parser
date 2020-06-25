@@ -16,6 +16,7 @@ as
 associated
 assuming
 at
+auct
 autre
 aux
 avec
@@ -65,6 +66,7 @@ erst
 etc
 even
 ever
+ex
 except
 familie
 family
@@ -163,6 +165,7 @@ seem
 seems
 sehr
 sein
+sensu
 serious
 shall
 shit

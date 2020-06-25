@@ -1551,6 +1551,12 @@ public abstract class NameParserTest {
   
   @Test
   public void taxonomicNotes() throws Exception {
+    // https://github.com/CatalogueOfLife/data/issues/146#issuecomment-649095386
+    assertName("Vittaria auct.", "Vittaria")
+        .monomial("Vittaria")
+        .sensu("auct.")
+        .nothingElse();
+
     // from Dyntaxa
     assertName("Pycnophyes Auctt., non Zelinka, 1907", "Pycnophyes")
         .monomial("Pycnophyes")
