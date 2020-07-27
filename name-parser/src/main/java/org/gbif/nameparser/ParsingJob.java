@@ -204,7 +204,7 @@ class ParsingJob implements Callable<ParsedName> {
       "$");
   private static final Pattern FILIUS_AT_END = Pattern.compile("[ .]f\\.?$");
   // name normalising
-  static final Pattern EXTRACT_SENSU = Pattern.compile("[;, ]?\\b" +
+  static final Pattern EXTRACT_SENSU = Pattern.compile("[;, ]?(?:\\b|^)" +
       "(" +
         "(?:(?:excl[. ](?:gen|sp|var)|mut.char|p.p)[. ])?" +
         "\\(?(?:" +

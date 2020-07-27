@@ -2027,8 +2027,33 @@ public abstract class NameParserTest {
   }
 
   @Test
-  public void parseAuthorshipOnly() throws Exception {
+  public void authorshipOnlyNotes() throws Exception {
+    assertAuthorship("(auct.) Rolfe")
+            .sensu("(auct. ) Rolfe")
+            .nothingElse();
 
+    assertAuthorship("auct., nom. subnud.")
+            .sensu("auct. , nom. subnud.")
+            .nothingElse();
+
+    assertAuthorship("Fischer-Le Saux et al., 1999 emend. Akhurst et al., 2004")
+            .combAuthors("1999", "Fischer-Le Saux", "al.")
+            .sensu("emend. Akhurst & al. , 2004")
+            .nothingElse();
+
+    assertAuthorship("Trautv. & Meyer sensu lato")
+            .combAuthors(null, "Trautv.", "Meyer")
+            .sensu("sensu lato")
+            .nothingElse();
+
+    assertAuthorship("Mill. non Parolly")
+            .combAuthors(null, "Mill.")
+            .sensu("non Parolly")
+            .nothingElse();
+  }
+
+  @Test
+  public void authorshipOnly() throws Exception {
     assertAuthorship("(Ristorcelli & Van ty) Wedd. ex Sch. Bip. (nom. nud.)")
             .basAuthors(null, "Ristorcelli", "Van ty")
             .combAuthors(null, "Sch.Bip.")
