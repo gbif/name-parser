@@ -65,7 +65,9 @@ public class NameParserGBIF implements NameParser {
       LOG.debug("Manual override found for authorship: {}", authorship);
       return over;
     }
-    return NameParser.super.parseAuthorship(authorship);
+
+    AuthorshipParsingJob job = new AuthorshipParsingJob(authorship, configs);
+    return job.call();
   }
 
   /**

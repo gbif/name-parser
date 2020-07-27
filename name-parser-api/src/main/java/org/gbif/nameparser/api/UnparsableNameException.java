@@ -8,7 +8,13 @@ package org.gbif.nameparser.api;
 public class UnparsableNameException extends Exception {
   private final NameType type;
   private final String name;
-  
+
+  public UnparsableNameException(NameType type, String name, String message) {
+    super(message);
+    this.type = type;
+    this.name = name;
+  }
+
   public UnparsableNameException(NameType type, String name) {
     super("Unparsable " + type + " name: " + name);
     this.type = type;
@@ -22,5 +28,11 @@ public class UnparsableNameException extends Exception {
   public String getName() {
     return name;
   }
-  
+
+  public static class UnparsableAuthorshipException extends UnparsableNameException {
+
+    public UnparsableAuthorshipException(String authorship) {
+      super(NameType.NO_NAME, authorship, "Unparsable authorship: " + authorship);
+    }
+  }
 }

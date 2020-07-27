@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
-import static java.util.regex.Pattern.matches;
 
 /**
  * Core parser class of the name parser that tries to take a clean name into its pieces by using regular expressions.
@@ -79,7 +78,7 @@ class ParsingJob implements Callable<ParsedName> {
       "(?: *: *(Pers\\.?|Fr\\.?))?";
   static final Pattern AUTHOR_TEAM_PATTERN = Pattern.compile("^" + AUTHOR_TEAM + "$");
   private static final String YEAR = "[12][0-9][0-9][0-9?]";
-  private static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/,-][0-9]{1,4})?";
+  static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/,-][0-9]{1,4})?";
 
   private static final String NOTHO = "notho";
   static final String RANK_MARKER = ("(?:"+NOTHO+")?(?:(?<!f[ .])sp|" +
@@ -381,11 +380,13 @@ class ParsingJob implements Callable<ParsedName> {
     return pattern.matcher(new InterruptibleCharSequence(text));
   }
 
-  private final Rank rank;
-  private final String scientificName;
-  private final ParsedName pn;
-  private final ParserConfigs configs;
-  private boolean ignoreAuthorship;
+  final Rank rank;
+  final String scientificName;
+  final ParserConfigs configs;
+  final ParsedName pn;
+  boolean ignoreAuthorship;
+  String name; // current version of the scientificName being parsed/normalized
+  ParsedName.State state; // current parsing state
 
   /**
    * @param scientificName the full scientific name to parse
@@ -400,7 +401,7 @@ class ParsingJob implements Callable<ParsedName> {
     pn.setCode(code);
   }
 
-  private ParsedName unparsable(NameType type) throws UnparsableNameException {
+  void unparsable(NameType type) throws UnparsableNameException {
     throw new UnparsableNameException(type, scientificName);
   }
 
@@ -423,20 +424,19 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // clean name, removing seriously wrong things
-    String name = preClean(scientificName);
+    name = preClean(scientificName);
 
     // before further cleaning/parsing try if we have known OTU formats, i.e. BIN or SH numbers
     // test for special cases they do not need any further parsing
-    if (!specialCases(name)) {
+    if (!specialCases()) {
       // do the main incremental parsing
-      parse(name);
+      parse();
     }
 
     if (LOG.isDebugEnabled()) {
       LOG.debug("Parsing time: {} for {}", (System.currentTimeMillis() - start), pn);
     }
 
-    // build canonical name
     return pn;
   }
 
@@ -449,7 +449,7 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * Parse very special cases and return true if the parsing succeeded and has thereby ended completely!
    */
-  private boolean specialCases(String name) throws UnparsableNameException {
+  private boolean specialCases() throws UnparsableNameException {
     // override exists?
     ParsedName over = configs.forName(name);
     if (over != null) {
@@ -502,7 +502,7 @@ class ParsingJob implements Callable<ParsedName> {
     return false;
   }
   
-  private void parse(String name) throws UnparsableNameException {
+  void parse() throws UnparsableNameException {
     // remove extinct markers
     Matcher m = EXTINCT_PATTERN.matcher(name);
     if (m.find()) {
@@ -518,18 +518,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
   
     // preparse nomenclatural references
-    ParsedName.State preParseState = null;
-    m = NOM_REFS.matcher(name);
-    if (m.find()) {
-      name = stripNomRef(m);
-      preParseState = ParsedName.State.PARTIAL;
-    } else {
-      m = NOM_REF_VOLUME.matcher(name);
-      if (m.find()) {
-        name = stripNomRef(m);
-        preParseState = ParsedName.State.PARTIAL;
-      }
-    }
+    preparseNomRef();
 
     // normalize bacterial rank markers
     name = TYPE_TO_VAR.matcher(name).replaceAll("$1var");
@@ -545,11 +534,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // remove placeholders from infragenerics and authors and set type
-    m = REMOVE_PLACEHOLDER_AUTHOR.matcher(name);
-    if (m.find()) {
-      name = m.replaceFirst(" $1");
-      pn.setType(NameType.PLACEHOLDER);
-    }
+    removePlaceholderAuthor();
     m = REMOVE_PLACEHOLDER_INFRAGENERIC.matcher(name);
     if (m.find()) {
       name = m.replaceFirst("");
@@ -564,9 +549,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // detect further unparsable names
-    if (PLACEHOLDER.matcher(name).find()) {
-      unparsable(NameType.PLACEHOLDER);
-    }
+    detectFurtherUnparsableNames();
 
     if (IS_VIRUS_PATTERN.matcher(name).find() || IS_VIRUS_PATTERN_CASE_SENSITIVE.matcher(name).find()) {
       unparsable(NameType.VIRUS);
@@ -634,30 +617,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // extract nom.illeg. and other nomen status notes
-    // includes manuscript notes, e.g. ined.
-    m = EXTRACT_NOMSTATUS.matcher(name);
-    if (m.find()) {
-      StringBuffer sb = new StringBuffer();
-      do {
-        String note = StringUtils.trimToNull(m.group(1));
-        if (note != null) {
-          pn.addNomenclaturalNote(note);
-          m.appendReplacement(sb, " ");
-          // if there was a rank given in the nom status populate the rank marker field
-          Matcher rm = NOV_RANK_MARKER.matcher(note);
-          if (rm.find()) {
-            setRank(rm.group(1), true);
-          }
-          // was this a manuscript note?
-          Matcher man = MANUSCRIPT_STATUS_PATTERN.matcher(note);
-          if (man.find()) {
-            pn.setManuscript(true);
-          }
-        }
-      } while (m.find());
-      m.appendTail(sb);
-      name = sb.toString();
-    }
+    extractNomStatus();
 
     // manuscript (unpublished) names  without a full scientific name, e.g. Verticordia sp.1
     // http://splink.cria.org.br/documentos/appendix_j.pdf
@@ -681,11 +641,8 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // extract sec reference
-    m = EXTRACT_SENSU.matcher(name);
-    if (m.find()) {
-      pn.setTaxonomicNote(lowerCaseFirstChar(normNote(m.group(1))));
-      name = m.replaceFirst("");
-    }
+    extractSecReference();
+
     // check for indets
     m = RANK_MARKER_AT_END.matcher(name);
     // f. is a marker for forms, but more often also found in authorships as "filius" - son of.
@@ -699,12 +656,8 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceAll("");
     }
 
-    // replace bibliographic in references
-    m = REPL_IN_REF.matcher(name);
-    if (m.find()) {
-      pn.setPublishedIn(normNote(concat(m.group(2), m.group(3))));
-      name = m.replaceFirst(m.group(3));
-    }
+    // extract bibliographic in references
+    extractPublishedIn();
 
     // remove superflous epithets with rank markers
     m = REMOVE_INTER_RANKS.matcher(name);
@@ -764,8 +717,9 @@ class ParsingJob implements Callable<ParsedName> {
     if (preparsingRank != null && this.rank != preparsingRank) {
       pn.setRank(preparsingRank);
     }
-    if (preParseState != null) {
-      pn.setState(preParseState);
+
+    if (state != null) {
+      pn.setState(state);
     }
     
     // determine name type
@@ -783,7 +737,80 @@ class ParsingJob implements Callable<ParsedName> {
     // determine code if not yet assigned
     determineCode();
   }
-  
+
+  void extractPublishedIn() {
+    Matcher m = REPL_IN_REF.matcher(name);
+    if (m.find()) {
+      pn.setPublishedIn(normNote(concat(m.group(2), m.group(3))));
+      name = m.replaceFirst(m.group(3));
+    }
+  }
+
+  void detectFurtherUnparsableNames() throws UnparsableNameException {
+    if (PLACEHOLDER.matcher(name).find()) {
+      unparsable(NameType.PLACEHOLDER);
+    }
+  }
+
+  void preparseNomRef(){
+    Matcher m = NOM_REFS.matcher(name);
+    if (m.find()) {
+      name = stripNomRef(m);
+      state = ParsedName.State.PARTIAL;
+    } else {
+      m = NOM_REF_VOLUME.matcher(name);
+      if (m.find()) {
+        name = stripNomRef(m);
+        state = ParsedName.State.PARTIAL;
+      }
+    }
+  }
+
+  void removePlaceholderAuthor() {
+    Matcher m = REMOVE_PLACEHOLDER_AUTHOR.matcher(name);
+    if (m.find()) {
+      name = m.replaceFirst(" $1");
+      pn.setType(NameType.PLACEHOLDER);
+    }
+  }
+
+  void extractSecReference() {
+    Matcher m = EXTRACT_SENSU.matcher(name);
+    if (m.find()) {
+      pn.setTaxonomicNote(lowerCaseFirstChar(normNote(m.group(1))));
+      name = m.replaceFirst("");
+    }
+  }
+
+
+  void extractNomStatus(){
+    // extract nom.illeg. and other nomen status notes
+    // includes manuscript notes, e.g. ined.
+    Matcher m = EXTRACT_NOMSTATUS.matcher(name);
+    if (m.find()) {
+      StringBuffer sb = new StringBuffer();
+      do {
+        String note = StringUtils.trimToNull(m.group(1));
+        if (note != null) {
+          pn.addNomenclaturalNote(note);
+          m.appendReplacement(sb, " ");
+          // if there was a rank given in the nom status populate the rank marker field
+          Matcher rm = NOV_RANK_MARKER.matcher(note);
+          if (rm.find()) {
+            setRank(rm.group(1), true);
+          }
+          // was this a manuscript note?
+          Matcher man = MANUSCRIPT_STATUS_PATTERN.matcher(note);
+          if (man.find()) {
+            pn.setManuscript(true);
+          }
+        }
+      } while (m.find());
+      m.appendTail(sb);
+      name = sb.toString();
+    }
+  }
+
   private static String lowerCaseFirstChar(String x) {
     if (x != null && x.length() > 0) {
       return x.substring(0, 1).toLowerCase() + x.substring(1);
@@ -935,6 +962,12 @@ class ParsingJob implements Callable<ParsedName> {
     return StringUtils.trimToEmpty(name);
   }
 
+
+  String normalizeHort(String name){
+    // normalize ex hort. (for gardeners, often used as ex names) spelled in lower case
+    return NORM_EX_HORT.matcher(name).replaceAll("hort.ex ");
+  }
+
   /**
    * Does the same as a normalize and additionally removes all ( ) and "und" etc
    * Checks if a name starts with a blacklisted name part like "Undetermined" or "Uncertain" and only returns the
@@ -950,8 +983,8 @@ class ParsingJob implements Callable<ParsedName> {
     if (name == null) {
       return null;
     }
-    // normalize ex hort. (for gardeners, often used as ex names) spelled in lower case
-    name = NORM_EX_HORT.matcher(name).replaceAll("hort.ex ");
+    // normalize ex hort.
+    name = normalizeHort(name);
 
     // normalize all quotes to single "
     name = NORM_QUOTES.matcher(name).replaceAll("'");
@@ -965,12 +998,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // no question marks after letters (after years they should remain)
-    m = NO_Q_MARKS.matcher(name);
-    if (m.find()) {
-      name = m.replaceAll("$1");
-      pn.setDoubtful(true);
-      pn.addWarning(Warnings.QUESTION_MARKS_REMOVED);
-    }
+    name = noQMarks(name);
 
     // remove prefixes
     name = REPL_RANK_PREFIXES.matcher(name).replaceAll("");
@@ -985,8 +1013,7 @@ class ParsingJob implements Callable<ParsedName> {
     //name = NORM_NO_SQUARE_BRACKETS.matcher(name).replaceAll(" $1 ");
 
     // replace different kind of brackets with ()
-    name = NORM_BRACKETS_OPEN_STRONG.matcher(name).replaceAll("(");
-    name = NORM_BRACKETS_CLOSE_STRONG.matcher(name).replaceAll(")");
+    name = normBrackets(name);
 
     // add ? genus when name starts with an epithet
     m = STARTING_EPITHET.matcher(name);
@@ -1005,10 +1032,30 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // finally NORMALIZE PUNCTUATION AND WHITESPACE again
+    return normWsPunct(name);
+  }
+
+  String normWsPunct(String name) {
     name = NORM_PUNCTUATIONS.matcher(name).replaceAll("$1");
     name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
     name = REPL_FINAL_PUNCTUATIONS.matcher(name).replaceAll("");
     return StringUtils.trimToEmpty(name);
+  }
+
+  String normBrackets(String name) {
+    name = NORM_BRACKETS_OPEN_STRONG.matcher(name).replaceAll("(");
+    name = NORM_BRACKETS_CLOSE_STRONG.matcher(name).replaceAll(")");
+    return name;
+  }
+
+  String noQMarks(String name) {
+    Matcher m = NO_Q_MARKS.matcher(name);
+    if (m.find()) {
+      name = m.replaceAll("$1");
+      pn.setDoubtful(true);
+      pn.addWarning(Warnings.QUESTION_MARKS_REMOVED);
+    }
+    return name;
   }
 
   /**

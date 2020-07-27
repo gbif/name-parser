@@ -2025,7 +2025,182 @@ public abstract class NameParserTest {
         .code(ZOOLOGICAL)
         .nothingElse();
   }
-  
+
+  @Test
+  public void parseAuthorshipOnly() throws Exception {
+
+    assertAuthorship("(Ristorcelli & Van ty) Wedd. ex Sch. Bip. (nom. nud.)")
+            .basAuthors(null, "Ristorcelli", "Van ty")
+            .combAuthors(null, "Sch.Bip.")
+            .combExAuthors("Wedd.")
+            .nomNote("nom.nud.")
+            .nothingElse();
+
+    assertAuthorship("(Wang & Liu, 1996)")
+            .basAuthors("1996", "Wang", "Liu")
+            .nothingElse();
+
+    assertAuthorship("(Wang, Yuwen & Xian-wei Liu, 1996)")
+            .basAuthors("1996", "Wang", "Yuwen", "Xian-wei Liu")
+            .nothingElse();
+
+    assertAuthorship("(Liu, Xian-wei, Z. Zheng & G. Xi, 1991)")
+            .basAuthors("1991", "Liu", "Xian-wei", "Z.Zheng", "G.Xi")
+            .nothingElse();
+
+    assertAuthorship("(Ristorcelli & Van ty, 1941)")
+            .basAuthors("1941", "Ristorcelli", "Van ty")
+            .nothingElse();
+
+
+    assertAuthorship("FISCHER 1885")
+            .combAuthors("1885", "Fischer")
+            .nothingElse();
+
+    assertAuthorship("(Walker, F., 1858)")
+            .basAuthors("1858", "F.Walker")
+            .nothingElse();
+
+    assertAuthorship("Schaufuss, L. W.")
+            .combAuthors(null, "L.W.Schaufuss")
+            .nothingElse();
+
+    assertAuthorship("Schaufuss, L. W., 1877")
+            .combAuthors("1877", "L.W.Schaufuss")
+            .nothingElse();
+
+    assertAuthorship("LeConte, J. L., 1878")
+            .combAuthors("1878", "J.L.LeConte")
+            .nothingElse();
+
+    assertAuthorship("Jian Wang ter & A.R.Bean")
+            .combAuthors(null, "Jian Wang ter", "A.R.Bean")
+            .nothingElse();
+
+    assertAuthorship("A.Murray bis")
+            .combAuthors(null, "A.Murray bis")
+            .nothingElse();
+
+    assertAuthorship("(Gordon) A.Murray bis")
+            .basAuthors(null, "Gordon")
+            .combAuthors(null, "A.Murray bis")
+            .nothingElse();
+
+    assertAuthorship("Castellano, S.L. Mill., L. Singh bis & T.N. Lakh. 2012")
+            .combAuthors("2012", "Castellano", "S.L.Mill.", "L.Singh bis", "T.N.Lakh.")
+            .nothingElse();
+
+    assertAuthorship("(Beurm., Gougerot & Vaucher bis) M. Ota")
+            .basAuthors(null, "Beurm.", "Gougerot", "Vaucher bis")
+            .combAuthors(null, "M.Ota")
+            .nothingElse();
+
+    // van der
+    assertAuthorship("(van der Wulp, 1885)")
+            .basAuthors("1885", "van der Wulp")
+            .nothingElse();
+
+    // turkish chars
+    assertAuthorship("Ilçim, Çenet & Dadandi")
+            .combAuthors(null, "Ilçim", "Çenet", "Dadandi")
+            .nothingElse();
+
+    assertAuthorship("S. Yildirimli")
+            .combAuthors(null, "S.Yildirimli")
+            .nothingElse();
+
+    assertAuthorship("Şahin, Koca & Yildirim, 2012")
+            .combAuthors("2012", "Şahin", "Koca", "Yildirim")
+            .nothingElse();
+
+    assertAuthorship("L.f")
+            .combAuthors(null, "L.f")
+            .nothingElse();
+
+    assertAuthorship("(L.) G. Don filius")
+            .basAuthors(null, "L.")
+            .combAuthors(null, "G.Don filius")
+            .nothingElse();
+
+    assertAuthorship("(L.) G. Don fil.")
+            .basAuthors(null, "L.")
+            .combAuthors(null, "G.Don fil.")
+            .nothingElse();
+
+    assertAuthorship("d'Urv.")
+            .combAuthors(null, "d'Urv.")
+            .nothingElse();
+
+    assertAuthorship("Balsamo M Fregni E Tongiorgi P")
+            .combAuthors(null, "M.Balsamo", "E.Fregni", "P.Tongiorgi")
+            .nothingElse();
+
+    assertAuthorship("Balsamo M Todaro MA")
+            .combAuthors(null, "M.Balsamo", "M.A.Todaro")
+            .nothingElse();
+
+    assertAuthorship("Cushman Em. Sellier de Civrieux, 1976")
+            .combAuthors("1976", "Cushman Em.Sellier de Civrieux")
+            .nothingElse();
+
+    // http://dev.gbif.org/issues/browse/POR-101
+    assertAuthorship("la Croix & P.J.Cribb")
+            .combAuthors(null, "la Croix", "P.J.Cribb")
+            .nothingElse();
+
+    assertAuthorship("le Croix & P.J.Cribb")
+            .combAuthors(null, "le Croix", "P.J.Cribb")
+            .nothingElse();
+
+    assertAuthorship("de la Croix & le P.J.Cribb")
+            .combAuthors(null, "de la Croix", "le P.J.Cribb")
+            .nothingElse();
+
+    assertAuthorship("Istv?nffi, 1898")
+            .combAuthors("1898", "Istvnffi")
+            .doubtful()
+            .warning(Warnings.QUESTION_MARKS_REMOVED)
+            .nothingElse();
+
+    assertAuthorship("F.S.Castracane degli Antelminelli")
+            .combAuthors(null, "F.S.Castracane degli Antelminelli")
+            .nothingElse();
+
+    assertAuthorship("De la Soie")
+            .combAuthors(null, "De la Soie")
+            .nothingElse();
+
+    assertAuthorship("Hort. ex Vilmorin")
+            .combAuthors(null, "Vilmorin")
+            .combExAuthors("hort.")
+            .nothingElse();
+
+    assertAuthorship("hortusa ex K. Koch")
+            .combAuthors(null, "K.Koch")
+            .combExAuthors("hort.")
+            .nothingElse();
+
+    assertAuthorship("hortus ex K. Koch")
+            .combAuthors(null, "K.Koch")
+            .combExAuthors("hort.")
+            .nothingElse();
+
+    assertAuthorship("(Thunberg) A.P.de Candolle")
+            .basAuthors(null, "Thunberg")
+            .combAuthors(null, "A.P.de Candolle")
+            .nothingElse();
+
+    assertAuthorship("(Huguet del Villar) S. Rivas-Martínez, F. Fernández González & D. Sánchez-Mata")
+            .basAuthors(null, "Huguet del Villar")
+            .combAuthors(null, "S.Rivas-Martínez", "F.Fernández González", "D.Sánchez-Mata")
+            .nothingElse();
+
+    assertAuthorship("(H. da C. Monteiro Filho) H. da C. Monteiro Filho")
+            .basAuthors(null, "H.da C.Monteiro Filho")
+            .combAuthors(null, "H.da C.Monteiro Filho")
+            .nothingElse();
+  }
+
   /**
    * http://dev.gbif.org/issues/browse/POR-2454
    */
@@ -2273,8 +2448,9 @@ public abstract class NameParserTest {
   }
 
   NameAssertion assertAuthorship(String rawAuthorship) throws UnparsableNameException {
-    NameAssertion na = assertName("Abies alba " + rawAuthorship, SPECIES, null, "Abies alba");
-    na.species("Abies", "alba");
+    ParsedAuthorship n = parser.parseAuthorship(rawAuthorship);
+    NameAssertion na = new NameAssertion((ParsedName) n);
+    na.type(null);
     return na;
   }
 
@@ -2295,7 +2471,7 @@ public abstract class NameParserTest {
     assertEquals(expectedCanonicalWithoutAuthors, n.canonicalNameWithoutAuthorship());
     return new NameAssertion(n);
   }
-  
+
   private BufferedReader resourceReader(String resourceFileName) throws UnsupportedEncodingException {
     return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/" + resourceFileName), "UTF-8"));
   }
