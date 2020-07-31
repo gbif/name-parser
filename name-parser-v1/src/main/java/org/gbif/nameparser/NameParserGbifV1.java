@@ -33,6 +33,7 @@ public class NameParserGbifV1 implements NameParser {
       .put(org.gbif.nameparser.api.NameType.VIRUS, NameType.VIRUS)
       .put(org.gbif.nameparser.api.NameType.HYBRID_FORMULA, NameType.HYBRID)
       .put(org.gbif.nameparser.api.NameType.INFORMAL, NameType.INFORMAL)
+      .put(org.gbif.nameparser.api.NameType.PHRASE, NameType.INFORMAL)
       .put(org.gbif.nameparser.api.NameType.OTU, NameType.OTU)
       .put(org.gbif.nameparser.api.NameType.PLACEHOLDER, NameType.PLACEHOLDER)
       .put(org.gbif.nameparser.api.NameType.NO_NAME, NameType.NO_NAME)
