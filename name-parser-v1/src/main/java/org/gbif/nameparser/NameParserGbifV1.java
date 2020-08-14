@@ -235,6 +235,11 @@ public class NameParserGbifV1 implements NameParser {
   static Rank toGbif(org.gbif.nameparser.api.Rank rank) {
     if (rank == null) return null;
     switch (rank) {
+      case SUPERDIVISION: return Rank.SUPERPHYLUM;
+      case DIVISION: return Rank.PHYLUM;
+      case SUBDIVISION: return Rank.SUBPHYLUM;
+      case INFRADIVISION: return Rank.INFRAPHYLUM;
+
       case SUPERSECTION: return Rank.INFRAGENERIC_NAME;
       case SUPERSERIES: return Rank.INFRAGENERIC_NAME;
       
