@@ -731,7 +731,7 @@ class ParsingJob implements Callable<ParsedName> {
     // flag names that match doubtful patterns
     applyDoubtfulFlag(scientificName);
 
-    // determine rank if not yet assigned
+    // determine rank if not yet assigned or change according to code
     determineRank();
 
     // determine code if not yet assigned
@@ -1209,6 +1209,10 @@ class ParsingJob implements Callable<ParsedName> {
   private void determineRank() {
     if (pn.getRank().otherOrUnranked()) {
       pn.setRank(RankUtils.inferRank(pn));
+    }
+    Set<>
+    if (pn.getRank().isAmbiguous() && pn.getCode() != null) {
+
     }
   }
   

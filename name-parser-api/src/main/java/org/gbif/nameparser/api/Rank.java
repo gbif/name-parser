@@ -15,13 +15,17 @@
  */
 package org.gbif.nameparser.api;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 /**
  * An ordered taxonomic rank enumeration with the most frequently used values.
@@ -389,7 +393,33 @@ public enum Rank {
       PROLES,
       CONVARIETY
   );
-  
+
+  private static final Map<Rank, Rank> MAJOR_RANKS;
+  static {
+    Map<Rank, Rank> map = new HashMap<>();
+    Pattern prefixes = Pattern.compile("^(SUPER|SUB|INFRA|GIGA|MAGN|GRAND|MIR|NAN|HYPO|MIN|PARV|MEGA|EPI)");
+    for (Rank r : Rank.values()) {
+      Rank major = r;
+      if (r.isInfraspecific()) {
+        major = Rank.INFRASPECIFIC_NAME;
+      } else {
+        Matcher m = prefixes.matcher(r.name());
+        if (m.find()) {
+          String name = m.replaceFirst("");
+          try {
+            major = Rank.valueOf(name);
+          } catch (IllegalArgumentException e) {
+          }
+        }
+      }
+      System.out.println(r + " -> " + major);
+      map.put(r, major);
+    }
+    // manual fixes
+    map.put(Rank.SPECIES_AGGREGATE, Rank.SPECIES);
+    MAJOR_RANKS = ImmutableMap.copyOf(map);
+  }
+
   private static final Map<Rank, NomCode> RANK2CODE = ImmutableMap.<Rank, NomCode>builder()
       .put(SUPERDIVISION, NomCode.ZOOLOGICAL)
       .put(DIVISION, NomCode.ZOOLOGICAL)
@@ -497,7 +527,16 @@ public enum Rank {
     }
     return false;
   }
-  
+
+  /**
+   * Return the major rank (incl all Linnean ranks) this rank belongs to stripping of its prefix, e.g. phylum for subphylum.
+   * For infraspecific ranks INFRASPECIFIC_NAME is returned.
+   * Ranks which cannot be mapped to a major rank return itself, never null.
+   */
+  public Rank getMajorRank() {
+    return MAJOR_RANKS.get(this);
+  }
+
   public boolean isSpeciesOrBelow() {
     return ordinal() >= SPECIES_AGGREGATE.ordinal() && notOtherOrUnranked();
   }
@@ -565,7 +604,7 @@ public enum Rank {
   public boolean isAmbiguous() {
     return AMBIGUOUS_RANKS.contains(this);
   }
-  
+
   /**
    * @return true if the rank is considered a legacy rank not used anymore in current nomenclature.
    */
