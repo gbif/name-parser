@@ -5,6 +5,7 @@ import com.google.common.base.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
@@ -39,6 +40,13 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
  */
 class ParsingJob implements Callable<ParsedName> {
   static Logger LOG = LoggerFactory.getLogger(ParsingJob.class);
+
+  private static final Map<Rank, Rank> DIVISION2PHYLUM = ImmutableMap.of(
+      Rank.SUPERDIVISION, Rank.SUPERPHYLUM,
+      Rank.DIVISION, Rank.PHYLUM,
+      Rank.SUBDIVISION, Rank.SUBPHYLUM,
+      Rank.INFRADIVISION, Rank.INFRAPHYLUM
+  );
 
   private static final Splitter WHITESPACE_SPLITTER = Splitter.on(" ").trimResults().omitEmptyStrings();
   private static final CharMatcher AUTHORTEAM_DELIMITER = CharMatcher.anyOf(",&");
@@ -1210,9 +1218,9 @@ class ParsingJob implements Callable<ParsedName> {
     if (pn.getRank().otherOrUnranked()) {
       pn.setRank(RankUtils.inferRank(pn));
     }
-    Set<>
-    if (pn.getRank().isAmbiguous() && pn.getCode() != null) {
-
+    // division is used in botany as a synonym for phylum
+    if (DIVISION2PHYLUM.containsKey(pn.getRank()) && pn.getCode() != NomCode.ZOOLOGICAL) {
+      pn.setRank(DIVISION2PHYLUM.get(pn.getRank()));
     }
   }
   
