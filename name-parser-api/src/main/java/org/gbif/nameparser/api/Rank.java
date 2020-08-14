@@ -28,10 +28,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 /**
- * An ordered taxonomic rank enumeration with the most frequently used values.
- * Several static methods, lists, sets and maps are provided to help with ordering and lookup from strings.
+ * An ordered taxonomic rank enumeration with most commonly used values.
+ * The ranks listed are code agnostic and if a rank is used both in zoology and botany it is the same enum value.
  *
- * @see <a href="http://rs.gbif.org/vocabulary/gbif/rank.xml">rs.gbif.org vocabulary</a>
+ * As some ranks are regulary placed in different orders in botany and zoology (e.g. section or series)
+ * we follow just one tradition, but mark those ranks as "ambiguous".
+ *
+ * Ranks also expose a variety of methods to deal with them programmatically, e.g map them to major ranks only,
+ * list Linnean ranks only, etc.
+ * Several static methods, lists, sets and maps are provided to help with ordering and lookup from strings.
  */
 public enum Rank {
   
@@ -167,22 +172,20 @@ public enum Rank {
   SUBSERIES("subser."),
   
   /**
-   * used for any other unspecific rank below genera and above species aggregates.
+   * Used for any other unspecific rank below genera and above species aggregates.
    */
   INFRAGENERIC_NAME("infragen."),
   
   /**
-   * A loosely defined group of species.
-   * Zoology: Aggregate - a group of species, other than a subgenus, within a genus. An aggregate may be denoted by a group name interpolated in parentheses.
-   * The Berlin/MoreTax model notes: [these] aren't taxonomic ranks but cirumscriptions because on the one hand they are necessary for the concatenation
-   * of the fullname and on the other hand they are necessary for distinguishing the aggregate or species group from the microspecies.
+   * A loosely defined group of species, often in flux.
+   * Often also called species complex, or superspecies.
    */
   SPECIES_AGGREGATE("agg."),
   
   SPECIES("sp."),
   
   /**
-   * used for any other unspecific rank below species.
+   * Used for any unspecific rank below species.
    */
   INFRASPECIFIC_NAME("infrasp."),
   
@@ -217,7 +220,7 @@ public enum Rank {
   CONVARIETY("convar."),
   
   /**
-   * used also for any other unspecific rank below subspecies.
+   * Used also for any unspecific rank below subspecies.
    */
   INFRASUBSPECIFIC_NAME("infrasubsp."),
   
