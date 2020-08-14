@@ -372,9 +372,14 @@ public enum Rank {
    * A set of ranks which are treated differently in different groups of organisms and usually between botany and zoology.
    */
   private static final Set<Rank> AMBIGUOUS_RANKS = ImmutableSet.of(
+      SUPERSECTION,
       SECTION,
       SUBSECTION,
-      SERIES
+      SUPERSERIES,
+      SERIES,
+      SUBSERIES,
+      OTHER,
+      UNRANKED
   );
   
   private static final Set<Rank> LEGACY_RANKS = ImmutableSet.of(
