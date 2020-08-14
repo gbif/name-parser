@@ -62,7 +62,15 @@ public enum Rank {
   INFRACLASS("infracl."),
   
   PARVCLASS("parvcl."),
-  
+
+  SUPERDIVISION("superdiv."),
+
+  DIVISION("div."),
+
+  SUBDIVISION("subdiv."),
+
+  INFRADIVISION("infradiv."),
+
   SUPERLEGION("superleg."),
   
   /**
@@ -378,6 +386,14 @@ public enum Rank {
   );
   
   private static final Map<Rank, NomCode> RANK2CODE = ImmutableMap.<Rank, NomCode>builder()
+      .put(SUPERDIVISION, NomCode.ZOOLOGICAL)
+      .put(DIVISION, NomCode.ZOOLOGICAL)
+      .put(SUBDIVISION, NomCode.ZOOLOGICAL)
+      .put(INFRADIVISION, NomCode.ZOOLOGICAL)
+      .put(SUPERLEGION, NomCode.ZOOLOGICAL)
+      .put(LEGION, NomCode.ZOOLOGICAL)
+      .put(SUBLEGION, NomCode.ZOOLOGICAL)
+      .put(INFRALEGION, NomCode.ZOOLOGICAL)
       .put(PARVCLASS, NomCode.ZOOLOGICAL)
       .put(GIGAORDER, NomCode.ZOOLOGICAL)
       .put(MAGNORDER, NomCode.ZOOLOGICAL)
@@ -387,10 +403,6 @@ public enum Rank {
       .put(HYPOORDER, NomCode.ZOOLOGICAL)
       .put(MINORDER, NomCode.ZOOLOGICAL)
       .put(PARVORDER, NomCode.ZOOLOGICAL)
-      .put(SUPERLEGION, NomCode.ZOOLOGICAL)
-      .put(LEGION, NomCode.ZOOLOGICAL)
-      .put(SUBLEGION, NomCode.ZOOLOGICAL)
-      .put(INFRALEGION, NomCode.ZOOLOGICAL)
       .put(SUPERCOHORT, NomCode.ZOOLOGICAL)
       .put(COHORT, NomCode.ZOOLOGICAL)
       .put(SUBCOHORT, NomCode.ZOOLOGICAL)
@@ -401,7 +413,6 @@ public enum Rank {
       .put(MORPH, NomCode.ZOOLOGICAL)
       .put(ABERRATION, NomCode.ZOOLOGICAL)
       .put(NATIO, NomCode.ZOOLOGICAL)
-      
       .put(PROLES, NomCode.BOTANICAL)
       .put(SUPERSECTION, NomCode.BOTANICAL)
       .put(SECTION, NomCode.BOTANICAL)

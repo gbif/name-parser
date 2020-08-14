@@ -4,13 +4,9 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
-
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.*;
 import org.gbif.nameparser.api.LinneanName;
 import org.gbif.nameparser.api.NomCode;
-import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
 
 import static org.gbif.nameparser.api.Rank.*;

@@ -7,10 +7,7 @@ import java.io.UnsupportedEncodingException;
 
 import com.google.common.collect.Iterables;
 import org.apache.commons.io.LineIterator;
-import org.checkerframework.checker.units.qual.A;
-import org.checkerframework.checker.units.qual.C;
 import org.gbif.nameparser.api.*;
-import org.junit.AfterClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
