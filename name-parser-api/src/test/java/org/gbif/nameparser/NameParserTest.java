@@ -635,7 +635,7 @@ public abstract class NameParserTest {
     
     // higher ranks should be marked as doubtful
     for (Rank r : Rank.values()) {
-      if (r.otherOrUnranked() || r.isSpeciesOrBelow()) continue;
+      if (r.otherOrUnranked() || r.isSpeciesOrBelow() || r.getMajorRank()==DIVISION) continue;
       NameAssertion ass = assertName("Achillea millefolium L.", r, "Achillea millefolium")
           .binomial("Achillea", null, "millefolium", r)
           .combAuthors(null, "L.")
