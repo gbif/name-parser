@@ -415,7 +415,6 @@ public enum Rank {
           }
         }
       }
-      System.out.println(r + " -> " + major);
       map.put(r, major);
     }
     // manual fixes
