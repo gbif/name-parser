@@ -2051,6 +2051,19 @@ public abstract class NameParserTest {
 
   @Test
   public void authorshipOnly() throws Exception {
+    // https://github.com/CatalogueOfLife/data/issues/176
+    assertAuthorship("Maas & He")
+        .combAuthors(null, "Maas", "He")
+        .nothingElse();
+
+    assertAuthorship("Yang & Wu")
+        .combAuthors(null, "Yang", "Wu")
+        .nothingElse();
+
+    assertAuthorship("Freytag & Ma")
+        .combAuthors(null, "Freytag", "Ma")
+        .nothingElse();
+
     assertAuthorship("(Ristorcelli & Van ty) Wedd. ex Sch. Bip. (nom. nud.)")
             .basAuthors(null, "Ristorcelli", "Van ty")
             .combAuthors(null, "Sch.Bip.")

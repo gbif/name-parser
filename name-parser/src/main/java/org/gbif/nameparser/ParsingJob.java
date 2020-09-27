@@ -1549,7 +1549,7 @@ class ParsingJob implements Callable<ParsedName> {
       String author = iter.next();
       if (iter.hasNext() && author.length()>3 && !author.endsWith(".")) {
         String next = iter.next();
-        if (next.length()<3 || INITIALS.matcher(next).find()) {
+        if (INITIALS.matcher(next).find()) {
           // consider an initial and merge with last author
           authors.add(normInitials(next) + author);
         } else {
