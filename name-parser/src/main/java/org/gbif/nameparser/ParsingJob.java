@@ -5,7 +5,6 @@ import com.google.common.base.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
@@ -67,7 +66,9 @@ class ParsingJob implements Callable<ParsedName> {
   // common 3 char or longer name suffices
   private static final String AUTHOR_TOKEN_3 = "fil|filius|hort|jun|junior|sen|senior";
   // common name suffices (ms=manuscript, not yet published)
-  private static final String AUTHOR_TOKEN = "(?:(?:\\p{Lu}|-[a-z])[\\p{Lu}\\p{Ll}'-]*" +
+  private static final String AUTHOR_TOKEN = "(?:" +
+      "(?<=\\bden )heede" +
+      "|(?:\\p{Lu}|-[a-z])[\\p{Lu}\\p{Ll}'-]*" +
       "|" + AUTHOR_TOKEN_3 +
       "|al|f|j|jr|ms|sr|v|v[ao]n|bis|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|ter|'?t|y" +
     ")\\.?";

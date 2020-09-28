@@ -1047,11 +1047,15 @@ public abstract class NameParserTest {
         .combAuthors(null, "L.L.Daniel")
         .notho(INFRASPECIFIC)
         .nothingElse();
-    
   }
   
   @Test
   public void authorVariations() throws Exception {
+    assertName("Asplenium cyprium Viane & Van den heede", "Asplenium cyprium")
+        .species("Asplenium", "cyprium")
+        .combAuthors(null, "Viane", "Van den heede")
+        .nothingElse();
+
     // bis and ter as author suffix
     // https://github.com/Sp2000/colplus-backend/issues/591
     assertName("Lagenophora queenslandica Jian Wang ter & A.R.Bean", "Lagenophora queenslandica")
@@ -2051,6 +2055,12 @@ public abstract class NameParserTest {
 
   @Test
   public void authorshipOnly() throws Exception {
+    assertAuthorship("Viane & Van den heede")
+        .combAuthors(null, "Viane", "Van den heede")
+        .nothingElse();
+
+
+
     // https://github.com/CatalogueOfLife/data/issues/176
     assertAuthorship("Maas & He")
         .combAuthors(null, "Maas", "He")
@@ -2135,53 +2145,74 @@ public abstract class NameParserTest {
             .basAuthors("1885", "van der Wulp")
             .nothingElse();
 
+    // https://www.ipni.org/a/40285-1
+    assertAuthorship("Viane & Van den heede")
+        .combAuthors(null, "Viane", "Van den heede")
+        .nothingElse();
+
+    assertAuthorship("van den Brink")
+        .combAuthors(null, "van den Brink")
+        .nothingElse();
+
+    assertAuthorship("Van de Kerckh.")
+        .combAuthors(null, "Van de Kerckh.")
+        .nothingElse();
+
+    assertAuthorship("Van de Putte")
+        .combAuthors(null, "Van de Putte")
+        .nothingElse();
+
+    assertAuthorship("Van Dersal")
+        .combAuthors(null, "Van Dersal")
+        .nothingElse();
+
     // turkish chars
     assertAuthorship("Ilçim, Çenet & Dadandi")
-            .combAuthors(null, "Ilçim", "Çenet", "Dadandi")
-            .nothingElse();
+        .combAuthors(null, "Ilçim", "Çenet", "Dadandi")
+        .nothingElse();
 
     assertAuthorship("S. Yildirimli")
-            .combAuthors(null, "S.Yildirimli")
-            .nothingElse();
+        .combAuthors(null, "S.Yildirimli")
+        .nothingElse();
 
     assertAuthorship("Şahin, Koca & Yildirim, 2012")
-            .combAuthors("2012", "Şahin", "Koca", "Yildirim")
-            .nothingElse();
+        .combAuthors("2012", "Şahin", "Koca", "Yildirim")
+        .nothingElse();
 
     assertAuthorship("L.f")
-            .combAuthors(null, "L.f")
-            .nothingElse();
+        .combAuthors(null, "L.f")
+        .nothingElse();
 
     assertAuthorship("(L.) G. Don filius")
-            .basAuthors(null, "L.")
-            .combAuthors(null, "G.Don filius")
-            .nothingElse();
+        .basAuthors(null, "L.")
+        .combAuthors(null, "G.Don filius")
+        .nothingElse();
 
     assertAuthorship("(L.) G. Don fil.")
-            .basAuthors(null, "L.")
-            .combAuthors(null, "G.Don fil.")
-            .nothingElse();
+        .basAuthors(null, "L.")
+        .combAuthors(null, "G.Don fil.")
+        .nothingElse();
 
     assertAuthorship("d'Urv.")
-            .combAuthors(null, "d'Urv.")
-            .nothingElse();
+        .combAuthors(null, "d'Urv.")
+        .nothingElse();
 
     assertAuthorship("Balsamo M Fregni E Tongiorgi P")
-            .combAuthors(null, "M.Balsamo", "E.Fregni", "P.Tongiorgi")
-            .nothingElse();
+        .combAuthors(null, "M.Balsamo", "E.Fregni", "P.Tongiorgi")
+        .nothingElse();
 
     assertAuthorship("Balsamo M Todaro MA")
-            .combAuthors(null, "M.Balsamo", "M.A.Todaro")
-            .nothingElse();
+        .combAuthors(null, "M.Balsamo", "M.A.Todaro")
+        .nothingElse();
 
     assertAuthorship("Cushman Em. Sellier de Civrieux, 1976")
-            .combAuthors("1976", "Cushman Em.Sellier de Civrieux")
-            .nothingElse();
+        .combAuthors("1976", "Cushman Em.Sellier de Civrieux")
+        .nothingElse();
 
     // http://dev.gbif.org/issues/browse/POR-101
     assertAuthorship("la Croix & P.J.Cribb")
-            .combAuthors(null, "la Croix", "P.J.Cribb")
-            .nothingElse();
+        .combAuthors(null, "la Croix", "P.J.Cribb")
+        .nothingElse();
 
     assertAuthorship("le Croix & P.J.Cribb")
             .combAuthors(null, "le Croix", "P.J.Cribb")

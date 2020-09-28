@@ -184,6 +184,7 @@ public class ParsingJobTest {
   public void testAuthor(){
     assertAuthorPattern("Y.-j. Wang");
     assertAuthorPattern("Z.-q.Liu");
+    assertAuthorPattern("Van den heede");
   }
   
   @Test
