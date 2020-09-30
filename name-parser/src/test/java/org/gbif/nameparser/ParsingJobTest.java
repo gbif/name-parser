@@ -141,6 +141,7 @@ public class ParsingJobTest {
 
   @Test
   public void testAuthorship() throws Exception {
+    assertAuthorshipPattern("zur Strassen", null, "zur Strassen");
     assertAuthorshipPatternFails("Wedd. ex Sch. Bip. (");
     assertAuthorshipPattern("Plesn¡k ex F.Ritter", "Plesnik", "F.Ritter");
     assertAuthorshipPattern("Britton, Sterns, & Poggenb.", null, "Britton", "Sterns", "Poggenb.");
@@ -185,6 +186,7 @@ public class ParsingJobTest {
     assertAuthorPattern("Y.-j. Wang");
     assertAuthorPattern("Z.-q.Liu");
     assertAuthorPattern("Van den heede");
+    assertAuthorPattern("zur Strassen");
   }
   
   @Test

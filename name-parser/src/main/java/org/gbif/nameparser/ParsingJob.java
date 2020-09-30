@@ -70,7 +70,7 @@ class ParsingJob implements Callable<ParsedName> {
       "(?<=\\bden )heede" +
       "|(?:\\p{Lu}|-[a-z])[\\p{Lu}\\p{Ll}'-]*" +
       "|" + AUTHOR_TOKEN_3 +
-      "|al|f|j|jr|ms|sr|v|v[ao]n|bis|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|ter|'?t|y" +
+      "|al|f|j|jr|ms|sr|v|v[ao]n|zu[rm]?|bis|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|ter|'?t|y" +
     ")\\.?";
   @VisibleForTesting
   static final String AUTHOR = AUTHOR_TOKEN + "(?:[ '-]?" + AUTHOR_TOKEN + ")*";
