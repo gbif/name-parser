@@ -39,47 +39,27 @@ import com.google.common.collect.Lists;
  * Several static methods, lists, sets and maps are provided to help with ordering and lookup from strings.
  */
 public enum Rank {
-  
+
   DOMAIN("dom."),
-  
-  REALM ("realm"),
-  
-  SUBREALM ("subrealm"),
-
+  REALM("realm"),
+  SUBREALM("subrealm"),
   SUPERKINGDOM("superreg."),
-  
   KINGDOM("reg."),
-  
   SUBKINGDOM("subreg."),
-  
   INFRAKINGDOM("infrareg."),
-  
-  SUPERPHYLUM("superphyl."),
-  
-  PHYLUM("phyl."),
-  
-  SUBPHYLUM("subphyl."),
-  
-  INFRAPHYLUM("infraphyl."),
-  
-  SUPERCLASS("supercl."),
-  
-  CLASS("cl."),
-  
-  SUBCLASS("subcl."),
-  
-  INFRACLASS("infracl."),
-  
-  PARVCLASS("parvcl."),
-
+  SUPERPHYLUM("superphyla", "superphyl."),
+  PHYLUM("phyla", "phyl."),
+  SUBPHYLUM("subphyla", "subphyl."),
+  INFRAPHYLUM("infraphyla", "infraphyl."),
+  SUPERCLASS("superclasses", "supercl."),
+  CLASS("classes", "cl."),
+  SUBCLASS("subclasses", "subcl."),
+  INFRACLASS("infraclasses", "infracl."),
+  PARVCLASS("parvclasses", "parvcl."),
   SUPERDIVISION("superdiv."),
-
   DIVISION("div."),
-
   SUBDIVISION("subdiv."),
-
   INFRADIVISION("infradiv."),
-
   SUPERLEGION("superleg."),
   
   /**
@@ -126,19 +106,19 @@ public enum Rank {
   
   PARVORDER("parvord."),
 
-  MEGAFAMILY("megafam."),
+  MEGAFAMILY("megafamilies", "megafam."),
   
-  GRANDFAMILY("grandfam."),
+  GRANDFAMILY("grandfamilies", "grandfam."),
   
-  SUPERFAMILY("superfam."),
+  SUPERFAMILY("superfamilies", "superfam."),
   
-  EPIFAMILY("epifam."),
+  EPIFAMILY("epifamilies", "epifam."),
   
-  FAMILY("fam."),
+  FAMILY("families", "fam."),
   
-  SUBFAMILY("subfam."),
+  SUBFAMILY("subfamilies", "subfam."),
   
-  INFRAFAMILY("infrafam."),
+  INFRAFAMILY("infrafamilies", "infrafam."),
   
   SUPERTRIBE("supertrib."),
   
@@ -153,11 +133,11 @@ public enum Rank {
    */
   SUPRAGENERIC_NAME("supragen."),
   
-  GENUS("gen."),
+  GENUS("genera", "gen."),
   
-  SUBGENUS("subgen."),
+  SUBGENUS("subgenera", "subgen."),
   
-  INFRAGENUS("infrag."),
+  INFRAGENUS("infragenera", "infrag."),
   
   SUPERSECTION("supersect."),
   
@@ -165,11 +145,11 @@ public enum Rank {
   
   SUBSECTION("subsect."),
   
-  SUPERSERIES("superser."),
+  SUPERSERIES("superseries", "superser."),
   
-  SERIES("ser."),
+  SERIES("series", "ser."),
   
-  SUBSERIES("subser."),
+  SUBSERIES("subseries", "subser."),
   
   /**
    * Used for any other unspecific rank below genera and above species aggregates.
@@ -182,7 +162,7 @@ public enum Rank {
    */
   SPECIES_AGGREGATE("agg."),
   
-  SPECIES("sp."),
+  SPECIES("species", "sp."),
   
   /**
    * Used for any unspecific rank below species.
@@ -198,7 +178,7 @@ public enum Rank {
    */
   GREX("gx"),
   
-  SUBSPECIES("subsp."),
+  SUBSPECIES("subspecies", "subsp."),
   
   /**
    * Rank in use from the code for cultivated plants.
@@ -217,7 +197,7 @@ public enum Rank {
    * <p>
    * From Spooner et al., Horticultural Reviews 28 (2003): 1-60
    */
-  CONVARIETY("convar."),
+  CONVARIETY("convarieties", "convar."),
   
   /**
    * Used also for any unspecific rank below subspecies.
@@ -227,7 +207,7 @@ public enum Rank {
   /**
    * Botanical legacy rank for a race, recommended in botanical code from 1868
    */
-  PROLES("prol."),
+  PROLES("proles", "prol."),
   
   /**
    * Zoological legacy rank
@@ -244,9 +224,9 @@ public enum Rank {
    */
   MORPH("morph"),
   
-  VARIETY("var."),
+  VARIETY("varieties", "var."),
   
-  SUBVARIETY("subvar."),
+  SUBVARIETY("subvarieties", "subvar."),
   
   FORM("f."),
   
@@ -477,15 +457,22 @@ public enum Rank {
       .build();
   
   private final String marker;
-  
+  private final String plural;
+
   Rank() {
     this(null);
   }
   
   Rank(String marker) {
     this.marker = marker;
+    this.plural = name().toLowerCase() + "s";
   }
-  
+
+  Rank(String plural, String marker) {
+    this.plural = plural;
+    this.marker = marker;
+  }
+
   public String getMarker() {
     return marker;
   }
