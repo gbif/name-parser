@@ -32,6 +32,38 @@ public abstract class NameParserTest {
   }
 
   /**
+   * https://github.com/gbif/name-parser/issues/33
+   * https://github.com/gbif/name-parser/issues/66
+   */
+  @Test
+  @Ignore
+  public void sic() throws Exception {
+    assertName("Turbo porphyrites [sic, porphyria]", "Turbo porphyrites")
+        .species("Turbo", "porphyrites")
+        .partial("[sic, porphyria]")
+        .nothingElse();
+
+    assertName("Melanella hollandri [sic] var. detrita Kucik", "Melanella hollandri [sic] var. detrita Kucik")
+        .infraSpecies("Melanella", "hollandri", VARIETY, "detrita")
+        .combAuthors(null, "Kucik")
+        .nothingElse();
+
+    assertName("Alnetoidia (Alnella) [sic] sudzhuchenica Sohi, 1998", "")
+        .nothingElse();
+
+    assertName("Flavobacterium branchiophila (sic) Wakabayashi et al. 1989", "")
+        .nothingElse();
+
+    // https://lpsn.dsmz.de/text/glossary#corrigendum
+    assertName("Campylobacter lari corrig. Benjamin et al. 1984", "")
+        .nothingElse();
+
+    assertName("Campylobacter laridis (sic) Benjamin et al. 1984", "")
+        .nothingElse();
+  }
+
+
+  /**
    * https://github.com/gbif/checklistbank/issues/87
    */
   @Test
