@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.units.qual.A;
 import org.gbif.nameparser.api.*;
 import org.gbif.nameparser.util.RankUtils;
 import org.slf4j.Logger;
@@ -190,6 +191,11 @@ class ParsingJob implements Callable<ParsedName> {
   // SH  = SH000003.07FU
   // BIN = BOLD:AAA0003
   private static final Pattern OTU_PATTERN = Pattern.compile("(BOLD:[0-9A-Z]{7}$|SH[0-9]{6,8}\\.[0-9]{2}FU)", CASE_INSENSITIVE);
+  private static final String GTDB_STRAIN_BLOCK = "(?:[A-Z]*[0-9]+(?:b)?[A-Z]*" +
+      "|FULL|bin)"; // specific tokens
+  private static final String GTDB_OTU_MONOMIAL = "(?:(?:"+GTDB_STRAIN_BLOCK+"-?)*(?:"+GTDB_STRAIN_BLOCK+")(?:_[A-Z])?|[A-Z][a-z]{2,}_[A-Z])";
+  private static final Pattern GTDB_MONOMIAL_PATTERN = Pattern.compile("^" + GTDB_OTU_MONOMIAL + "$");
+  private static final Pattern GTDB_BINOMIAL_PATTERN = Pattern.compile("^(" + GTDB_OTU_MONOMIAL + ") +(sp[0-9]+)$");
   // spots a Candidatus bacterial name
   private static final String CANDIDATUS = "(Candidatus\\s|Ca\\.)";
   private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS);
@@ -476,7 +482,27 @@ class ParsingJob implements Callable<ParsedName> {
       pn.setState(ParsedName.State.COMPLETE);
       return true;
     }
-    
+
+    // GTDB OTU names
+    // https://github.com/gbif/name-parser/issues/74
+    m = GTDB_MONOMIAL_PATTERN.matcher(name);
+    if (m.find()) {
+      pn.setUninomial(m.group());
+      pn.setType(NameType.OTU);
+      pn.setRank(Rank.UNRANKED);
+      pn.setState(ParsedName.State.COMPLETE);
+      return true;
+    }
+    m = GTDB_BINOMIAL_PATTERN.matcher(name);
+    if (m.find()) {
+      pn.setGenus(m.group(1));
+      pn.setSpecificEpithet(m.group(2));
+      pn.setType(NameType.OTU);
+      pn.setRank(Rank.SPECIES);
+      pn.setState(ParsedName.State.COMPLETE);
+      return true;
+    }
+
     // BOLD style placeholders
     // https://github.com/gbif/name-parser/issues/45
     m = BOLD_PLACEHOLDERS.matcher(name);

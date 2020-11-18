@@ -887,7 +887,129 @@ public abstract class NameParserTest {
   
   @Test
   public void oTU() throws Exception {
-    
+
+    // https://github.com/gbif/name-parser/issues/74
+    assertName("Desulfobacterota_B", "Desulfobacterota_B")
+        .monomial("Desulfobacterota_B")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("UBA3054", "UBA3054")
+        .monomial("UBA3054")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("F0040", "F0040")
+        .monomial("F0040")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("AABM5-125-24", "AABM5-125-24")
+        .monomial("AABM5-125-24")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("B130-G9", "B130-G9")
+        .monomial("B130-G9")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("BMS3Abin14", "BMS3Abin14")
+        .monomial("BMS3Abin14")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("4572-55", "4572-55")
+        .monomial("4572-55")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("T1SED10-198M", "T1SED10-198M")
+        .monomial("T1SED10-198M")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("BMS3Abin14", "BMS3Abin14")
+        .monomial("BMS3Abin14")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("UBA11359_C", "UBA11359_C")
+        .monomial("UBA11359_C")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("01-FULL-45-15b", "01-FULL-45-15b")
+        .monomial("01-FULL-45-15b")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("E44-bin80", "E44-bin80")
+        .monomial("E44-bin80")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("Ellin6529", "Ellin6529")
+        .monomial("Ellin6529")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("E2", "E2")
+        .monomial("E2")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("9FT-COMBO-53-11", "9FT-COMBO-53-11")
+        .monomial("9FT-COMBO-53-11")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("AqS3", "AqS3")
+        .monomial("AqS3")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("Gp7-AA8", "Gp7-AA8")
+        .monomial("Gp7-AA8")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("0-14-0-10-38-17 sp002774085", "0-14-0-10-38-17 sp002774085")
+        .species("0-14-0-10-38-17", "sp002774085")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("01-FULL-45-15b sp001822655", "01-FULL-45-15b sp001822655")
+        .species("01-FULL-45-15b", "sp001822655")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("18JY21-1 sp004344915", "18JY21-1 sp004344915")
+        .species("18JY21-1", "sp004344915")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("18JY21-1 sp004344915", "18JY21-1 sp004344915")
+        .species("", "")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("18JY21-1 sp004344915", "18JY21-1 sp004344915")
+        .species("", "")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("18JY21-1 sp004344915", "18JY21-1 sp004344915")
+        .species("", "")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("18JY21-1 sp004344915", "18JY21-1 sp004344915")
+        .species("", "")
+        .type(OTU)
+        .nothingElse();
+
+
     assertName("SH1508347.08FU", "SH1508347.08FU")
         .monomial("SH1508347.08FU")
         .type(OTU)
@@ -1501,8 +1623,6 @@ public abstract class NameParserTest {
     assertNoName("&nbsp;");
     assertNoName("X");
     assertNoName("a");
-    assertNoName("143");
-    assertNoName("321-432");
     assertNoName("-,.#");
     assertNoName(" .");
   }
