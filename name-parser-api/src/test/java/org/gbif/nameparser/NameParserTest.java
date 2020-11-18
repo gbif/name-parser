@@ -2184,10 +2184,13 @@ public abstract class NameParserTest {
 
   @Test
   public void authorshipOnly() throws Exception {
-    assertAuthorship("Viane & Van den heede")
-        .combAuthors(null, "Viane", "Van den heede")
+    assertAuthorship("1771")
+        .combAuthors("1771")
         .nothingElse();
 
+    assertAuthorship("Pallas, 1771")
+        .combAuthors("1771", "Pallas")
+        .nothingElse();
 
 
     // https://github.com/CatalogueOfLife/data/issues/176

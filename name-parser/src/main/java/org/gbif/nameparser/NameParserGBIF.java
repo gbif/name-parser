@@ -59,6 +59,10 @@ public class NameParserGBIF implements NameParser {
 
   @Override
   public ParsedAuthorship parseAuthorship(String authorship) throws UnparsableNameException {
+    if (Strings.isNullOrEmpty(authorship)) {
+      throw new UnparsableNameException.UnparsableAuthorshipException(authorship);
+    }
+
     // override exists?
     ParsedAuthorship over = configs.forAuthorship(authorship);
     if (over != null) {
@@ -67,7 +71,31 @@ public class NameParserGBIF implements NameParser {
     }
 
     AuthorshipParsingJob job = new AuthorshipParsingJob(authorship, configs);
-    return job.call();
+    FutureTask<ParsedName> task = new FutureTask<>(job);
+    EXEC.execute(task);
+
+    try {
+      return task.get(timeout, TimeUnit.MILLISECONDS);
+
+    } catch (InterruptedException e) {
+      LOG.warn("Thread got interrupted. Stop authorship parse job {}", authorship, e);
+
+    } catch (ExecutionException e) {
+      // unwrap UnparsableNameException
+      if (e.getCause() instanceof UnparsableNameException) {
+        throw (UnparsableNameException) e.getCause();
+
+      } else {
+        LOG.warn("ExecutionException when parsing authorship: {}", authorship, e);
+      }
+
+    } catch (TimeoutException e) {
+      // parsing timeout
+      LOG.warn("Parsing timeout for authorship: {}", authorship);
+      task.cancel(true);
+    }
+
+    throw new UnparsableNameException.UnparsableAuthorshipException(authorship);
   }
 
   /**
