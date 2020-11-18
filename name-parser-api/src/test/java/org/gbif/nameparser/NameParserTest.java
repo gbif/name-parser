@@ -949,11 +949,6 @@ public abstract class NameParserTest {
         .type(OTU)
         .nothingElse();
 
-    assertName("Ellin6529", "Ellin6529")
-        .monomial("Ellin6529")
-        .type(OTU)
-        .nothingElse();
-
     assertName("E2", "E2")
         .monomial("E2")
         .type(OTU)
@@ -986,26 +981,6 @@ public abstract class NameParserTest {
 
     assertName("18JY21-1 sp004344915", "18JY21-1 sp004344915")
         .species("18JY21-1", "sp004344915")
-        .type(OTU)
-        .nothingElse();
-
-    assertName("18JY21-1 sp004344915", "18JY21-1 sp004344915")
-        .species("", "")
-        .type(OTU)
-        .nothingElse();
-
-    assertName("18JY21-1 sp004344915", "18JY21-1 sp004344915")
-        .species("", "")
-        .type(OTU)
-        .nothingElse();
-
-    assertName("18JY21-1 sp004344915", "18JY21-1 sp004344915")
-        .species("", "")
-        .type(OTU)
-        .nothingElse();
-
-    assertName("18JY21-1 sp004344915", "18JY21-1 sp004344915")
-        .species("", "")
         .type(OTU)
         .nothingElse();
 

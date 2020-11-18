@@ -191,8 +191,8 @@ class ParsingJob implements Callable<ParsedName> {
   // SH  = SH000003.07FU
   // BIN = BOLD:AAA0003
   private static final Pattern OTU_PATTERN = Pattern.compile("(BOLD:[0-9A-Z]{7}$|SH[0-9]{6,8}\\.[0-9]{2}FU)", CASE_INSENSITIVE);
-  private static final String GTDB_STRAIN_BLOCK = "(?:[A-Z]*[0-9]+(?:b)?[A-Z]*" +
-      "|FULL|bin)"; // specific tokens
+  private static final String GTDB_STRAIN_BLOCK = "(?:(?:[A-Z]+(?:[a-z]{1,2}[A-Z]*)?)?[0-9]+(?:b)?[A-Z]*" +
+      "|FULL|COMBO|bin)"; // specific tokens
   private static final String GTDB_OTU_MONOMIAL = "(?:(?:"+GTDB_STRAIN_BLOCK+"-?)*(?:"+GTDB_STRAIN_BLOCK+")(?:_[A-Z])?|[A-Z][a-z]{2,}_[A-Z])";
   private static final Pattern GTDB_MONOMIAL_PATTERN = Pattern.compile("^" + GTDB_OTU_MONOMIAL + "$");
   private static final Pattern GTDB_BINOMIAL_PATTERN = Pattern.compile("^(" + GTDB_OTU_MONOMIAL + ") +(sp[0-9]+)$");
