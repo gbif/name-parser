@@ -91,7 +91,7 @@ class ParsingJob implements Callable<ParsedName> {
   static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/,-][0-9]{1,4})?";
 
   private static final String NOTHO = "notho";
-  static final String RANK_MARKER = ("(?:"+NOTHO+")?(?:(?<!f[ .])sp|" +
+  static final String RANK_MARKER = ("(?:"+NOTHO+"|agamo)?(?:(?<!f[ .])sp|" +
         StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") +
     ")")
     // avoid hort.ex matches

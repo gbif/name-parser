@@ -19,7 +19,7 @@ public class RankUtils {
   /**
    * Matches all dots ("."), underscores ("_") and dashes ("-").
    */
-  private static final Pattern NORMALIZE_RANK_MARKER = Pattern.compile("(?:[._ -]+|\\bnotho)");
+  private static final Pattern NORMALIZE_RANK_MARKER = Pattern.compile("(?:[._ -]+|\\b(?:notho|agamo))");
   
   private static Map<String, Rank> buildRankMarkerMap(Stream<Rank> ranks, Map.Entry<String, Rank>... additions) {
     Map<String, Rank> map = Maps.newHashMap();
@@ -134,6 +134,7 @@ public class RankUtils {
       Maps.immutableEntry("sv", SUBVARIETY),
       Maps.immutableEntry("v", VARIETY),
       Maps.immutableEntry("var", VARIETY),
+      Maps.immutableEntry("nvar", VARIETY),
       Maps.immutableEntry("\\*+", INFRASPECIFIC_NAME)
   );
   

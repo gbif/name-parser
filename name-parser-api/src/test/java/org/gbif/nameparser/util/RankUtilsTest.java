@@ -87,6 +87,8 @@ public class RankUtilsTest {
   
   @Test
   public void testRankMarkers() {
+    assertEquals(Rank.SUBSPECIES, RankUtils.inferRank("agamossp."));
+    assertEquals(Rank.SUBSPECIES, RankUtils.inferRank("nothossp."));
     for (Rank r : Rank.values()) {
       if (r.notOtherOrUnranked() && r != Rank.CULTIVAR_GROUP) {
         assertEquals(r, RankUtils.inferRank(r.getMarker()));
