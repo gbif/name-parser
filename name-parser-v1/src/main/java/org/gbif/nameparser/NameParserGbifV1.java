@@ -253,6 +253,8 @@ public class NameParserGbifV1 implements NameParser {
       case HYPOORDER: return Rank.SUPRAGENERIC_NAME;
       case MINORDER: return Rank.SUPRAGENERIC_NAME;
 
+      case SUBTERCLASS: return Rank.SUPRAGENERIC_NAME;
+
       case REALM: return Rank.SUPRAGENERIC_NAME;
       case SUBREALM: return Rank.SUPRAGENERIC_NAME;
     }

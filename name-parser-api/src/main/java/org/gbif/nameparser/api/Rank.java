@@ -55,6 +55,7 @@ public enum Rank {
   CLASS("classes", "cl."),
   SUBCLASS("subclasses", "subcl."),
   INFRACLASS("infraclasses", "infracl."),
+  SUBTERCLASS("subterclasses", "subtcl."),
   PARVCLASS("parvclasses", "parvcl."),
   SUPERDIVISION("superdiv."),
   DIVISION("div."),
@@ -380,7 +381,7 @@ public enum Rank {
   private static final Map<Rank, Rank> MAJOR_RANKS;
   static {
     Map<Rank, Rank> map = new HashMap<>();
-    Pattern prefixes = Pattern.compile("^(SUPER|SUB|INFRA|GIGA|MAGN|GRAND|MIR|NAN|HYPO|MIN|PARV|MEGA|EPI)");
+    Pattern prefixes = Pattern.compile("^(SUPER|SUB(?:TER)?|INFRA|GIGA|MAGN|GRAND|MIR|NAN|HYPO|MIN|PARV|MEGA|EPI)");
     for (Rank r : Rank.values()) {
       Rank major = r;
       if (r.isInfraspecific()) {
@@ -411,6 +412,7 @@ public enum Rank {
       .put(LEGION, NomCode.ZOOLOGICAL)
       .put(SUBLEGION, NomCode.ZOOLOGICAL)
       .put(INFRALEGION, NomCode.ZOOLOGICAL)
+      .put(SUBTERCLASS, NomCode.ZOOLOGICAL)
       .put(PARVCLASS, NomCode.ZOOLOGICAL)
       .put(GIGAORDER, NomCode.ZOOLOGICAL)
       .put(MAGNORDER, NomCode.ZOOLOGICAL)
@@ -430,6 +432,7 @@ public enum Rank {
       .put(MORPH, NomCode.ZOOLOGICAL)
       .put(ABERRATION, NomCode.ZOOLOGICAL)
       .put(NATIO, NomCode.ZOOLOGICAL)
+
       .put(PROLES, NomCode.BOTANICAL)
       .put(SUPERSECTION, NomCode.BOTANICAL)
       .put(SECTION, NomCode.BOTANICAL)
