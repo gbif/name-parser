@@ -55,7 +55,7 @@ public enum Rank {
   CLASS("classes", "cl."),
   SUBCLASS("subclasses", "subcl."),
   INFRACLASS("infraclasses", "infracl."),
-  SUBTERCLASS("subterclasses", "subtcl."),
+  SUBTERCLASS("subterclasses", "subtercl."),
   PARVCLASS("parvclasses", "parvcl."),
   SUPERDIVISION("superdiv."),
   DIVISION("div."),
