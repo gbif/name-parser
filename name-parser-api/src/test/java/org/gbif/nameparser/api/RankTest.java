@@ -83,7 +83,21 @@ public class RankTest {
     assertTrue(Rank.DWC_RANKS.contains(Rank.SUBGENUS));
     assertTrue(Rank.DWC_RANKS.contains(Rank.SPECIES));
   }
-  
+
+  @Test
+  public void majorRanks() {
+    for (Rank r : Rank.values()) {
+      assertNotNull(r.getMajorRank());
+    }
+    assertEquals(Rank.FAMILY, Rank.SUPERFAMILY.getMajorRank());
+    assertEquals(Rank.FAMILY, Rank.EPIFAMILY.getMajorRank());
+    assertEquals(Rank.ORDER, Rank.MAGNORDER.getMajorRank());
+    assertEquals(Rank.ORDER, Rank.PARVORDER.getMajorRank());
+    assertEquals(Rank.INFRASPECIFIC_NAME, Rank.PATHOVAR.getMajorRank());
+    assertEquals(Rank.INFRASPECIFIC_NAME, Rank.VARIETY.getMajorRank());
+    assertEquals(Rank.INFRASPECIFIC_NAME, Rank.SUBFORM.getMajorRank());
+  }
+
   @Test
   public void testIsSpeciesOrBelow() {
     assertFalse(Rank.SUPERFAMILY.isSpeciesOrBelow());

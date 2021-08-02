@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.units.qual.A;
 import org.gbif.nameparser.api.*;
 import org.gbif.nameparser.util.RankUtils;
 import org.slf4j.Logger;
@@ -40,6 +41,13 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 class ParsingJob implements Callable<ParsedName> {
   static Logger LOG = LoggerFactory.getLogger(ParsingJob.class);
 
+  private static final Map<Rank, Rank> DIVISION2PHYLUM = ImmutableMap.of(
+      Rank.SUPERDIVISION, Rank.SUPERPHYLUM,
+      Rank.DIVISION, Rank.PHYLUM,
+      Rank.SUBDIVISION, Rank.SUBPHYLUM,
+      Rank.INFRADIVISION, Rank.INFRAPHYLUM
+  );
+
   private static final Splitter WHITESPACE_SPLITTER = Splitter.on(" ").trimResults().omitEmptyStrings();
   private static final CharMatcher AUTHORTEAM_DELIMITER = CharMatcher.anyOf(",&");
   private static final Splitter AUTHORTEAM_SPLITTER = Splitter.on(AUTHORTEAM_DELIMITER).trimResults().omitEmptyStrings();
@@ -59,9 +67,11 @@ class ParsingJob implements Callable<ParsedName> {
   // common 3 char or longer name suffices
   private static final String AUTHOR_TOKEN_3 = "fil|filius|hort|jun|junior|sen|senior";
   // common name suffices (ms=manuscript, not yet published)
-  private static final String AUTHOR_TOKEN = "(?:(?:\\p{Lu}|-[a-z])[\\p{Lu}\\p{Ll}'-]*" +
+  private static final String AUTHOR_TOKEN = "(?:" +
+      "(?<=\\bden )heede" +
+      "|(?:\\p{Lu}|-[a-z])[\\p{Lu}\\p{Ll}'-]*" +
       "|" + AUTHOR_TOKEN_3 +
-      "|al|f|j|jr|ms|sr|v|v[ao]n|bis|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|ter|'?t|y" +
+      "|al|f|j|jr|ms|sr|v|v[ao]n|zu[rm]?|bis|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|ter|'?t|y" +
     ")\\.?";
   @VisibleForTesting
   static final String AUTHOR = AUTHOR_TOKEN + "(?:[ '-]?" + AUTHOR_TOKEN + ")*";
@@ -81,7 +91,7 @@ class ParsingJob implements Callable<ParsedName> {
   static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/,-][0-9]{1,4})?";
 
   private static final String NOTHO = "notho";
-  static final String RANK_MARKER = ("(?:"+NOTHO+")?(?:(?<!f[ .])sp|" +
+  static final String RANK_MARKER = ("(?:"+NOTHO+"|agamo)?(?:(?<!f[ .])sp|" +
         StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") +
     ")")
     // avoid hort.ex matches
@@ -181,6 +191,11 @@ class ParsingJob implements Callable<ParsedName> {
   // SH  = SH000003.07FU
   // BIN = BOLD:AAA0003
   private static final Pattern OTU_PATTERN = Pattern.compile("(BOLD:[0-9A-Z]{7}$|SH[0-9]{6,8}\\.[0-9]{2}FU)", CASE_INSENSITIVE);
+  private static final String GTDB_STRAIN_BLOCK = "(?:(?:[A-Z]+(?:[a-z]{1,2}[A-Z]*)?)?[0-9]+(?:b)?[A-Z]*" +
+      "|FULL|COMBO|bin)"; // specific tokens
+  private static final String GTDB_OTU_MONOMIAL = "(?:(?:"+GTDB_STRAIN_BLOCK+"-?)*(?:"+GTDB_STRAIN_BLOCK+")(?:_[A-Z])?|[A-Z][a-z]{2,}_[A-Z])";
+  private static final Pattern GTDB_MONOMIAL_PATTERN = Pattern.compile("^" + GTDB_OTU_MONOMIAL + "$");
+  private static final Pattern GTDB_BINOMIAL_PATTERN = Pattern.compile("^(" + GTDB_OTU_MONOMIAL + ") +(sp[0-9]+)$");
   // spots a Candidatus bacterial name
   private static final String CANDIDATUS = "(Candidatus\\s|Ca\\.)";
   private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS);
@@ -494,7 +509,27 @@ class ParsingJob implements Callable<ParsedName> {
       pn.setState(ParsedName.State.COMPLETE);
       return true;
     }
-    
+
+    // GTDB OTU names
+    // https://github.com/gbif/name-parser/issues/74
+    m = GTDB_MONOMIAL_PATTERN.matcher(name);
+    if (m.find()) {
+      pn.setUninomial(m.group());
+      pn.setType(NameType.OTU);
+      pn.setRank(Rank.UNRANKED);
+      pn.setState(ParsedName.State.COMPLETE);
+      return true;
+    }
+    m = GTDB_BINOMIAL_PATTERN.matcher(name);
+    if (m.find()) {
+      pn.setGenus(m.group(1));
+      pn.setSpecificEpithet(m.group(2));
+      pn.setType(NameType.OTU);
+      pn.setRank(Rank.SPECIES);
+      pn.setState(ParsedName.State.COMPLETE);
+      return true;
+    }
+
     // BOLD style placeholders
     // https://github.com/gbif/name-parser/issues/45
     m = BOLD_PLACEHOLDERS.matcher(name);
@@ -771,7 +806,7 @@ class ParsingJob implements Callable<ParsedName> {
     // flag names that match doubtful patterns
     applyDoubtfulFlag(scientificName);
 
-    // determine rank if not yet assigned
+    // determine rank if not yet assigned or change according to code
     determineRank();
 
     // determine code if not yet assigned
@@ -1262,6 +1297,10 @@ class ParsingJob implements Callable<ParsedName> {
     if (pn.getRank().otherOrUnranked()) {
       pn.setRank(RankUtils.inferRank(pn));
     }
+    // division is used in botany as a synonym for phylum
+    if (DIVISION2PHYLUM.containsKey(pn.getRank()) && pn.getCode() != NomCode.ZOOLOGICAL) {
+      pn.setRank(DIVISION2PHYLUM.get(pn.getRank()));
+    }
   }
   
   private void determineCode() {
@@ -1589,7 +1628,7 @@ class ParsingJob implements Callable<ParsedName> {
       String author = iter.next();
       if (iter.hasNext() && author.length()>3 && !author.endsWith(".")) {
         String next = iter.next();
-        if (next.length()<3 || INITIALS.matcher(next).find()) {
+        if (INITIALS.matcher(next).find()) {
           // consider an initial and merge with last author
           authors.add(normInitials(next) + author);
         } else {

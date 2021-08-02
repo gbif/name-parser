@@ -38,8 +38,27 @@ public class AuthorshipParsingJob extends ParsingJob {
         super(authorship, Rank.UNRANKED, null, configs);
     }
 
+
+    /**
+     * Fully parse the supplied name also trying to extract authorships, a conceptual sec reference, remarks or notes
+     * on the nomenclatural status. In some cases the authorship parsing proves impossible and this nameparser will
+     * return null.
+     *
+     * For strings which are no scientific names and scientific names that cannot be expressed by the ParsedName class
+     * the parser will throw an UnparsableException with a given NameType and the original, unparsed name. This is the
+     * case for all virus names and proper hybrid formulas, so make sure you catch and process this exception.
+     *
+     * @throws UnparsableNameException
+     */
     @Override
-    void parse() throws UnparsableNameException {
+    public ParsedName call() throws UnparsableNameException {
+        long start = 0;
+        if (LOG.isDebugEnabled()) {
+            start = System.currentTimeMillis();
+        }
+
+        // clean name, removing seriously wrong things
+        name = preClean(scientificName);
 
         // preparse nomenclatural references
         preparseNomRef();
@@ -73,6 +92,11 @@ public class AuthorshipParsingJob extends ParsingJob {
         if (state != null) {
             pn.setState(state);
         }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Parsing time: {} for {}", (System.currentTimeMillis() - start), pn);
+        }
+        return pn;
     }
 
     @Override

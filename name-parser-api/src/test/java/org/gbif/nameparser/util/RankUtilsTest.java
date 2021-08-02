@@ -5,9 +5,6 @@ import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -90,6 +87,8 @@ public class RankUtilsTest {
   
   @Test
   public void testRankMarkers() {
+    assertEquals(Rank.SUBSPECIES, RankUtils.inferRank("agamossp."));
+    assertEquals(Rank.SUBSPECIES, RankUtils.inferRank("nothossp."));
     for (Rank r : Rank.values()) {
       if (r.notOtherOrUnranked() && r != Rank.CULTIVAR_GROUP) {
         assertEquals(r, RankUtils.inferRank(r.getMarker()));

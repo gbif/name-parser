@@ -3,7 +3,7 @@
     <parent>
         <artifactId>name-parser-motherpom</artifactId>
         <groupId>org.gbif</groupId>
-        <version>3.6.1-ala-SNAPSHOT</version>
+        <version>3.6.2-ala-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

@@ -5,8 +5,11 @@ import org.gbif.nameparser.api.ParsedName;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class ParserConfigs {
+  private final static Pattern MORE_WS = Pattern.compile("[\\s,.+'\"&_—|-]+");
+  private final static Pattern MORE_WS2 = Pattern.compile("\\s*([(){}\\[\\]]+)\\s*");
 
   private final Map<String, ParsedName> names = new HashMap<>();
   private final Map<String, ParsedAuthorship> authorships = new HashMap<>();
@@ -35,7 +38,9 @@ public class ParserConfigs {
     return authorships.remove(norm(authorship));
   }
 
-  private static String norm(String x) {
-    return ParsingJob.preClean(x, null).toLowerCase();
+  static String norm(String x) {
+    x = ParsingJob.preClean(x, null).toLowerCase();
+    x = MORE_WS.matcher(x).replaceAll(" ");
+    return MORE_WS2.matcher(x).replaceAll(" $1 ");
   }
 }

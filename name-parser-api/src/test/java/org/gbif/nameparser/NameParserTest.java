@@ -7,10 +7,7 @@ import java.io.UnsupportedEncodingException;
 
 import com.google.common.collect.Iterables;
 import org.apache.commons.io.LineIterator;
-import org.checkerframework.checker.units.qual.A;
-import org.checkerframework.checker.units.qual.C;
 import org.gbif.nameparser.api.*;
-import org.junit.AfterClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -33,6 +30,38 @@ public abstract class NameParserTest {
   protected NameParserTest(NameParser parser) {
     this.parser = parser;
   }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/33
+   * https://github.com/gbif/name-parser/issues/66
+   */
+  @Test
+  @Ignore
+  public void sic() throws Exception {
+    assertName("Turbo porphyrites [sic, porphyria]", "Turbo porphyrites")
+        .species("Turbo", "porphyrites")
+        .partial("[sic, porphyria]")
+        .nothingElse();
+
+    assertName("Melanella hollandri [sic] var. detrita Kucik", "Melanella hollandri [sic] var. detrita Kucik")
+        .infraSpecies("Melanella", "hollandri", VARIETY, "detrita")
+        .combAuthors(null, "Kucik")
+        .nothingElse();
+
+    assertName("Alnetoidia (Alnella) [sic] sudzhuchenica Sohi, 1998", "")
+        .nothingElse();
+
+    assertName("Flavobacterium branchiophila (sic) Wakabayashi et al. 1989", "")
+        .nothingElse();
+
+    // https://lpsn.dsmz.de/text/glossary#corrigendum
+    assertName("Campylobacter lari corrig. Benjamin et al. 1984", "")
+        .nothingElse();
+
+    assertName("Campylobacter laridis (sic) Benjamin et al. 1984", "")
+        .nothingElse();
+  }
+
 
   /**
    * https://github.com/gbif/checklistbank/issues/87
@@ -638,7 +667,7 @@ public abstract class NameParserTest {
     
     // higher ranks should be marked as doubtful
     for (Rank r : Rank.values()) {
-      if (r.otherOrUnranked() || r.isSpeciesOrBelow()) continue;
+      if (r.otherOrUnranked() || r.isSpeciesOrBelow() || r.getMajorRank()==DIVISION) continue;
       NameAssertion ass = assertName("Achillea millefolium L.", r, "Achillea millefolium")
           .binomial("Achillea", null, "millefolium", r)
           .combAuthors(null, "L.")
@@ -858,7 +887,104 @@ public abstract class NameParserTest {
   
   @Test
   public void oTU() throws Exception {
-    
+
+    // https://github.com/gbif/name-parser/issues/74
+    assertName("Desulfobacterota_B", "Desulfobacterota_B")
+        .monomial("Desulfobacterota_B")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("UBA3054", "UBA3054")
+        .monomial("UBA3054")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("F0040", "F0040")
+        .monomial("F0040")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("AABM5-125-24", "AABM5-125-24")
+        .monomial("AABM5-125-24")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("B130-G9", "B130-G9")
+        .monomial("B130-G9")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("BMS3Abin14", "BMS3Abin14")
+        .monomial("BMS3Abin14")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("4572-55", "4572-55")
+        .monomial("4572-55")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("T1SED10-198M", "T1SED10-198M")
+        .monomial("T1SED10-198M")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("BMS3Abin14", "BMS3Abin14")
+        .monomial("BMS3Abin14")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("UBA11359_C", "UBA11359_C")
+        .monomial("UBA11359_C")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("01-FULL-45-15b", "01-FULL-45-15b")
+        .monomial("01-FULL-45-15b")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("E44-bin80", "E44-bin80")
+        .monomial("E44-bin80")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("E2", "E2")
+        .monomial("E2")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("9FT-COMBO-53-11", "9FT-COMBO-53-11")
+        .monomial("9FT-COMBO-53-11")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("AqS3", "AqS3")
+        .monomial("AqS3")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("Gp7-AA8", "Gp7-AA8")
+        .monomial("Gp7-AA8")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("0-14-0-10-38-17 sp002774085", "0-14-0-10-38-17 sp002774085")
+        .species("0-14-0-10-38-17", "sp002774085")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("01-FULL-45-15b sp001822655", "01-FULL-45-15b sp001822655")
+        .species("01-FULL-45-15b", "sp001822655")
+        .type(OTU)
+        .nothingElse();
+
+    assertName("18JY21-1 sp004344915", "18JY21-1 sp004344915")
+        .species("18JY21-1", "sp004344915")
+        .type(OTU)
+        .nothingElse();
+
+
     assertName("SH1508347.08FU", "SH1508347.08FU")
         .monomial("SH1508347.08FU")
         .type(OTU)
@@ -1050,11 +1176,17 @@ public abstract class NameParserTest {
         .combAuthors(null, "L.L.Daniel")
         .notho(INFRASPECIFIC)
         .nothingElse();
-    
   }
   
   @Test
   public void authorVariations() throws Exception {
+    //Van den heede works only if given as separate authorship
+    
+    //assertName("Asplenium cyprium Viane & Van den heede", "Asplenium cyprium")
+    //    .species("Asplenium", "cyprium")
+    //    .combAuthors(null, "Viane", "Van den heede")
+    //    .nothingElse();
+
     // bis and ter as author suffix
     // https://github.com/Sp2000/colplus-backend/issues/591
     assertName("Lagenophora queenslandica Jian Wang ter & A.R.Bean", "Lagenophora queenslandica")
@@ -1466,8 +1598,6 @@ public abstract class NameParserTest {
     assertNoName("&nbsp;");
     assertNoName("X");
     assertNoName("a");
-    assertNoName("143");
-    assertNoName("321-432");
     assertNoName("-,.#");
     assertNoName(" .");
   }
@@ -2054,6 +2184,28 @@ public abstract class NameParserTest {
 
   @Test
   public void authorshipOnly() throws Exception {
+    assertAuthorship("1771")
+        .combAuthors("1771")
+        .nothingElse();
+
+    assertAuthorship("Pallas, 1771")
+        .combAuthors("1771", "Pallas")
+        .nothingElse();
+
+
+    // https://github.com/CatalogueOfLife/data/issues/176
+    assertAuthorship("Maas & He")
+        .combAuthors(null, "Maas", "He")
+        .nothingElse();
+
+    assertAuthorship("Yang & Wu")
+        .combAuthors(null, "Yang", "Wu")
+        .nothingElse();
+
+    assertAuthorship("Freytag & Ma")
+        .combAuthors(null, "Freytag", "Ma")
+        .nothingElse();
+
     assertAuthorship("(Ristorcelli & Van ty) Wedd. ex Sch. Bip. (nom. nud.)")
             .basAuthors(null, "Ristorcelli", "Van ty")
             .combAuthors(null, "Sch.Bip.")
@@ -2125,53 +2277,74 @@ public abstract class NameParserTest {
             .basAuthors("1885", "van der Wulp")
             .nothingElse();
 
+    // https://www.ipni.org/a/40285-1
+    assertAuthorship("Viane & Van den heede")
+        .combAuthors(null, "Viane", "Van den heede")
+        .nothingElse();
+
+    assertAuthorship("van den Brink")
+        .combAuthors(null, "van den Brink")
+        .nothingElse();
+
+    assertAuthorship("Van de Kerckh.")
+        .combAuthors(null, "Van de Kerckh.")
+        .nothingElse();
+
+    assertAuthorship("Van de Putte")
+        .combAuthors(null, "Van de Putte")
+        .nothingElse();
+
+    assertAuthorship("Van Dersal")
+        .combAuthors(null, "Van Dersal")
+        .nothingElse();
+
     // turkish chars
     assertAuthorship("Ilçim, Çenet & Dadandi")
-            .combAuthors(null, "Ilçim", "Çenet", "Dadandi")
-            .nothingElse();
+        .combAuthors(null, "Ilçim", "Çenet", "Dadandi")
+        .nothingElse();
 
     assertAuthorship("S. Yildirimli")
-            .combAuthors(null, "S.Yildirimli")
-            .nothingElse();
+        .combAuthors(null, "S.Yildirimli")
+        .nothingElse();
 
     assertAuthorship("Şahin, Koca & Yildirim, 2012")
-            .combAuthors("2012", "Şahin", "Koca", "Yildirim")
-            .nothingElse();
+        .combAuthors("2012", "Şahin", "Koca", "Yildirim")
+        .nothingElse();
 
     assertAuthorship("L.f")
-            .combAuthors(null, "L.f")
-            .nothingElse();
+        .combAuthors(null, "L.f")
+        .nothingElse();
 
     assertAuthorship("(L.) G. Don filius")
-            .basAuthors(null, "L.")
-            .combAuthors(null, "G.Don filius")
-            .nothingElse();
+        .basAuthors(null, "L.")
+        .combAuthors(null, "G.Don filius")
+        .nothingElse();
 
     assertAuthorship("(L.) G. Don fil.")
-            .basAuthors(null, "L.")
-            .combAuthors(null, "G.Don fil.")
-            .nothingElse();
+        .basAuthors(null, "L.")
+        .combAuthors(null, "G.Don fil.")
+        .nothingElse();
 
     assertAuthorship("d'Urv.")
-            .combAuthors(null, "d'Urv.")
-            .nothingElse();
+        .combAuthors(null, "d'Urv.")
+        .nothingElse();
 
     assertAuthorship("Balsamo M Fregni E Tongiorgi P")
-            .combAuthors(null, "M.Balsamo", "E.Fregni", "P.Tongiorgi")
-            .nothingElse();
+        .combAuthors(null, "M.Balsamo", "E.Fregni", "P.Tongiorgi")
+        .nothingElse();
 
     assertAuthorship("Balsamo M Todaro MA")
-            .combAuthors(null, "M.Balsamo", "M.A.Todaro")
-            .nothingElse();
+        .combAuthors(null, "M.Balsamo", "M.A.Todaro")
+        .nothingElse();
 
     assertAuthorship("Cushman Em. Sellier de Civrieux, 1976")
-            .combAuthors("1976", "Cushman Em.Sellier de Civrieux")
-            .nothingElse();
+        .combAuthors("1976", "Cushman Em.Sellier de Civrieux")
+        .nothingElse();
 
     // http://dev.gbif.org/issues/browse/POR-101
     assertAuthorship("la Croix & P.J.Cribb")
-            .combAuthors(null, "la Croix", "P.J.Cribb")
-            .nothingElse();
+        .combAuthors(null, "la Croix", "P.J.Cribb")
+        .nothingElse();
 
     assertAuthorship("le Croix & P.J.Cribb")
             .combAuthors(null, "le Croix", "P.J.Cribb")

@@ -15,54 +15,52 @@
  */
 package org.gbif.nameparser.api;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 /**
- * An ordered taxonomic rank enumeration with the most frequently used values.
- * Several static methods, lists, sets and maps are provided to help with ordering and lookup from strings.
+ * An ordered taxonomic rank enumeration with most commonly used values.
+ * The ranks listed are code agnostic and if a rank is used both in zoology and botany it is the same enum value.
  *
- * @see <a href="http://rs.gbif.org/vocabulary/gbif/rank.xml">rs.gbif.org vocabulary</a>
+ * As some ranks are regulary placed in different orders in botany and zoology (e.g. section or series)
+ * we follow just one tradition, but mark those ranks as "ambiguous".
+ *
+ * Ranks also expose a variety of methods to deal with them programmatically, e.g map them to major ranks only,
+ * list Linnean ranks only, etc.
+ * Several static methods, lists, sets and maps are provided to help with ordering and lookup from strings.
  */
 public enum Rank {
-  
-  DOMAIN("dom."),
-  
-  REALM ("realm"),
-  
-  SUBREALM ("subrealm"),
 
+  DOMAIN("dom."),
+  REALM("realm"),
+  SUBREALM("subrealm"),
   SUPERKINGDOM("superreg."),
-  
   KINGDOM("reg."),
-  
   SUBKINGDOM("subreg."),
-  
   INFRAKINGDOM("infrareg."),
-  
-  SUPERPHYLUM("superphyl."),
-  
-  PHYLUM("phyl."),
-  
-  SUBPHYLUM("subphyl."),
-  
-  INFRAPHYLUM("infraphyl."),
-  
-  SUPERCLASS("supercl."),
-  
-  CLASS("cl."),
-  
-  SUBCLASS("subcl."),
-  
-  INFRACLASS("infracl."),
-  
-  PARVCLASS("parvcl."),
-  
+  SUPERPHYLUM("superphyla", "superphyl."),
+  PHYLUM("phyla", "phyl."),
+  SUBPHYLUM("subphyla", "subphyl."),
+  INFRAPHYLUM("infraphyla", "infraphyl."),
+  SUPERCLASS("superclasses", "supercl."),
+  CLASS("classes", "cl."),
+  SUBCLASS("subclasses", "subcl."),
+  INFRACLASS("infraclasses", "infracl."),
+  SUBTERCLASS("subterclasses", "subtercl."),
+  PARVCLASS("parvclasses", "parvcl."),
+  SUPERDIVISION("superdiv."),
+  DIVISION("div."),
+  SUBDIVISION("subdiv."),
+  INFRADIVISION("infradiv."),
   SUPERLEGION("superleg."),
   
   /**
@@ -109,19 +107,19 @@ public enum Rank {
   
   PARVORDER("parvord."),
 
-  MEGAFAMILY("megafam."),
+  MEGAFAMILY("megafamilies", "megafam."),
   
-  GRANDFAMILY("grandfam."),
+  GRANDFAMILY("grandfamilies", "grandfam."),
   
-  SUPERFAMILY("superfam."),
+  SUPERFAMILY("superfamilies", "superfam."),
   
-  EPIFAMILY("epifam."),
+  EPIFAMILY("epifamilies", "epifam."),
   
-  FAMILY("fam."),
+  FAMILY("families", "fam."),
   
-  SUBFAMILY("subfam."),
+  SUBFAMILY("subfamilies", "subfam."),
   
-  INFRAFAMILY("infrafam."),
+  INFRAFAMILY("infrafamilies", "infrafam."),
   
   SUPERTRIBE("supertrib."),
   
@@ -136,11 +134,11 @@ public enum Rank {
    */
   SUPRAGENERIC_NAME("supragen."),
   
-  GENUS("gen."),
+  GENUS("genera", "gen."),
   
-  SUBGENUS("subgen."),
+  SUBGENUS("subgenera", "subgen."),
   
-  INFRAGENUS("infrag."),
+  INFRAGENUS("infragenera", "infrag."),
   
   SUPERSECTION("supersect."),
   
@@ -148,29 +146,27 @@ public enum Rank {
   
   SUBSECTION("subsect."),
   
-  SUPERSERIES("superser."),
+  SUPERSERIES("superseries", "superser."),
   
-  SERIES("ser."),
+  SERIES("series", "ser."),
   
-  SUBSERIES("subser."),
+  SUBSERIES("subseries", "subser."),
   
   /**
-   * used for any other unspecific rank below genera and above species aggregates.
+   * Used for any other unspecific rank below genera and above species aggregates.
    */
   INFRAGENERIC_NAME("infragen."),
   
   /**
-   * A loosely defined group of species.
-   * Zoology: Aggregate - a group of species, other than a subgenus, within a genus. An aggregate may be denoted by a group name interpolated in parentheses.
-   * The Berlin/MoreTax model notes: [these] aren't taxonomic ranks but cirumscriptions because on the one hand they are necessary for the concatenation
-   * of the fullname and on the other hand they are necessary for distinguishing the aggregate or species group from the microspecies.
+   * A loosely defined group of species, often in flux.
+   * Often also called species complex, or superspecies.
    */
   SPECIES_AGGREGATE("agg."),
   
-  SPECIES("sp."),
+  SPECIES("species", "sp."),
   
   /**
-   * used for any other unspecific rank below species.
+   * Used for any unspecific rank below species.
    */
   INFRASPECIFIC_NAME("infrasp."),
   
@@ -183,7 +179,7 @@ public enum Rank {
    */
   GREX("gx"),
   
-  SUBSPECIES("subsp."),
+  SUBSPECIES("subspecies", "subsp."),
   
   /**
    * Rank in use from the code for cultivated plants.
@@ -202,17 +198,17 @@ public enum Rank {
    * <p>
    * From Spooner et al., Horticultural Reviews 28 (2003): 1-60
    */
-  CONVARIETY("convar."),
+  CONVARIETY("convarieties", "convar."),
   
   /**
-   * used also for any other unspecific rank below subspecies.
+   * Used also for any unspecific rank below subspecies.
    */
   INFRASUBSPECIFIC_NAME("infrasubsp."),
   
   /**
    * Botanical legacy rank for a race, recommended in botanical code from 1868
    */
-  PROLES("prol."),
+  PROLES("proles", "prol."),
   
   /**
    * Zoological legacy rank
@@ -229,9 +225,9 @@ public enum Rank {
    */
   MORPH("morph"),
   
-  VARIETY("var."),
+  VARIETY("varieties", "var."),
   
-  SUBVARIETY("subvar."),
+  SUBVARIETY("subvarieties", "subvar."),
   
   FORM("f."),
   
@@ -364,9 +360,14 @@ public enum Rank {
    * A set of ranks which are treated differently in different groups of organisms and usually between botany and zoology.
    */
   private static final Set<Rank> AMBIGUOUS_RANKS = ImmutableSet.of(
+      SUPERSECTION,
       SECTION,
       SUBSECTION,
-      SERIES
+      SUPERSERIES,
+      SERIES,
+      SUBSERIES,
+      OTHER,
+      UNRANKED
   );
   
   private static final Set<Rank> LEGACY_RANKS = ImmutableSet.of(
@@ -376,8 +377,42 @@ public enum Rank {
       PROLES,
       CONVARIETY
   );
-  
+
+  private static final Map<Rank, Rank> MAJOR_RANKS;
+  static {
+    Map<Rank, Rank> map = new HashMap<>();
+    Pattern prefixes = Pattern.compile("^(SUPER|SUB(?:TER)?|INFRA|GIGA|MAGN|GRAND|MIR|NAN|HYPO|MIN|PARV|MEGA|EPI)");
+    for (Rank r : Rank.values()) {
+      Rank major = r;
+      if (r.isInfraspecific()) {
+        major = Rank.INFRASPECIFIC_NAME;
+      } else {
+        Matcher m = prefixes.matcher(r.name());
+        if (m.find()) {
+          String name = m.replaceFirst("");
+          try {
+            major = Rank.valueOf(name);
+          } catch (IllegalArgumentException e) {
+          }
+        }
+      }
+      map.put(r, major);
+    }
+    // manual fixes
+    map.put(Rank.SPECIES_AGGREGATE, Rank.SPECIES);
+    MAJOR_RANKS = ImmutableMap.copyOf(map);
+  }
+
   private static final Map<Rank, NomCode> RANK2CODE = ImmutableMap.<Rank, NomCode>builder()
+      .put(SUPERDIVISION, NomCode.ZOOLOGICAL)
+      .put(DIVISION, NomCode.ZOOLOGICAL)
+      .put(SUBDIVISION, NomCode.ZOOLOGICAL)
+      .put(INFRADIVISION, NomCode.ZOOLOGICAL)
+      .put(SUPERLEGION, NomCode.ZOOLOGICAL)
+      .put(LEGION, NomCode.ZOOLOGICAL)
+      .put(SUBLEGION, NomCode.ZOOLOGICAL)
+      .put(INFRALEGION, NomCode.ZOOLOGICAL)
+      .put(SUBTERCLASS, NomCode.ZOOLOGICAL)
       .put(PARVCLASS, NomCode.ZOOLOGICAL)
       .put(GIGAORDER, NomCode.ZOOLOGICAL)
       .put(MAGNORDER, NomCode.ZOOLOGICAL)
@@ -387,10 +422,6 @@ public enum Rank {
       .put(HYPOORDER, NomCode.ZOOLOGICAL)
       .put(MINORDER, NomCode.ZOOLOGICAL)
       .put(PARVORDER, NomCode.ZOOLOGICAL)
-      .put(SUPERLEGION, NomCode.ZOOLOGICAL)
-      .put(LEGION, NomCode.ZOOLOGICAL)
-      .put(SUBLEGION, NomCode.ZOOLOGICAL)
-      .put(INFRALEGION, NomCode.ZOOLOGICAL)
       .put(SUPERCOHORT, NomCode.ZOOLOGICAL)
       .put(COHORT, NomCode.ZOOLOGICAL)
       .put(SUBCOHORT, NomCode.ZOOLOGICAL)
@@ -401,7 +432,7 @@ public enum Rank {
       .put(MORPH, NomCode.ZOOLOGICAL)
       .put(ABERRATION, NomCode.ZOOLOGICAL)
       .put(NATIO, NomCode.ZOOLOGICAL)
-      
+
       .put(PROLES, NomCode.BOTANICAL)
       .put(SUPERSECTION, NomCode.BOTANICAL)
       .put(SECTION, NomCode.BOTANICAL)
@@ -429,15 +460,22 @@ public enum Rank {
       .build();
   
   private final String marker;
-  
+  private final String plural;
+
   Rank() {
     this(null);
   }
   
   Rank(String marker) {
     this.marker = marker;
+    this.plural = name().toLowerCase() + "s";
   }
-  
+
+  Rank(String plural, String marker) {
+    this.plural = plural;
+    this.marker = marker;
+  }
+
   public String getMarker() {
     return marker;
   }
@@ -481,7 +519,16 @@ public enum Rank {
     }
     return false;
   }
-  
+
+  /**
+   * Return the major rank (incl all Linnean ranks) this rank belongs to stripping of its prefix, e.g. phylum for subphylum.
+   * For infraspecific ranks INFRASPECIFIC_NAME is returned.
+   * Ranks which cannot be mapped to a major rank return itself, never null.
+   */
+  public Rank getMajorRank() {
+    return MAJOR_RANKS.get(this);
+  }
+
   public boolean isSpeciesOrBelow() {
     return ordinal() >= SPECIES_AGGREGATE.ordinal() && notOtherOrUnranked();
   }
@@ -549,7 +596,7 @@ public enum Rank {
   public boolean isAmbiguous() {
     return AMBIGUOUS_RANKS.contains(this);
   }
-  
+
   /**
    * @return true if the rank is considered a legacy rank not used anymore in current nomenclature.
    */

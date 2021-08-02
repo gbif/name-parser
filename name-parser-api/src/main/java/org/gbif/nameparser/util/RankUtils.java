@@ -4,13 +4,9 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
-
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.*;
 import org.gbif.nameparser.api.LinneanName;
 import org.gbif.nameparser.api.NomCode;
-import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
 
 import static org.gbif.nameparser.api.Rank.*;
@@ -23,7 +19,7 @@ public class RankUtils {
   /**
    * Matches all dots ("."), underscores ("_") and dashes ("-").
    */
-  private static final Pattern NORMALIZE_RANK_MARKER = Pattern.compile("(?:[._ -]+|\\bnotho)");
+  private static final Pattern NORMALIZE_RANK_MARKER = Pattern.compile("(?:[._ -]+|\\b(?:notho|agamo))");
   
   private static Map<String, Rank> buildRankMarkerMap(Stream<Rank> ranks, Map.Entry<String, Rank>... additions) {
     Map<String, Rank> map = Maps.newHashMap();
@@ -138,6 +134,7 @@ public class RankUtils {
       Maps.immutableEntry("sv", SUBVARIETY),
       Maps.immutableEntry("v", VARIETY),
       Maps.immutableEntry("var", VARIETY),
+      Maps.immutableEntry("nvar", VARIETY),
       Maps.immutableEntry("\\*+", INFRASPECIFIC_NAME)
   );
   
