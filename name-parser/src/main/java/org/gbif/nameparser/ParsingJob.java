@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.A;
 import org.gbif.nameparser.api.*;
 import org.gbif.nameparser.util.RankUtils;
 import org.slf4j.Logger;
@@ -267,7 +266,7 @@ class ParsingJob implements Callable<ParsedName> {
   // √ó is an utf garbaged version of the hybrid cross found in IPNI. See http://dev.gbif.org/issues/browse/POR-3081
   private static final Pattern NORM_HYBRIDS_GENUS = Pattern.compile("^\\s*(?:[+×xX]|√ó)\\s*([" + NAME_LETTERS + "])");
   private static final Pattern NORM_HYBRIDS_EPITH = Pattern.compile("^\\s*(×?" + MONOMIAL + ")\\s+(?:×|√ó|[xX]\\s)\\s*(" + EPITHET + ")");
-  private static final Pattern NORM_HYBRIDS_FORM = Pattern.compile("\\b([×xX]|√ó) ");
+  private static final Pattern NORM_HYBRIDS_FORMULA = Pattern.compile("[. ]([×xX]|√ó) ");
   private static final Pattern NORM_TF_GENUS = Pattern.compile("^([" + NAME_LETTERS + "])\\(([" + name_letters + "-]+)\\)\\.? ");
   private static final Pattern REPL_FINAL_PUNCTUATIONS = Pattern.compile("[,;:]+$");
   private static final Pattern REPL_IN_REF = Pattern.compile("[, ]?\\b(in|IN|apud) (" + AUTHOR_TEAM + ")(.*?)$");
@@ -965,7 +964,7 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       name = m.replaceFirst("$1 ×$2");
     }
-    m = NORM_HYBRIDS_FORM.matcher(name);
+    m = NORM_HYBRIDS_FORMULA.matcher(name);
     if (m.find()) {
       name = m.replaceAll(" × ");
     }

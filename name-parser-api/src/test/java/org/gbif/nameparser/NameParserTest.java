@@ -64,6 +64,20 @@ public abstract class NameParserTest {
 
 
   /**
+   * https://github.com/gbif/portal-feedback/issues/3535
+   */
+  @Test
+  public void noHybrids() throws Exception {
+    assertName("Lepidodens similis Zhang F & Pan Z-X in Zhang, F, Pan, Z-X, Wu, J, Ding, Y-H, Yu, D-Y & Wang, B-X, 2016", "Lepidodens similis")
+        .species("Lepidodens", "similis")
+        .combAuthors("2016", "Zhang F", "Pan Z-X")
+        .publishedIn("Zhang, F, Pan, Z-X, Wu, J, Ding, Y-H, Yu, D-Y & Wang, B-X, 2016")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
+
+  /**
    * https://github.com/gbif/checklistbank/issues/87
    */
   @Test
