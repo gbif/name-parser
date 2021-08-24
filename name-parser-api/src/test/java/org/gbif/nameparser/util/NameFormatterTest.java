@@ -528,8 +528,29 @@ public class NameFormatterTest {
         "Polypodium vulgare nothosubsp. mantoniae (Rothm.) Schidlay",
         "Polypodium vulgare nothosubsp. mantoniae (Rothm.) Schidlay");
   }
-  
-  
+
+
+  @Test
+  public void testPhraseName() throws Exception {
+    pn.setGenus("Acacia");
+    pn.setRank(Rank.SPECIES);
+    pn.setPhrase("Bigge Island");
+    pn.setVoucher("A.A. Mitchell 3436");
+    pn.setType(NameType.PHRASE);
+
+    assertEquals("Acacia sp. Bigge Island (A.A. Mitchell 3436)", NameFormatter.canonical(pn));
+    assertEquals("Acacia", NameFormatter.canonicalMinimal(pn));
+    assertEquals("Acacia sp. Bigge Island (A.A. Mitchell 3436)", NameFormatter.canonicalWithoutAuthorship(pn));
+    assertEquals("<i>Acacia</i> sp. Bigge Island (A.A. Mitchell 3436)", NameFormatter.canonicalCompleteHtml(pn));
+
+    pn.setNominatingParty("WA Herbarium");
+    assertEquals("Acacia sp. Bigge Island (A.A. Mitchell 3436) WA Herbarium", NameFormatter.canonical(pn));
+    assertEquals("Acacia", NameFormatter.canonicalMinimal(pn));
+    assertEquals("Acacia sp. Bigge Island (A.A. Mitchell 3436) WA Herbarium", NameFormatter.canonicalWithoutAuthorship(pn));
+    assertEquals("<i>Acacia</i> sp. Bigge Island (A.A. Mitchell 3436) WA Herbarium", NameFormatter.canonicalCompleteHtml(pn));
+
+  }
+
   private Authorship authorship(String year, String... authors) {
     Authorship a = new Authorship();
     a.setYear(year);

@@ -217,7 +217,7 @@ public class NameFormatter {
       }
       
       if (n.getSpecificEpithet() == null) {
-        if (showIndet && n.getGenus() != null && n.getCultivarEpithet() == null) {
+        if ((showIndet && n.getGenus() != null && n.getCultivarEpithet() == null) || (showPhrase && n.getType() == NameType.PHRASE)) {
           if (n.getRank() != null && n.getRank().isSpeciesOrBelow()) {
             // no species epithet given, indetermined!
             if (n.getRank().isInfraspecific()) {
