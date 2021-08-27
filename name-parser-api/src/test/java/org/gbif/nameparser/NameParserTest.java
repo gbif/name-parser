@@ -740,7 +740,38 @@ public abstract class NameParserTest {
         .combAuthors(null, "Lammers")
         .nothingElse();
   }
-  
+
+  @Test
+  public void oddFungiRanks() throws Exception {
+    assertName("Cyphelium disseminatum ⍺ subsessile", "Cyphelium disseminatum subsessile")
+        .infraSpecies("Cyphelium", "disseminatum", INFRASPECIFIC_NAME, "subsessile")
+        .nothingElse();
+
+    assertName("Capitularia fimbriata *** carpophora", "Capitularia fimbriata carpophora")
+        .infraSpecies("Capitularia", "fimbriata", INFRASPECIFIC_NAME, "carpophora")
+        .nothingElse();
+
+    assertName("Cyphelium disseminatum c subsessile", "Cyphelium disseminatum subsessile")
+        .infraSpecies("Cyphelium", "disseminatum", INFRASPECIFIC_NAME, "subsessile")
+        .nothingElse();
+
+    assertName("Cyphelium disseminatum g subsessile", "Cyphelium disseminatum subsessile")
+        .infraSpecies("Cyphelium", "disseminatum", INFRASPECIFIC_NAME, "subsessile")
+        .nothingElse();
+  }
+
+  @Test
+  @Ignore
+  public void oddFungiRanksUnsupported() throws Exception {
+    assertName("Capitularia fimbriata ⍺ vulgaris 3 tubaeformis *** carpophora", "Capitularia fimbriata carpophora")
+        .infraSpecies("Capitularia", "fimbriata", INFRASPECIFIC_NAME, "carpophora")
+        .nothingElse();
+
+    assertName("Capitularia pyxidata ß longipes H. carpophora Floerke", "Capitularia pyxidata carpophora")
+        .infraSpecies("Capitularia", "pyxidata", INFRASPECIFIC_NAME, "carpophora")
+        .nothingElse();
+  }
+
   @Test
   @Ignore
   public void strains() throws Exception {
