@@ -399,7 +399,9 @@ class ParsingJob implements Callable<ParsedName> {
   private static final String DESC_WORD = "[" + NAME_LETTERS + "][" + ALL_LETTERS_NUMBERS + ".\\-_]*";
   private static final String LOCATION_OR_DESC = "(?:\\d+\\.?|" + DESC_WORD + "(?:\\s+" + DESC_WORD +")*)";
   private static final String DESCRIPTIVE_PHRASE = "(?:'" + LOCATION_OR_DESC + "'|" + LOCATION_OR_DESC + ")";
-  private static final String VOUCHER = AUTHOR_TEAM_WS +"\\s+(?:[A-Z]+[0-9]+|[0-9/]+)";
+  private static final String ANNOTATION = "(?:\\s+[a-z.]+)?";
+  private static final String VOUCHER_NUMBER = "(?:[A-Z]+[0-9]+|[0-9/]+|[0-9]+/[A-Za-z]+/[0-9]+)";
+  private static final String VOUCHER = AUTHOR_TEAM_WS + ANNOTATION + "\\s+" + VOUCHER_NUMBER;
   private static final String NOTE = "\\[([^]]+)]";
 
   public static final Pattern PHRASE_NAME = Pattern.compile("^" +

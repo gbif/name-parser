@@ -241,6 +241,9 @@ public class ParsingJobTest {
     checkPattern(ParsingJob.PHRASE_NAME, "Toechima sp. East Alligator (J.Russell-Smith 8418) NT Herbarium", "Toechima", "sp", "East Alligator", "J.Russell-Smith 8418", "NT Herbarium", null);
     checkPattern(ParsingJob.PHRASE_NAME, "Goodenia sp. Bachsten Creek (M.D. Barrett 685) WA Herbarium");
     checkPattern(ParsingJob.PHRASE_NAME, "Baeckea sp. Beringbooding (AR Main 11/9/1957)", "Baeckea", "sp", "Beringbooding", "AR Main 11/9/1957", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Sida sp. Walhallow Station (C.Edgood 28/Oct/94)", "Sida", "sp", "Walhallow Station", "C.Edgood 28/Oct/94", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Sida sp. B (C.Dunlop 1739)", "Sida", "sp", "B", "C.Dunlop 1739", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Grevillea brachystylis subsp. Busselton (G.J.Keighery s.n. 28/8/1985)", "Grevillea brachystylis", "subsp", "Busselton", "G.J.Keighery s.n. 28/8/1985", null, null);
     checkPattern(ParsingJob.PHRASE_NAME, "Baeckea sp. Calingiri (F.Hort 1710)");
     checkPattern(ParsingJob.PHRASE_NAME, "Baeckea sp. East Yuna (R Spjut & C Edson 7077)");
     checkPattern(ParsingJob.PHRASE_NAME, "Acacia sp. Goodlands (BR Maslin 7761) [aff. resinosa]", "Acacia", "sp", "Goodlands", "BR Maslin 7761", null, "[aff. resinosa]");
