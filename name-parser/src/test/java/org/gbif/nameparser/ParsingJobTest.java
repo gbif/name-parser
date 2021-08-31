@@ -242,6 +242,7 @@ public class ParsingJobTest {
     checkPattern(ParsingJob.PHRASE_NAME, "Goodenia sp. Bachsten Creek (M.D. Barrett 685) WA Herbarium");
     checkPattern(ParsingJob.PHRASE_NAME, "Baeckea sp. Beringbooding (AR Main 11/9/1957)", "Baeckea", "sp", "Beringbooding", "AR Main 11/9/1957", null, null);
     checkPattern(ParsingJob.PHRASE_NAME, "Sida sp. Walhallow Station (C.Edgood 28/Oct/94)", "Sida", "sp", "Walhallow Station", "C.Edgood 28/Oct/94", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Elaeocarpus sp. Rocky Creek (Hunter s.n., 16 Sep 1993)", "Elaeocarpus", "sp", "Rocky Creek", "Hunter s.n., 16 Sep 1993", null);
     checkPattern(ParsingJob.PHRASE_NAME, "Sida sp. B (C.Dunlop 1739)", "Sida", "sp", "B", "C.Dunlop 1739", null, null);
     checkPattern(ParsingJob.PHRASE_NAME, "Grevillea brachystylis subsp. Busselton (G.J.Keighery s.n. 28/8/1985)", "Grevillea brachystylis", "subsp", "Busselton", "G.J.Keighery s.n. 28/8/1985", null, null);
     checkPattern(ParsingJob.PHRASE_NAME, "Baeckea sp. Calingiri (F.Hort 1710)");
@@ -251,7 +252,8 @@ public class ParsingJobTest {
     checkPattern(ParsingJob.PHRASE_NAME, "Atrichornis (Rahcinta) sp Glory (BR Maslin 7711)", "Atrichornis (Rahcinta)", "sp", "Glory", "BR Maslin 7711", null);
     checkPattern(ParsingJob.PHRASE_NAME, "Acacia mutabilis subsp. Young River (G.F.Craig 2052)", "Acacia mutabilis", "subsp", "Young River", "G.F.Craig 2052", null);
     checkPattern(ParsingJob.PHRASE_NAME, "Acacia mutabilis Maslin subsp. Young River (G.F.Craig 2052)", "Acacia mutabilis Maslin", "subsp", "Young River", "G.F.Craig 2052", null);
-    assertFalse(ParsingJob.PHRASE_NAME.matcher("Acacia sp. \"Morning Glory\"").matches());
+    assertFalse(ParsingJob.PHRASE_NAME.matcher( "Elaeocarpus sp. Rocky Creek").matches()); // Looks like an author
+    assertFalse(ParsingJob.PHRASE_NAME.matcher("Acacia sp. \"Morning Glory\"").matches()); // Looks like a cultivar
   }
 
   private static void checkPattern(Pattern pattern, String test, String... parts) {
