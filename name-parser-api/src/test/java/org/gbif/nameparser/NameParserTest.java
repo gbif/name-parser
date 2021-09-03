@@ -76,6 +76,24 @@ public abstract class NameParserTest {
   }
 
   /**
+   * https://github.com/gbif/name-parser/issues/72
+   */
+  @Test
+  public void zurStrassen() throws Exception {
+    assertName("Jezzinothrips cretacicus zur Strassen, 1973", "Jezzinothrips cretacicus")
+        .species("Jezzinothrips", "cretacicus")
+        .combAuthors("1973", "zur Strassen")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    assertName("Jezzinothrips cretacicus amazur Strassen, 1973", "Jezzinothrips cretacicus amazur")
+        .infraSpecies("Jezzinothrips", "cretacicus", INFRASPECIFIC_NAME, "amazur")
+        .combAuthors("1973", "Strassen")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/portal-feedback/issues/3535
    */
   @Test
