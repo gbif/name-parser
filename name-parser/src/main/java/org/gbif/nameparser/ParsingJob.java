@@ -228,7 +228,7 @@ class ParsingJob implements Callable<ParsedName> {
       ")");
   private static final String NOV_RANKS = "((?:[sS]ub)?(?:[fF]am|[gG]en|[sS]s?p(?:ec)?|[vV]ar|[fF](?:orma?)?))";
   private static final Pattern NOV_RANK_MARKER = Pattern.compile("\\b(" + NOV_RANKS + ")\\b");
-  static final String MANUSCRIPT_STATUS = "(?:(?:comb[. ]?)?ined|ms|in press)\\.?($|\\s)";
+  static final String MANUSCRIPT_STATUS = "(?:(?:comb[. ]?)?ined|ms|in press|unpublished)\\.?($|\\s)";
   static final Pattern MANUSCRIPT_STATUS_PATTERN = Pattern.compile(MANUSCRIPT_STATUS);
   static final Pattern EXTRACT_NOMSTATUS = Pattern.compile("[;, ]?"
       + "\\(?"
@@ -339,7 +339,7 @@ class ParsingJob implements Callable<ParsedName> {
   
   @VisibleForTesting
   static final Pattern POTENTIAL_NAME_PATTERN = Pattern.compile("^×?" + MONOMIAL + "\\b");
-  private static final Pattern REMOVE_INTER_RANKS = Pattern.compile("\\b((?:subsp|ssp|var)[ .].+)\\b("+RANK_MARKER+")\\b");
+  private static final Pattern REMOVE_INTER_RANKS = Pattern.compile("\\b((?:subsp|ssp|var)[ .].+)\\b("+RANK_MARKER+"\\b.{2,})");
   // allow only short lower case tokens to avoid matching to a real epithet
   private static final String SKIP_AUTHORS = "(?:\\b[ \\p{Ll}'(-]{0,3}\\p{Lu}.*?\\b)??";
   public static final Pattern NAME_PATTERN = Pattern.compile("^" +
@@ -710,6 +710,7 @@ class ParsingJob implements Callable<ParsedName> {
     // remove superflous epithets with rank markers
     m = REMOVE_INTER_RANKS.matcher(name);
     if (m.find()) {
+      logMatcher(m);
       pn.addWarning("Intermediate classification removed: " + m.group(1));
       name = m.replaceFirst("$2");
     }

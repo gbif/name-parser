@@ -179,6 +179,38 @@ public abstract class NameParserTest {
   }
 
   /**
+   * https://github.com/gbif/name-parser/issues/56
+   */
+  @Test
+  public void rechf() throws Exception {
+    assertName("Salix repens L. subsp. galeifolia Neumann ex Rech. f.", "Salix repens subsp. galeifolia")
+        .infraSpecies("Salix", "repens", SUBSPECIES, "galeifolia")
+        .combExAuthors("Neumann")
+        .combAuthors(null, "Rech.f.")
+        .code(BOTANICAL)
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/49
+   */
+  @Test
+  public void wfoAuthors() throws Exception {
+    assertName("Taraxacum vulgaris Backer ex K.Heyne", "Taraxacum vulgaris")
+        .species("Taraxacum", "vulgaris")
+        .combAuthors(null, "K.Heyne")
+        .combExAuthors("Backer")
+        .nothingElse();
+
+    assertName("Taraxacum oosterveldii Petrasiak & Johansen, unpublished", "Taraxacum oosterveldii")
+        .species("Taraxacum", "oosterveldii")
+        .combAuthors(null, "Petrasiak", "Johansen")
+        .nomNote("unpublished")
+        .manuscript()
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/portal-feedback/issues/3535
    */
   @Test
@@ -379,7 +411,7 @@ public abstract class NameParserTest {
         .infraSpecies("Achillea", "millefolium", Rank.VARIETY, "pallidotegula")
         .nothingElse();
   }
-  
+
   @Test
   public void exAuthors() throws Exception {
     assertName("Acacia truncata (Burm. f.) hort. ex Hoffmanns.", "Acacia truncata")
