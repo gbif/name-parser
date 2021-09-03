@@ -94,6 +94,14 @@ public abstract class NameParserTest {
   }
 
   /**
+   * https://github.com/gbif/name-parser/issues/68
+   */
+  @Test
+  public void cladeNames() throws Exception {
+    assertUnparsable("Amauropeltoid clade", INFORMAL);
+  }
+
+  /**
    * https://github.com/gbif/portal-feedback/issues/3535
    */
   @Test
@@ -105,7 +113,6 @@ public abstract class NameParserTest {
         .code(ZOOLOGICAL)
         .nothingElse();
   }
-
 
   /**
    * https://github.com/gbif/checklistbank/issues/87
