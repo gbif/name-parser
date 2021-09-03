@@ -139,6 +139,17 @@ public abstract class NameParserTest {
   }
 
   /**
+   * https://github.com/gbif/name-parser/issues/59
+   */
+  @Test
+  public void vonDen() throws Exception {
+    assertName("Gyalidea minuta van den Boom & Vezda", "Gyalidea minuta")
+        .species("Gyalidea", "minuta")
+        .combAuthors(null, "van den Boom", "Vezda")
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/portal-feedback/issues/3535
    */
   @Test
