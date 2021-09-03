@@ -150,6 +150,22 @@ public abstract class NameParserTest {
   }
 
   /**
+   * https://github.com/gbif/name-parser/issues/58
+   */
+  @Test
+  public void vdAuthors() throws Exception {
+    assertName("Taraxacum dunense v. Soest", "Taraxacum dunense")
+        .species("Taraxacum", "dunense")
+        .combAuthors(null, "v.Soest")
+        .nothingElse();
+
+    assertName("Rubus planus v. d. Beek", "Rubus planus")
+        .species("Rubus", "planus")
+        .combAuthors(null, "v.d.Beek")
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/portal-feedback/issues/3535
    */
   @Test

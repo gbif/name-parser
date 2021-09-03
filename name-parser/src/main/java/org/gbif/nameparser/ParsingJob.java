@@ -299,8 +299,8 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern STARTING_EPITHET = Pattern.compile("^\\s*(" + EPITHET + ")\\b");
   private static final Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\. *sp(?:ec)?\\b");
   private static final Pattern SENSU_LATU = Pattern.compile("\\bs\\.l\\.\\b");
+  private static final Pattern ABREV_AUTHOR_PREFIXES = Pattern.compile("\\b(v\\.(?:d\\.)?)("+AUTHOR+")");
 
-  
   private static final Pattern NOM_REFS = Pattern.compile("[,;.]?[\\p{Lu}\\p{Ll}\\s]*\\b(?:Proceedings|Journal|Annals|Bulletin|Systematics|Taxonomy|Series|Memoirs|Mitteilungen|Berichte)\\b.+$");
   // 4(2): 611
   private static final Pattern NOM_REF_VOLUME = Pattern.compile("[,;.]?[\\p{Lu}\\p{Ll}\\s]*\\b\\d+\\s*(//(\\d+//))?:\\s*\\d+\\b.+$");
@@ -694,6 +694,19 @@ class ParsingJob implements Callable<ParsedName> {
     // extract bibliographic in references
     extractPublishedIn();
 
+    // save abbreviated author prefixes, avoiding them to become rank markers, e.g. v.
+    final Map<String, String> authorPrefixes = new HashMap<>();
+    m = ABREV_AUTHOR_PREFIXES.matcher(name);
+    if (m.find()) {
+      StringBuffer sb = new StringBuffer();
+      do {
+        authorPrefixes.put(m.group(2), m.group(1));
+        m.appendReplacement(sb, m.group(2));
+      } while (m.find());
+      m.appendTail(sb);
+      name = sb.toString();
+    }
+
     // remove superflous epithets with rank markers
     m = REMOVE_INTER_RANKS.matcher(name);
     if (m.find()) {
@@ -736,6 +749,12 @@ class ParsingJob implements Callable<ParsedName> {
       }
     }
 
+    // apply saved author prefixes again
+    if (!authorPrefixes.isEmpty()) {
+      applyAuthorPrefix(authorPrefixes, pn.getBasionymAuthorship());
+      applyAuthorPrefix(authorPrefixes, pn.getCombinationAuthorship());
+    }
+
     // any manuscript epithet (species or infraspecies?)
     if (epithet != null) {
       if (pn.getSpecificEpithet() == null) {
@@ -771,6 +790,19 @@ class ParsingJob implements Callable<ParsedName> {
 
     // determine code if not yet assigned
     determineCode();
+  }
+
+  void applyAuthorPrefix(Map<String, String> prefixes, Authorship auth) {
+    applyAuthorPrefix(prefixes, auth.getAuthors());
+    applyAuthorPrefix(prefixes, auth.getExAuthors());
+  }
+  void applyAuthorPrefix(Map<String, String> prefixes, List<String> authors) {
+    for (int idx=0; idx<authors.size(); idx++) {
+      String a = authors.get(idx);
+      if (prefixes.containsKey(a)) {
+        authors.set(idx, prefixes.get(a) + a);
+      }
+    }
   }
 
   void extractPublishedIn() {
