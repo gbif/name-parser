@@ -94,6 +94,18 @@ public abstract class NameParserTest {
   }
 
   /**
+   * https://github.com/gbif/name-parser/issues/70
+   */
+  @Test
+  public void nomSuperfl() throws Exception {
+    assertName("Agrostis compressa Willd., nom. superfl.", "Agrostis compressa")
+        .species("Agrostis", "compressa")
+        .combAuthors(null, "Willd.")
+        .nomNote("nom.superfl.")
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/name-parser/issues/68
    */
   @Test
