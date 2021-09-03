@@ -228,7 +228,7 @@ class ParsingJob implements Callable<ParsedName> {
       ")");
   private static final String NOV_RANKS = "((?:[sS]ub)?(?:[fF]am|[gG]en|[sS]s?p(?:ec)?|[vV]ar|[fF](?:orma?)?))";
   private static final Pattern NOV_RANK_MARKER = Pattern.compile("\\b(" + NOV_RANKS + ")\\b");
-  static final String MANUSCRIPT_STATUS = "(?:(?:comb[. ]?)?ined|ms)\\.?($|\\s)";
+  static final String MANUSCRIPT_STATUS = "(?:(?:comb[. ]?)?ined|ms|in press)\\.?($|\\s)";
   static final Pattern MANUSCRIPT_STATUS_PATTERN = Pattern.compile(MANUSCRIPT_STATUS);
   static final Pattern EXTRACT_NOMSTATUS = Pattern.compile("[;, ]?"
       + "\\(?"

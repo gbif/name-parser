@@ -76,6 +76,19 @@ public abstract class NameParserTest {
   }
 
   /**
+   * https://github.com/gbif/name-parser/issues/75
+   */
+  @Test
+  public void oosterveldii() throws Exception {
+    assertName("Taraxacum piet-oosterveldii H. Øllg. in press", "Taraxacum piet-oosterveldii")
+        .species("Taraxacum", "piet-oosterveldii")
+        .combAuthors(null, "H.Øllg.")
+        .nomNote("in press")
+        .manuscript()
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/name-parser/issues/72
    */
   @Test
