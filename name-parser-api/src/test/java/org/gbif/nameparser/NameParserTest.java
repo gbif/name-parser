@@ -102,6 +102,19 @@ public abstract class NameParserTest {
   }
 
   /**
+   * https://github.com/gbif/name-parser/issues/67
+   */
+  @Test
+  public void doubleHyphenEpithet() throws Exception {
+    assertName("Grammitis friderici-et-pauli (Christ) Copel.", "Grammitis friderici-et-pauli")
+        .species("Grammitis", "friderici-et-pauli")
+        .combAuthors(null, "Copel.")
+        .basAuthors(null, "Christ")
+        .code(BOTANICAL)
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/portal-feedback/issues/3535
    */
   @Test
