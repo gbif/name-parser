@@ -108,7 +108,7 @@ class ParsingJob implements Callable<ParsedName> {
         ), "|") +
     ")";
   
-  private static final String UNALLOWED_EPITHETS = "aff|and|cf|from|ms|of|the|where";
+  private static final String UNALLOWED_EPITHETS = "aff|and|cf|des|from|ms|of|the|where";
   private static final String UNALLOWED_EPITHET_ENDING =
       "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
   // allow for cf/aff markers before epithets

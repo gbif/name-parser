@@ -127,6 +127,18 @@ public abstract class NameParserTest {
   }
 
   /**
+   * https://github.com/gbif/name-parser/issues/62
+   */
+  @Test
+  public void desLoges() throws Exception {
+    assertName("Desbrochers des Loges, 1881", "Desbrochers")
+        .monomial("Desbrochers")
+        .combAuthors("1881", "des Loges")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/portal-feedback/issues/3535
    */
   @Test
