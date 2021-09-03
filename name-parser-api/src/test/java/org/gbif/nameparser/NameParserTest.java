@@ -64,6 +64,18 @@ public abstract class NameParserTest {
 
 
   /**
+   * https://github.com/gbif/name-parser/issues/80
+   */
+  @Test
+  public void CkYang() throws Exception {
+    assertName("Nemopistha sinica C.-k. Yang, 1986", "Nemopistha sinica")
+        .species("Nemopistha", "sinica")
+        .combAuthors("1986", "C.-k.Yang")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/portal-feedback/issues/3535
    */
   @Test

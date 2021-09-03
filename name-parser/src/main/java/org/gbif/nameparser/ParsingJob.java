@@ -116,7 +116,7 @@ class ParsingJob implements Callable<ParsedName> {
   static final String EPITHET = "(?:[0-9]+-?|[a-z]-|[doml]'|(?:van|novae) [a-z])?"
             // avoid matching to rank markers
             + "(?!"+RANK_MARKER+"\\b)"
-            + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
+            + "[" + name_letters + "][" + name_letters + "+-]*(?<! d)[" + name_letters + "]"
             // avoid epithets and those ending with the unallowed endings, e.g. serovar and author suffices like filius
             + "(?<!(?:\\b(?:ex|l[ae]|v[ao]n|"+AUTHOR_TOKEN_3+")\\.?|\\b(?:"+UNALLOWED_EPITHETS+")|"+ UNALLOWED_EPITHET_ENDING +"))(?=\\b)";
   static final String MONOMIAL =
