@@ -152,6 +152,16 @@ public abstract class NameParserTest {
   }
 
   /**
+   * https://github.com/gbif/name-parser/issues/60
+   */
+  @Test
+  public void subg() throws Exception {
+    assertName("Centaurea L. subg. Jacea", "Centaurea subgen. Jacea")
+        .infraGeneric("Centaurea", SUBGENUS, "Jacea")
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/name-parser/issues/59
    */
   @Test
