@@ -156,6 +156,10 @@ public abstract class NameParserTest {
    */
   @Test
   public void subg() throws Exception {
+    assertName("Centaurea subg. Jacea", "Centaurea subgen. Jacea")
+        .infraGeneric("Centaurea", SUBGENUS, "Jacea")
+        .nothingElse();
+
     assertName("Centaurea L. subg. Jacea", "Centaurea subgen. Jacea")
         .infraGeneric("Centaurea", SUBGENUS, "Jacea")
         .nothingElse();
