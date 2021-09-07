@@ -470,6 +470,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
         Objects.equals(cultivarEpithet, that.cultivarEpithet) &&
         Objects.equals(strain, that.strain) &&
         Objects.equals(this.voucher, that.voucher) &&
+        Objects.equals(this.nominatingParty, that.nominatingParty) &&
         notho == that.notho &&
         Objects.equals(epithetQualifier, that.epithetQualifier) &&
         type == that.type;
@@ -478,7 +479,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet,
-        cultivarEpithet, strain, candidatus, notho, epithetQualifier, type);
+        cultivarEpithet, strain, voucher, nominatingParty, candidatus, notho, epithetQualifier, type);
   }
 
   @Override
