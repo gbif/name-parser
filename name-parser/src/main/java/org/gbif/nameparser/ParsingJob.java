@@ -625,16 +625,16 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // Extract phrase name phrase, voucher, nominating party and note
-    // This is done before normalisation so that we can preserve case on
+    // This is done before normalisation so that we can preserve case on the phrase
     m = PHRASE_NAME.matcher(name);
     if (m.find()) {
       name = m.group(1);
       pn.setRank(RankUtils.inferRank(m.group(2)));
-      pn.setPhrase(stripSurround(m.group(3), '\'', '\''));
+      pn.setStrain(stripSurround(m.group(3), '\'', '\''));
       pn.setVoucher(m.group(4));
       pn.setNominatingParty(m.group(5));
       pn.setTaxonomicNote(stripSurround(m.group(6), '[', ']'));
-      pn.setType(NameType.PHRASE);
+      pn.setType(NameType.INFORMAL);
     }
 
     // normalise name
@@ -1231,7 +1231,7 @@ class ParsingJob implements Callable<ParsedName> {
 
       } else if (pn.getRank().notOtherOrUnranked()) {
         if (pn.isPhraseName()) {
-          pn.setType(NameType.PHRASE);
+          pn.setType(NameType.INFORMAL);
         } else if (pn.isIndetermined()) {
           pn.setType(NameType.INFORMAL);
           pn.addWarning(Warnings.INDETERMINED);

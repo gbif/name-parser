@@ -137,7 +137,7 @@ public class NameAssertion {
             assertFalse(n.isManuscript());
             break;
           case PHRASE:
-            assertNull(n.getPhrase());
+            assertFalse(n.isPhraseName());
             assertNull(n.getVoucher());
             assertNull(n.getNominatingParty());
             break;
@@ -286,13 +286,13 @@ public class NameAssertion {
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());
     assertNull(n.getCultivarEpithet());
-    assertEquals(phrase, n.getPhrase());
+    assertEquals(phrase, n.getStrain());
     assertEquals(voucher, n.getVoucher());
     assertEquals(nominatingParty, n.getNominatingParty());
     assertTrue(n.isPhraseName());
     assertEquals(rank, n.getRank());
-    assertEquals(NameType.PHRASE, n.getType());
-    return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.TYPE, NP.PHRASE);
+    assertEquals(NameType.INFORMAL, n.getType());
+    return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.TYPE, NP.STRAIN, NP.PHRASE);
   }
 
   NameAssertion code(NomCode code) {

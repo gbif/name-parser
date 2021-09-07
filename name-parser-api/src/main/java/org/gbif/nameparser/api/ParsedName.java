@@ -79,23 +79,16 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   private String strain;
 
   /**
-   * The phrase in a phrase name.
-   *
-   * @see NameType#PHRASE
-   */
-  private String phrase;
-
-  /**
    * The voucher in a phrase name
    *
-   * @see NameType#PHRASE
+   * @see NameType#INFORMAL
    */
   private String voucher;
 
   /**
    * The nominating party for a phrase name
    *
-   * @see NameType#PHRASE
+   * @see NameType#INFORMAL
    */
   private String nominatingParty;
 
@@ -145,7 +138,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     infraspecificEpithet = pn.infraspecificEpithet;
     cultivarEpithet = pn.cultivarEpithet;
     strain = pn.strain;
-    phrase = pn.phrase;
     voucher = pn.voucher;
     nominatingParty = pn.nominatingParty;
     candidatus = pn.candidatus;
@@ -263,14 +255,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   
   public void setStrain(String strain) {
     this.strain = strain;
-  }
-
-  public String getPhrase() {
-    return phrase;
-  }
-
-  public void setPhrase(String phrase) {
-    this.phrase = phrase;
   }
 
   public String getVoucher() {
@@ -431,7 +415,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * @return True if this is a phrase name
    */
   public boolean isPhraseName() {
-    return phrase != null && !this.phrase.isEmpty() && this.voucher != null && !this.voucher.isEmpty();
+    return strain != null && !this.strain.isEmpty() && this.voucher != null && !this.voucher.isEmpty();
   }
   
   /**
@@ -485,7 +469,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
         Objects.equals(infraspecificEpithet, that.infraspecificEpithet) &&
         Objects.equals(cultivarEpithet, that.cultivarEpithet) &&
         Objects.equals(strain, that.strain) &&
-        Objects.equals(phrase, that.phrase) &&
         Objects.equals(this.voucher, that.voucher) &&
         notho == that.notho &&
         Objects.equals(epithetQualifier, that.epithetQualifier) &&
@@ -529,6 +512,12 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     }
     if (strain != null) {
       sb.append(" STR:").append(strain);
+    }
+    if (voucher != null) {
+      sb.append(" VOU:").append(voucher);
+    }
+    if (nominatingParty != null) {
+      sb.append(" NP:").append(nominatingParty);
     }
     if (getCombinationAuthorship() != null) {
       sb.append(" A:").append(getCombinationAuthorship());

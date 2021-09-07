@@ -534,9 +534,9 @@ public class NameFormatterTest {
   public void testPhraseName() throws Exception {
     pn.setGenus("Acacia");
     pn.setRank(Rank.SPECIES);
-    pn.setPhrase("Bigge Island");
+    pn.setStrain("Bigge Island");
     pn.setVoucher("A.A. Mitchell 3436");
-    pn.setType(NameType.PHRASE);
+    pn.setType(NameType.INFORMAL);
 
     assertEquals("Acacia sp. Bigge Island (A.A. Mitchell 3436)", NameFormatter.canonical(pn));
     assertEquals("Acacia", NameFormatter.canonicalMinimal(pn));
@@ -546,7 +546,7 @@ public class NameFormatterTest {
     pn.setNominatingParty("WA Herbarium");
     assertEquals("Acacia sp. Bigge Island (A.A. Mitchell 3436) WA Herbarium", NameFormatter.canonical(pn));
     assertEquals("Acacia", NameFormatter.canonicalMinimal(pn));
-    assertEquals("Acacia sp. Bigge Island (A.A. Mitchell 3436) WA Herbarium", NameFormatter.canonicalWithoutAuthorship(pn));
+    assertEquals("Acacia sp. Bigge Island (A.A. Mitchell 3436)", NameFormatter.canonicalWithoutAuthorship(pn));
     assertEquals("<i>Acacia</i> sp. Bigge Island (A.A. Mitchell 3436) WA Herbarium", NameFormatter.canonicalCompleteHtml(pn));
 
   }
