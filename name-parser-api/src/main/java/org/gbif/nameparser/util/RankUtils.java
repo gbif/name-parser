@@ -98,7 +98,9 @@ public class RankUtils {
       .put("species", SPECIES)
       .put("spp", SPECIES)
       .build();
-  
+
+  public static final String ALPHA_DELTA = "ɑα⍺βɣγδẟ";
+
   /**
    * Map of only infraspecific rank markers to their respective rank enum.
    */
@@ -135,9 +137,10 @@ public class RankUtils {
       Maps.immutableEntry("v", VARIETY),
       Maps.immutableEntry("var", VARIETY),
       Maps.immutableEntry("nvar", VARIETY),
-      Maps.immutableEntry("\\*+", INFRASPECIFIC_NAME)
+      Maps.immutableEntry("\\*+", INFRASPECIFIC_NAME),
+      Maps.immutableEntry("["+ALPHA_DELTA+"]", INFRASPECIFIC_NAME)
   );
-  
+
   static class FluentHashMap<K, V> extends java.util.HashMap<K, V> {
     public FluentHashMap<K, V> with(Map<K, V> map) {
       putAll(map);

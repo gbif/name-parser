@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.A;
 import org.gbif.nameparser.api.*;
 import org.gbif.nameparser.util.RankUtils;
 import org.slf4j.Logger;
@@ -76,7 +75,7 @@ class ParsingJob implements Callable<ParsedName> {
   @VisibleForTesting
   static final String AUTHOR = AUTHOR_TOKEN + "(?:[ '-]?" + AUTHOR_TOKEN + ")*";
   // common author suffices that can be mistaken for epithets
-  static final String AUTHOR_SUFFIX = "(?:bis|ter|d(?:[ae][rnl]?|egli))";
+  static final String AUTHOR_SUFFIX = "(?:bis|ter|d(?:[ae][rnl]?|egli)|van(?: de[nr]?)|zur?)";
   private static final Pattern AUTHOR_SUFFIX_P = Pattern.compile("^" + AUTHOR_SUFFIX + "$");
   private static final String AUTHOR_TEAM = AUTHOR + "(?:[&,;]+" + AUTHOR + ")*";
   static final String AUTHORSHIP =
@@ -109,7 +108,7 @@ class ParsingJob implements Callable<ParsedName> {
         ), "|") +
     ")";
   
-  private static final String UNALLOWED_EPITHETS = "aff|and|cf|from|ms|of|the|where";
+  private static final String UNALLOWED_EPITHETS = "aff|and|cf|des|from|ms|of|the|where";
   private static final String UNALLOWED_EPITHET_ENDING =
       "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
   // allow for cf/aff markers before epithets
@@ -117,7 +116,7 @@ class ParsingJob implements Callable<ParsedName> {
   static final String EPITHET = "(?:[0-9]+-?|[a-z]-|[doml]'|(?:van|novae) [a-z])?"
             // avoid matching to rank markers
             + "(?!"+RANK_MARKER+"\\b)"
-            + "[" + name_letters + "+-]{1,}(?<! d)[" + name_letters + "]"
+            + "[" + name_letters + "][" + name_letters + "+-]*(?<! d)[" + name_letters + "]"
             // avoid epithets and those ending with the unallowed endings, e.g. serovar and author suffices like filius
             + "(?<!(?:\\b(?:ex|l[ae]|v[ao]n|"+AUTHOR_TOKEN_3+")\\.?|\\b(?:"+UNALLOWED_EPITHETS+")|"+ UNALLOWED_EPITHET_ENDING +"))(?=\\b)";
   static final String MONOMIAL =
@@ -136,7 +135,7 @@ class ParsingJob implements Callable<ParsedName> {
   }
   private static final String INFRAGENERIC =
     "(?:\\(([" + NAME_LETTERS + "][" + name_letters + "-]+)\\)" +
-        "| ((?:"+NOTHO+")?(?:" +
+        "|(?: .*?| )((?:"+NOTHO+")?(?:" +
           StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRAGENERIC.keySet(), "|") +
         "))[. ]([" + NAME_LETTERS + "][" + name_letters + "-]+)"
     + ")";
@@ -228,8 +227,8 @@ class ParsingJob implements Callable<ParsedName> {
         ")\\)?" +
       ")");
   private static final String NOV_RANKS = "((?:[sS]ub)?(?:[fF]am|[gG]en|[sS]s?p(?:ec)?|[vV]ar|[fF](?:orma?)?))";
-  private static final Pattern NOV_RANK_MARKER = Pattern.compile("(" + NOV_RANKS + ")");
-  static final String MANUSCRIPT_STATUS = "(?:(?:comb[. ]?)?ined|ms)\\.?($|\\s)";
+  private static final Pattern NOV_RANK_MARKER = Pattern.compile("\\b(" + NOV_RANKS + ")\\b");
+  static final String MANUSCRIPT_STATUS = "(?:(?:comb[. ]?)?ined|ms|in press|unpublished)\\.?($|\\s)";
   static final Pattern MANUSCRIPT_STATUS_PATTERN = Pattern.compile(MANUSCRIPT_STATUS);
   static final Pattern EXTRACT_NOMSTATUS = Pattern.compile("[;, ]?"
       + "\\(?"
@@ -257,7 +256,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_BRACKETS_CLOSE = Pattern.compile("\\s*,?\\s*([})\\]])\\s*");
   private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("( ?[{\\[] ?)+");
   private static final Pattern NORM_BRACKETS_CLOSE_STRONG = Pattern.compile("( ?[}\\]] ?)+");
-  private static final Pattern NORM_AND = Pattern.compile("\\b *(and|et|und|\\+|,&) *\\b");
+  private static final Pattern NORM_AND = Pattern.compile("\\b *(?<!-)(and|et|und|\\+|,&)(?!-) *\\b");
   private static final Pattern NORM_SUBGENUS = Pattern.compile("(" + MONOMIAL + ") (" + MONOMIAL + ") (" + EPITHET + ")");
   private static final Pattern NO_Q_MARKS = Pattern.compile("([" + author_letters + "])\\?+");
   private static final Pattern NORM_PUNCTUATIONS = Pattern.compile("\\s*([.,;:&(){}\\[\\]-])\\s*\\1*\\s*");
@@ -267,7 +266,7 @@ class ParsingJob implements Callable<ParsedName> {
   // √ó is an utf garbaged version of the hybrid cross found in IPNI. See http://dev.gbif.org/issues/browse/POR-3081
   private static final Pattern NORM_HYBRIDS_GENUS = Pattern.compile("^\\s*(?:[+×xX]|√ó)\\s*([" + NAME_LETTERS + "])");
   private static final Pattern NORM_HYBRIDS_EPITH = Pattern.compile("^\\s*(×?" + MONOMIAL + ")\\s+(?:×|√ó|[xX]\\s)\\s*(" + EPITHET + ")");
-  private static final Pattern NORM_HYBRIDS_FORM = Pattern.compile("\\b([×xX]|√ó) ");
+  private static final Pattern NORM_HYBRIDS_FORMULA = Pattern.compile("[. ]([×xX]|√ó) ");
   private static final Pattern NORM_TF_GENUS = Pattern.compile("^([" + NAME_LETTERS + "])\\(([" + name_letters + "-]+)\\)\\.? ");
   private static final Pattern REPL_FINAL_PUNCTUATIONS = Pattern.compile("[,;:]+$");
   private static final Pattern REPL_IN_REF = Pattern.compile("[, ]?\\b(in|IN|apud) (" + AUTHOR_TEAM + ")(.*?)$");
@@ -289,7 +288,8 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
   @VisibleForTesting
   static final Pattern PLACEHOLDER = Pattern.compile("^N\\.\\s*N\\.|\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
-  private static final Pattern DOUBTFUL = Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + "\":;&*+\\s,.()\\[\\]/'`´0-9-†]+$");
+  private static final Pattern INFORMAL_UNPARSABLE = Pattern.compile(" clade\\b", CASE_INSENSITIVE);
+  private static final Pattern DOUBTFUL = Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + RankUtils.ALPHA_DELTA + "\":;&*+\\s,.()\\[\\]/'`´0-9-†]+$");
   private static final Pattern DOUBTFUL_NULL = Pattern.compile("\\bnull\\b", CASE_INSENSITIVE);
   private static final Pattern XML_ENTITY_STRIP = Pattern.compile("&\\s*([a-z]+)\\s*;");
   // matches badly formed amoersands which are important in names / authorships
@@ -299,8 +299,8 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern STARTING_EPITHET = Pattern.compile("^\\s*(" + EPITHET + ")\\b");
   private static final Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\. *sp(?:ec)?\\b");
   private static final Pattern SENSU_LATU = Pattern.compile("\\bs\\.l\\.\\b");
+  private static final Pattern ABREV_AUTHOR_PREFIXES = Pattern.compile("\\b(v\\.(?:d\\.)?)("+AUTHOR+")");
 
-  
   private static final Pattern NOM_REFS = Pattern.compile("[,;.]?[\\p{Lu}\\p{Ll}\\s]*\\b(?:Proceedings|Journal|Annals|Bulletin|Systematics|Taxonomy|Series|Memoirs|Mitteilungen|Berichte)\\b.+$");
   // 4(2): 611
   private static final Pattern NOM_REF_VOLUME = Pattern.compile("[,;.]?[\\p{Lu}\\p{Ll}\\s]*\\b\\d+\\s*(//(\\d+//))?:\\s*\\d+\\b.+$");
@@ -339,7 +339,7 @@ class ParsingJob implements Callable<ParsedName> {
   
   @VisibleForTesting
   static final Pattern POTENTIAL_NAME_PATTERN = Pattern.compile("^×?" + MONOMIAL + "\\b");
-  private static final Pattern REMOVE_INTER_RANKS = Pattern.compile("\\b((?:subsp|ssp|var)[ .].+)\\b("+RANK_MARKER+")\\b");
+  private static final Pattern REMOVE_INTER_RANKS = Pattern.compile("\\b((?:subsp|ssp|var)[ .].+)\\b("+RANK_MARKER+"\\b.{2,})");
   // allow only short lower case tokens to avoid matching to a real epithet
   private static final String SKIP_AUTHORS = "(?:\\b[ \\p{Ll}'(-]{0,3}\\p{Lu}.*?\\b)??";
   public static final Pattern NAME_PATTERN = Pattern.compile("^" +
@@ -736,9 +736,23 @@ class ParsingJob implements Callable<ParsedName> {
     // extract bibliographic in references
     extractPublishedIn();
 
+    // save abbreviated author prefixes, avoiding them to become rank markers, e.g. v.
+    final Map<String, String> authorPrefixes = new HashMap<>();
+    m = ABREV_AUTHOR_PREFIXES.matcher(name);
+    if (m.find()) {
+      StringBuffer sb = new StringBuffer();
+      do {
+        authorPrefixes.put(m.group(2), m.group(1));
+        m.appendReplacement(sb, m.group(2));
+      } while (m.find());
+      m.appendTail(sb);
+      name = sb.toString();
+    }
+
     // remove superflous epithets with rank markers
     m = REMOVE_INTER_RANKS.matcher(name);
     if (m.find()) {
+      logMatcher(m);
       pn.addWarning("Intermediate classification removed: " + m.group(1));
       name = m.replaceFirst("$2");
     }
@@ -778,6 +792,12 @@ class ParsingJob implements Callable<ParsedName> {
       }
     }
 
+    // apply saved author prefixes again
+    if (!authorPrefixes.isEmpty()) {
+      applyAuthorPrefix(authorPrefixes, pn.getBasionymAuthorship());
+      applyAuthorPrefix(authorPrefixes, pn.getCombinationAuthorship());
+    }
+
     // any manuscript epithet (species or infraspecies?)
     if (epithet != null) {
       if (pn.getSpecificEpithet() == null) {
@@ -815,6 +835,19 @@ class ParsingJob implements Callable<ParsedName> {
     determineCode();
   }
 
+  void applyAuthorPrefix(Map<String, String> prefixes, Authorship auth) {
+    applyAuthorPrefix(prefixes, auth.getAuthors());
+    applyAuthorPrefix(prefixes, auth.getExAuthors());
+  }
+  void applyAuthorPrefix(Map<String, String> prefixes, List<String> authors) {
+    for (int idx=0; idx<authors.size(); idx++) {
+      String a = authors.get(idx);
+      if (prefixes.containsKey(a)) {
+        authors.set(idx, prefixes.get(a) + a);
+      }
+    }
+  }
+
   void extractPublishedIn() {
     Matcher m = REPL_IN_REF.matcher(name);
     if (m.find()) {
@@ -826,6 +859,9 @@ class ParsingJob implements Callable<ParsedName> {
   void detectFurtherUnparsableNames() throws UnparsableNameException {
     if (PLACEHOLDER.matcher(name).find()) {
       unparsable(NameType.PLACEHOLDER);
+    }
+    if (INFORMAL_UNPARSABLE.matcher(name).find()) {
+      unparsable(NameType.INFORMAL);
     }
   }
 
@@ -1007,7 +1043,7 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       name = m.replaceFirst("$1 ×$2");
     }
-    m = NORM_HYBRIDS_FORM.matcher(name);
+    m = NORM_HYBRIDS_FORMULA.matcher(name);
     if (m.find()) {
       name = m.replaceAll(" × ");
     }

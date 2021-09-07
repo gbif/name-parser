@@ -64,6 +64,180 @@ public abstract class NameParserTest {
 
 
   /**
+   * https://github.com/gbif/name-parser/issues/80
+   */
+  @Test
+  public void CkYang() throws Exception {
+    assertName("Nemopistha sinica C.-k. Yang, 1986", "Nemopistha sinica")
+        .species("Nemopistha", "sinica")
+        .combAuthors("1986", "C.-k.Yang")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/75
+   */
+  @Test
+  public void oosterveldii() throws Exception {
+    assertName("Taraxacum piet-oosterveldii H. Øllg. in press", "Taraxacum piet-oosterveldii")
+        .species("Taraxacum", "piet-oosterveldii")
+        .combAuthors(null, "H.Øllg.")
+        .nomNote("in press")
+        .manuscript()
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/72
+   */
+  @Test
+  public void zurStrassen() throws Exception {
+    assertName("Jezzinothrips cretacicus zur Strassen, 1973", "Jezzinothrips cretacicus")
+        .species("Jezzinothrips", "cretacicus")
+        .combAuthors("1973", "zur Strassen")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    assertName("Jezzinothrips cretacicus amazur Strassen, 1973", "Jezzinothrips cretacicus amazur")
+        .infraSpecies("Jezzinothrips", "cretacicus", INFRASPECIFIC_NAME, "amazur")
+        .combAuthors("1973", "Strassen")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/70
+   */
+  @Test
+  public void nomSuperfl() throws Exception {
+    assertName("Agrostis compressa Willd., nom. superfl.", "Agrostis compressa")
+        .species("Agrostis", "compressa")
+        .combAuthors(null, "Willd.")
+        .nomNote("nom.superfl.")
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/68
+   */
+  @Test
+  public void cladeNames() throws Exception {
+    assertUnparsable("Amauropeltoid clade", INFORMAL);
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/67
+   */
+  @Test
+  public void doubleHyphenEpithet() throws Exception {
+    assertName("Grammitis friderici-et-pauli (Christ) Copel.", "Grammitis friderici-et-pauli")
+        .species("Grammitis", "friderici-et-pauli")
+        .combAuthors(null, "Copel.")
+        .basAuthors(null, "Christ")
+        .code(BOTANICAL)
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/62
+   */
+  @Test
+  public void desLoges() throws Exception {
+    assertName("Desbrochers des Loges, 1881", "Desbrochers")
+        .monomial("Desbrochers")
+        .combAuthors("1881", "des Loges")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/60
+   */
+  @Test
+  public void subg() throws Exception {
+    assertName("Centaurea subg. Jacea", "Centaurea subgen. Jacea")
+        .infraGeneric("Centaurea", SUBGENUS, "Jacea")
+        .nothingElse();
+
+    assertName("Centaurea L. subg. Jacea", "Centaurea subgen. Jacea")
+        .infraGeneric("Centaurea", SUBGENUS, "Jacea")
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/59
+   */
+  @Test
+  public void vonDen() throws Exception {
+    assertName("Gyalidea minuta van den Boom & Vezda", "Gyalidea minuta")
+        .species("Gyalidea", "minuta")
+        .combAuthors(null, "van den Boom", "Vezda")
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/58
+   */
+  @Test
+  public void vdAuthors() throws Exception {
+    assertName("Taraxacum dunense v. Soest", "Taraxacum dunense")
+        .species("Taraxacum", "dunense")
+        .combAuthors(null, "v.Soest")
+        .nothingElse();
+
+    assertName("Rubus planus v. d. Beek", "Rubus planus")
+        .species("Rubus", "planus")
+        .combAuthors(null, "v.d.Beek")
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/56
+   */
+  @Test
+  public void rechf() throws Exception {
+    assertName("Salix repens L. subsp. galeifolia Neumann ex Rech. f.", "Salix repens subsp. galeifolia")
+        .infraSpecies("Salix", "repens", SUBSPECIES, "galeifolia")
+        .combExAuthors("Neumann")
+        .combAuthors(null, "Rech.f.")
+        .code(BOTANICAL)
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/name-parser/issues/49
+   */
+  @Test
+  public void wfoAuthors() throws Exception {
+    assertName("Taraxacum vulgaris Backer ex K.Heyne", "Taraxacum vulgaris")
+        .species("Taraxacum", "vulgaris")
+        .combAuthors(null, "K.Heyne")
+        .combExAuthors("Backer")
+        .nothingElse();
+
+    assertName("Taraxacum oosterveldii Petrasiak & Johansen, unpublished", "Taraxacum oosterveldii")
+        .species("Taraxacum", "oosterveldii")
+        .combAuthors(null, "Petrasiak", "Johansen")
+        .nomNote("unpublished")
+        .manuscript()
+        .nothingElse();
+  }
+
+  /**
+   * https://github.com/gbif/portal-feedback/issues/3535
+   */
+  @Test
+  public void noHybrids() throws Exception {
+    assertName("Lepidodens similis Zhang F & Pan Z-X in Zhang, F, Pan, Z-X, Wu, J, Ding, Y-H, Yu, D-Y & Wang, B-X, 2016", "Lepidodens similis")
+        .species("Lepidodens", "similis")
+        .combAuthors("2016", "Zhang F", "Pan Z-X")
+        .publishedIn("Zhang, F, Pan, Z-X, Wu, J, Ding, Y-H, Yu, D-Y & Wang, B-X, 2016")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/checklistbank/issues/87
    */
   @Test
@@ -251,7 +425,7 @@ public abstract class NameParserTest {
         .infraSpecies("Achillea", "millefolium", Rank.VARIETY, "pallidotegula")
         .nothingElse();
   }
-  
+
   @Test
   public void exAuthors() throws Exception {
     assertName("Acacia truncata (Burm. f.) hort. ex Hoffmanns.", "Acacia truncata")
@@ -726,7 +900,38 @@ public abstract class NameParserTest {
         .combAuthors(null, "Lammers")
         .nothingElse();
   }
-  
+
+  @Test
+  public void oddFungiRanks() throws Exception {
+    assertName("Cyphelium disseminatum ⍺ subsessile", "Cyphelium disseminatum subsessile")
+        .infraSpecies("Cyphelium", "disseminatum", INFRASPECIFIC_NAME, "subsessile")
+        .nothingElse();
+
+    assertName("Capitularia fimbriata *** carpophora", "Capitularia fimbriata carpophora")
+        .infraSpecies("Capitularia", "fimbriata", INFRASPECIFIC_NAME, "carpophora")
+        .nothingElse();
+
+    assertName("Cyphelium disseminatum c subsessile", "Cyphelium disseminatum subsessile")
+        .infraSpecies("Cyphelium", "disseminatum", INFRASPECIFIC_NAME, "subsessile")
+        .nothingElse();
+
+    assertName("Cyphelium disseminatum g subsessile", "Cyphelium disseminatum subsessile")
+        .infraSpecies("Cyphelium", "disseminatum", INFRASPECIFIC_NAME, "subsessile")
+        .nothingElse();
+  }
+
+  @Test
+  @Ignore
+  public void oddFungiRanksUnsupported() throws Exception {
+    assertName("Capitularia fimbriata ⍺ vulgaris 3 tubaeformis *** carpophora", "Capitularia fimbriata carpophora")
+        .infraSpecies("Capitularia", "fimbriata", INFRASPECIFIC_NAME, "carpophora")
+        .nothingElse();
+
+    assertName("Capitularia pyxidata ß longipes H. carpophora Floerke", "Capitularia pyxidata carpophora")
+        .infraSpecies("Capitularia", "pyxidata", INFRASPECIFIC_NAME, "carpophora")
+        .nothingElse();
+  }
+
   @Test
   @Ignore
   public void strains() throws Exception {
