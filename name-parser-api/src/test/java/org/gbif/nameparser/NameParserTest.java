@@ -937,9 +937,15 @@ public abstract class NameParserTest {
   public void strains() throws Exception {
     assertName("Endobugula sp. JYr4", "Endobugula sp. JYr4")
         .species("Endobugula", null)
-        .strain("sp. JYr4")
+        .strain("JYr4")
         .nothingElse();
-    
+
+    assertName("Lepidoptera sp. JGP0404", "Lepidoptera sp. JGP0404")
+        .species("Lepidoptera", null)
+        .strain("JGP0404")
+        .type(NameType.INFORMAL)
+        .nothingElse();
+
     // avoid author & year to be accepted as strain
     assertName("Anniella nigra FISCHER 1885", "Anniella nigra")
         .species("Anniella", "nigra")

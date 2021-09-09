@@ -96,6 +96,8 @@ public class RankTest {
     assertEquals(Rank.INFRASPECIFIC_NAME, Rank.PATHOVAR.getMajorRank());
     assertEquals(Rank.INFRASPECIFIC_NAME, Rank.VARIETY.getMajorRank());
     assertEquals(Rank.INFRASPECIFIC_NAME, Rank.SUBFORM.getMajorRank());
+    assertEquals(Rank.GENUS, Rank.INFRAGENERIC_NAME.getMajorRank());
+    assertEquals(Rank.SUPRAGENERIC_NAME, Rank.SUPRAGENERIC_NAME.getMajorRank());
   }
 
   @Test
