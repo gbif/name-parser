@@ -163,7 +163,13 @@ public abstract class NameParserTest {
     assertName("Centaurea L. subg. Jacea", "Centaurea subgen. Jacea")
         .infraGeneric("Centaurea", SUBGENUS, "Jacea")
         .nothingElse();
-  }
+
+    // not a series: https://github.com/gbif/checklistbank/issues/200
+    assertName("Mergus merganser Linnaeus, 1758", "Mergus merganser")
+        .species("Mergus", "merganser")
+        .combAuthors("1758", "Linnaeus")
+        .code(ZOOLOGICAL)
+        .nothingElse();  }
 
   /**
    * https://github.com/gbif/name-parser/issues/59

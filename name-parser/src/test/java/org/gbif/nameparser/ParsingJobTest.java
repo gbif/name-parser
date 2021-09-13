@@ -17,6 +17,15 @@ public class ParsingJobTest {
   static final Pattern AUTHORSHIP_PATTERN = Pattern.compile("^" + ParsingJob.AUTHORSHIP + "$");
 
   @Test
+  public void infragenericPattern() throws Exception {
+    Pattern IG = Pattern.compile(ParsingJob.INFRAGENERIC);
+
+    assertTrue(IG.matcher(" ser.Jacea").find());
+    assertTrue(IG.matcher(" L.subg.Jacea").find());
+    assertFalse(IG.matcher("Mergus merganser Linnaeus,1758").find());
+  }
+
+  @Test
   public void testFamilyPrefixPattern() throws Exception {
     assertFalse(ParsingJob.FAMILY_PREFIX.matcher("Poaceae").find());
     assertTrue(ParsingJob.FAMILY_PREFIX.matcher("Poaceae subtrib. Cxyz").find());

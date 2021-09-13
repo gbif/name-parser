@@ -133,9 +133,10 @@ class ParsingJob implements Callable<ParsedName> {
         throw new IllegalStateException("Failed to read latin-endings.txt from classpath resources", e);
       }
   }
-  private static final String INFRAGENERIC =
+  @VisibleForTesting
+  protected static final String INFRAGENERIC =
     "(?:\\(([" + NAME_LETTERS + "][" + name_letters + "-]+)\\)" +
-        "|(?: .*?| )((?:"+NOTHO+")?(?:" +
+        "|(?: .+?[. ]| )((?:"+NOTHO+")?(?:" +
           StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRAGENERIC.keySet(), "|") +
         "))[. ]([" + NAME_LETTERS + "][" + name_letters + "-]+)"
     + ")";
