@@ -2806,10 +2806,36 @@ public abstract class NameParserTest {
         .manuscript()
         .nothingElse();
     
-    assertName("Prostanthera sp. Somersbey (B.J.Conn 4024)", "Prostanthera sp.Somersbey(B.J.Conn 4024)")
-        .species("Prostanthera", "sp.Somersbey(B.J.Conn 4024)")
-        .type(INFORMAL)
-        .manuscript()
+  }
+
+  @Test
+  public void phraseNames() throws Exception {
+    assertName("Prostanthera sp. Somersbey (B.J.Conn 4024)", "Prostanthera sp. Somersbey (B.J.Conn 4024)")
+        .phrase("Prostanthera", "Somersbey", SPECIES, "B.J.Conn 4024", null)
+        .nothingElse();
+    assertName("Pultenaea sp. 'Olinda' (Coveny 6616)", "Pultenaea sp. Olinda (Coveny 6616)")
+        .phrase("Pultenaea", "Olinda", SPECIES, "Coveny 6616", null)
+        .nothingElse();
+    assertName("Pterostylis sp. Sandheath (D.Murfet 3190) R.J.Bates", "Pterostylis sp. Sandheath (D.Murfet 3190)")
+        .phrase("Pterostylis", "Sandheath", SPECIES, "D.Murfet 3190", "R.J.Bates")
+        .nothingElse();
+    // Check to make sure base name is parsed before haring off into the wilderness
+    assertName("Acacia mutabilis Maslin", "Acacia mutabilis")
+        .species("Acacia", "mutabilis")
+        .combAuthors(null, "Maslin")
+        .nothingElse();
+    assertName("Acacia mutabilis Maslin subsp. Young River (G.F. Craig 2052)", "Acacia mutabilis ssp. Young River (G.F. Craig 2052)")
+        .phrase("Acacia", "Young River", SUBSPECIES, "G.F. Craig 2052", null)
+        .combAuthors(null, "Maslin")
+        .nothingElse();
+    assertName("Dampiera sp. Central Wheatbelt (L.W.Sage, F.Hort, C.A.Hollister LWS2321)", "Dampiera sp. Central Wheatbelt (L.W.Sage, F.Hort, C.A.Hollister LWS2321)")
+        .phrase("Dampiera", "Central Wheatbelt", SPECIES, "L.W.Sage, F.Hort, C.A.Hollister LWS2321", null)
+         .nothingElse();
+    assertName("Dampiera     sp    Central  Wheatbelt (L.W.Sage,   F.Hort,   C.A.Hollister   LWS2321)", "Dampiera sp. Central Wheatbelt (L.W.Sage, F.Hort, C.A.Hollister LWS2321)")
+        .phrase("Dampiera", "Central Wheatbelt", SPECIES, "L.W.Sage, F.Hort, C.A.Hollister LWS2321", null)
+        .nothingElse();
+    assertName("Toechima sp. East Alligator (J.Russell-Smith 8418) NT Herbarium", "Toechima sp. East Alligator (J.Russell-Smith 8418)")
+        .phrase("Toechima", "East Alligator", SPECIES, "J.Russell-Smith 8418", "NT Herbarium")
         .nothingElse();
   }
   

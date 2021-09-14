@@ -392,6 +392,35 @@ class ParsingJob implements Callable<ParsedName> {
              // #23 any remainder
              "(\\b.*?)??$");
 
+  // Allowable phrase rank marker
+  private static final String AUTHOR_WS = AUTHOR_TOKEN + "(?:[ '-]*" + AUTHOR_TOKEN + ")*";
+  private static final String AUTHOR_TEAM_WS = AUTHOR_WS + "(?:\\s*[&,;]+\\s*" + AUTHOR_WS + ")*";
+  private static final String PLACEHOLDER_RANK_MARKER = "sp|subsp|ssp|var|cv";
+  private static final String ALL_LETTERS_NUMBERS = NAME_LETTERS + name_letters + "0-9";
+  private static final String DESC_WORD = "[" + NAME_LETTERS + "][" + ALL_LETTERS_NUMBERS + ".\\-_]*";
+  private static final String LOCATION_OR_DESC = "(?:\\d+\\.?|" + DESC_WORD + "(?:\\s+" + DESC_WORD +")*)";
+  private static final String DESCRIPTIVE_PHRASE = "(?:'" + LOCATION_OR_DESC + "'|" + LOCATION_OR_DESC + ")";
+  private static final String SINE_NOMINE = "s\\.n\\.,?";
+  private static final String VOUCHER_NUMBER_OR_DATE = "(?:[A-Z]*[0-9]+|[0-9]+[\\s\\-/][0-9A-Za-z]+[\\s\\-/][0-9]+)";
+  private static final String VOUCHER = AUTHOR_TEAM_WS + "(?:\\s+" + SINE_NOMINE + ")?\\s+" + VOUCHER_NUMBER_OR_DATE;
+  private static final String NOTE = "\\[([^]]+)]";
+
+  public static final Pattern PHRASE_NAME = Pattern.compile("^" +
+      // This pattern has to be applied before normalisation, since otherwise phrases and vouchers get played with
+      // Group 1 is normal scientific name - will either represent a Monomial or binomial with optional author and infrageneric name
+      "(" + MONOMIAL + "(?:\\s*\\(" + MONOMIAL + "\\))?(?:\\s+" + EPITHET +")?(?:\\s+\\(?" + AUTHOR_TEAM_WS + "\\)?)?)"
+      // Group 2 is the Rank marker.  For a phrase it needs to be sp. subsp. or var.
+      + "\\s+(" + PLACEHOLDER_RANK_MARKER + ")\\.?"
+      // Group 3 indicates the mandatory location/desc for the phrase name.
+      + "\\s*(" + DESCRIPTIVE_PHRASE + ")"
+      //Group 4 is the VOUCHER for the phrase it indicates the collector and a voucher id
+      + "\\s*\\((" + VOUCHER + ")\\)"
+      //Group 5 is the party proposing addition of the taxon
+      + "\\s*(" + AUTHOR_TEAM + ")?"
+      //Group 6 is any additional notes
+      + "\\s*(" + NOTE + ")?$"
+  );
+
   static Matcher interruptableMatcher(Pattern pattern, String text) {
     return pattern.matcher(new InterruptibleCharSequence(text));
   }
@@ -593,6 +622,19 @@ class ParsingJob implements Callable<ParsedName> {
 
     // detect RNA/DNA gene/strain names and flag as informal
     if (IS_GENE.matcher(name).find()) {
+      pn.setType(NameType.INFORMAL);
+    }
+
+    // Extract phrase name phrase, voucher, nominating party and note
+    // This is done before normalisation so that we can preserve case on the phrase
+    m = PHRASE_NAME.matcher(name);
+    if (m.find()) {
+      name = m.group(1);
+      pn.setRank(RankUtils.inferRank(m.group(2)));
+      pn.setStrain(stripSurround(m.group(3), '\'', '\''));
+      pn.setVoucher(m.group(4));
+      pn.setNominatingParty(m.group(5));
+      pn.setTaxonomicNote(stripSurround(m.group(6), '[', ']'));
       pn.setType(NameType.INFORMAL);
     }
 
@@ -1130,6 +1172,16 @@ class ParsingJob implements Callable<ParsedName> {
     return name;
   }
 
+  String stripSurround(String part, char left, char right) {
+    if (part == null || part.length() < 2)
+      return part;
+    if (part.charAt(0) == left && part.charAt(part.length() - 1) == right) {
+      part = part.substring(0, part.length() - 1).substring(1).trim();
+      part = part.isEmpty() ? null : part;
+    }
+    return part;
+  }
+
   /**
    * basic careful cleaning, trying to preserve all parsable name parts
    */
@@ -1215,7 +1267,9 @@ class ParsingJob implements Callable<ParsedName> {
         setTypeIfNull(pn, NameType.INFORMAL);
 
       } else if (pn.getRank().notOtherOrUnranked()) {
-        if (pn.isIndetermined()) {
+        if (pn.isPhraseName()) {
+          pn.setType(NameType.INFORMAL);
+        } else if (pn.isIndetermined()) {
           pn.setType(NameType.INFORMAL);
           pn.addWarning(Warnings.INDETERMINED);
 

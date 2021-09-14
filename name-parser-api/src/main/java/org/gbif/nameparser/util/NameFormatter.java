@@ -18,7 +18,7 @@ public class NameFormatter {
   private static final String ITALICS_OPEN = "<i>";
   private static final String ITALICS_CLOSE = "</i>";
   private static final Pattern AL = Pattern.compile("^al\\.?$");
-  
+
   private NameFormatter() {
   
   }
@@ -32,14 +32,14 @@ public class NameFormatter {
     // TODO: show authorship for zoological autonyms?
     // TODO: how can we best remove subsp from zoological names?
     // https://github.com/gbif/portal-feedback/issues/640
-    return buildName(n, true, true, true, true, false, true, false, true, true, false,  false, true, true, false);
+    return buildName(n, true, true, true, true, false, true, false, true, true, false,  false, true, true, true, true, true, false);
   }
   
   /**
    * A full scientific name just as canonicalName, but without any authorship.
    */
   public static String canonicalWithoutAuthorship(ParsedName n) {
-    return buildName(n, true, true, false, true, false, true, false, true, true, false,  false, true, true,  false);
+    return buildName(n, true, true, false, true, false, true, false, true, true, false,  false, true, true, true, false, true, false);
   }
   
   /**
@@ -54,21 +54,21 @@ public class NameFormatter {
    * Bracteata
    */
   public static String canonicalMinimal(ParsedName n) {
-    return buildName(n, false, false, false, false, false, true, true, false, false, false,  false, false, false, false);
+    return buildName(n, false, false, false, false, false, true, true, false, false, false,  false, false, false, false, false, false, false);
   }
   
   /**
    * Assembles a full name with all details including non code compliant, informal remarks.
    */
   public static String canonicalComplete(ParsedName n) {
-    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, false);
+    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, false);
   }
   
   /**
    * Assembles a full name with all details including non code compliant, informal remarks and html markup.
    */
   public static String canonicalCompleteHtml(ParsedName n) {
-    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true);
+    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, true);
   }
   
   /**
@@ -121,6 +121,12 @@ public class NameFormatter {
    * @param showIndet            if true include the rank marker for incomplete determinations, for example Puma spec.
    * @param showQualifier        if true include the epithet qualifiers
    * @param nomNote              include nomenclatural notes
+   * @param showSensu
+   * @param showStrain
+   * @param showCultivar
+   * @param showPhrase           Show phrase
+   * @param showVoucher          Show vouching party
+   * @param showNominatingParty  Show nominating party
    * @param html                 add html markup
    */
   public static String buildName(ParsedName n,
@@ -136,11 +142,14 @@ public class NameFormatter {
                                  boolean nomNote,
                                  boolean showSensu,
                                  boolean showCultivar,
+                                 boolean showPhrase,
+                                 boolean showVoucher,
+                                 boolean showNominatingParty,
                                  boolean showStrain,
                                  boolean html
   ) {
     StringBuilder sb = new StringBuilder();
-    
+
     boolean candidateItalics = false;
     if (n.isCandidatus()) {
       sb.append("\"");
@@ -211,7 +220,7 @@ public class NameFormatter {
       }
       
       if (n.getSpecificEpithet() == null) {
-        if (showIndet && n.getGenus() != null && n.getCultivarEpithet() == null) {
+        if ((showIndet && n.getGenus() != null && n.getCultivarEpithet() == null) || (showPhrase && n.isPhraseName())) {
           if (n.getRank() != null && n.getRank().isSpeciesOrBelow()) {
             // no species epithet given, indetermined!
             if (n.getRank().isInfraspecific()) {
@@ -283,8 +292,8 @@ public class NameFormatter {
       appendAuthorship(n, sb);
     }
     
-    // add strain name
-    if (showStrain && n.getStrain() != null) {
+    // add strain name (phrase names get special treatment)
+    if (showStrain && n.getStrain() != null && !n.isPhraseName()) {
       sb.append(" ")
           .append(n.getStrain());
     }
@@ -306,6 +315,18 @@ public class NameFormatter {
             .append(n.getCultivarEpithet())
             .append("'");
       }
+    }
+
+    // Add phrase name
+    if (showPhrase && n.isPhraseName()) {
+      String phrase = n.getStrain();
+      String voucher = n.getVoucher();
+      String nominatingParty = n.getNominatingParty();
+      appendIfNotEmpty(sb, " ").append(phrase);
+      if (voucher != null && showVoucher)
+        sb.append(" (").append(voucher).append(")");
+      if (nominatingParty != null && showNominatingParty)
+        sb.append(" ").append(nominatingParty);
     }
     
     // add sensu/sec reference

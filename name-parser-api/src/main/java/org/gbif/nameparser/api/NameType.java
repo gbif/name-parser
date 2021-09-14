@@ -34,7 +34,7 @@ public enum NameType {
    * A hybrid <b>formula</b> (not a hybrid name).
    */
   HYBRID_FORMULA,
-  
+
   /**
    * A variation of a scientific name that either adds additional notes or has some shortcomings to be classified as
    * regular scientific names. Frequent reasons are:
@@ -42,6 +42,15 @@ public enum NameType {
    * - indetermined like "Abies spec."
    * - abbreviated genus "A. alba Mill"
    * - manuscript names lacking latin species names, e.g. Verticordia sp.1
+   * - phrase name, Phrase names are a structured semi-informal name with the form
+   *   <em>Dryandra sp. 1 (A.S.George 16647) WA Herbarium</em>,
+   *   <em>Pultenaea sp. 'Olinda' (Coveny 6616)</em> or
+   *   <em>Acacia mutabilis Maslin subsp. Young River (G.F. Craig 2052)</em>
+   *   The 1, Olinda or Young River is the phrase, similar to a cultivar name, that identifies the taxon.
+   *   The (A.S.George 16647), (Coveny 6616) or (G.F. Craig 2052) is the voucher, the name or initials of the person
+   *   vouching for the specimen and the unique collector number assigned to the voucher.
+   *   The WA Herbarium is the nominating party, the party that wants to have a placeholder name for this specimen
+   *   https://florabase.dpaw.wa.gov.au/help/names#phrase
    */
   INFORMAL,
   
@@ -58,7 +67,7 @@ public enum NameType {
    * Typically, OTU's are based on similar 16S rRNA sequences.
    */
   OTU,
-  
+
   /**
    * A placeholder name like "incertae sedis" or "unknown genus".
    */

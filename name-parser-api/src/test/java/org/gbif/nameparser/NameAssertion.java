@@ -42,6 +42,7 @@ public class NameAssertion {
     REMAINS,
     WARNING,
     MANUSCRIPT,
+    PHRASE,
     QUALIFIERS
   }
   
@@ -134,6 +135,11 @@ public class NameAssertion {
             break;
           case MANUSCRIPT:
             assertFalse(n.isManuscript());
+            break;
+          case PHRASE:
+            assertFalse(n.isPhraseName());
+            assertNull(n.getVoucher());
+            assertNull(n.getNominatingParty());
             break;
           case QUALIFIERS:
             assertTrue(n.getEpithetQualifier() == null || n.getEpithetQualifier().isEmpty());
@@ -275,7 +281,20 @@ public class NameAssertion {
     assertEquals(NomCode.CULTIVARS, n.getCode());
     return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.CODE);
   }
-  
+
+  NameAssertion phrase(String genus, String phrase, Rank rank, String voucher, String nominatingParty) {
+    assertNull(n.getUninomial());
+    assertEquals(genus, n.getGenus());
+    assertNull(n.getCultivarEpithet());
+    assertEquals(phrase, n.getStrain());
+    assertEquals(voucher, n.getVoucher());
+    assertEquals(nominatingParty, n.getNominatingParty());
+    assertTrue(n.isPhraseName());
+    assertEquals(rank, n.getRank());
+    assertEquals(NameType.INFORMAL, n.getType());
+    return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.TYPE, NP.STRAIN, NP.PHRASE);
+  }
+
   NameAssertion code(NomCode code) {
     assertEquals(code, n.getCode());
     return add(NP.CODE);

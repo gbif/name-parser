@@ -238,6 +238,46 @@ public class ParsingJobTest {
     noPotentialName("ATCC 4321");
   }
 
+  @Test
+  public void testPhraseNames() throws Exception {
+    checkPattern(ParsingJob.PHRASE_NAME, "Pultenaea sp. 'Olinda' (Coveny 6616)", "Pultenaea", "sp", "'Olinda'", "Coveny 6616", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Marsilea sp. Neutral Junction (D.E.Albrecht 9192)", "Marsilea", "sp", "Neutral Junction", "D.E.Albrecht 9192", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Dampiera sp. Central Wheatbelt (L.W.Sage, F.Hort, C.A.Hollister LWS2321)", "Dampiera", "sp", "Central Wheatbelt", "L.W.Sage, F.Hort, C.A.Hollister LWS2321", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Baeckea ssp. 2 (LJM 2019)", "Baeckea", "ssp", "2", "LJM 2019", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Baeckea var 2 (LJM 2019)","Baeckea", "var", "2", "LJM 2019", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Baeckea sp. Bunney Road (S.Patrick 4059)");
+    checkPattern(ParsingJob.PHRASE_NAME, "Prostanthera sp. Bundjalung Nat. Pk. (B.J.Conn 3471)");
+    checkPattern(ParsingJob.PHRASE_NAME, "Toechima sp. East Alligator (J.Russell-Smith 8418) NT Herbarium", "Toechima", "sp", "East Alligator", "J.Russell-Smith 8418", "NT Herbarium", null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Goodenia sp. Bachsten Creek (M.D. Barrett 685) WA Herbarium");
+    checkPattern(ParsingJob.PHRASE_NAME, "Baeckea sp. Beringbooding (AR Main 11/9/1957)", "Baeckea", "sp", "Beringbooding", "AR Main 11/9/1957", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Sida sp. Walhallow Station (C.Edgood 28/Oct/94)", "Sida", "sp", "Walhallow Station", "C.Edgood 28/Oct/94", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Elaeocarpus sp. Rocky Creek (Hunter s.n., 16 Sep 1993)", "Elaeocarpus", "sp", "Rocky Creek", "Hunter s.n., 16 Sep 1993", null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Sida sp. B (C.Dunlop 1739)", "Sida", "sp", "B", "C.Dunlop 1739", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Grevillea brachystylis subsp. Busselton (G.J.Keighery s.n. 28/8/1985)", "Grevillea brachystylis", "subsp", "Busselton", "G.J.Keighery s.n. 28/8/1985", null, null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Baeckea sp. Calingiri (F.Hort 1710)");
+    checkPattern(ParsingJob.PHRASE_NAME, "Baeckea sp. East Yuna (R Spjut & C Edson 7077)");
+    checkPattern(ParsingJob.PHRASE_NAME, "Acacia sp. Goodlands (BR Maslin 7761) [aff. resinosa]", "Acacia", "sp", "Goodlands", "BR Maslin 7761", null, "[aff. resinosa]");
+    checkPattern(ParsingJob.PHRASE_NAME, "Acacia sp. Manmanning (BR Maslin 7711) [aff. multispicata]");
+    checkPattern(ParsingJob.PHRASE_NAME, "Atrichornis (Rahcinta) sp Glory (BR Maslin 7711)", "Atrichornis (Rahcinta)", "sp", "Glory", "BR Maslin 7711", null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Acacia mutabilis subsp. Young River (G.F.Craig 2052)", "Acacia mutabilis", "subsp", "Young River", "G.F.Craig 2052", null);
+    checkPattern(ParsingJob.PHRASE_NAME, "Acacia mutabilis Maslin subsp. Young River (G.F.Craig 2052)", "Acacia mutabilis Maslin", "subsp", "Young River", "G.F.Craig 2052", null);
+    assertFalse(ParsingJob.PHRASE_NAME.matcher( "Elaeocarpus sp. Rocky Creek").matches()); // Looks like an author
+    assertFalse(ParsingJob.PHRASE_NAME.matcher("Acacia sp. \"Morning Glory\"").matches()); // Looks like a cultivar
+  }
+
+  private static void checkPattern(Pattern pattern, String test, String... parts) {
+    Matcher matcher = pattern.matcher(test);
+    assertTrue(matcher.matches());
+    for (int i = 0; i < parts.length; i++)
+      assertEquals(parts[i], matcher.group(i + 1));
+  }
+
+
+  private static void checkPatternFails(Pattern pattern, String test) {
+    assertFalse(pattern.matcher(JOB.normalize(test)).matches());
+  }
+
+
   private static void nomStatusRemark(String remarks) {
     nomStatusRemark(remarks, remarks);
   }
