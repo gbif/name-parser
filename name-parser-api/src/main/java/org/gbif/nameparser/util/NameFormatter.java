@@ -1,12 +1,12 @@
 package org.gbif.nameparser.util;
 
-import java.util.List;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import org.gbif.nameparser.api.*;
+
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -293,9 +293,9 @@ public class NameFormatter {
     }
     
     // add strain name (phrase names get special treatment)
-    if (showStrain && n.getStrain() != null && !n.isPhraseName()) {
+    if (showStrain && n.getPhrase() != null && !n.isPhraseName()) {
       sb.append(" ")
-          .append(n.getStrain());
+          .append(n.getPhrase());
     }
     
     // add cultivar name
@@ -319,7 +319,7 @@ public class NameFormatter {
 
     // Add phrase name
     if (showPhrase && n.isPhraseName()) {
-      String phrase = n.getStrain();
+      String phrase = n.getPhrase();
       String voucher = n.getVoucher();
       String nominatingParty = n.getNominatingParty();
       appendIfNotEmpty(sb, " ").append(phrase);

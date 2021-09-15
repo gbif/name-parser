@@ -1,8 +1,8 @@
 package org.gbif.nameparser.util;
 
-import java.text.Normalizer;
-
 import org.apache.commons.lang3.StringUtils;
+
+import java.text.Normalizer;
 
 /**
  * Utilities dealing with unicode strings

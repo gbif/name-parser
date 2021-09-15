@@ -1,16 +1,15 @@
 package org.gbif.nameparser.api;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.ObjectUtils;
+import org.gbif.nameparser.util.NameFormatter;
+
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-
-import com.google.common.collect.Lists;
-import org.apache.commons.lang3.ObjectUtils;
-import org.gbif.nameparser.util.NameFormatter;
 
 import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
 
@@ -76,7 +75,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   
   private String cultivarEpithet;
   
-  private String strain;
+  private String phrase;
 
   /**
    * The voucher in a phrase name
@@ -137,7 +136,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     specificEpithet = pn.specificEpithet;
     infraspecificEpithet = pn.infraspecificEpithet;
     cultivarEpithet = pn.cultivarEpithet;
-    strain = pn.strain;
+    phrase = pn.phrase;
     voucher = pn.voucher;
     nominatingParty = pn.nominatingParty;
     candidatus = pn.candidatus;
@@ -249,12 +248,12 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     this.cultivarEpithet = cultivarEpithet;
   }
   
-  public String getStrain() {
-    return strain;
+  public String getPhrase() {
+    return phrase;
   }
   
-  public void setStrain(String strain) {
-    this.strain = strain;
+  public void setPhrase(String phrase) {
+    this.phrase = phrase;
   }
 
   public String getVoucher() {
@@ -355,7 +354,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * @return true if the parsed name has non null name properties or a scientific name. Remarks will not count as a name
    */
   public boolean hasName() {
-    return ObjectUtils.firstNonNull(uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, strain, cultivarEpithet) != null;
+    return ObjectUtils.firstNonNull(uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, phrase, cultivarEpithet) != null;
   }
 
   public boolean isHybridName() {
@@ -415,7 +414,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * @return True if this is a phrase name
    */
   public boolean isPhraseName() {
-    return strain != null && !this.strain.isEmpty() && this.voucher != null && !this.voucher.isEmpty();
+    return phrase != null && !this.phrase.isEmpty() && this.voucher != null && !this.voucher.isEmpty();
   }
   
   /**
@@ -462,24 +461,24 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     return candidatus == that.candidatus &&
         rank == that.rank &&
         code == that.code &&
-        Objects.equals(uninomial, that.uninomial) &&
-        Objects.equals(genus, that.genus) &&
-        Objects.equals(infragenericEpithet, that.infragenericEpithet) &&
-        Objects.equals(specificEpithet, that.specificEpithet) &&
-        Objects.equals(infraspecificEpithet, that.infraspecificEpithet) &&
-        Objects.equals(cultivarEpithet, that.cultivarEpithet) &&
-        Objects.equals(strain, that.strain) &&
-        Objects.equals(this.voucher, that.voucher) &&
-        Objects.equals(this.nominatingParty, that.nominatingParty) &&
+           Objects.equals(uninomial, that.uninomial) &&
+           Objects.equals(genus, that.genus) &&
+           Objects.equals(infragenericEpithet, that.infragenericEpithet) &&
+           Objects.equals(specificEpithet, that.specificEpithet) &&
+           Objects.equals(infraspecificEpithet, that.infraspecificEpithet) &&
+           Objects.equals(cultivarEpithet, that.cultivarEpithet) &&
+           Objects.equals(phrase, that.phrase) &&
+           Objects.equals(this.voucher, that.voucher) &&
+           Objects.equals(this.nominatingParty, that.nominatingParty) &&
         notho == that.notho &&
-        Objects.equals(epithetQualifier, that.epithetQualifier) &&
+           Objects.equals(epithetQualifier, that.epithetQualifier) &&
         type == that.type;
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet,
-        cultivarEpithet, strain, voucher, nominatingParty, candidatus, notho, epithetQualifier, type);
+        cultivarEpithet, phrase, voucher, nominatingParty, candidatus, notho, epithetQualifier, type);
   }
 
   @Override
@@ -511,8 +510,8 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     if (cultivarEpithet != null) {
       sb.append(" CV:").append(cultivarEpithet);
     }
-    if (strain != null) {
-      sb.append(" STR:").append(strain);
+    if (phrase != null) {
+      sb.append(" STR:").append(phrase);
     }
     if (voucher != null) {
       sb.append(" VOU:").append(voucher);

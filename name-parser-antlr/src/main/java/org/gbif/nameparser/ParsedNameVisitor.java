@@ -1,12 +1,9 @@
 package org.gbif.nameparser;
 
-import java.util.stream.Collectors;
-
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.antlr.SciNameBaseVisitor;
 import org.gbif.nameparser.antlr.SciNameParser;
-import org.gbif.nameparser.api.Authorship;
 import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;

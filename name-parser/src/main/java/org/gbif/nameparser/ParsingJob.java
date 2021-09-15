@@ -538,7 +538,7 @@ class ParsingJob implements Callable<ParsedName> {
     m = BOLD_PLACEHOLDERS.matcher(name);
     if (m.find()) {
       pn.setUninomial(m.group(1));
-      pn.setStrain(m.group(2));
+      pn.setPhrase(m.group(2));
       pn.setState(ParsedName.State.COMPLETE);
       checkBlacklist(); // check blacklist
       pn.setType(NameType.PLACEHOLDER);
@@ -631,7 +631,7 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       name = m.group(1);
       pn.setRank(RankUtils.inferRank(m.group(2)));
-      pn.setStrain(stripSurround(m.group(3), '\'', '\''));
+      pn.setPhrase(stripSurround(m.group(3), '\'', '\''));
       pn.setVoucher(m.group(4));
       pn.setNominatingParty(m.group(5));
       pn.setTaxonomicNote(stripSurround(m.group(6), '[', ']'));
@@ -714,7 +714,7 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       name = m.replaceFirst(m.group(1));
       pn.setType(NameType.INFORMAL);
-      pn.setStrain(m.group(2));
+      pn.setPhrase(m.group(2));
       LOG.debug("Strain: {}", m.group(2));
     }
 

@@ -176,7 +176,7 @@ public class NameParserGbifV1 implements NameParser {
     if (gbif.getRank() == Rank.UNRANKED && Rank.UNRANKED != rank) {
       gbif.setRank(null);
     }
-    gbif.setStrain(pn.getStrain());
+    gbif.setStrain(pn.getPhrase());
     gbif.setSensu(pn.getTaxonomicNote());
 
     gbif.setAuthorship(NameFormatter.authorString(pn.getCombinationAuthorship(), false));

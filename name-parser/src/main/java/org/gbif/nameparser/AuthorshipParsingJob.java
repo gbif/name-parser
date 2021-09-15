@@ -2,7 +2,10 @@ package org.gbif.nameparser;
 
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
-import org.gbif.nameparser.api.*;
+import org.gbif.nameparser.api.NameType;
+import org.gbif.nameparser.api.ParsedName;
+import org.gbif.nameparser.api.Rank;
+import org.gbif.nameparser.api.UnparsableNameException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

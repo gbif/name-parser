@@ -480,7 +480,7 @@ public class NameFormatterTest {
     assertName("Pseudomonas syringae aceris", "Pseudomonas syringae pv. aceris Van Hall, 1904");
     assertHtml("<i>Pseudomonas</i> <i>syringae</i> pv. <i>aceris</i> Van Hall, 1904");
     
-    pn.setStrain("CFBP 2339");
+    pn.setPhrase("CFBP 2339");
     assertName("Pseudomonas syringae aceris", "Pseudomonas syringae pv. aceris Van Hall, 1904 CFBP 2339");
     assertHtml("<i>Pseudomonas</i> <i>syringae</i> pv. <i>aceris</i> Van Hall, 1904 CFBP 2339");
     
@@ -534,7 +534,7 @@ public class NameFormatterTest {
   public void testPhraseName() throws Exception {
     pn.setGenus("Acacia");
     pn.setRank(Rank.SPECIES);
-    pn.setStrain("Bigge Island");
+    pn.setPhrase("Bigge Island");
     pn.setVoucher("A.A. Mitchell 3436");
     pn.setType(NameType.INFORMAL);
 

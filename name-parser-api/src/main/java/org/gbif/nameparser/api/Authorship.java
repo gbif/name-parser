@@ -1,12 +1,12 @@
 package org.gbif.nameparser.api;
 
+import com.google.common.base.Strings;
+import org.gbif.nameparser.util.NameFormatter;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-
-import com.google.common.base.Strings;
-import org.gbif.nameparser.util.NameFormatter;
 
 /**
  * Authorship of the name (recombination) or basionym

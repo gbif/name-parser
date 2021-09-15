@@ -1,11 +1,11 @@
 package org.gbif.nameparser;
 
-import java.util.Set;
-
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gbif.nameparser.api.*;
+
+import java.util.Set;
 
 import static org.gbif.nameparser.api.NomCode.BACTERIAL;
 import static org.gbif.nameparser.api.NomCode.BOTANICAL;
@@ -22,7 +22,7 @@ public class NameAssertion {
     TYPE,
     EPITHETS,
     INFRAGEN,
-    STRAIN,
+    PHRASE,
     CULTIVAR,
     EXTINCT,
     CANDIDATE,
@@ -42,7 +42,7 @@ public class NameAssertion {
     REMAINS,
     WARNING,
     MANUSCRIPT,
-    PHRASE,
+    VOUCHER,
     QUALIFIERS
   }
   
@@ -62,8 +62,8 @@ public class NameAssertion {
           case INFRAGEN:
             assertNull(n.getInfragenericEpithet());
             break;
-          case STRAIN:
-            assertNull(n.getStrain());
+          case PHRASE:
+            assertNull(n.getPhrase());
             break;
           case CULTIVAR:
             assertNull(n.getCultivarEpithet());
@@ -136,7 +136,7 @@ public class NameAssertion {
           case MANUSCRIPT:
             assertFalse(n.isManuscript());
             break;
-          case PHRASE:
+          case VOUCHER:
             assertFalse(n.isPhraseName());
             assertNull(n.getVoucher());
             assertNull(n.getNominatingParty());
@@ -282,17 +282,17 @@ public class NameAssertion {
     return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.CODE);
   }
 
-  NameAssertion phrase(String genus, String phrase, Rank rank, String voucher, String nominatingParty) {
+  NameAssertion phraseName(String genus, String phrase, Rank rank, String voucher, String nominatingParty) {
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());
     assertNull(n.getCultivarEpithet());
-    assertEquals(phrase, n.getStrain());
+    assertEquals(phrase, n.getPhrase());
     assertEquals(voucher, n.getVoucher());
     assertEquals(nominatingParty, n.getNominatingParty());
     assertTrue(n.isPhraseName());
     assertEquals(rank, n.getRank());
     assertEquals(NameType.INFORMAL, n.getType());
-    return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.TYPE, NP.STRAIN, NP.PHRASE);
+    return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.TYPE, NP.PHRASE, NP.VOUCHER);
   }
 
   NameAssertion code(NomCode code) {
@@ -311,11 +311,12 @@ public class NameAssertion {
     return add(NP.CANDIDATE, NP.CODE);
   }
   
-  NameAssertion strain(String strain) {
-    assertEquals(strain, n.getStrain());
-    return add(NP.STRAIN);
+  NameAssertion phrase(String phrase) {
+    assertNull(n.getCultivarEpithet());
+    assertEquals(phrase, n.getPhrase());
+    return add(NP.PHRASE);
   }
-  
+
   NameAssertion sensu(String sensu) {
     assertEquals(sensu, n.getTaxonomicNote());
     return add(NP.TAXNOTE);

@@ -1,7 +1,5 @@
 package org.gbif.nameparser;
 
-import javax.annotation.Nullable;
-
 import com.google.common.base.Strings;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -10,6 +8,8 @@ import org.gbif.nameparser.antlr.SciNameParser;
 import org.gbif.nameparser.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
 
 /**
  * The GBIF name parser build on ANTLR v4 ALL(*) grammar.

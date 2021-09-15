@@ -7,8 +7,8 @@ import org.gbif.nameparser.utils.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.*;
 import javax.annotation.Nullable;
+import java.util.concurrent.*;
 
 /**
  * The default GBIF name parser build on regular expressions.

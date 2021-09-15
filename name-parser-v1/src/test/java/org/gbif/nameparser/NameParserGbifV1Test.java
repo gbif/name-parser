@@ -10,10 +10,6 @@ import org.junit.Test;
 
 import java.lang.management.ManagementFactory;
 
-import static org.gbif.nameparser.api.NameType.PLACEHOLDER;
-import static org.gbif.nameparser.api.NomCode.ZOOLOGICAL;
-import static org.gbif.nameparser.api.Rank.FAMILY;
-import static org.gbif.nameparser.api.Rank.GENUS;
 import static org.junit.Assert.*;
 
 

@@ -1,13 +1,16 @@
 package org.gbif.nameparser.util;
 
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
-
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.gbif.nameparser.api.LinneanName;
 import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.Rank;
+
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static org.gbif.nameparser.api.Rank.*;
 

@@ -13,9 +13,9 @@ import scala.Option;
 import scala.collection.Iterator;
 import scala.collection.Map;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
 /**
  * Wrapper around the GNA Name parser to deal with ParsedName and API.

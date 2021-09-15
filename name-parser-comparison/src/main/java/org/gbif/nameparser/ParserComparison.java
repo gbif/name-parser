@@ -1,8 +1,6 @@
 package org.gbif.nameparser;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.io.Closeables;
-import org.apache.commons.io.IOUtils;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.UnparsableNameException;
