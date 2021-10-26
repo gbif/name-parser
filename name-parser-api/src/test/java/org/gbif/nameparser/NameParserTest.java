@@ -62,6 +62,18 @@ public abstract class NameParserTest {
         .nothingElse();
   }
 
+  /**
+   * https://github.com/gbif/name-parser/issues/82
+   */
+  @Test
+  public void error() throws Exception {
+    assertName("Agama annectans Blanford, 1870 [orth. error]", "Agama annectans")
+        .species("Agama", "annectans")
+        .combAuthors("1870", "Blanford")
+        .nomNote("orth.error")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
 
   /**
    * https://github.com/gbif/name-parser/issues/80

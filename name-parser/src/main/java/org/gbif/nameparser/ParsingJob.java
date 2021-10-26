@@ -232,16 +232,17 @@ class ParsingJob implements Callable<ParsedName> {
   static final String MANUSCRIPT_STATUS = "(?:(?:comb[. ]?)?ined|ms|in press|unpublished)\\.?($|\\s)";
   static final Pattern MANUSCRIPT_STATUS_PATTERN = Pattern.compile(MANUSCRIPT_STATUS);
   static final Pattern EXTRACT_NOMSTATUS = Pattern.compile("[;, ]?"
-      + "\\(?"
+      + "[(\\[]?"
       + "\\b("
         + "(?:comb|"+NOV_RANKS+")[. ]nov\\b[. ]?(?:ined[. ])?"
         + "|"+MANUSCRIPT_STATUS
+        + "|orth[. ](?:var|error)"
         + "|nom(?:en)?[. ]"
           + "(?:utiq(?:ue)?[. ])?"
           + "(?:ambig|alter|alt|correct|cons|dubium|dub|herb|illeg|invalid|inval|negatum|neg|novum|nov|nudum|nud|oblitum|obl|praeoccup|prov|prot|transf|superfl|super|rejic|rej)\\b[. ]?"
           + "(?:prop[. ]|proposed\\b)?"
       + ")"
-      + "\\)?");
+      + "[)\\]]?");
   private static final Pattern NORM_ANON = Pattern.compile("\\b(anon\\.?)(\\b|\\s|$)");
   private static final Pattern COMMA_AFTER_BASYEAR = Pattern.compile("("+YEAR+")\\s*\\)\\s*,");
   private static final Pattern NORM_APOSTROPHES = Pattern.compile("([\u0060\u00B4\u2018\u2019]+)");
