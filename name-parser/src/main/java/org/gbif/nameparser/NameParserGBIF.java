@@ -20,16 +20,12 @@ import java.util.concurrent.*;
 public class NameParserGBIF implements NameParser {
   public static final String THREAD_NAME = "NameParser-worker";
   private static Logger LOG = LoggerFactory.getLogger(NameParserGBIF.class);
+
   /**
    * We use a cached daemon threadpool to run the parsing in the background so we can control
-   * timeouts. If idle the pool shrinks to no threads after 10 seconds.
+   * timeouts. If idle the pool shrinks to no threads after 1 seconds plus configured timeout.
    */
-  private static final ExecutorService EXEC = new ThreadPoolExecutor(0, 100,
-      10L, TimeUnit.SECONDS,
-      new SynchronousQueue<Runnable>(),
-      new NamedThreadFactory(THREAD_NAME, Thread.NORM_PRIORITY, true),
-      new ThreadPoolExecutor.CallerRunsPolicy());
-
+  private final ExecutorService exec;
   private final long timeout;  // max parsing time in milliseconds
   private final ParserConfigs configs = new ParserConfigs();
 
@@ -37,18 +33,37 @@ public class NameParserGBIF implements NameParser {
    * The default name parser without an explicit monomials list using the default timeout of 1s for parsing.
    */
   public NameParserGBIF() {
-    this(1000);  // max default parsing time is one second;
+    this(1000);
   }
 
   /**
-   * The default name parser without an explicit monomials list using the given timeout in milliseconds for parsing.
+   * @param timeout max parsing time in milliseconds
    */
   public NameParserGBIF(long timeout) {
+    this(timeout, 0, 100);
+  }
+
+  /**
+   * @param timeout max parsing time in milliseconds
+   */
+  public NameParserGBIF(long timeout, int corePoolSize, int maxPoolSize) {
+    this(timeout, new ThreadPoolExecutor(corePoolSize, maxPoolSize,
+        1000 + 2*timeout, TimeUnit.MILLISECONDS,
+        new SynchronousQueue<>(),
+        new NamedThreadFactory(THREAD_NAME, Thread.NORM_PRIORITY, true),
+        new ThreadPoolExecutor.CallerRunsPolicy()));
+  }
+
+    /**
+     * The default name parser without an explicit monomials list using the given timeout in milliseconds for parsing.
+     */
+  public NameParserGBIF(long timeout, ExecutorService executorService) {
     Preconditions.checkArgument(timeout > 0, "Timeout needs to be at least 1ms");
     LOG.debug("Create new name parser with timeout={}", timeout);
-    this.timeout = timeout;  // max default parsing time is one second;
+    this.timeout = timeout;
+    this.exec = executorService;
   }
-  
+
   /**
    * @deprecated provide rank and code parameters
    */
@@ -72,7 +87,7 @@ public class NameParserGBIF implements NameParser {
 
     AuthorshipParsingJob job = new AuthorshipParsingJob(authorship, configs);
     FutureTask<ParsedName> task = new FutureTask<>(job);
-    EXEC.execute(task);
+    exec.execute(task);
 
     try {
       return task.get(timeout, TimeUnit.MILLISECONDS);
@@ -127,7 +142,7 @@ public class NameParserGBIF implements NameParser {
     }
     
     FutureTask<ParsedName> task = new FutureTask<ParsedName>(new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank, code, configs));
-    EXEC.execute(task);
+    exec.execute(task);
 
     try {
       return task.get(timeout, TimeUnit.MILLISECONDS);
@@ -160,11 +175,11 @@ public class NameParserGBIF implements NameParser {
   @Override
   public void close() throws Exception {
     LOG.info("Shutting down name parser worker threads");
-    EXEC.shutdown();
-    if (EXEC.awaitTermination(1, TimeUnit.SECONDS)) {
+    exec.shutdown();
+    if (exec.awaitTermination(1, TimeUnit.SECONDS)) {
       LOG.info("shutdown succeeded orderly");
     } else {
-      int count = EXEC.shutdownNow().size();
+      int count = exec.shutdownNow().size();
       LOG.warn("forced shutdown of name parser workers, discarding {} queued parsing tasks", count);
     }
   }
