@@ -5,10 +5,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
@@ -323,7 +320,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   public void setEpithetQualifier(NamePart part, String qualifier) {
     if (part != null && qualifier != null) {
       if (epithetQualifier == null) {
-        epithetQualifier = new HashMap<>();
+        epithetQualifier = new EnumMap<>(NamePart.class);
       }
       epithetQualifier.put(part, qualifier);
     }
@@ -448,6 +445,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   /**
    * @See NameFormatter.authorshipComplete()
    */
+  @Override
   public String authorshipComplete() {
     return NameFormatter.authorshipComplete(this);
   }

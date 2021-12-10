@@ -10,8 +10,7 @@ import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -61,14 +60,14 @@ public class InterruptibleCharSequenceTest {
   @Test
   public void testRegexTimeout() throws InterruptedException {
     final String threadName = "regex-worker";
-    final ExecutorService EXEC = new ThreadPoolExecutor(0, 20, 100L, TimeUnit.MILLISECONDS,
+    final ExecutorService exec = new ThreadPoolExecutor(0, 20, 100L, TimeUnit.MILLISECONDS,
         new SynchronousQueue<Runnable>(),
         new NamedThreadFactory(threadName, Thread.NORM_PRIORITY, true),
         new ThreadPoolExecutor.CallerRunsPolicy());
 
     for (int x = 0; x<8; x++) {
       System.out.println("Executing task " + x);
-      Future<Long> task = EXEC.submit(LongRegxJob.interruptable());
+      Future<Long> task = exec.submit(LongRegxJob.interruptable());
       try {
         Long duration = task.get(100, TimeUnit.MILLISECONDS);
         fail("Expected to timeout but parsed in " + duration + "ms");
@@ -86,7 +85,7 @@ public class InterruptibleCharSequenceTest {
     //allow for some time to interrupt
     long sleep = 100;
     System.out.println("Wait for " + sleep + "ms");
-    Thread.sleep(sleep);
+    TimeUnit.MILLISECONDS.sleep(sleep);
 
     // now make sure the regex runner thread is dead!
     Set<Thread> threads = Thread.getAllStackTraces().keySet();
@@ -97,11 +96,11 @@ public class InterruptibleCharSequenceTest {
     }
     for (Thread t : threads) {
       if (t.getName().startsWith(threadName)) {
-        assertFalse("Running executor thread detected", t.getState() == Thread.State.RUNNABLE);
+        assertNotSame("Running executor thread detected", t.getState(), Thread.State.RUNNABLE);
       }
     }
 
-    EXEC.shutdown();
+    exec.shutdown();
   }
 
 }

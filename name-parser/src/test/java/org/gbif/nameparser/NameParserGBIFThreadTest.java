@@ -60,7 +60,7 @@ public class NameParserGBIFThreadTest {
     List done = exec.invokeAll(jobs);
     System.out.println(watch.elapsed(TimeUnit.MILLISECONDS));
 
-    Thread.sleep(1000*16);
+    TimeUnit.SECONDS.sleep(5);
     System.out.println("Bye bye");
   }
 
@@ -79,7 +79,7 @@ public class NameParserGBIFThreadTest {
     List done = exec.invokeAll(jobs);
     System.out.println(watch.elapsed(TimeUnit.MILLISECONDS));
 
-    Thread.sleep(1000*16);
+    TimeUnit.SECONDS.sleep(5);
     System.out.println("Bye bye");
   }
 

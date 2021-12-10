@@ -981,7 +981,6 @@ class ParsingJob implements Callable<ParsedName> {
    *
    * @return The normalized name
    */
-  @VisibleForTesting
   String normalize(String name) {
     if (name == null) {
       return null;
@@ -1186,7 +1185,6 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * basic careful cleaning, trying to preserve all parsable name parts
    */
-  @VisibleForTesting
   String preClean(String name) {
     return preClean(name, pn.getWarnings());
   }
@@ -1614,7 +1612,6 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
 
-  @VisibleForTesting
   static Authorship parseAuthorship(String ex, String authors, String year) {
     Authorship a = new Authorship();
     if (authors != null) {

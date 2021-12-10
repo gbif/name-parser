@@ -7,6 +7,7 @@ import org.gbif.nameparser.api.UnparsableNameException;
 import org.junit.Test;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
@@ -44,7 +45,7 @@ public class NameParserGBIFTimeoutTest {
       System.out.println("Parsing took " + duration + "ms");
 
       // make sure no further parser threads are running. Give the JVM a few milliseconds to interrupt the task
-      Thread.sleep(extra);
+      TimeUnit.MILLISECONDS.sleep(extra);
 
       Set<Thread> threads = Thread.getAllStackTraces().keySet();
       for (Thread t : threads) {

@@ -300,7 +300,7 @@ public class RankUtils {
       if (pn.getCode() == null) {
         suffices = GLOBAL_SUFFICES_RANK_MAP;
       } else {
-        suffices = SUFFICES_RANK_MAP.getOrDefault(pn.getCode(), Collections.EMPTY_MAP);
+        suffices = SUFFICES_RANK_MAP.getOrDefault(pn.getCode(), Collections.emptyMap());
       }
       for (Map.Entry<String, Rank> e : suffices.entrySet()) {
         if (pn.getUninomial().endsWith(e.getKey())) {
