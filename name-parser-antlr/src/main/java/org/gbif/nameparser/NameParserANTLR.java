@@ -44,6 +44,7 @@ public class NameParserANTLR implements org.gbif.nameparser.api.NameParser {
    *
    * @throws UnparsableNameException
    */
+  @Override
   public ParsedName parse(String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException {
     if (Strings.isNullOrEmpty(scientificName)) {
       unparsable(NameType.NO_NAME, null);
