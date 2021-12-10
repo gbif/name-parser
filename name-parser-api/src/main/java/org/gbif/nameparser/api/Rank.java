@@ -19,10 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -379,7 +376,7 @@ public enum Rank {
 
   private static final Map<Rank, Rank> MAJOR_RANKS;
   static {
-    Map<Rank, Rank> map = new HashMap<>();
+    Map<Rank, Rank> map = new EnumMap<>(Rank.class);
     Pattern prefixes = Pattern.compile("^(SUPER|SUB(?:TER)?|INFRA|GIGA|MAGN|GRAND|MIR|NAN|HYPO|MIN|PARV|MEGA|EPI)");
     for (Rank r : Rank.values()) {
       Rank major = r;

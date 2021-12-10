@@ -38,6 +38,7 @@ public class NamedThreadFactory implements ThreadFactory {
     this.daemon = daemon;
   }
 
+  @Override
   public Thread newThread(Runnable r) {
     Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
     t.setPriority(priority);
