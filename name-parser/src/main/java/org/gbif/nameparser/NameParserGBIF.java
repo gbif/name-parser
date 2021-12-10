@@ -19,7 +19,7 @@ import java.util.concurrent.*;
  */
 public class NameParserGBIF implements NameParser {
   public static final String THREAD_NAME = "NameParser-worker";
-  private static Logger LOG = LoggerFactory.getLogger(NameParserGBIF.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NameParserGBIF.class);
 
   /**
    * We use a cached daemon threadpool to run the parsing in the background so we can control
@@ -136,12 +136,13 @@ public class NameParserGBIF implements NameParser {
    *
    * @throws UnparsableNameException
    */
+  @Override
   public ParsedName parse(final String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException {
     if (Strings.isNullOrEmpty(scientificName)) {
       throw new UnparsableNameException(NameType.NO_NAME, scientificName);
     }
     
-    FutureTask<ParsedName> task = new FutureTask<ParsedName>(new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank, code, configs));
+    FutureTask<ParsedName> task = new FutureTask<>(new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank, code, configs));
     exec.execute(task);
 
     try {
