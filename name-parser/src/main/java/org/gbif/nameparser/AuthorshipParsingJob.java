@@ -54,7 +54,7 @@ public class AuthorshipParsingJob extends ParsingJob {
      * @throws UnparsableNameException
      */
     @Override
-    public ParsedName call() throws UnparsableNameException {
+    public ParsedName call() throws UnparsableNameException, InterruptedException {
         long start = 0;
         if (LOG.isDebugEnabled()) {
             start = System.currentTimeMillis();
@@ -110,9 +110,9 @@ public class AuthorshipParsingJob extends ParsingJob {
         unparsable(NameType.NO_NAME);
     }
 
-    private void parseNormalisedAuthorship() throws UnparsableNameException {
+    private void parseNormalisedAuthorship() throws UnparsableNameException, InterruptedException {
         LOG.debug("Parse normed authorship: {}", name);
-        Matcher m = AUTHORSHIP_PATTERN.matcher(name);
+        Matcher m = matcherInterruptable(AUTHORSHIP_PATTERN, name);
         if (m.find()) {
             // #9 any remainder
             if (StringUtils.isBlank(m.group(9))) {

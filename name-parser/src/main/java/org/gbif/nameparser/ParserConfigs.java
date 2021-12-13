@@ -39,8 +39,13 @@ public class ParserConfigs {
   }
 
   static String norm(String x) {
-    x = ParsingJob.preClean(x, null).toLowerCase();
-    x = MORE_WS.matcher(x).replaceAll(" ");
-    return MORE_WS2.matcher(x).replaceAll(" $1 ");
+    try {
+      x = ParsingJob.preClean(x, null).toLowerCase();
+      x = MORE_WS.matcher(x).replaceAll(" ");
+      return MORE_WS2.matcher(x).replaceAll(" $1 ");
+
+    } catch (InterruptedException e) {
+      return x;
+    }
   }
 }

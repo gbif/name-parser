@@ -5,10 +5,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -60,46 +63,46 @@ public class InterruptibleCharSequenceTest {
   @Test
   public void testRegexTimeout() throws InterruptedException {
     final String threadName = "regex-worker";
-    final ExecutorService exec = new ThreadPoolExecutor(0, 20, 100L, TimeUnit.MILLISECONDS,
+    final ExecutorService exec = new ThreadPoolExecutor(0, 10, 250L, TimeUnit.MILLISECONDS,
         new SynchronousQueue<Runnable>(),
         new NamedThreadFactory(threadName, Thread.NORM_PRIORITY, true),
         new ThreadPoolExecutor.CallerRunsPolicy());
 
+    List<Future<Long>> futures = new ArrayList<>();
     for (int x = 0; x<8; x++) {
-      System.out.println("Executing task " + x);
-      Future<Long> task = exec.submit(LongRegxJob.interruptable());
+      System.out.println("Submitting task " + x);
+      futures.add(exec.submit(LongRegxJob.interruptable()));
+    }
+
+    for (Future<Long> f : futures) {
       try {
-        Long duration = task.get(100, TimeUnit.MILLISECONDS);
+        Long duration = f.get(100, TimeUnit.MILLISECONDS);
         fail("Expected to timeout but parsed in " + duration + "ms");
 
       } catch (TimeoutException e) {
         // timeout happend, expected. Add more tasks
-        System.out.println("Task " + x + " timed out as expected. Interrupt");
-        task.cancel(true);
+        System.out.println("Task " + f + " timed out as expected. Cancel");
+        f.cancel(true);
 
       } catch (InterruptedException | ExecutionException e) {
         e.printStackTrace();
       }
     }
 
-    //allow for some time to interrupt
-    long sleep = 100;
+    //allow for some time to interrupt and destroy the threads
+    long sleep = 500;
     System.out.println("Wait for " + sleep + "ms");
     TimeUnit.MILLISECONDS.sleep(sleep);
 
     // now make sure the regex runner thread is dead!
-    Set<Thread> threads = Thread.getAllStackTraces().keySet();
+    Set<Thread> threads = Thread.getAllStackTraces().keySet().stream()
+                                .filter(t -> t.getName().startsWith(threadName))
+                                .collect(Collectors.toSet());
     for (Thread t : threads) {
-      if (t.getName().startsWith(threadName)) {
-        System.out.println(t.getName() + "  -->  " + t.getState());
-      }
+      assertNotSame("Running executor thread detected", Thread.State.RUNNABLE, t.getState());
     }
-    for (Thread t : threads) {
-      if (t.getName().startsWith(threadName)) {
-        assertNotSame("Running executor thread detected", t.getState(), Thread.State.RUNNABLE);
-      }
-    }
-
+    // there should be no idle threads kept by the pool
+    assertEquals(0, threads.size());
     exec.shutdown();
   }
 

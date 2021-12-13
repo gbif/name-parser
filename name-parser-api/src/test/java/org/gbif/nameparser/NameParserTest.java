@@ -3,6 +3,7 @@ package org.gbif.nameparser;
 import com.google.common.collect.Iterables;
 import org.apache.commons.io.LineIterator;
 import org.gbif.nameparser.api.*;
+import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -29,6 +30,11 @@ public abstract class NameParserTest {
   
   protected NameParserTest(NameParser parser) {
     this.parser = parser;
+  }
+
+  @After
+  public void teardown() throws Exception {
+    parser.close();
   }
 
   /**

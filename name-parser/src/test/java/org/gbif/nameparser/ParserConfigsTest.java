@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 public class ParserConfigsTest {
 
   @Test
-  public void norm() {
+  public void norm() throws InterruptedException {
     assertNorm("zur strassen 1973", "zur Strassen,  1973");
     assertNorm("zur strassen 1973", "zur Strassen , 1973");
     assertNorm("zur strassen 1973", " zur Strassen, 1973");
@@ -23,7 +23,7 @@ public class ParserConfigsTest {
     assertNorm(" ( zur strassen 1973 ) markus robert", "( zur Strassen, 1973 ) Markus & RObert");
   }
 
-  private void assertNorm(String expect, String x) {
+  private void assertNorm(String expect, String x) throws InterruptedException {
     //System.out.println(String.format("%50s -> %s", x, ParserConfigs.norm(x)));
     assertEquals(expect, ParserConfigs.norm(x));
   }

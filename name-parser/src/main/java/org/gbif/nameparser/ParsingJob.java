@@ -16,6 +16,8 @@ import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
+import java.nio.channels.InterruptedByTimeoutException;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
@@ -422,8 +424,25 @@ class ParsingJob implements Callable<ParsedName> {
       + "\\s*(" + NOTE + ")?$"
   );
 
-  static Matcher interruptableMatcher(Pattern pattern, String text) {
+  static Matcher matcherInterruptable(Pattern pattern, String text) throws InterruptedException {
+    if (Thread.currentThread().isInterrupted()) {
+      throw new InterruptedException("Interrupted!");
+    }
     return pattern.matcher(new InterruptibleCharSequence(text));
+  }
+
+  static String replAllInterruptable(Pattern pattern, String text, String replacement) throws InterruptedException {
+    if (Thread.currentThread().isInterrupted()) {
+      throw new InterruptedException("Interrupted!");
+    }
+    return pattern.matcher(new InterruptibleCharSequence(text)).replaceAll(replacement);
+  }
+
+  static boolean findInterruptable(Pattern pattern, String text) throws InterruptedException {
+    if (Thread.currentThread().isInterrupted()) {
+      throw new InterruptedException("Interrupted!");
+    }
+    return pattern.matcher(new InterruptibleCharSequence(text)).find();
   }
 
   final Rank rank;
@@ -463,7 +482,7 @@ class ParsingJob implements Callable<ParsedName> {
    * @throws UnparsableNameException
    */
   @Override
-  public ParsedName call() throws UnparsableNameException {
+  public ParsedName call() throws UnparsableNameException, InterruptedException {
     long start = 0;
     if (LOG.isDebugEnabled()) {
       start = System.currentTimeMillis();
@@ -495,7 +514,7 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * Parse very special cases and return true if the parsing succeeded and has thereby ended completely!
    */
-  private boolean specialCases() throws UnparsableNameException {
+  private boolean specialCases() throws UnparsableNameException, InterruptedException {
     // override exists?
     ParsedName over = configs.forName(name);
     if (over != null) {
@@ -505,7 +524,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // BOLD/UNITE OTU names
-    Matcher m = OTU_PATTERN.matcher(name);
+    Matcher m = matcherInterruptable(OTU_PATTERN, name);
     if (m.find()) {
       pn.setUninomial(m.group(1).toUpperCase());
       pn.setType(NameType.OTU);
@@ -516,7 +535,7 @@ class ParsingJob implements Callable<ParsedName> {
 
     // GTDB OTU names
     // https://github.com/gbif/name-parser/issues/74
-    m = GTDB_MONOMIAL_PATTERN.matcher(name);
+    m = matcherInterruptable(GTDB_MONOMIAL_PATTERN, name);
     if (m.find()) {
       pn.setUninomial(m.group());
       pn.setType(NameType.OTU);
@@ -524,7 +543,7 @@ class ParsingJob implements Callable<ParsedName> {
       pn.setState(ParsedName.State.COMPLETE);
       return true;
     }
-    m = GTDB_BINOMIAL_PATTERN.matcher(name);
+    m = matcherInterruptable(GTDB_BINOMIAL_PATTERN, name);
     if (m.find()) {
       pn.setGenus(m.group(1));
       pn.setSpecificEpithet(m.group(2));
@@ -536,7 +555,7 @@ class ParsingJob implements Callable<ParsedName> {
 
     // BOLD style placeholders
     // https://github.com/gbif/name-parser/issues/45
-    m = BOLD_PLACEHOLDERS.matcher(name);
+    m = matcherInterruptable(BOLD_PLACEHOLDERS, name);
     if (m.find()) {
       pn.setUninomial(m.group(1));
       pn.setPhrase(m.group(2));
@@ -548,7 +567,7 @@ class ParsingJob implements Callable<ParsedName> {
       return true;
     }
     // unparsable BOLD style placeholder: Iteaphila-group
-    m = UNPARSABLE_GROUP.matcher(name);
+    m = matcherInterruptable(UNPARSABLE_GROUP, name);
     if (m.find()) {
       // can we parse out a species group?
       if (m.group(2) != null) {
@@ -568,16 +587,16 @@ class ParsingJob implements Callable<ParsedName> {
     return false;
   }
   
-  void parse() throws UnparsableNameException {
+  void parse() throws UnparsableNameException, InterruptedException {
     // remove extinct markers
-    Matcher m = EXTINCT_PATTERN.matcher(name);
+    Matcher m = matcherInterruptable(EXTINCT_PATTERN, name);
     if (m.find()) {
       pn.setExtinct(true);
       name = m.replaceFirst("");
     }
 
     // before any cleaning test for properly quoted candidate names
-    m = IS_CANDIDATUS_QUOTE_PATTERN.matcher(scientificName);
+    m = matcherInterruptable(IS_CANDIDATUS_QUOTE_PATTERN, scientificName);
     if (m.find()) {
       pn.setCandidatus(true);
       name = m.replaceFirst(m.group(2));
@@ -587,10 +606,10 @@ class ParsingJob implements Callable<ParsedName> {
     preparseNomRef();
 
     // normalize bacterial rank markers
-    name = TYPE_TO_VAR.matcher(name).replaceAll("$1var");
+    name = replAllInterruptable(TYPE_TO_VAR, name,"$1var");
 
     // TODO: parse manuscript names properly
-    m = INFRASPEC_UPPER.matcher(name);
+    m = matcherInterruptable(INFRASPEC_UPPER, name);
     String infraspecEpithet = null;
     if (m.find()) {
       // we will replace is later again with infraspecific we memorized here!!!
@@ -601,14 +620,14 @@ class ParsingJob implements Callable<ParsedName> {
 
     // remove placeholders from infragenerics and authors and set type
     removePlaceholderAuthor();
-    m = REMOVE_PLACEHOLDER_INFRAGENERIC.matcher(name);
+    m = matcherInterruptable(REMOVE_PLACEHOLDER_INFRAGENERIC, name);
     if (m.find()) {
       name = m.replaceFirst("");
       pn.setType(NameType.PLACEHOLDER);
     }
 
     // resolve parsable names with a placeholder genus only
-    m = PLACEHOLDER_GENUS.matcher(name);
+    m = matcherInterruptable(PLACEHOLDER_GENUS, name);
     if (m.find()) {
       name = m.replaceFirst("? ");
       pn.setType(NameType.PLACEHOLDER);
@@ -617,18 +636,18 @@ class ParsingJob implements Callable<ParsedName> {
     // detect further unparsable names
     detectFurtherUnparsableNames();
 
-    if (IS_VIRUS_PATTERN.matcher(name).find() || IS_VIRUS_PATTERN_CASE_SENSITIVE.matcher(name).find()) {
+    if (findInterruptable(IS_VIRUS_PATTERN, name) || findInterruptable(IS_VIRUS_PATTERN_CASE_SENSITIVE, name)) {
       unparsable(NameType.VIRUS);
     }
 
     // detect RNA/DNA gene/strain names and flag as informal
-    if (IS_GENE.matcher(name).find()) {
+    if (findInterruptable(IS_GENE, name)) {
       pn.setType(NameType.INFORMAL);
     }
 
     // Extract phrase name phrase, voucher, nominating party and note
     // This is done before normalisation so that we can preserve case on the phrase
-    m = PHRASE_NAME.matcher(name);
+    m = matcherInterruptable(PHRASE_NAME, name);
     if (m.find()) {
       name = m.group(1);
       pn.setRank(RankUtils.inferRank(m.group(2)));
@@ -647,13 +666,13 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // remove family in front of subfamily ranks
-    m = FAMILY_PREFIX.matcher(name);
+    m = matcherInterruptable(FAMILY_PREFIX, name);
     if (m.find()) {
       name = m.replaceFirst("$1");
     }
 
     // check for supraspecific ranks at the beginning of the name
-    m = SUPRA_RANK_PREFIX.matcher(name);
+    m = matcherInterruptable(SUPRA_RANK_PREFIX, name);
     if (m.find()) {
       pn.setRank(RankUtils.RANK_MARKER_MAP.get(m.group(1).replace(".", "")));
       name = m.replaceFirst("");
@@ -662,7 +681,7 @@ class ParsingJob implements Callable<ParsedName> {
     // parse cultivar names first BEFORE we strongly normalize
     // this will potentially remove quotes needed to find cultivar names
     // this will potentially remove quotes needed to find cultivar group names
-    m = CULTIVAR_GROUP.matcher(name);
+    m = matcherInterruptable(CULTIVAR_GROUP, name);
     if (m.find()) {
       pn.setCultivarEpithet(m.group(1));
       name = m.replaceFirst(" ");
@@ -673,7 +692,7 @@ class ParsingJob implements Callable<ParsedName> {
         pn.setRank(Rank.CULTIVAR_GROUP);
       }
     }
-    m = CULTIVAR.matcher(name);
+    m = matcherInterruptable(CULTIVAR, name);
     if (m.find()) {
       pn.setCultivarEpithet(m.group(2));
       name = m.replaceFirst("$1");
@@ -681,15 +700,15 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // name without any latin char letter at all?
-    if (NO_LETTERS.matcher(name).find()) {
+    if (findInterruptable(NO_LETTERS, name)) {
       unparsable(NameType.NO_NAME);
     }
 
-    if (HYBRID_FORMULA_PATTERN.matcher(name).find()) {
+    if (findInterruptable(HYBRID_FORMULA_PATTERN, name)) {
       unparsable(NameType.HYBRID_FORMULA);
     }
 
-    m = IS_CANDIDATUS_PATTERN.matcher(name);
+    m = matcherInterruptable(IS_CANDIDATUS_PATTERN, name);
     if (m.find()) {
       pn.setCandidatus(true);
       name = m.replaceFirst("");
@@ -700,7 +719,7 @@ class ParsingJob implements Callable<ParsedName> {
 
     // manuscript (unpublished) names  without a full scientific name, e.g. Verticordia sp.1
     // http://splink.cria.org.br/documentos/appendix_j.pdf
-    m = MANUSCRIPT_NAMES.matcher(name);
+    m = matcherInterruptable(MANUSCRIPT_NAMES, name);
     String epithet = null;
     if (m.find()) {
       pn.setType(NameType.INFORMAL);
@@ -711,7 +730,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // parse out species/strain names with numbers found in Genebank/EBI names, e.g. Advenella kashmirensis W13003
-    m = STRAIN.matcher(name);
+    m = matcherInterruptable(STRAIN, name);
     if (m.find()) {
       name = m.replaceFirst(m.group(1));
       pn.setType(NameType.INFORMAL);
@@ -723,10 +742,10 @@ class ParsingJob implements Callable<ParsedName> {
     extractSecReference();
 
     // check for indets
-    m = RANK_MARKER_AT_END.matcher(name);
+    m = matcherInterruptable(RANK_MARKER_AT_END, name);
     // f. is a marker for forms, but more often also found in authorships as "filius" - son of.
     // so ignore those
-    if (m.find() && !FILIUS_AT_END.matcher(name).find()) {
+    if (m.find() && !findInterruptable(FILIUS_AT_END, name)) {
       // use as rank unless we already have a cultivar
       ignoreAuthorship = true;
       if (pn.getCultivarEpithet() == null) {
@@ -740,7 +759,7 @@ class ParsingJob implements Callable<ParsedName> {
 
     // save abbreviated author prefixes, avoiding them to become rank markers, e.g. v.
     final Map<String, String> authorPrefixes = new HashMap<>();
-    m = ABREV_AUTHOR_PREFIXES.matcher(name);
+    m = matcherInterruptable(ABREV_AUTHOR_PREFIXES, name);
     if (m.find()) {
       StringBuffer sb = new StringBuffer();
       do {
@@ -752,7 +771,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // remove superflous epithets with rank markers
-    m = REMOVE_INTER_RANKS.matcher(name);
+    m = matcherInterruptable(REMOVE_INTER_RANKS, name);
     if (m.find()) {
       logMatcher(m);
       pn.addWarning("Intermediate classification removed: " + m.group(1));
@@ -780,14 +799,14 @@ class ParsingJob implements Callable<ParsedName> {
     boolean parsed = parseNormalisedName(nameStrongly);
     if (!parsed) {
       // try to spot a virus name once we know its not a scientific name
-      m = IS_VIRUS_PATTERN_POSTFAIL.matcher(nameStrongly);
+      m = matcherInterruptable(IS_VIRUS_PATTERN_POSTFAIL, nameStrongly);
       if (m.find()) {
         unparsable(NameType.VIRUS);
       }
 
       // cant parse it, fail!
       // Does it appear to be a genuine name starting with a monomial?
-      if (POTENTIAL_NAME_PATTERN.matcher(name).find()) {
+      if (findInterruptable(POTENTIAL_NAME_PATTERN, name)) {
         unparsable(NameType.SCIENTIFIC);
       } else {
         unparsable(NameType.NO_NAME);
@@ -850,30 +869,30 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
 
-  void extractPublishedIn() {
-    Matcher m = REPL_IN_REF.matcher(name);
+  void extractPublishedIn() throws InterruptedException {
+    Matcher m = matcherInterruptable(REPL_IN_REF, name);
     if (m.find()) {
       pn.setPublishedIn(normNote(concat(m.group(2), m.group(3))));
       name = m.replaceFirst(m.group(3));
     }
   }
 
-  void detectFurtherUnparsableNames() throws UnparsableNameException {
-    if (PLACEHOLDER.matcher(name).find()) {
+  void detectFurtherUnparsableNames() throws UnparsableNameException, InterruptedException {
+    if (findInterruptable(PLACEHOLDER, name)) {
       unparsable(NameType.PLACEHOLDER);
     }
-    if (INFORMAL_UNPARSABLE.matcher(name).find()) {
+    if (findInterruptable(INFORMAL_UNPARSABLE, name)) {
       unparsable(NameType.INFORMAL);
     }
   }
 
-  void preparseNomRef(){
-    Matcher m = NOM_REFS.matcher(name);
+  void preparseNomRef() throws InterruptedException {
+    Matcher m = matcherInterruptable(NOM_REFS, name);
     if (m.find()) {
       name = stripNomRef(m);
       state = ParsedName.State.PARTIAL;
     } else {
-      m = NOM_REF_VOLUME.matcher(name);
+      m = matcherInterruptable(NOM_REF_VOLUME, name);
       if (m.find()) {
         name = stripNomRef(m);
         state = ParsedName.State.PARTIAL;
@@ -881,16 +900,16 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
 
-  void removePlaceholderAuthor() {
-    Matcher m = REMOVE_PLACEHOLDER_AUTHOR.matcher(name);
+  void removePlaceholderAuthor() throws InterruptedException {
+    Matcher m = matcherInterruptable(REMOVE_PLACEHOLDER_AUTHOR, name);
     if (m.find()) {
       name = m.replaceFirst(" $1");
       pn.setType(NameType.PLACEHOLDER);
     }
   }
 
-  void extractSecReference() {
-    Matcher m = EXTRACT_SENSU.matcher(name);
+  void extractSecReference() throws InterruptedException {
+    Matcher m = matcherInterruptable(EXTRACT_SENSU, name);
     if (m.find()) {
       pn.setTaxonomicNote(lowerCaseFirstChar(normNote(m.group(1))));
       name = m.replaceFirst("");
@@ -898,10 +917,10 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
 
-  void extractNomStatus(){
+  void extractNomStatus() throws InterruptedException {
     // extract nom.illeg. and other nomen status notes
     // includes manuscript notes, e.g. ined.
-    Matcher m = EXTRACT_NOMSTATUS.matcher(name);
+    Matcher m = matcherInterruptable(EXTRACT_NOMSTATUS, name);
     if (m.find()) {
       StringBuffer sb = new StringBuffer();
       do {
@@ -910,12 +929,12 @@ class ParsingJob implements Callable<ParsedName> {
           pn.addNomenclaturalNote(note);
           m.appendReplacement(sb, " ");
           // if there was a rank given in the nom status populate the rank marker field
-          Matcher rm = NOV_RANK_MARKER.matcher(note);
+          Matcher rm = matcherInterruptable(NOV_RANK_MARKER, note);
           if (rm.find()) {
             setRank(rm.group(1), true);
           }
           // was this a manuscript note?
-          Matcher man = MANUSCRIPT_STATUS_PATTERN.matcher(note);
+          Matcher man = matcherInterruptable(MANUSCRIPT_STATUS_PATTERN, note);
           if (man.find()) {
             pn.setManuscript(true);
           }
@@ -981,80 +1000,83 @@ class ParsingJob implements Callable<ParsedName> {
    *
    * @return The normalized name
    */
-  String normalize(String name) {
+  String normalize(String name) throws InterruptedException {
     if (name == null) {
       return null;
+    }
+    if (Thread.currentThread().isInterrupted()) {
+      throw new InterruptedException("Interrupted!");
     }
 
     // translate some very similar characters that sometimes get misused instead of real letters
     name = StringUtils.replaceChars(name, "¡", "i");
 
     // normalise usage of rank marker with 2 dots, i.e. forma specialis and sensu latu
-    Matcher m = FORM_SPECIALIS.matcher(name);
+    Matcher m = matcherInterruptable(FORM_SPECIALIS, name);
     if (m.find()) {
       name = m.replaceAll("fsp");
     }
-    m = SENSU_LATU.matcher(name);
+    m = matcherInterruptable(SENSU_LATU, name);
     if (m.find()) {
       name = m.replaceAll("sl");
     }
 
     // cleanup years
-    name = NORM_YEAR.matcher(name).replaceAll("$1");
+    name = replAllInterruptable(NORM_YEAR, name,"$1");
 
     // remove imprint years. See ICZN §22A.2.3 http://www.iczn.org/iczn/index.jsp?nfv=&article=22
-    m = NORM_IMPRINT_YEAR.matcher(name);
+    m = matcherInterruptable(NORM_IMPRINT_YEAR, name);
     if (m.find()) {
       LOG.debug("Imprint year {} removed", m.group(2));
       name = m.replaceAll("$1");
     }
 
     // replace underscores
-    name = REPL_UNDERSCORE.matcher(name).replaceAll(" ");
+    name = replAllInterruptable(REPL_UNDERSCORE, name," ");
 
     // normalise punctuations removing any adjacent space
-    m = NORM_PUNCTUATIONS.matcher(name);
+    m = matcherInterruptable(NORM_PUNCTUATIONS, name);
     if (m.find()) {
       name = m.replaceAll("$1");
     }
     // normalise different usages of ampersand, and, et &amp; to always use &
-    name = NORM_AND.matcher(name).replaceAll("&");
+    name = replAllInterruptable(NORM_AND, name,"&");
 
     // remove commans after basionym brackets
-    m = COMMA_AFTER_BASYEAR.matcher(name);
+    m = matcherInterruptable(COMMA_AFTER_BASYEAR, name);
     if (m.find()) {
       name = m.replaceFirst("$1)");
     }
 
     // no whitespace before and after brackets, keeping the bracket style
-    m = NORM_BRACKETS_OPEN.matcher(name);
+    m = matcherInterruptable(NORM_BRACKETS_OPEN, name);
     if (m.find()) {
       name = m.replaceAll("$1");
     }
-    m = NORM_BRACKETS_CLOSE.matcher(name);
+    m = matcherInterruptable(NORM_BRACKETS_CLOSE, name);
     if (m.find()) {
       name = m.replaceAll("$1");
     }
     // normalize hybrid markers
-    m = NORM_HYBRIDS_GENUS.matcher(name);
+    m = matcherInterruptable(NORM_HYBRIDS_GENUS, name);
     if (m.find()) {
       name = m.replaceFirst("×$1");
     }
-    m = NORM_HYBRIDS_EPITH.matcher(name);
+    m = matcherInterruptable(NORM_HYBRIDS_EPITH, name);
     if (m.find()) {
       name = m.replaceFirst("$1 ×$2");
     }
-    m = NORM_HYBRIDS_FORMULA.matcher(name);
+    m = matcherInterruptable(NORM_HYBRIDS_FORMULA, name);
     if (m.find()) {
       name = m.replaceAll(" × ");
     }
-    // capitalize Anonumous author
-    m = NORM_ANON.matcher(name);
+    // capitalize Anonymous author
+    m = matcherInterruptable(NORM_ANON, name);
     if (m.find()) {
       name = m.replaceFirst("Anon.");
     }
     // capitalize all entire upper case words
-    m = NORM_UPPERCASE_WORDS.matcher(name);
+    m = matcherInterruptable(NORM_UPPERCASE_WORDS, name);
     if (m.find()) {
       StringBuffer sb = new StringBuffer();
       m.appendReplacement(sb, m.group(1) + m.group(2).toLowerCase());
@@ -1066,20 +1088,20 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // Capitalize potential owercase genus in binomials
-    m = NORM_LOWERCASE_BINOMIAL.matcher(name);
+    m = matcherInterruptable(NORM_LOWERCASE_BINOMIAL, name);
     if (m.find()) {
       name = m.replaceFirst(StringUtils.capitalize(m.group(1)) + " " + m.group(2));
     }
 
     // finally whitespace and trimming
-    name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
+    name = replAllInterruptable(NORM_WHITESPACE, name," ");
     return StringUtils.trimToEmpty(name);
   }
 
 
-  String normalizeHort(String name){
+  String normalizeHort(String name) throws InterruptedException {
     // normalize ex hort. (for gardeners, often used as ex names) spelled in lower case
-    return NORM_EX_HORT.matcher(name).replaceAll("hort.ex ");
+    return replAllInterruptable(NORM_EX_HORT, name,"hort.ex ");
   }
 
   /**
@@ -1093,7 +1115,7 @@ class ParsingJob implements Callable<ParsedName> {
    * @return The normalized name
    */
   @VisibleForTesting
-  String normalizeStrong(String name) {
+  String normalizeStrong(String name) throws InterruptedException {
     if (name == null) {
       return null;
     }
@@ -1101,11 +1123,11 @@ class ParsingJob implements Callable<ParsedName> {
     name = normalizeHort(name);
 
     // normalize all quotes to single "
-    name = NORM_QUOTES.matcher(name).replaceAll("'");
+    name = replAllInterruptable(NORM_QUOTES, name, "'");
     // remove quotes from genus
-    name = REPL_GENUS_QUOTE.matcher(name).replaceFirst("$1 ");
+    name = matcherInterruptable(REPL_GENUS_QUOTE, name).replaceFirst("$1 ");
     // remove enclosing quotes
-    Matcher m = REPL_ENCLOSING_QUOTE.matcher(name);
+    Matcher m = matcherInterruptable(REPL_ENCLOSING_QUOTE, name);
     if (m.find()) {
       name = m.replaceAll("");
       pn.addWarning(Warnings.REPL_ENCLOSING_QUOTE);
@@ -1115,10 +1137,10 @@ class ParsingJob implements Callable<ParsedName> {
     name = noQMarks(name);
 
     // remove prefixes
-    name = REPL_RANK_PREFIXES.matcher(name).replaceAll("");
+    name = replAllInterruptable(REPL_RANK_PREFIXES, name, "");
 
     // remove brackets inside the genus, the kind taxon finder produces
-    m = NORM_TF_GENUS.matcher(name);
+    m = matcherInterruptable(NORM_TF_GENUS, name);
     if (m.find()) {
       name = m.replaceAll("$1$2 ");
     }
@@ -1130,14 +1152,14 @@ class ParsingJob implements Callable<ParsedName> {
     name = normBrackets(name);
 
     // add ? genus when name starts with an epithet
-    m = STARTING_EPITHET.matcher(name);
+    m = matcherInterruptable(STARTING_EPITHET, name);
     if (m.find()) {
       name = m.replaceFirst("? $1");
       pn.addWarning(Warnings.MISSING_GENUS);
     }
 
     // add parenthesis around subgenus if missing
-    m = NORM_SUBGENUS.matcher(name);
+    m = matcherInterruptable(NORM_SUBGENUS, name);
     if (m.find()) {
       // make sure epithet is not a rank mismatch or author suffix
       if (parseRank(m.group(3)) == null && !AUTHOR_SUFFIX_P.matcher(m.group(3)).find()){
@@ -1149,21 +1171,21 @@ class ParsingJob implements Callable<ParsedName> {
     return normWsPunct(name);
   }
 
-  String normWsPunct(String name) {
-    name = NORM_PUNCTUATIONS.matcher(name).replaceAll("$1");
-    name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
-    name = REPL_FINAL_PUNCTUATIONS.matcher(name).replaceAll("");
+  String normWsPunct(String name) throws InterruptedException {
+    name = replAllInterruptable(NORM_PUNCTUATIONS, name,"$1");
+    name = replAllInterruptable(NORM_WHITESPACE, name," ");
+    name = replAllInterruptable(REPL_FINAL_PUNCTUATIONS, name,"");
     return StringUtils.trimToEmpty(name);
   }
 
-  String normBrackets(String name) {
-    name = NORM_BRACKETS_OPEN_STRONG.matcher(name).replaceAll("(");
-    name = NORM_BRACKETS_CLOSE_STRONG.matcher(name).replaceAll(")");
+  String normBrackets(String name) throws InterruptedException {
+    name = replAllInterruptable(NORM_BRACKETS_OPEN_STRONG, name, "(");
+    name = replAllInterruptable(NORM_BRACKETS_CLOSE_STRONG, name, ")");
     return name;
   }
 
-  String noQMarks(String name) {
-    Matcher m = NO_Q_MARKS.matcher(name);
+  String noQMarks(String name) throws InterruptedException {
+    Matcher m = matcherInterruptable(NO_Q_MARKS, name);
     if (m.find()) {
       name = m.replaceAll("$1");
       pn.setDoubtful(true);
@@ -1185,16 +1207,16 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * basic careful cleaning, trying to preserve all parsable name parts
    */
-  String preClean(String name) {
+  String preClean(String name) throws InterruptedException {
     return preClean(name, pn.getWarnings());
   }
 
   /**
    * basic careful cleaning, trying to preserve all parsable name parts
    */
-  public static String preClean(String name, @Nullable Set<String> warnings) {
+  public static String preClean(String name, @Nullable Set<String> warnings) throws InterruptedException {
     // remove bad whitespace in html entities
-    Matcher m = XML_ENTITY_STRIP.matcher(name);
+    Matcher m = matcherInterruptable(XML_ENTITY_STRIP, name);
     if (m.find()) {
       name = m.replaceAll("&$1;");
     }
@@ -1205,7 +1227,7 @@ class ParsingJob implements Callable<ParsedName> {
       warnings.add(Warnings.HTML_ENTITIES);
     }
     // finally remove still existing bad ampersands missing the closing ;
-    m = AMPERSAND_ENTITY.matcher(name);
+    m = matcherInterruptable(AMPERSAND_ENTITY, name);
     if (m.find()) {
       name = m.replaceAll("&");
       if (warnings != null) {
@@ -1214,7 +1236,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // replace xml tags
-    m = XML_TAGS.matcher(name);
+    m = matcherInterruptable(XML_TAGS, name);
     if (m.find()) {
       name = m.replaceAll("");
       if (warnings != null) {
@@ -1239,9 +1261,9 @@ class ParsingJob implements Callable<ParsedName> {
         name = name.substring(idx, name.length() - end);
       }
     }
-    name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
+    name = replAllInterruptable(NORM_WHITESPACE, name, " ");
     // replace various single quote apostrophes with always '
-    name = NORM_APOSTROPHES.matcher(name).replaceAll("'");
+    name = replAllInterruptable(NORM_APOSTROPHES, name, "'");
 
     return StringUtils.trimToEmpty(name);
   }
@@ -1315,15 +1337,15 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
   
-  private void applyDoubtfulFlag(String scientificName) {
+  private void applyDoubtfulFlag(String scientificName) throws InterruptedException {
     // all rules below do not apply to unparsable names
-    Matcher m = DOUBTFUL.matcher(scientificName);
+    Matcher m = matcherInterruptable(DOUBTFUL, scientificName);
     if (!m.find()) {
       pn.setDoubtful(true);
       pn.addWarning(Warnings.UNUSUAL_CHARACTERS);
 
     } else if (pn.getType().isParsable()){
-      m = DOUBTFUL_NULL.matcher(scientificName);
+      m = matcherInterruptable(DOUBTFUL_NULL, scientificName);
       if (m.find()) {
         pn.setDoubtful(true);
         pn.addWarning(Warnings.NULL_EPITHET);
@@ -1389,9 +1411,9 @@ class ParsingJob implements Callable<ParsedName> {
    * @param name
    * @return  true if the name could be parsed, false in case of failure
    */
-  private boolean parseNormalisedName(String name) {
+  private boolean parseNormalisedName(String name) throws InterruptedException {
     LOG.debug("Parse normed name string: {}", name);
-    Matcher matcher = interruptableMatcher(NAME_PATTERN, name);
+    Matcher matcher = matcherInterruptable(NAME_PATTERN, name);
     if (matcher.find()) {
       if (StringUtils.isBlank(matcher.group(23))) {
         pn.setState(ParsedName.State.COMPLETE);
@@ -1587,10 +1609,10 @@ class ParsingJob implements Callable<ParsedName> {
    * if no rank marker is set, inspect epitheta for wrongly placed rank markers and modify parsed name accordingly.
    * This is sometimes the case for informal names like: Coccyzus americanus ssp.
    */
-  private void lookForIrregularRankMarker() {
+  private void lookForIrregularRankMarker() throws InterruptedException {
     if (pn.getRank().otherOrUnranked()) {
       if (pn.getInfraspecificEpithet() != null) {
-        Matcher m = RANK_MARKER_ONLY.matcher(pn.getInfraspecificEpithet());
+        Matcher m = matcherInterruptable(RANK_MARKER_ONLY, pn.getInfraspecificEpithet());
         if (m.find()) {
           // we found a rank marker, make it one
           setRank(pn.getInfraspecificEpithet());
@@ -1598,7 +1620,7 @@ class ParsingJob implements Callable<ParsedName> {
         }
       }
       if (pn.getSpecificEpithet() != null) {
-        Matcher m = RANK_MARKER_ONLY.matcher(pn.getSpecificEpithet());
+        Matcher m = matcherInterruptable(RANK_MARKER_ONLY, pn.getSpecificEpithet());
         if (m.find()) {
           // we found a rank marker, make it one
           setRank(pn.getSpecificEpithet());
@@ -1612,7 +1634,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
 
-  static Authorship parseAuthorship(String ex, String authors, String year) {
+  static Authorship parseAuthorship(String ex, String authors, String year) throws InterruptedException {
     Authorship a = new Authorship();
     if (authors != null) {
       a.setAuthors(splitTeam(authors));
@@ -1627,12 +1649,12 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * Splits an author team by either ; or ,
    */
-  private static List<String> splitTeam(String team) {
+  private static List<String> splitTeam(String team) throws InterruptedException {
     // treat semicolon differently. Single author name can contain a comma now!
     if (team.contains(";")) {
       List<String> authors = Lists.newArrayList();
       for (String a : AUTHORTEAM_SEMI_SPLITTER.split(team)) {
-        Matcher m = AUTHOR_INITIAL_SWAP.matcher(a);
+        Matcher m = matcherInterruptable(AUTHOR_INITIAL_SWAP, a);
         if (m.find()) {
           authors.add(normAuthor(m.group(2) + " " + m.group(1), true));
         } else {
@@ -1644,7 +1666,7 @@ class ParsingJob implements Callable<ParsedName> {
     } else if(AUTHORTEAM_DELIMITER.matchesAnyOf(team)) {
       return sanitizeAuthors(AUTHORTEAM_SPLITTER.splitToList(team));
   
-    } else if (SPACE_AUTHORTEAM.matcher(team).find()){
+    } else if (findInterruptable(SPACE_AUTHORTEAM, team)){
       // we sometimes see space delimited authorteams with the initials consistently at the end of a single author:
       // Balsamo M Fregni E Tongiorgi MA
       return sanitizeAuthors(WHITESPACE_SPLITTER.splitToList(team));
@@ -1658,14 +1680,14 @@ class ParsingJob implements Callable<ParsedName> {
    * test if we have initials as authors following directly clear surnames
    * See https://github.com/gbif/name-parser/issues/28
    */
-  private static List<String> sanitizeAuthors(List<String> tokens) {
+  private static List<String> sanitizeAuthors(List<String> tokens) throws InterruptedException {
     final List<String> authors = new ArrayList<>();
     final Iterator<String> iter = tokens.iterator();
     while (iter.hasNext()) {
       String author = iter.next();
       if (iter.hasNext() && author.length()>3 && !author.endsWith(".")) {
         String next = iter.next();
-        if (INITIALS.matcher(next).find()) {
+        if (findInterruptable(INITIALS, next)) {
           // consider an initial and merge with last author
           authors.add(normInitials(next) + author);
         } else {
@@ -1697,9 +1719,9 @@ class ParsingJob implements Callable<ParsedName> {
      * See IPNI author standard form recommendations:
      * http://www.ipni.org/standard_forms_author.html
      */
-  private static String normAuthor(String authors, boolean normPunctuation) {
+  private static String normAuthor(String authors, boolean normPunctuation) throws InterruptedException {
     if (normPunctuation) {
-      authors = NORM_PUNCTUATIONS.matcher(authors).replaceAll("$1");
+      authors = replAllInterruptable(NORM_PUNCTUATIONS, authors, "$1");
     }
     return StringUtils.trimToNull(authors);
   }

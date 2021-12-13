@@ -191,7 +191,7 @@ public class ParsingJobTest {
   }
   
   @Test
-  public void testAuthor(){
+  public void testAuthor() throws InterruptedException {
     assertAuthorPattern("Y.-j. Wang");
     assertAuthorPattern("Z.-q.Liu");
     assertAuthorPattern("Van den heede");
@@ -273,15 +273,15 @@ public class ParsingJobTest {
   }
 
 
-  private static void checkPatternFails(Pattern pattern, String test) {
+  private static void checkPatternFails(Pattern pattern, String test) throws InterruptedException {
     assertFalse(pattern.matcher(JOB.normalize(test)).matches());
   }
 
 
-  private static void nomStatusRemark(String remarks) {
+  private static void nomStatusRemark(String remarks) throws InterruptedException {
     nomStatusRemark(remarks, remarks);
   }
-  private static void nomStatusRemark(String remarks, String match) {
+  private static void nomStatusRemark(String remarks, String match) throws InterruptedException {
     Matcher m = ParsingJob.EXTRACT_NOMSTATUS.matcher(JOB.normalize(remarks));
     assertTrue (m.find());
     assertEquals(match, m.group().trim());
@@ -299,11 +299,11 @@ public class ParsingJobTest {
     assertTrue (m.find());
   }
 
-  private static void assertAuthorshipPattern(String authorship) {
+  private static void assertAuthorshipPattern(String authorship) throws InterruptedException {
     assertAuthorshipPattern(authorship, null, authorship);
   }
 
-  private static void assertAuthorshipPattern(String authorship, String exAuthor, String ... authors) {
+  private static void assertAuthorshipPattern(String authorship, String exAuthor, String ... authors) throws InterruptedException {
     try {
       String normed = JOB.normalize(authorship);
       Matcher m = AUTHORSHIP_PATTERN.matcher(normed);
@@ -326,7 +326,7 @@ public class ParsingJobTest {
     }
   }
 
-  private static void assertAuthorshipPatternFails(String authorship) {
+  private static void assertAuthorshipPatternFails(String authorship) throws InterruptedException {
     String normed = JOB.normalize(authorship);
     Matcher m = AUTHORSHIP_PATTERN.matcher(normed);
     if (m.find()) {
@@ -338,11 +338,11 @@ public class ParsingJobTest {
   }
 
 
-  private void assertAuthorTeamPattern(String authorship) {
+  private void assertAuthorTeamPattern(String authorship) throws InterruptedException {
     assertAuthorTeamPattern(authorship, authorship);
   }
 
-  private void assertAuthorTeamPattern(String authorship, String ... authors) {
+  private void assertAuthorTeamPattern(String authorship, String ... authors) throws InterruptedException {
     String normed = JOB.normalize(authorship);
     Matcher m = ParsingJob.AUTHOR_TEAM_PATTERN.matcher(normed);
     assertTrue(authorship, m.find());
@@ -353,7 +353,7 @@ public class ParsingJobTest {
     assertEquals(Lists.newArrayList(authors), auth.getAuthors());
   }
   
-  private void assertAuthorPattern(String author) {
+  private void assertAuthorPattern(String author) throws InterruptedException {
     String normed = JOB.normalize(author);
     Matcher m = AUTHOR_PATTERN.matcher(normed);
     assertTrue(author, m.find());
@@ -409,7 +409,7 @@ public class ParsingJobTest {
     assertNomNote("var.nov.",  "Euphorbia rossiana var. nov. Steinmann, 1199");
   }
 
-  private void assertNomNote(String expectedNote, String name) {
+  private void assertNomNote(String expectedNote, String name) throws InterruptedException {
     String note = null;
     Matcher matcher = ParsingJob.EXTRACT_NOMSTATUS.matcher(JOB.normalize(name));
     if (matcher.find()) {
@@ -418,7 +418,7 @@ public class ParsingJobTest {
     assertEquals(expectedNote, note);
   }
 
-  private void assertTaxNote(String expectedNote, String name) {
+  private void assertTaxNote(String expectedNote, String name) throws InterruptedException {
     String note = null;
     Matcher matcher = ParsingJob.EXTRACT_SENSU.matcher(JOB.normalize(name));
     if (matcher.find()) {
@@ -436,7 +436,7 @@ public class ParsingJobTest {
   }
 
   @Test
-  public void testNormalizeName() {
+  public void testNormalizeName() throws InterruptedException {
     assertNormalize("Anniella nigra FISCHER 1885", "Anniella nigra Fischer 1885");
     assertNormalize("Nuculoidea Williams et  Breger 1916  ","Nuculoidea Williams&Breger 1916");
     assertNormalize("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea behrens var.christoph Williams&Breger 1916");
@@ -461,12 +461,12 @@ public class ParsingJobTest {
     assertNormalize("Ctenotus alacer Storr, 1970 (not 1969)", "Ctenotus alacer Storr,1970");
   }
 
-  private void assertNormalize(String raw, String expected) {
+  private void assertNormalize(String raw, String expected) throws InterruptedException {
     assertEquals(expected, JOB.normalize(JOB.preClean(raw)));
   }
 
   @Test
-  public void testNormalizeStrongName() {
+  public void testNormalizeStrongName() throws InterruptedException {
     assertNormalizeStrong("Alstonia vieillardii Van Heurck & Müll.Arg.", "Alstonia vieillardii Van Heurck&Müll.Arg.");
     assertNormalizeStrong("Nuculoidea Williams et  Breger 1916  ","Nuculoidea Williams&Breger 1916");
     //assertNormalizeStrong("Nuculoidea behrens var.christoph Williams & Breger [1916]  ", "Nuculoidea behrens var.christoph Williams&Breger,1916");
@@ -490,7 +490,7 @@ public class ParsingJobTest {
     //assertNormalizeStrong("Leucanitis roda Herrich-Schäffer (1851) 1845", "Leucanitis roda (Herrich-Schäffer, 1851), 1845");
   }
 
-  private void assertNormalizeStrong(String raw, String expected) {
+  private void assertNormalizeStrong(String raw, String expected) throws InterruptedException {
     assertEquals(expected, JOB.normalizeStrong(JOB.normalize(JOB.preClean(raw))));
   }
 

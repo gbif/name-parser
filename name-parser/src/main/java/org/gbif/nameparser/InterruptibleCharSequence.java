@@ -24,6 +24,9 @@ public class InterruptibleCharSequence implements CharSequence {
 
   @Override
   public int length() {
+    if (Thread.currentThread().isInterrupted()) {
+      throw new RuntimeException("Interrupted!");
+    }
     return inner.length();
   }
 

@@ -3,12 +3,14 @@ package org.gbif.nameparser;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.gbif.nameparser.api.*;
+import org.gbif.nameparser.utils.CallerBlocksPolicy;
 import org.gbif.nameparser.utils.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * The default GBIF name parser build on regular expressions.
@@ -48,15 +50,15 @@ public class NameParserGBIF implements NameParser {
    */
   public NameParserGBIF(long timeout, int corePoolSize, int maxPoolSize) {
     this(timeout, new ThreadPoolExecutor(corePoolSize, maxPoolSize,
-        1000 + 2*timeout, TimeUnit.MILLISECONDS,
+        2*timeout, TimeUnit.MILLISECONDS,
         new SynchronousQueue<>(),
         new NamedThreadFactory(THREAD_NAME, Thread.NORM_PRIORITY, true),
-        new ThreadPoolExecutor.CallerRunsPolicy()));
+        new CallerBlocksPolicy(timeout)));
   }
 
-    /**
-     * The default name parser without an explicit monomials list using the given timeout in milliseconds for parsing.
-     */
+  /**
+   * The default name parser without an explicit monomials list using the given timeout in milliseconds for parsing.
+   */
   public NameParserGBIF(long timeout, ExecutorService executorService) {
     Preconditions.checkArgument(timeout > 0, "Timeout needs to be at least 1ms");
     LOG.debug("Create new name parser with timeout={}", timeout);
