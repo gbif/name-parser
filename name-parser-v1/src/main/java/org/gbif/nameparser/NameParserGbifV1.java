@@ -1,6 +1,5 @@
 package org.gbif.nameparser;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
@@ -205,8 +204,8 @@ public class NameParserGbifV1 implements NameParser {
     return gbif;
   }
 
-  @VisibleForTesting
-  static NameType gbifNameType(org.gbif.nameparser.api.ParsedName pn) {
+
+  public static NameType gbifNameType(org.gbif.nameparser.api.ParsedName pn) {
     NameType t;
     // detect name types that only exist in the GBIF API v1
     if (pn.isDoubtful() && pn.getWarnings().contains(Warnings.BLACKLISTED_EPITHET)) {
@@ -226,13 +225,11 @@ public class NameParserGbifV1 implements NameParser {
     return t;
   }
 
-  @VisibleForTesting
-  static org.gbif.api.vocabulary.NamePart toGbif(NamePart notho) {
+  public static org.gbif.api.vocabulary.NamePart toGbif(NamePart notho) {
     return convertEnum(org.gbif.api.vocabulary.NamePart.class, notho);
   }
 
-  @VisibleForTesting
-  static Rank toGbif(org.gbif.nameparser.api.Rank rank) {
+  public static Rank toGbif(org.gbif.nameparser.api.Rank rank) {
     if (rank == null) return null;
     switch (rank) {
       case SUPERDIVISION: return Rank.SUPERPHYLUM;
@@ -261,8 +258,8 @@ public class NameParserGbifV1 implements NameParser {
     return convertEnum(Rank.class, rank);
   }
 
-  @VisibleForTesting
-  static org.gbif.nameparser.api.Rank fromGbif(Rank rank) {
+
+  public static org.gbif.nameparser.api.Rank fromGbif(Rank rank) {
     if (rank == null) return null;
     switch (rank) {
       case RACE: return org.gbif.nameparser.api.Rank.PROLES;
