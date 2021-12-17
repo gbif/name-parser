@@ -1,8 +1,18 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.nameparser;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.exception.UnparsableException;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.service.checklistbank.NameParser;
@@ -13,11 +23,17 @@ import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.nameparser.api.Warnings;
 import org.gbif.nameparser.util.NameFormatter;
+
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.util.Map;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 
 import static org.gbif.nameparser.api.ParsedName.State;
 
@@ -230,7 +246,9 @@ public class NameParserGbifV1 implements NameParser {
   }
 
   public static Rank toGbif(org.gbif.nameparser.api.Rank rank) {
-    if (rank == null) return null;
+    if (rank == null) {
+      return null;
+    }
     switch (rank) {
       case SUPERDIVISION: return Rank.SUPERPHYLUM;
       case DIVISION: return Rank.PHYLUM;
@@ -254,15 +272,18 @@ public class NameParserGbifV1 implements NameParser {
 
       case REALM: return Rank.SUPRAGENERIC_NAME;
       case SUBREALM: return Rank.SUPRAGENERIC_NAME;
+
+      default: return convertEnum(Rank.class, rank);
     }
-    return convertEnum(Rank.class, rank);
   }
 
 
   public static org.gbif.nameparser.api.Rank fromGbif(Rank rank) {
-    if (rank == null) return null;
-    switch (rank) {
-      case RACE: return org.gbif.nameparser.api.Rank.PROLES;
+    if (rank == null) {
+      return null;
+    }
+    if (Rank.RACE == rank) {
+      return org.gbif.nameparser.api.Rank.PROLES;
     }
     return convertEnum(org.gbif.nameparser.api.Rank.class, rank);
   }
