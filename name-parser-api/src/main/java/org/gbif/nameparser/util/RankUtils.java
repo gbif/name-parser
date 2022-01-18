@@ -151,6 +151,7 @@ public class RankUtils {
       Maps.immutableEntry("subv", SUBVARIETY),
       Maps.immutableEntry("subvar", SUBVARIETY),
       Maps.immutableEntry("sv", SUBVARIETY),
+      Maps.immutableEntry("tinfr", INFRASPECIFIC_NAME),
       Maps.immutableEntry("v", VARIETY),
       Maps.immutableEntry("var", VARIETY),
       Maps.immutableEntry("nvar", VARIETY),

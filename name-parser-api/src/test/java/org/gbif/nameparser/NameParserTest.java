@@ -83,6 +83,14 @@ public abstract class NameParserTest {
         .nothingElse();
   }
 
+  @Test
+  public void tinfr() throws Exception {
+    assertName("Hieracium vulgatum t.infr. arrectariicaule Sudre", "Hieracium vulgatum arrectariicaule")
+        .infraSpecies("Hieracium", "vulgatum", INFRASPECIFIC_NAME, "arrectariicaule")
+        .combAuthors(null, "Sudre")
+        .nothingElse();
+  }
+
   /**
    * https://github.com/gbif/name-parser/issues/82
    */

@@ -107,7 +107,7 @@ class ParsingJob implements Callable<ParsedName> {
   static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/,-][0-9]{1,4})?";
 
   private static final String NOTHO = "notho";
-  static final String RANK_MARKER = ("(?:"+NOTHO+"|agamo)?(?:(?<!f[ .])sp|" +
+  static final String RANK_MARKER = ("(?:"+NOTHO+"|agamo)?(?:(?<!f[ .])sp|t\\.infr|" +
         StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") +
     ")")
     // avoid hort.ex matches
@@ -333,7 +333,7 @@ class ParsingJob implements Callable<ParsedName> {
         if (sb.length()>4) {
           sb.append("|");
         }
-        sb.append(r.name().toLowerCase().substring(0, r.name().length()-3));
+        sb.append(r.name().toLowerCase(), 0, r.name().length() - 3);
       }
     }
     sb.append(")type\\b");
