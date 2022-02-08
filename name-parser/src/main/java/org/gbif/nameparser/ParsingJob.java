@@ -268,6 +268,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern REPL_ENCLOSING_QUOTE = Pattern.compile("^$");//Pattern.compile("^[',\\s]+|[',\\s]+$");
   private static final Pattern NORM_UPPERCASE_WORDS = Pattern.compile("\\b(\\p{Lu})(\\p{Lu}{2,})\\b");
   private static final Pattern NORM_LOWERCASE_BINOMIAL = Pattern.compile("^(" + EPITHET + ") (" + EPITHET + ")");
+  private static final Pattern NORM_HYBRID_HOMOGLYPHS = Pattern.compile("[хᕁᕽ᙮ⅹ⤫⤬⨯ｘ\uD835\uDC31\uD835\uDC65\uD835\uDC99\uD835\uDCCD\uD835\uDD01\uD835\uDD35\uD835\uDD69\uD835\uDD9D\uD835\uDDD1\uD835\uDE05\uD835\uDE39\uD835\uDE6D\uD835\uDEA1]");
   private static final Pattern NORM_WHITESPACE = Pattern.compile("(?:\\\\[nr]|\\s)+");
   private static final Pattern REPL_UNDERSCORE = Pattern.compile("_+");
   private static final Pattern NORM_NO_SQUARE_BRACKETS = Pattern.compile("\\[(.*?)\\]");
@@ -1073,17 +1074,21 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceAll("$1");
     }
     // normalize hybrid markers
+    m = matcherInterruptable(NORM_HYBRID_HOMOGLYPHS, name);
+    if (m.find()) {
+      name = m.replaceAll(HYBRID_MARKER);
+    }
     m = matcherInterruptable(NORM_HYBRIDS_GENUS, name);
     if (m.find()) {
-      name = m.replaceFirst("×$1");
+      name = m.replaceFirst(HYBRID_MARKER+"$1");
     }
     m = matcherInterruptable(NORM_HYBRIDS_EPITH, name);
     if (m.find()) {
-      name = m.replaceFirst("$1 ×$2");
+      name = m.replaceFirst("$1 "+HYBRID_MARKER+"$2");
     }
     m = matcherInterruptable(NORM_HYBRIDS_FORMULA, name);
     if (m.find()) {
-      name = m.replaceAll(" × ");
+      name = m.replaceAll(" "+HYBRID_MARKER+" ");
     }
     // capitalize Anonymous author
     m = matcherInterruptable(NORM_ANON, name);
