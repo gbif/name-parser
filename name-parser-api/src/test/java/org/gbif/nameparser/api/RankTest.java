@@ -111,6 +111,14 @@ public class RankTest {
     assertEquals(Rank.INFRASPECIFIC_NAME, Rank.SUBFORM.getMajorRank());
     assertEquals(Rank.GENUS, Rank.INFRAGENERIC_NAME.getMajorRank());
     assertEquals(Rank.SUPRAGENERIC_NAME, Rank.SUPRAGENERIC_NAME.getMajorRank());
+
+    assertEquals(Rank.PHYLUM, Rank.SUPERPHYLUM.getMajorRank());
+    assertEquals(Rank.PHYLUM, Rank.PHYLUM.getMajorRank());
+    assertEquals(Rank.PHYLUM, Rank.SUBPHYLUM.getMajorRank());
+    assertEquals(Rank.PHYLUM, Rank.INFRAPHYLUM.getMajorRank());
+    assertEquals(Rank.PHYLUM, Rank.PARVPHYLUM.getMajorRank());
+    assertEquals(Rank.PHYLUM, Rank.MICROPHYLUM.getMajorRank());
+    assertEquals(Rank.PHYLUM, Rank.NANOPHYLUM.getMajorRank());
   }
 
   @Test
@@ -251,5 +259,18 @@ public class RankTest {
     assertTrue(Rank.DOMAIN.notOtherOrUnranked());
     assertTrue(Rank.INFRASUBSPECIFIC_NAME.notOtherOrUnranked());
     assertTrue(Rank.STRAIN.notOtherOrUnranked());
+  }
+
+  @Test
+  public void testCodeSpecific() {
+    int counter = 0;
+    for (Rank r : Rank.values()) {
+      if (r.isLinnean() || r.isUncomparable()) continue;
+      if (r.isRestrictedToCode() != null) continue;
+      if (r.name().startsWith("SUPER") || r.name().startsWith("SUB") || r.name().startsWith("INFRA")) continue;
+      counter++;
+      System.out.println(r);
+    }
+    assertEquals(6, counter);
   }
 }

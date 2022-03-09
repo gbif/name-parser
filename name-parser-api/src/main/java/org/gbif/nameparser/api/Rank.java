@@ -41,86 +41,64 @@ public enum Rank {
   KINGDOM("reg."),
   SUBKINGDOM("subreg."),
   INFRAKINGDOM("infrareg."),
+
   SUPERPHYLUM("superphyla", "superphyl."),
   PHYLUM("phyla", "phyl."),
   SUBPHYLUM("subphyla", "subphyl."),
   INFRAPHYLUM("infraphyla", "infraphyl."),
+  PARVPHYLUM("parvphyla", "parvphyl."),
+  MICROPHYLUM("microphyla", "microphyl."),
+  NANOPHYLUM("nanophyla", "nanophyl."),
+
+  GIGACLASS("gigaclasses","gigacl."),
+  MEGACLASS("gigaclasses","gigacl."),
   SUPERCLASS("superclasses", "supercl."),
   CLASS("classes", "cl."),
   SUBCLASS("subclasses", "subcl."),
   INFRACLASS("infraclasses", "infracl."),
   SUBTERCLASS("subterclasses", "subtercl."),
   PARVCLASS("parvclasses", "parvcl."),
+
   SUPERDIVISION("superdiv."),
   DIVISION("div."),
   SUBDIVISION("subdiv."),
   INFRADIVISION("infradiv."),
+
   SUPERLEGION("superleg."),
-  
-  /**
-   * Sometimes used in zoology, e.g. for birds and mammals
-   */
   LEGION("leg."),
-  
   SUBLEGION("subleg."),
-  
   INFRALEGION("infraleg."),
-  
+
+  MEGACOHORT("megacohort"),
   SUPERCOHORT("supercohort"),
-  
-  /**
-   * Sometimes used in zoology, e.g. for birds and mammals
-   */
   COHORT("cohort"),
-  
   SUBCOHORT("subcohort"),
-  
   INFRACOHORT("infracohort"),
 
   GIGAORDER("gigaord."),
-
   MAGNORDER("magnord."),
-  
   GRANDORDER("grandord."),
-
   MIRORDER("mirord."),
-
   SUPERORDER("superord."),
-
   ORDER("ord."),
-
   NANORDER("nanord."),
-
   HYPOORDER("hypoord."),
-
   MINORDER("minord."),
-
   SUBORDER("subord."),
-  
   INFRAORDER("infraord."),
-  
   PARVORDER("parvord."),
 
   MEGAFAMILY("megafamilies", "megafam."),
-  
   GRANDFAMILY("grandfamilies", "grandfam."),
-  
   SUPERFAMILY("superfamilies", "superfam."),
-  
   EPIFAMILY("epifamilies", "epifam."),
-  
   FAMILY("families", "fam."),
-  
   SUBFAMILY("subfamilies", "subfam."),
-  
   INFRAFAMILY("infrafamilies", "infrafam."),
-  
+
   SUPERTRIBE("supertrib."),
-  
   TRIBE("trib."),
-  
   SUBTRIBE("subtrib."),
-  
   INFRATRIBE("infratrib."),
   
   /**
@@ -135,15 +113,11 @@ public enum Rank {
   INFRAGENUS("infragenera", "infrag."),
   
   SUPERSECTION("supersect."),
-  
   SECTION("sect."),
-  
   SUBSECTION("subsect."),
   
   SUPERSERIES("superseries", "superser."),
-  
   SERIES("series", "ser."),
-  
   SUBSERIES("subseries", "subser."),
   
   /**
@@ -375,7 +349,7 @@ public enum Rank {
   private static final Map<Rank, Rank> MAJOR_RANKS;
   static {
     Map<Rank, Rank> map = new EnumMap<>(Rank.class);
-    Pattern prefixes = Pattern.compile("^(SUPER|SUB(?:TER)?|INFRA|GIGA|MAGN|GRAND|MIR|NAN|HYPO|MIN|PARV|MEGA|EPI)");
+    Pattern prefixes = Pattern.compile("^(SUPER|SUB(?:TER)?|INFRA|MICRO|NANO|GIGA|MAGN|GRAND|MIR|NAN|HYPO|MIN|PARV|MEGA|EPI)");
     for (Rank r : Rank.values()) {
       Rank major = r;
       if (r.isInfraspecific()) {
@@ -399,6 +373,13 @@ public enum Rank {
   }
 
   private static final Map<Rank, NomCode> RANK2CODE = ImmutableMap.<Rank, NomCode>builder()
+      .put(PARVPHYLUM, NomCode.ZOOLOGICAL)
+      .put(MICROPHYLUM, NomCode.ZOOLOGICAL)
+      .put(NANOPHYLUM, NomCode.ZOOLOGICAL)
+      .put(GIGACLASS, NomCode.ZOOLOGICAL)
+      .put(MEGACLASS, NomCode.ZOOLOGICAL)
+      .put(SUBTERCLASS, NomCode.ZOOLOGICAL)
+      .put(PARVCLASS, NomCode.ZOOLOGICAL)
       .put(SUPERDIVISION, NomCode.ZOOLOGICAL)
       .put(DIVISION, NomCode.ZOOLOGICAL)
       .put(SUBDIVISION, NomCode.ZOOLOGICAL)
@@ -407,8 +388,6 @@ public enum Rank {
       .put(LEGION, NomCode.ZOOLOGICAL)
       .put(SUBLEGION, NomCode.ZOOLOGICAL)
       .put(INFRALEGION, NomCode.ZOOLOGICAL)
-      .put(SUBTERCLASS, NomCode.ZOOLOGICAL)
-      .put(PARVCLASS, NomCode.ZOOLOGICAL)
       .put(GIGAORDER, NomCode.ZOOLOGICAL)
       .put(MAGNORDER, NomCode.ZOOLOGICAL)
       .put(GRANDORDER, NomCode.ZOOLOGICAL)
@@ -417,6 +396,7 @@ public enum Rank {
       .put(HYPOORDER, NomCode.ZOOLOGICAL)
       .put(MINORDER, NomCode.ZOOLOGICAL)
       .put(PARVORDER, NomCode.ZOOLOGICAL)
+      .put(MEGACOHORT, NomCode.ZOOLOGICAL)
       .put(SUPERCOHORT, NomCode.ZOOLOGICAL)
       .put(COHORT, NomCode.ZOOLOGICAL)
       .put(SUBCOHORT, NomCode.ZOOLOGICAL)
@@ -474,7 +454,11 @@ public enum Rank {
   public String getMarker() {
     return marker;
   }
-  
+
+  public String getPlural() {
+    return plural;
+  }
+
   /**
    * @return true for infraspecific ranks excluding species.
    */
