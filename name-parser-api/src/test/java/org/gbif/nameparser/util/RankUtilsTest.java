@@ -87,6 +87,7 @@ public class RankUtilsTest {
     pn.setCode(code);
     return pn;
   }
+
   @Test
   public void testInferRank2() {
     for (Rank r : Rank.values()) {
@@ -95,7 +96,6 @@ public class RankUtilsTest {
       }
     }
   }
-  
   
   @Test
   public void testRankMarkers() {

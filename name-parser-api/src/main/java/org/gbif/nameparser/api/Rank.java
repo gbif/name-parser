@@ -51,7 +51,7 @@ public enum Rank {
   NANOPHYLUM("nanophyla", "nanophyl."),
 
   GIGACLASS("gigaclasses","gigacl."),
-  MEGACLASS("gigaclasses","gigacl."),
+  MEGACLASS("megaclasses","megacl."),
   SUPERCLASS("superclasses", "supercl."),
   CLASS("classes", "cl."),
   SUBCLASS("subclasses", "subcl."),

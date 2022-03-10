@@ -255,23 +255,33 @@ public class NameParserGbifV1 implements NameParser {
       case SUBDIVISION: return Rank.SUBPHYLUM;
       case INFRADIVISION: return Rank.INFRAPHYLUM;
 
-      case SUPERSECTION: return Rank.INFRAGENERIC_NAME;
-      case SUPERSERIES: return Rank.INFRAGENERIC_NAME;
+      case SUPERSECTION:
+      case SUPERSERIES:
+        return Rank.INFRAGENERIC_NAME;
       
-      case MEGAFAMILY: return Rank.SUPRAGENERIC_NAME;
-      case GRANDFAMILY: return Rank.SUPRAGENERIC_NAME;
-      case EPIFAMILY: return Rank.SUPRAGENERIC_NAME;
+      case MEGAFAMILY:
+      case GRANDFAMILY:
+      case EPIFAMILY:
 
-      case GIGAORDER: return Rank.SUPRAGENERIC_NAME;
-      case MIRORDER: return Rank.SUPRAGENERIC_NAME;
-      case NANORDER: return Rank.SUPRAGENERIC_NAME;
-      case HYPOORDER: return Rank.SUPRAGENERIC_NAME;
-      case MINORDER: return Rank.SUPRAGENERIC_NAME;
+      case GIGAORDER:
+      case MIRORDER:
+      case NANORDER:
+      case HYPOORDER:
+      case MINORDER:
 
-      case SUBTERCLASS: return Rank.SUPRAGENERIC_NAME;
+      case MEGACOHORT:
 
-      case REALM: return Rank.SUPRAGENERIC_NAME;
-      case SUBREALM: return Rank.SUPRAGENERIC_NAME;
+      case GIGACLASS:
+      case MEGACLASS:
+      case SUBTERCLASS:
+
+      case PARVPHYLUM:
+      case MICROPHYLUM:
+      case NANOPHYLUM:
+
+      case REALM:
+      case SUBREALM:
+        return Rank.SUPRAGENERIC_NAME;
 
       default: return convertEnum(Rank.class, rank);
     }
