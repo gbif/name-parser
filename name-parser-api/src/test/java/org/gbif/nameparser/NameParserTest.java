@@ -1939,6 +1939,22 @@ public abstract class NameParserTest {
   
   @Test
   public void taxonomicNotes() throws Exception {
+    // FishBase https://github.com/CatalogueOfLife/backend/issues/1067
+    assertName("Centropyge fisheri (non Snyder, 1904)", "Centropyge fisheri")
+        .species("Centropyge", "fisheri")
+        .sensu("non Snyder, 1904")
+        .nothingElse();
+
+    assertName("Centropyge fisheri non (Snyder, 1904)", "Centropyge fisheri")
+        .species("Centropyge", "fisheri")
+        .sensu("non (Snyder, 1904)")
+        .nothingElse();
+
+    assertName("Centropyge fisheri (not Snyder, 1904)", "Centropyge fisheri")
+        .species("Centropyge", "fisheri")
+        .sensu("not Snyder, 1904")
+        .nothingElse();
+
     // https://github.com/CatalogueOfLife/data/issues/146#issuecomment-649095386
     assertName("Vittaria auct.", "Vittaria")
         .monomial("Vittaria")

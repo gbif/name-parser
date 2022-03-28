@@ -240,8 +240,9 @@ class ParsingJob implements Callable<ParsedName> {
       "(" +
         "(?:(?:excl[. ](?:gen|sp|var)|mut.char|p.p)[. ])?" +
         "\\(?(?:" +
-          "ss?[. ](?:(?:ampl|l|s|str)[. ]|(?:ampl|lat|strict)(?:[uo]|issimo)?)" +
-          "|(?:(?:ss[. ])?[aA]uctt?|[eE]mend|[fF]ide|[nN]on|[nN]ec|[sS]ec|[sS]ensu|[aA]ccording to)(?:[. ]|\\.?$).*" +
+          "ss?[. ](?:(?:ampl|l|s|str)[. ]" +
+          "|(?:ampl|lat|strict)(?:[uo]|issimo)?)" +
+          "|(?:(?:ss[. ])?[aA]uctt?|[eE]mend|[fF]ide|[nN]on|not|[nN]ec|[sS]ec|[sS]ensu|[aA]ccording to)(?:[. (]|\\.?$).*" +
         ")\\)?" +
       ")");
   private static final String NOV_RANKS = "((?:[sS]ub)?(?:[fF]am|[gG]en|[sS]s?p(?:ec)?|[vV]ar|[fF](?:orma?)?))";

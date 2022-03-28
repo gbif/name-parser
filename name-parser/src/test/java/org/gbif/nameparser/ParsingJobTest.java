@@ -379,6 +379,8 @@ public class ParsingJobTest {
 
   @Test
   public void testTaxonomicNotesPattern() throws Exception {
+    assertTaxNote("non(Snyder,1904)", "Centropyge fisheri non (Snyder, 1904)");
+    assertTaxNote("(non Snyder,1904)", "Centropyge fisheri (non Snyder, 1904)");
     assertTaxNote("auct.amer.", "Ramaria subbotrytis (Coker) Corner 1950 auct. amer.");
     assertTaxNote("s.l.", "Ramaria subbotrytis s.l.");
     assertTaxNote("s.ampl.", "Ramaria subbotrytis (Coker) Corner 1950 s. ampl.");
