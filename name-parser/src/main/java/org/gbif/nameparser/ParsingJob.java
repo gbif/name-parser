@@ -295,17 +295,16 @@ class ParsingJob implements Callable<ParsedName> {
       StringUtils.join(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
   private static final Pattern MANUSCRIPT_NAMES = Pattern.compile("\\b(indet|spp?)[. ](?:nov\\.)?[A-Z0-9][a-zA-Z0-9-]*(?:\\(.+?\\))?");
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
-  private static final Pattern REMOVE_PLACEHOLDER_AUTHOR = Pattern.compile("\\b"+
-      "(?:unknown|unspecified|uncertain|\\?)" +
-      "[, ] ?(" + YEAR_LOOSE + ")$", CASE_INSENSITIVE
-  );
+  private static final Pattern BAD_AUTHORSHIP = Pattern.compile("(?:" +
+    "\\b(?:not\\s|un)(?:applicable|given|known|specified|certain)|missing|\\?)" +
+    "(?:[, ]+(" + YEAR_LOOSE + "))?$", Pattern.CASE_INSENSITIVE);
   private static final Pattern PLACEHOLDER_GENUS = Pattern.compile("^(In|Dummy|Missing|Temp|Unknown|Unplaced|Unspecified) (?=[a-z]+)\\b");
   private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|" +
     "deleted?|dummy|incertae ?sedis|indetermined|mixed|" +
     "not (?:assigned|stated)|" +
     "place ?holder|temp|tobedeleted|" +
     "un(?:accepted|allocated|assigned|certain|classed|classified|cultured|described|det(?:ermined)?|ident|known|named|placed|specified)" +
-  ")";
+  ")"; // not assigned
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
   @VisibleForTesting
   static final Pattern PLACEHOLDER = Pattern.compile("^N\\.\\s*N\\.|\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
@@ -918,10 +917,13 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   void removePlaceholderAuthor() throws InterruptedException {
-    Matcher m = matcherInterruptable(REMOVE_PLACEHOLDER_AUTHOR, name);
-    if (m.find()) {
+    Matcher m = matcherInterruptable(BAD_AUTHORSHIP, name);
+    // check match was more than just ?
+    if (m.find() && m.group(0).length()>2) {
+      logMatcher(m);
+      // replace with year only?
       name = m.replaceFirst(" $1");
-      pn.setType(NameType.PLACEHOLDER);
+      pn.addWarning(Warnings.AUTHORSHIP_REMOVED);
     }
   }
 

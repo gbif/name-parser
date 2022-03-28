@@ -750,9 +750,9 @@ public abstract class NameParserTest {
    */
   @Test
   public void unparsablePlaceholder() throws Exception {
+    assertUnparsable("Mollusca not assigned", PLACEHOLDER);
     assertUnparsable("[unassigned] Cladobranchia", PLACEHOLDER);
     assertUnparsable("Biota incertae sedis", PLACEHOLDER);
-    assertUnparsable("Mollusca not assigned", PLACEHOLDER);
     assertUnparsable("Unaccepted", PLACEHOLDER);
     assertUnparsable("uncultured Verrucomicrobiales bacterium", PLACEHOLDER);
     assertUnparsable("uncultured Vibrio sp.", PLACEHOLDER);
@@ -1936,7 +1936,20 @@ public abstract class NameParserTest {
         .nothingElse();
     
   }
-  
+
+  @Test
+  public void flagBadAuthorship() throws Exception {
+    assertName("Cynoglossus aurolineatus Not applicable", "Cynoglossus aurolineatus")
+        .species("Cynoglossus", "aurolineatus")
+        .warning(Warnings.AUTHORSHIP_REMOVED)
+        .nothingElse();
+
+    assertName("Asellus major Not given", "Asellus major")
+        .species("Asellus", "major")
+        .warning(Warnings.AUTHORSHIP_REMOVED)
+        .nothingElse();
+  }
+
   @Test
   public void taxonomicNotes() throws Exception {
     // FishBase https://github.com/CatalogueOfLife/backend/issues/1067

@@ -31,6 +31,7 @@ public class Warnings {
   public static final String XML_TAGS = "xml tags removed";
   public static final String BLACKLISTED_EPITHET = "blacklisted epithet used";
   public static final String NOMENCLATURAL_REFERENCE = "nomenclatural reference removed";
+  public static final String AUTHORSHIP_REMOVED = "authorship placeholder removed";
 
   private Warnings() {
   }
