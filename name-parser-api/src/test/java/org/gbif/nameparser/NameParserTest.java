@@ -1148,7 +1148,7 @@ public abstract class NameParserTest {
     assertHybridFormula("Symphytum caucasicum x uplandicum");
   }
   
-  protected void assertHybridFormula(String name) {
+  protected void assertHybridFormula(String name) throws InterruptedException {
     assertUnparsable(name, HYBRID_FORMULA);
   }
   
@@ -2093,7 +2093,7 @@ public abstract class NameParserTest {
     
   }
   
-  private void assertSensu(String raw, String sensu) throws UnparsableNameException {
+  private void assertSensu(String raw, String sensu) throws UnparsableNameException, InterruptedException {
     assertEquals(sensu, parser.parse(raw, null).getTaxonomicNote());
   }
   
@@ -2941,7 +2941,7 @@ public abstract class NameParserTest {
   // HELPER METHODS
   // **************
   
-  public boolean isViralName(String name) {
+  public boolean isViralName(String name) throws InterruptedException {
     try {
       parser.parse(name, null);
     } catch (UnparsableNameException e) {
@@ -2953,19 +2953,19 @@ public abstract class NameParserTest {
     return false;
   }
   
-  private void assertNoName(String name) {
+  private void assertNoName(String name) throws InterruptedException {
     assertUnparsable(name, NO_NAME);
   }
   
-  private void assertUnparsable(String name, NameType type) {
+  private void assertUnparsable(String name, NameType type) throws InterruptedException {
     assertUnparsableName(name, Rank.UNRANKED, type, name);
   }
   
-  private void assertUnparsable(String name, Rank rank, NameType type) {
+  private void assertUnparsable(String name, Rank rank, NameType type) throws InterruptedException {
     assertUnparsableName(name, rank, type, name);
   }
   
-  private void assertUnparsableName(String name, Rank rank, NameType type, String expectedName) {
+  private void assertUnparsableName(String name, Rank rank, NameType type, String expectedName) throws InterruptedException {
     try {
       parser.parse(name, rank, null);
       fail("Expected " + name + " to be unparsable");
@@ -2976,26 +2976,26 @@ public abstract class NameParserTest {
     }
   }
 
-  NameAssertion assertAuthorship(String rawAuthorship) throws UnparsableNameException {
+  NameAssertion assertAuthorship(String rawAuthorship) throws UnparsableNameException, InterruptedException {
     ParsedAuthorship n = parser.parseAuthorship(rawAuthorship);
     NameAssertion na = new NameAssertion((ParsedName) n);
     na.type(null);
     return na;
   }
 
-  NameAssertion assertName(String rawName, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
+  NameAssertion assertName(String rawName, String expectedCanonicalWithoutAuthors) throws UnparsableNameException, InterruptedException {
     return assertName(rawName, null, null, expectedCanonicalWithoutAuthors);
   }
   
-  NameAssertion assertName(String rawName, Rank rank, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
+  NameAssertion assertName(String rawName, Rank rank, String expectedCanonicalWithoutAuthors) throws UnparsableNameException, InterruptedException {
     return assertName(rawName, rank, null, expectedCanonicalWithoutAuthors);
   }
   
-  NameAssertion assertName(String rawName, NomCode code, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
+  NameAssertion assertName(String rawName, NomCode code, String expectedCanonicalWithoutAuthors) throws UnparsableNameException, InterruptedException {
     return assertName(rawName, null, code, expectedCanonicalWithoutAuthors);
   }
   
-  NameAssertion assertName(String rawName, Rank rank, NomCode code, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {
+  NameAssertion assertName(String rawName, Rank rank, NomCode code, String expectedCanonicalWithoutAuthors) throws UnparsableNameException, InterruptedException {
     ParsedName n = parser.parse(rawName, rank, code);
     assertEquals(expectedCanonicalWithoutAuthors, n.canonicalNameWithoutAuthorship());
     return new NameAssertion(n);
