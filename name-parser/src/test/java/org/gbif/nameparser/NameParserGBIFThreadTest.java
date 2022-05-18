@@ -53,7 +53,7 @@ public class NameParserGBIFThreadTest {
     System.out.println(watch.elapsed(TimeUnit.MILLISECONDS));
   }
 
-  private void warm() throws UnparsableNameException {
+  private void warm() throws UnparsableNameException, InterruptedException {
     NameParserGBIF parser = new NameParserGBIF();
     ParsedName pn = parser.parse(NAME);
   }

@@ -85,7 +85,7 @@ public class NameParserGBIF implements NameParser {
    * @deprecated provide rank and code parameters
    */
   @Deprecated
-  public ParsedName parse(String scientificName) throws UnparsableNameException {
+  public ParsedName parse(String scientificName) throws UnparsableNameException, InterruptedException {
     return parse(scientificName, Rank.UNRANKED);
   }
 
@@ -134,7 +134,7 @@ public class NameParserGBIF implements NameParser {
    * @deprecated provide rank and code parameters
    */
   @Deprecated
-  public ParsedName parse(final String scientificName, Rank rank) throws UnparsableNameException {
+  public ParsedName parse(final String scientificName, Rank rank) throws UnparsableNameException, InterruptedException {
     return parse(scientificName, rank, null);
   }
   
@@ -154,7 +154,7 @@ public class NameParserGBIF implements NameParser {
    * @throws UnparsableNameException
    */
   @Override
-  public ParsedName parse(final String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException {
+  public ParsedName parse(final String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException, InterruptedException {
     if (Strings.isNullOrEmpty(scientificName)) {
       throw new UnparsableNameException(NameType.NO_NAME, scientificName);
     }
@@ -164,9 +164,6 @@ public class NameParserGBIF implements NameParser {
 
     try {
       return task.get(timeout, TimeUnit.MILLISECONDS);
-      
-    } catch (InterruptedException e) {
-      LOG.warn("Thread got interrupted. Stop parse job {} {}", rank, scientificName, e);
       
     } catch (ExecutionException e) {
       // unwrap UnparsableNameException

@@ -25,9 +25,9 @@ public interface NameParser extends AutoCloseable {
    * @deprecated provide rank and code parameters
    */
   @Deprecated
-  ParsedName parse(String scientificName) throws UnparsableNameException;
+  ParsedName parse(String scientificName) throws UnparsableNameException, InterruptedException;
 
-  default ParsedAuthorship parseAuthorship(String authorship) throws UnparsableNameException {
+  default ParsedAuthorship parseAuthorship(String authorship) throws UnparsableNameException, InterruptedException {
     return parse("Abies alba " + authorship, Rank.SPECIES, null);
   }
 
@@ -35,7 +35,7 @@ public interface NameParser extends AutoCloseable {
    * @deprecated provide rank and code parameters
    */
   @Deprecated
-  ParsedName parse(String scientificName, Rank rank) throws UnparsableNameException;
+  ParsedName parse(String scientificName, Rank rank) throws UnparsableNameException, InterruptedException;
   
   /**
    * Fully parse the supplied name also trying to extract authorships, a conceptual sec reference, remarks or notes
@@ -52,6 +52,6 @@ public interface NameParser extends AutoCloseable {
    *
    * @throws UnparsableNameException
   */
-  ParsedName parse(String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException;
+  ParsedName parse(String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException, InterruptedException;
   
 }

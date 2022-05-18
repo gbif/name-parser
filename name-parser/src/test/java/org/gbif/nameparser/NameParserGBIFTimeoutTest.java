@@ -42,7 +42,7 @@ public class NameParserGBIFTimeoutTest {
   StopWatch watch = new StopWatch();
 
   @Before
-  public void init() {
+  public void init() throws InterruptedException {
     // warm up parser
     try {
       parser.parse("Abies", Rank.GENUS);

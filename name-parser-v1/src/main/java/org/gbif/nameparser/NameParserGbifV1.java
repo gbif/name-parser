@@ -79,6 +79,11 @@ public class NameParserGbifV1 implements NameParser {
     try {
       return convert(s, rank, parser.parse(s, fromGbif(rank)));
 
+    } catch (InterruptedException e) {
+      // got interrupted but we cant handle it or rethrow it. next best option is to reset the threads flag
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("Thread got interrupted");
+
     } catch (UnparsableNameException e) {
       throw new UnparsableException(NAME_TYPE_MAP.getOrDefault(e.getType(), NameType.DOUBTFUL), e.getName());
     }
