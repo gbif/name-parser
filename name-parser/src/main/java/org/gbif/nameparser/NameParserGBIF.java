@@ -18,6 +18,7 @@ import org.gbif.nameparser.utils.CallerBlocksPolicy;
 import org.gbif.nameparser.utils.NamedThreadFactory;
 
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
@@ -90,7 +91,7 @@ public class NameParserGBIF implements NameParser {
   }
 
   @Override
-  public ParsedAuthorship parseAuthorship(String authorship) throws UnparsableNameException {
+  public ParsedAuthorship parseAuthorship(String authorship) throws UnparsableNameException, InterruptedException {
     if (Strings.isNullOrEmpty(authorship)) {
       throw new UnparsableNameException.UnparsableAuthorshipException(authorship);
     }
@@ -103,14 +104,16 @@ public class NameParserGBIF implements NameParser {
     }
 
     AuthorshipParsingJob job = new AuthorshipParsingJob(authorship, configs);
+
+    return execute(job, authorship, () -> new UnparsableNameException.UnparsableAuthorshipException(authorship));
+  }
+
+  private ParsedName execute(ParsingJob job, String name, Supplier<UnparsableNameException> unparsableSupplier) throws UnparsableNameException, InterruptedException {
     FutureTask<ParsedName> task = new FutureTask<>(job);
     exec.execute(task);
 
     try {
       return task.get(timeout, TimeUnit.MILLISECONDS);
-
-    } catch (InterruptedException e) {
-      LOG.warn("Thread got interrupted. Stop authorship parse job {}", authorship, e);
 
     } catch (ExecutionException e) {
       // unwrap UnparsableNameException
@@ -118,16 +121,16 @@ public class NameParserGBIF implements NameParser {
         throw (UnparsableNameException) e.getCause();
 
       } else {
-        LOG.warn("ExecutionException when parsing authorship: {}", authorship, e);
+        LOG.warn("ExecutionException when parsing: {}", name, e);
       }
 
     } catch (TimeoutException e) {
       // parsing timeout
-      LOG.warn("Parsing timeout for authorship: {}", authorship);
+      LOG.warn("Parsing timeout for: {}", name);
       task.cancel(true);
     }
 
-    throw new UnparsableNameException.UnparsableAuthorshipException(authorship);
+    throw unparsableSupplier.get();
   }
 
   /**
@@ -158,29 +161,8 @@ public class NameParserGBIF implements NameParser {
     if (Strings.isNullOrEmpty(scientificName)) {
       throw new UnparsableNameException(NameType.NO_NAME, scientificName);
     }
-    
-    FutureTask<ParsedName> task = new FutureTask<>(new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank, code, configs));
-    exec.execute(task);
-
-    try {
-      return task.get(timeout, TimeUnit.MILLISECONDS);
-      
-    } catch (ExecutionException e) {
-      // unwrap UnparsableNameException
-      if (e.getCause() instanceof UnparsableNameException) {
-        throw (UnparsableNameException) e.getCause();
-        
-      } else {
-        LOG.warn("ExecutionException when parsing name: {}", scientificName, e);
-      }
-      
-    } catch (TimeoutException e) {
-      // parsing timeout
-      LOG.warn("Parsing timeout for name: {}", scientificName);
-      task.cancel(true);
-    }
-    
-    throw new UnparsableNameException(NameType.SCIENTIFIC, scientificName);
+    ParsingJob job = new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank, code, configs);
+    return execute(job, scientificName, () -> new UnparsableNameException(NameType.SCIENTIFIC, scientificName));
   }
 
   public ParserConfigs getConfigs() {
