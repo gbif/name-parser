@@ -8,11 +8,11 @@
     <version>3.7.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>name-parser-grammar</artifactId>
+  <artifactId>name-parser-antlr</artifactId>
   <packaging>jar</packaging>
 
-  <name>GBIF Name Parser Grammar</name>
-  <description>GBIF Name Parser based on grammars</description>
+  <name>GBIF Name Parser Antlr</name>
+  <description>GBIF Name Parser based on antlr grammars</description>
 
   <distributionManagement>
     <site>
