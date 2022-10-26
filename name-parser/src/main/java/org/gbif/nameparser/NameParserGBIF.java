@@ -76,7 +76,7 @@ public class NameParserGBIF implements NameParser {
    */
   public NameParserGBIF(long timeout, ExecutorService executorService) {
     Preconditions.checkArgument(timeout > 0, "Timeout needs to be at least 1ms");
-    LOG.debug("Create new name parser with timeout={}", timeout);
+    LOG.info("Create new name parser with timeout={}", timeout);
     this.timeout = timeout;
     this.exec = executorService;
   }
