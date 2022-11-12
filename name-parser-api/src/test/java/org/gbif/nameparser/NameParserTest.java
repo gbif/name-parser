@@ -403,7 +403,16 @@ public abstract class NameParserTest {
         .code(BOTANICAL)
         .nothingElse();
   }
-  
+
+  @Test
+  public void speciesWithSubgenus() throws Exception {
+    assertName("Passalus (Pertinax) gaboi Jiménez & Reyes, 2022", "Passalus gaboi")
+        .species("Passalus", "Pertinax", "gaboi")
+        .combAuthors("2022", "Jiménez", "Reyes")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
   @Test
   public void specialEpithets() throws Exception {
     assertName("Gracillaria v-flava Haworth, 1828", "Gracillaria v-flava")
@@ -2729,6 +2738,14 @@ public abstract class NameParserTest {
    */
   @Test
   public void hyphens() throws Exception {
+    // atypical hyphens, https://github.com/CatalogueOfLife/backend/issues/1178
+    assertName("Passalus (Pertinax) gaboi Jiménez‑Ferbans & Reyes‑Castillo, 2022", "Passalus gaboi")
+        .species("Passalus", "Pertinax", "gaboi")
+        .infraGeneric("Pertinax")
+        .combAuthors("2022", "Jiménez‑Ferbans", "Reyes‑Castillo")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
     assertName("Minilimosina v-atrum (Villeneuve, 1917)", "Minilimosina v-atrum")
         .species("Minilimosina", "v-atrum")
         .basAuthors("1917", "Villeneuve")
