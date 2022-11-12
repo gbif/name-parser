@@ -13,18 +13,16 @@
  */
 package org.gbif.nameparser;
 
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.antlr.SciNameLexer;
 import org.gbif.nameparser.antlr.SciNameParser;
 import org.gbif.nameparser.api.*;
-
-import javax.annotation.Nullable;
-
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
+import javax.annotation.Nullable;
 
 /**
  * The GBIF name parser build on ANTLR v4 ALL(*) grammar.
@@ -61,7 +59,7 @@ public class NameParserANTLR implements org.gbif.nameparser.api.NameParser {
    */
   @Override
   public ParsedName parse(String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException {
-    if (Strings.isNullOrEmpty(scientificName)) {
+    if (StringUtils.isBlank(scientificName)) {
       unparsable(NameType.NO_NAME, null);
     }
     System.out.println("\n" + scientificName);

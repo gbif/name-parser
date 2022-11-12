@@ -13,14 +13,13 @@
  */
 package org.gbif.nameparser.util;
 
+import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
 
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 
 /**
  *
@@ -363,7 +362,7 @@ public class NameFormatter {
     if (asciiOnly) {
       name = UnicodeUtils.foldToAscii(name);
     }
-    return Strings.emptyToNull(name);
+    return StringUtils.trimToNull(name);
   }
   
   private static StringBuilder appendInfraspecific(StringBuilder sb, ParsedName n, boolean hybridMarker, boolean showQualifier, boolean rankMarker, boolean forceRankMarker, boolean html) {

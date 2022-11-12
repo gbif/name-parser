@@ -13,14 +13,13 @@
  */
 package org.gbif.nameparser.api;
 
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-
-import com.google.common.base.Strings;
 
 /**
  * Authorship of the name (recombination) or basionym
@@ -88,7 +87,7 @@ public class Authorship {
   }
 
   public void addAuthor(String author) {
-    if (Strings.isNullOrEmpty(author)) {
+    if (StringUtils.isBlank(author)) {
       if (authors == null) authors = new ArrayList<>();
       authors.add(author);
     }
@@ -110,7 +109,7 @@ public class Authorship {
   }
 
   public void addExAuthor(String author) {
-    if (com.google.common.base.Strings.isNullOrEmpty(author)) {
+    if (StringUtils.isBlank(author)) {
       if (exAuthors == null) exAuthors = new ArrayList<>();
       exAuthors.add(author);
     }
