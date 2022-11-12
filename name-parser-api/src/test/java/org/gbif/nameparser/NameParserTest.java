@@ -2737,6 +2737,7 @@ public abstract class NameParserTest {
    * https://github.com/gbif/name-parser/issues/27
    */
   @Test
+  @Ignore("work in progress")
   public void hyphens() throws Exception {
     // atypical hyphens, https://github.com/CatalogueOfLife/backend/issues/1178
     assertName("Passalus (Pertinax) gaboi Jiménez‑Ferbans & Reyes‑Castillo, 2022", "Passalus gaboi")
