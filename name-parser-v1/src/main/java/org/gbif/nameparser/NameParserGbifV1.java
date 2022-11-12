@@ -13,6 +13,8 @@
  */
 package org.gbif.nameparser;
 
+import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.exception.UnparsableException;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.service.checklistbank.NameParser;
@@ -23,17 +25,11 @@ import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.nameparser.api.Warnings;
 import org.gbif.nameparser.util.NameFormatter;
-
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
+import javax.annotation.Nullable;
+import java.util.Map;
 
 import static org.gbif.nameparser.api.ParsedName.State;
 
@@ -120,7 +116,7 @@ public class NameParserGbifV1 implements NameParser {
   @Override
   // parses the name without authorship and returns the ParsedName.canonicalName() string
   public String parseToCanonical(String scientificName, @Nullable Rank rank) {
-    if (Strings.isNullOrEmpty(scientificName)) {
+    if (StringUtils.isBlank(scientificName)) {
       return null;
     }
     try {
@@ -157,7 +153,7 @@ public class NameParserGbifV1 implements NameParser {
    * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
    */
   public String parseToCanonicalOrScientificName(String scientificName, @Nullable Rank rank) {
-    if (Strings.isNullOrEmpty(scientificName)) {
+    if (StringUtils.isBlank(scientificName)) {
       return null;
     }
     try {

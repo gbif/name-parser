@@ -13,20 +13,17 @@
  */
 package org.gbif.nameparser;
 
+import com.google.common.base.Preconditions;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
 import org.gbif.nameparser.utils.CallerBlocksPolicy;
 import org.gbif.nameparser.utils.NamedThreadFactory;
-
-import java.util.concurrent.*;
-import java.util.function.Supplier;
-
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import javax.annotation.Nullable;
+import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 /**
  * The default GBIF name parser build on regular expressions.
@@ -92,7 +89,7 @@ public class NameParserGBIF implements NameParser {
 
   @Override
   public ParsedAuthorship parseAuthorship(String authorship) throws UnparsableNameException, InterruptedException {
-    if (Strings.isNullOrEmpty(authorship)) {
+    if (StringUtils.isBlank(authorship)) {
       throw new UnparsableNameException.UnparsableAuthorshipException(authorship);
     }
 
@@ -158,7 +155,7 @@ public class NameParserGBIF implements NameParser {
    */
   @Override
   public ParsedName parse(final String scientificName, Rank rank, @Nullable NomCode code) throws UnparsableNameException, InterruptedException {
-    if (Strings.isNullOrEmpty(scientificName)) {
+    if (StringUtils.isBlank(scientificName)) {
       throw new UnparsableNameException(NameType.NO_NAME, scientificName);
     }
     ParsingJob job = new ParsingJob(scientificName, rank == null ? Rank.UNRANKED : rank, code, configs);

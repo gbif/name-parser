@@ -13,6 +13,7 @@
  */
 package org.gbif.nameparser;
 
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
@@ -20,10 +21,6 @@ import org.gbif.nameparser.api.UnparsableNameException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Strings;
 
 public class AuthorshipParsingJob extends ParsingJob {
 
@@ -87,7 +84,7 @@ public class AuthorshipParsingJob extends ParsingJob {
 
         // normalise name
         name = normalize(name);
-        if (Strings.isNullOrEmpty(name)) {
+        if (StringUtils.isBlank(name)) {
             unparsable();
         }
         // extract nom.illeg. and other nomen status notes
