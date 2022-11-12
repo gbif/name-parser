@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static org.gbif.nameparser.util.UnicodeUtils.foldToAscii;
 import static org.junit.Assert.*;
 
 
@@ -109,4 +110,51 @@ public class UnicodeUtilsTest {
     assertEquals("Abies × Picea", UnicodeUtils.replaceHomoglyphs("Abies × Picea"));
   }
 
+  @Test
+  public void testFoldToAscii() throws Exception {
+    assertEquals("Navas, 1929", foldToAscii("Navás, 1929"));
+    assertEquals(null, foldToAscii(null));
+    assertEquals("", foldToAscii(""));
+    assertEquals("Schulhof, Gymnasium Hurth", foldToAscii("Schulhof, Gymnasium Hürth"));
+    assertEquals("Doring", foldToAscii("Döring"));
+    assertEquals("Desireno", foldToAscii("Désírèñø"));
+    assertEquals("Debreczy & I. Racz", foldToAscii("Debreçzÿ & Ï. Rácz"));
+    assertEquals("Donatia novae-zelandiae", foldToAscii("Donatia novae-zelandiæ"));
+    assertEquals("Carex ×cayouettei", foldToAscii("Carex ×cayouettei"));
+    assertEquals("Carex comosa × Carex lupulina", foldToAscii("Carex comosa × Carex lupulina"));
+    assertEquals("Aeropyrum coil-shaped virus", foldToAscii("Aeropyrum coil-shaped virus"));
+    assertEquals("†Lachnus bonneti", foldToAscii("†Lachnus bonneti"));
+
+    assertEquals("lachs", foldToAscii("łachs"));
+    assertEquals("Coccinella 2-pustulata", foldToAscii("Coccinella 2-puſtulata"));
+
+    String test = "ŠŒŽšœžŸ¥µÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ";
+    assertEquals("SOEZsoezY¥µAAAAAAAECEEEEIIIIDNOOOOOOUUUUYssaaaaaaaeceeeeiiiidnoooooouuuuyy", foldToAscii(test));
+  }
+
+
+  @Test
+  public void testDecodeUtf8Garbage() {
+    assertUtf8(null, null);
+    assertUtf8("", "");
+    assertUtf8("a", "a");
+    assertUtf8("ä-üOØ", "ä-üOØ");
+    assertUtf8("(Günther, 1887)", "(GÃ¼nther, 1887)");
+    assertUtf8("Böhlke, 1955", "BÃ¶hlke, 1955");
+    assertUtf8("Nielsen & Quéro, 1991\n", "Nielsen & QuÃ©ro, 1991\n");
+    assertUtf8("Rosinés", "RosinÃ©s");
+    assertUtf8("S. Calderón & Standl.", "S. CalderÃ³n & Standl.");
+    assertUtf8("Strömman, 1896", "StrÃ¶mman, 1896");
+    assertUtf8("Sérus.", "SÃ©rus.");
+    assertUtf8("Thér.", "ThÃ©r.");
+    assertUtf8("Trécul", "TrÃ©cul");
+    assertUtf8("Hale & López-Fig.\n", "Hale & LÃ³pez-Fig.\n");
+  }
+
+  private void assertUtf8(String expected, String src) {
+    String decoded = UnicodeUtils.decodeUtf8Garbage(src);
+    assertEquals(expected, decoded);
+    // make sure if we had gotten the correct string it would not be modified
+    assertEquals(expected, UnicodeUtils.decodeUtf8Garbage(decoded));
+  }
 }
