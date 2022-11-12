@@ -1011,6 +1011,7 @@ class ParsingJob implements Callable<ParsedName> {
    * - removes whitespace inside brackets
    * - removes whitespace before commas
    * - normalized hybrid marker to be the ascii multiplication sign
+   * - normalized hyphen to be the ascii character
    * - removes whitespace between hybrid marker and following name part in case it is NOT a hybrid formula
    * - trims the string and replaces multi whitespace with single space
    * - capitalizes all only uppercase words (authors are often found in upper case only)

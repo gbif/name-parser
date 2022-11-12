@@ -19,6 +19,7 @@ import org.gbif.nameparser.api.Rank;
 
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableList;
@@ -37,7 +38,8 @@ public class RankUtils {
    * Matches all dots ("."), underscores ("_") and dashes ("-").
    */
   private static final Pattern NORMALIZE_RANK_MARKER = Pattern.compile("(?:[._ -]+|\\b(?:notho|agamo))");
-  
+  private static List<Rank> LINNEAN_RANKS_REVERSE = Lists.reverse(Rank.LINNEAN_RANKS);
+
   private static Map<String, Rank> buildRankMarkerMap(Stream<Rank> ranks, Map.Entry<String, Rank>... additions) {
     Map<String, Rank> map = Maps.newHashMap();
     ranks.forEach(r -> {
@@ -326,5 +328,72 @@ public class RankUtils {
     // default if we cant find anything else
     return UNRANKED;
   }
-  
+
+
+  /**
+   * @return a list of all ranks above or equal the given minimum rank.
+   */
+  public static List<Rank> minRanks(Rank rank) {
+    return Arrays.stream(Rank.values()).filter(
+        r -> r.ordinal() <= rank.ordinal()
+    ).collect(Collectors.toList());
+  }
+
+  /**
+   * @return a list of all ranks below or equal the given maximum rank.
+   */
+  public static List<Rank> maxRanks(Rank rank) {
+    return Arrays.stream(Rank.values()).filter(
+        r -> r.ordinal() >= rank.ordinal()
+    ).collect(Collectors.toList());
+  }
+
+  /**
+   * Returns true if r1 is a higher rank than r2 and none of the 2 ranks are uncomparable or ambiguous between codes.
+   */
+  public static boolean higherThanCodeAgnostic(Rank r1, Rank r2) {
+    return (!r1.isUncomparable() && !r2.isUncomparable() && r1.higherThan(r2) && !r1.isAmbiguous() && !r2.isAmbiguous());
+  }
+
+  /**
+   * The ranks between the given minimum and maximum
+   * @param inclusive if true also include the given min and max ranks
+   */
+  public static Set<Rank> between(Rank min, Rank max, boolean inclusive) {
+    Set<Rank> ranks = new HashSet<>(RankUtils.minRanks(min));
+    ranks.retainAll(RankUtils.maxRanks(max));
+    if (!inclusive) {
+      ranks.remove(min);
+      ranks.remove(max);
+    }
+    return ranks;
+  }
+
+  public static Rank nextLowerLinneanRank(Rank rank) {
+    for (Rank r : Rank.LINNEAN_RANKS) {
+      if (r.ordinal() > rank.ordinal()) {
+        return r;
+      }
+    }
+    return null;
+  }
+
+  public static Rank nextHigherLinneanRank(Rank rank) {
+    for (Rank r : LINNEAN_RANKS_REVERSE) {
+      if (r.ordinal() < rank.ordinal()) {
+        return r;
+      }
+    }
+    return null;
+  }
+
+  public static Rank lowestRank(Collection<Rank> ranks) {
+    if (ranks != null && !ranks.isEmpty()) {
+      LinkedList<Rank> rs = new LinkedList<>(ranks);
+      Collections.sort(rs);
+      return rs.getLast();
+    }
+    return null;
+  }
+
 }

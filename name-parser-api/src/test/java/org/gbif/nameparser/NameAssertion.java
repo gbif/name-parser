@@ -204,7 +204,11 @@ public class NameAssertion {
   NameAssertion species(String genus, String epithet) {
     return binomial(genus, null, epithet, Rank.SPECIES);
   }
-  
+
+  NameAssertion species(String genus, String infraGeneric, String epithet) {
+    return binomial(genus, infraGeneric, epithet, Rank.SPECIES);
+  }
+
   NameAssertion binomial(String genus, String infraGeneric, String epithet, Rank rank) {
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());

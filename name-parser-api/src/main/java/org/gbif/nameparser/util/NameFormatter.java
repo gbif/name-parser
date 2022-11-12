@@ -361,7 +361,7 @@ public class NameFormatter {
       name = UnicodeUtils.decompose(name);
     }
     if (asciiOnly) {
-      name = UnicodeUtils.ascii(name);
+      name = UnicodeUtils.foldToAscii(name);
     }
     return Strings.emptyToNull(name);
   }
