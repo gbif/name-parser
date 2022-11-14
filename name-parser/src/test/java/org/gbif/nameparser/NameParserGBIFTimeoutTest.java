@@ -38,7 +38,7 @@ public class NameParserGBIFTimeoutTest {
 
   final int extra = 100;
 
-  NameParser parser = new NameParserGBIF(10, 0, 10);
+  NameParser parser = new NameParserGBIF(11, 0, 10);
   StopWatch watch = new StopWatch();
 
   @Before
