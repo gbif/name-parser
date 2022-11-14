@@ -320,7 +320,7 @@ public class ParsingJobTest {
 
   private static void assertAuthorshipPattern(String authorship, String exAuthor, String ... authors) throws InterruptedException {
     try {
-      String normed = JOB.normalize(authorship);
+      String normed = JOB.normalize(JOB.preClean(authorship));
       Matcher m = AUTHORSHIP_PATTERN.matcher(normed);
       assertTrue(authorship, m.find());
       if (ParsingJob.LOG.isDebugEnabled()) {
