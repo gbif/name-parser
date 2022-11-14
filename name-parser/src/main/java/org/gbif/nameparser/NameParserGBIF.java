@@ -41,8 +41,8 @@ public class NameParserGBIF implements NameParser {
    * timeouts. If idle the pool shrinks to no threads after 1 seconds plus configured timeout.
    */
   private final ExecutorService exec;
-  private final long timeout;  // max parsing time in milliseconds
   private final ParserConfigs configs = new ParserConfigs();
+  private long timeout;  // max parsing time in milliseconds
 
   /**
    * The default name parser without an explicit monomials list using the default timeout of 1s for parsing.
@@ -73,10 +73,19 @@ public class NameParserGBIF implements NameParser {
    * The default name parser without an explicit monomials list using the given timeout in milliseconds for parsing.
    */
   public NameParserGBIF(long timeout, ExecutorService executorService) {
-    Preconditions.checkArgument(timeout > 0, "Timeout needs to be at least 1ms");
-    LOG.info("Create new name parser with timeout={}", timeout);
+    Preconditions.checkArgument(timeout > 10, "Timeout needs to be at least 10ms");
+    LOG.info("Create new name parser with {}ms timeout", timeout);
     this.timeout = timeout;
     this.exec = executorService;
+  }
+
+  public long getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(long timeout) {
+    LOG.info("Change name parser timeout to {}ms", timeout);
+    this.timeout = timeout;
   }
 
   /**
