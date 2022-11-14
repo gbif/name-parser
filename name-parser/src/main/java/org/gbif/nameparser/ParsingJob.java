@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
 import org.gbif.nameparser.util.RankUtils;
+import org.gbif.nameparser.util.UnicodeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -460,6 +461,7 @@ class ParsingJob implements Callable<ParsedName> {
 
   final Rank rank;
   final String scientificName;
+  final String scientificNameCleaned; // preCleaned scientificName
   final ParserConfigs configs;
   final ParsedName pn;
   boolean ignoreAuthorship;
@@ -477,6 +479,9 @@ class ParsingJob implements Callable<ParsedName> {
     pn =  new ParsedName();
     pn.setRank(rank);
     pn.setCode(code);
+    // clean name, removing seriously wrong things
+    scientificNameCleaned = preClean(scientificName, pn.getWarnings());
+    name = scientificNameCleaned;
   }
 
   void unparsable(NameType type) throws UnparsableNameException {
@@ -500,9 +505,6 @@ class ParsingJob implements Callable<ParsedName> {
     if (LOG.isDebugEnabled()) {
       start = System.currentTimeMillis();
     }
-
-    // clean name, removing seriously wrong things
-    name = preClean(scientificName);
 
     // before further cleaning/parsing try if we have known OTU formats, i.e. BIN or SH numbers
     // test for special cases they do not need any further parsing
@@ -860,7 +862,7 @@ class ParsingJob implements Callable<ParsedName> {
     checkBlacklist();
     
     // flag names that match doubtful patterns
-    applyDoubtfulFlag(scientificName);
+    applyDoubtfulFlag();
 
     // determine rank if not yet assigned or change according to code
     determineRank();
@@ -1001,14 +1003,13 @@ class ParsingJob implements Callable<ParsedName> {
    * Carefully normalizes a scientific name trying to maintain the original as close as possible.
    * In particular the string is normalized by:
    * - adding commas in front of years
+   * - normalized hybrid marker to be the ascii multiplication sign
    * - trims whitespace around hyphens
    * - pads whitespace around &
    * - adds whitespace after dots following a genus abbreviation, rank marker or author name
    * - keeps whitespace before opening and after closing brackets
    * - removes whitespace inside brackets
    * - removes whitespace before commas
-   * - normalized hybrid marker to be the ascii multiplication sign
-   * - normalized hyphen to be the ascii character
    * - removes whitespace between hybrid marker and following name part in case it is NOT a hybrid formula
    * - trims the string and replaces multi whitespace with single space
    * - capitalizes all only uppercase words (authors are often found in upper case only)
@@ -1024,9 +1025,6 @@ class ParsingJob implements Callable<ParsedName> {
     if (Thread.currentThread().isInterrupted()) {
       throw new InterruptedException("Interrupted!");
     }
-
-    // translate some very similar characters that sometimes get misused instead of real letters
-    name = StringUtils.replaceChars(name, "¡", "i");
 
     // normalise usage of rank marker with 2 dots, i.e. forma specialis and sensu latu
     Matcher m = matcherInterruptable(FORM_SPECIALIS, name);
@@ -1235,9 +1233,9 @@ class ParsingJob implements Callable<ParsedName> {
   /**
    * basic careful cleaning, trying to preserve all parsable name parts
    */
-  public static String preClean(String name, @Nullable Set<String> warnings) throws InterruptedException {
+  public static String preClean(String name, @Nullable Set<String> warnings) {
     // remove bad whitespace in html entities
-    Matcher m = matcherInterruptable(XML_ENTITY_STRIP, name);
+    Matcher m = XML_ENTITY_STRIP.matcher(name);
     if (m.find()) {
       name = m.replaceAll("&$1;");
     }
@@ -1248,7 +1246,7 @@ class ParsingJob implements Callable<ParsedName> {
       warnings.add(Warnings.HTML_ENTITIES);
     }
     // finally remove still existing bad ampersands missing the closing ;
-    m = matcherInterruptable(AMPERSAND_ENTITY, name);
+    m = AMPERSAND_ENTITY.matcher(name);
     if (m.find()) {
       name = m.replaceAll("&");
       if (warnings != null) {
@@ -1257,12 +1255,20 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // replace xml tags
-    m = matcherInterruptable(XML_TAGS, name);
+    m = XML_TAGS.matcher(name);
     if (m.find()) {
       name = m.replaceAll("");
       if (warnings != null) {
         warnings.add(Warnings.XML_TAGS);
       }
+    }
+
+    // translate some very similar characters that sometimes get misused instead of real letters
+    String before = name;
+    name = UnicodeUtils.replaceHomoglyphs(name, true, "⍺");
+    name = StringUtils.replaceChars(name, "¡", "i");
+    if (!name.equals(before)) {
+      warnings.add(Warnings.HOMOGLYHPS);
     }
 
     // trim
@@ -1282,9 +1288,9 @@ class ParsingJob implements Callable<ParsedName> {
         name = name.substring(idx, name.length() - end);
       }
     }
-    name = replAllInterruptable(NORM_WHITESPACE, name, " ");
+    name = NORM_WHITESPACE.matcher(name).replaceAll(" ");
     // replace various single quote apostrophes with always '
-    name = replAllInterruptable(NORM_APOSTROPHES, name, "'");
+    name = NORM_APOSTROPHES.matcher(name).replaceAll("'");
 
     return StringUtils.trimToEmpty(name);
   }
@@ -1358,15 +1364,15 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
   
-  private void applyDoubtfulFlag(String scientificName) throws InterruptedException {
+  private void applyDoubtfulFlag() throws InterruptedException {
     // all rules below do not apply to unparsable names
-    Matcher m = matcherInterruptable(DOUBTFUL, scientificName);
+    Matcher m = matcherInterruptable(DOUBTFUL, scientificNameCleaned);
     if (!m.find()) {
       pn.setDoubtful(true);
       pn.addWarning(Warnings.UNUSUAL_CHARACTERS);
 
     } else if (pn.getType().isParsable()){
-      m = matcherInterruptable(DOUBTFUL_NULL, scientificName);
+      m = matcherInterruptable(DOUBTFUL_NULL, scientificNameCleaned);
       if (m.find()) {
         pn.setDoubtful(true);
         pn.addWarning(Warnings.NULL_EPITHET);

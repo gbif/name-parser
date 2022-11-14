@@ -406,9 +406,9 @@ public abstract class NameParserTest {
 
   @Test
   public void speciesWithSubgenus() throws Exception {
-    assertName("Passalus (Pertinax) gaboi Jiménez & Reyes, 2022", "Passalus gaboi")
+    assertName("Passalus (Pertinax) gaboi Jiménez-Maxim & Reyes, 2022", "Passalus gaboi")
         .species("Passalus", "Pertinax", "gaboi")
-        .combAuthors("2022", "Jiménez", "Reyes")
+        .combAuthors("2022", "Jiménez-Maxim", "Reyes")
         .code(ZOOLOGICAL)
         .nothingElse();
   }
@@ -497,8 +497,7 @@ public abstract class NameParserTest {
         .species("Gymnocalycium", "eurypleurumn")
         .combAuthors(null, "F.Ritter")
         .combExAuthors("Plesnik")
-        .doubtful()
-        .warning(Warnings.UNUSUAL_CHARACTERS) // the ¡ in Plesn¡k is not a regular i
+        .warning(Warnings.HOMOGLYHPS) // the ¡ in Plesn¡k is not a regular i
         .nothingElse();
     
     assertName("Abutilon bastardioides Baker f. ex Rose", "Abutilon bastardioides")
@@ -2737,16 +2736,7 @@ public abstract class NameParserTest {
    * https://github.com/gbif/name-parser/issues/27
    */
   @Test
-  @Ignore("work in progress")
   public void hyphens() throws Exception {
-    // atypical hyphens, https://github.com/CatalogueOfLife/backend/issues/1178
-    assertName("Passalus (Pertinax) gaboi Jiménez‑Ferbans & Reyes‑Castillo, 2022", "Passalus gaboi")
-        .species("Passalus", "Pertinax", "gaboi")
-        .infraGeneric("Pertinax")
-        .combAuthors("2022", "Jiménez‑Ferbans", "Reyes‑Castillo")
-        .code(ZOOLOGICAL)
-        .nothingElse();
-
     assertName("Minilimosina v-atrum (Villeneuve, 1917)", "Minilimosina v-atrum")
         .species("Minilimosina", "v-atrum")
         .basAuthors("1917", "Villeneuve")
@@ -2776,7 +2766,15 @@ public abstract class NameParserTest {
         .basAuthors(null, "Y.N.Lee")
         .code(BOTANICAL)
         .nothingElse();
-    
+
+    // atypical hyphens, https://github.com/CatalogueOfLife/backend/issues/1178
+    assertName("Passalus (Pertinax) gaboi Jiménez‑Ferbans & Reyes‑Castillo, 2022", "Passalus gaboi")
+        .species("Passalus", "Pertinax", "gaboi")
+        .infraGeneric("Pertinax")
+        .combAuthors("2022", "Jiménez-Ferbans", "Reyes-Castillo")
+        .code(ZOOLOGICAL)
+        .warning(Warnings.HOMOGLYHPS)
+        .nothingElse();
   }
   
   @Test
