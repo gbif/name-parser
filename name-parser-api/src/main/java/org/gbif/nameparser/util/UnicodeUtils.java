@@ -6,13 +6,18 @@ import it.unimi.dsi.fastutil.ints.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.PrimitiveIterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Utilities dealing with unicode strings
@@ -120,9 +125,34 @@ public class UnicodeUtils {
       HOMOGLYHPS_LOWEST_CP = minCP.get();
       HOMOGLYHPS_HIGHEST_CP = maxCP.get();
       LOG.info("Loaded known homoglyphs for: {}", canonicals);
-      LOG.debug("Min homoglyph codepoint: {}", minCP);
-      LOG.debug("Max homoglyph codepoint: {}", maxCP);
+      LOG.debug("Min/max homoglyph codepoint: {} / {}", minCP, maxCP);
     }
+  }
+  // unicode codepoints considered ASCII hyphens
+  private static final int HYPHEN_HOMOGLYHPS_LOWEST_CP;
+  private static final int HYPHEN_HOMOGLYHPS_HIGHEST_CP;
+  private static final IntSet HYPHEN_HOMOGLYHPS;
+  static {
+    IntSet hyp = new IntOpenHashSet(
+        ("-˗۔‐‑‒–⁃−➖Ⲻ﹘‑").codePoints().boxed().collect(Collectors.toSet())
+    );
+    hyp.remove(45); // ignore canonical ascii hyphen - this yields a higher lower bound and better performance as we skip ascii char checks
+
+    List<Integer> hl = new ArrayList<>(hyp);
+    Collections.sort(hl);
+    StringBuilder sb = new StringBuilder();
+    for (int cp : hl) {
+      sb.append(cp);
+      sb.append(" -> ");
+      sb.appendCodePoint(cp);
+      sb.append("\n");
+    }
+    System.out.println(sb);
+    HYPHEN_HOMOGLYHPS = IntSets.unmodifiable(hyp);
+    HYPHEN_HOMOGLYHPS_LOWEST_CP = hyp.intStream().min().getAsInt();
+    HYPHEN_HOMOGLYHPS_HIGHEST_CP = hyp.intStream().max().getAsInt();
+    LOG.info("Loaded {} known hyphen homoglyphs", hyp.size());
+    LOG.debug("Min/max hyphen homoglyph codepoint: {} / {}", HYPHEN_HOMOGLYHPS_LOWEST_CP, HYPHEN_HOMOGLYHPS_HIGHEST_CP);
   }
 
   /**
@@ -208,19 +238,42 @@ public class UnicodeUtils {
 
   /**
    * Replaces all known homoglyphs with their canonical character.
+   * @param inclHyphens if true homoglyphs for hyphens (which are sometimes wanted) will be replaced
    */
-  public static String replaceHomoglyphs(final CharSequence cs) {
+  public static String replaceHomoglyphs(final CharSequence cs, boolean inclHyphens) {
+    return replaceHomoglyphs(cs, inclHyphens, null);
+  }
+
+  /**
+   * Replaces all known homoglyphs with their canonical character.
+   * @param inclHyphens if true homoglyphs for hyphens (which are sometimes wanted) will be replaced
+   * @param keep optional list of unicode characters/codepoints to not replace even though they are considered homoglyphs
+   */
+  public static String replaceHomoglyphs(final CharSequence cs, boolean inclHyphens, @Nullable String keep) {
     if (cs == null) {
       return null;
+    }
+    IntSet keepCP = new IntOpenHashSet();
+    if (keep != null) {
+      keepCP.addAll(keep.codePoints().boxed().collect(Collectors.toSet()));
     }
     StringBuilder sb = new StringBuilder();
     PrimitiveIterator.OfInt iter = cs.codePoints().iterator();
     while(iter.hasNext()) {
       final int cp = iter.nextInt();
-      if (HOMOGLYHPS_LOWEST_CP <= cp && cp <= HOMOGLYHPS_HIGHEST_CP && HOMOGLYHPS.containsKey(cp)) {
-        sb.append(HOMOGLYHPS.get(cp));
-      } else {
+      if (keepCP.contains(cp)) {
         sb.appendCodePoint(cp);
+        continue;
+      }
+
+      if (inclHyphens && HYPHEN_HOMOGLYHPS_LOWEST_CP <= cp && cp <= HYPHEN_HOMOGLYHPS_HIGHEST_CP && HYPHEN_HOMOGLYHPS.contains(cp)) {
+        sb.append("-");
+      } else {
+        if (HOMOGLYHPS_LOWEST_CP <= cp && cp <= HOMOGLYHPS_HIGHEST_CP && HOMOGLYHPS.containsKey(cp)) {
+          sb.append(HOMOGLYHPS.get(cp));
+        } else {
+          sb.appendCodePoint(cp);
+        }
       }
     }
     return sb.toString();

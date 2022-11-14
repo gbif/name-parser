@@ -83,7 +83,7 @@ public class UnicodeUtilsTest {
     }) {
       if (UnicodeUtils.containsHomoglyphs(x)) {
         System.out.println(x);
-        System.out.println(UnicodeUtils.replaceHomoglyphs(x));
+        System.out.println(UnicodeUtils.replaceHomoglyphs(x, false));
         int cp = UnicodeUtils.findHomoglyph(x);
         System.out.print(cp);
         System.out.println(" " + Character.getName(cp));
@@ -105,9 +105,15 @@ public class UnicodeUtilsTest {
 
   @Test
   public void replaceHomoglyphs() {
-    assertEquals("rdtrfvgb3weñ54drtfvgxá+ä+.p, …-!§%&\"´`'SLA", UnicodeUtils.replaceHomoglyphs(input1));
-    assertEquals("rfvgb3çwßß54dAtfvgx+ä+.p, …-!§%&\"´`'", UnicodeUtils.replaceHomoglyphs(input2));
-    assertEquals("Abies × Picea", UnicodeUtils.replaceHomoglyphs("Abies × Picea"));
+    assertEquals("rdtrfvgb3weñ54drtfvgxá+ä+.p, …-!§%&\"´`'SLA", UnicodeUtils.replaceHomoglyphs(input1, false));
+    assertEquals("rfvgb3çwßß54dAtfvgx+ä+.p, …-!§%&\"´`'", UnicodeUtils.replaceHomoglyphs(input2, false));
+    assertEquals("Abies × Picea", UnicodeUtils.replaceHomoglyphs("Abies × Picea", true));
+    assertEquals("Jiménez-Ferbans", UnicodeUtils.replaceHomoglyphs("Jiménez‑Ferbans", true));
+    assertEquals("Jiménez-Ferbans", UnicodeUtils.replaceHomoglyphs("Jiménez‒Ferbans", true));
+    assertEquals("Jiménez-Ferbans", UnicodeUtils.replaceHomoglyphs("Jiménez﹘Ferbans", true));
+    assertEquals("Jiménez-Ferbans", UnicodeUtils.replaceHomoglyphs("Jiménez-Ferbans", true));
+    // should this be a homoglyph?
+    assertEquals("¡i", UnicodeUtils.replaceHomoglyphs("¡i", true));
   }
 
   @Test

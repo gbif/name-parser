@@ -18,6 +18,7 @@ package org.gbif.nameparser.api;
  */
 public class Warnings {
   public static final String NULL_EPITHET = "epithet with literal value null";
+  public static final String HOMOGLYHPS = "homoglyphs replaced";
   public static final String UNUSUAL_CHARACTERS = "unusual characters";
   public static final String SUBSPECIES_ASSIGNED = "Name was considered species but contains infraspecific epithet";
   public static final String LC_MONOMIAL = "lower case monomial match";
