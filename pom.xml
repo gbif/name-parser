@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>name-parser-motherpom</artifactId>
-    <version>3.7.3-SNAPSHOT</version>
+    <version>3.7.4-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>GBIF Name Parser Motherpom</name>
@@ -42,7 +42,7 @@
         <fastutil.version>8.5.9</fastutil.version>
         <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
         <gbif-api.version>0.166</gbif-api.version>
-        <guava.version>28.0-jre</guava.version>
+        <guava.version>29.0-jre</guava.version>
         <junit.version>4.13.1</junit.version>
         <logback.version>1.2.3</logback.version>
         <slf4j.version>1.7.24</slf4j.version>
