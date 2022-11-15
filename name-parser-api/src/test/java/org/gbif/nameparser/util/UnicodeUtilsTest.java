@@ -114,6 +114,8 @@ public class UnicodeUtilsTest {
     assertEquals("Jiménez-Ferbans", UnicodeUtils.replaceHomoglyphs("Jiménez-Ferbans", true));
     // should this be a homoglyph?
     assertEquals("¡i", UnicodeUtils.replaceHomoglyphs("¡i", true));
+    // we keep this as s, not f
+    assertEquals("Coccinella 2-pustulata Linnæus, 1758", UnicodeUtils.replaceHomoglyphs("Coccinella 2-puſtulata Linnæus, 1758", true));
   }
 
   @Test

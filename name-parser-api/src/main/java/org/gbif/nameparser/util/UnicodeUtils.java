@@ -59,11 +59,17 @@ public class UnicodeUtils {
   private static final Int2CharMap HOMOGLYHPS; // unicode codepoints as keys to avoid dealing with chars & surrogate pairs
   private static final int HOMOGLYHPS_LOWEST_CP;
   private static final int HOMOGLYHPS_HIGHEST_CP;
+  private static int toCodePoint(char c) {
+    return String.valueOf(c).codePoints().findFirst().getAsInt();
+  }
   static {
     // canonicals to be ignored from the homoglyph list
     final CharSet ignoredCanonicals = new CharArraySet(new char[]{' ', '\'', '-', '﹘'});
     try (LineReader lr = new LineReader(ClassLoader.getSystemResourceAsStream("unicode/homoglyphs.txt"))) {
+      // we manage some codepoints differently from the official homoglyph list
       Int2CharMap homoglyphs = new Int2CharOpenHashMap();
+      homoglyphs.put(toCodePoint('ſ'), 's');
+
       final AtomicInteger minCP = new AtomicInteger(Integer.MAX_VALUE);
       final AtomicInteger maxCP = new AtomicInteger(Integer.MIN_VALUE);
       StringBuilder canonicals = new StringBuilder();
@@ -96,10 +102,11 @@ public class UnicodeUtils {
           ignore.add(cp);
         });
         line.substring(1).codePoints()
-            // remove hybrid marker which we use often
+            // remove hybrid marker which we use often and treat separately
             .filter(cp -> cp > 128
                           && cp != NameFormatter.HYBRID_MARKER
                           && !DIACRITICS.contains(cp)
+                          && !homoglyphs.containsKey(cp)
                           && !ignore.contains(cp)
             )
             .forEach(
@@ -139,17 +146,19 @@ public class UnicodeUtils {
         ("-˗۔‐‑‒–⁃−➖Ⲻ﹘‑").codePoints().boxed().collect(Collectors.toSet())
     );
     hyp.remove(45); // ignore canonical ascii hyphen - this yields a higher lower bound and better performance as we skip ascii char checks
-
-    List<Integer> hl = new ArrayList<>(hyp);
-    Collections.sort(hl);
-    StringBuilder sb = new StringBuilder();
-    for (int cp : hl) {
-      sb.append(cp);
-      sb.append(" -> ");
-      sb.appendCodePoint(cp);
-      sb.append("\n");
+    if (DEBUG) {
+      List<Integer> hl = new ArrayList<>(hyp);
+      Collections.sort(hl);
+      StringBuilder sb = new StringBuilder();
+      for (int cp : hl) {
+        sb.append(cp);
+        sb.append(" -> ");
+        sb.appendCodePoint(cp);
+        sb.append("\n");
+      }
+      System.out.println(sb);
     }
-    System.out.println(sb);
+
     HYPHEN_HOMOGLYHPS = IntSets.unmodifiable(hyp);
     HYPHEN_HOMOGLYHPS_LOWEST_CP = hyp.intStream().min().getAsInt();
     HYPHEN_HOMOGLYHPS_HIGHEST_CP = hyp.intStream().max().getAsInt();
