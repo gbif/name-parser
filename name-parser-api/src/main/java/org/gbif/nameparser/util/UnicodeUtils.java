@@ -1,8 +1,10 @@
 package org.gbif.nameparser.util;
 
 import com.google.common.base.Charsets;
+import it.unimi.dsi.fastutil.chars.CharArraySet;
 import it.unimi.dsi.fastutil.chars.CharSet;
 import it.unimi.dsi.fastutil.ints.*;
+import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +61,7 @@ public class UnicodeUtils {
   private static final int HOMOGLYHPS_HIGHEST_CP;
   static {
     // canonicals to be ignored from the homoglyph list
-    final CharSet ignoredCanonicals = CharSet.of(' ', '\'', '-', '﹘');
+    final CharSet ignoredCanonicals = new CharArraySet(new char[]{' ', '\'', '-', '﹘'});
     try (LineReader lr = new LineReader(ClassLoader.getSystemResourceAsStream("unicode/homoglyphs.txt"))) {
       Int2CharMap homoglyphs = new Int2CharOpenHashMap();
       final AtomicInteger minCP = new AtomicInteger(Integer.MAX_VALUE);
