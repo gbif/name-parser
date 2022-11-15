@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>name-parser-motherpom</artifactId>
-    <version>3.7.3-SNAPSHOT</version>
+    <version>3.7.3</version>
   </parent>
 
   <artifactId>name-parser-antlr</artifactId>
