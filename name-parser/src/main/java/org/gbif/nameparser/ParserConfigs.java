@@ -15,6 +15,7 @@ package org.gbif.nameparser;
 
 import org.gbif.nameparser.api.ParsedAuthorship;
 import org.gbif.nameparser.api.ParsedName;
+import org.gbif.nameparser.util.UnicodeUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +54,7 @@ public class ParserConfigs {
 
   static String norm(String x) {
     x = ParsingJob.preClean(x, null).toLowerCase();
+    x = UnicodeUtils.decompose(x);
     x = MORE_WS.matcher(x).replaceAll(" ");
     return MORE_WS2.matcher(x).replaceAll(" $1 ");
   }

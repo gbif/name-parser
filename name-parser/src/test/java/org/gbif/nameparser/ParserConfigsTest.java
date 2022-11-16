@@ -13,6 +13,7 @@
  */
 package org.gbif.nameparser;
 
+import org.gbif.nameparser.util.UnicodeUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -32,8 +33,9 @@ public class ParserConfigsTest {
     assertNorm(" ( zur strassen 1973 ) markus", "( zur Strassen 1973 )  Markus  ");
     assertNorm(" ( zur strassen 1973 ) markus", " ( zur Strassen, 1973 )Markus");
     assertNorm(" ( zur strassen 1973 ) markus", "( zur Strassen, 1973 )Markus");
-    assertNorm(" ( zúr straßen 1973 ) märkus", "( zúr Straßen, 1973 )Märkus");
+    assertNorm(" ( zúr strassen 1973 ) märkus", "( zúr Straßen, 1973 )Märkus");
     assertNorm(" ( zur strassen 1973 ) markus robert", "( zur Strassen, 1973 ) Markus & RObert");
+    assertNorm("coccinella 2 pustulata linnaeus 1758", "Coccinella 2-puſtulata Linnæus, 1758");
   }
 
   private void assertNorm(String expect, String x) throws InterruptedException {

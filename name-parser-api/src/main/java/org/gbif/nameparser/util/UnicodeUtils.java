@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import it.unimi.dsi.fastutil.chars.CharArraySet;
 import it.unimi.dsi.fastutil.chars.CharSet;
 import it.unimi.dsi.fastutil.ints.*;
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,24 +176,9 @@ public class UnicodeUtils {
     if (x == null) {
       return null;
     }
-    return x.replaceAll("æ", "ae")
-        .replaceAll("Æ", "Ae")
-        .replaceAll("œ", "oe")
-        .replaceAll("Œ", "Oe")
-        .replaceAll("Ĳ", "Ij")
-        .replaceAll("ĳ", "ij")
-        .replaceAll("ǈ", "Lj")
-        .replaceAll("ǉ", "lj")
-        .replaceAll("ȸ", "db")
-        .replaceAll("ȹ", "qp")
-        .replaceAll("ß", "ss")
-        .replaceAll("ﬆ", "st")
-        .replaceAll("ﬅ", "ft")
-        .replaceAll("ﬀ", "ff")
-        .replaceAll("ﬁ", "fi")
-        .replaceAll("ﬂ", "fl")
-        .replaceAll("ﬃ", "ffi")
-        .replaceAll("ﬄ", "ffl");
+    return StringUtils.replaceEach(x,
+        new String[]{"æ", "Æ", "œ", "Œ", "Ĳ", "ĳ", "ǈ", "ǉ", "ȸ", "ȹ", "ß", "ﬆ", "ﬅ", "ﬀ", "ﬁ", "ﬂ", "ﬃ", "ﬄ"},
+        new String[]{"ae","Ae","oe","Oe","Ij","ij","Lj","lj","db","qp","ss","st","ft","ff","fi","fl","ffi","ffl"});
   }
 
   /**

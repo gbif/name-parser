@@ -116,6 +116,9 @@ public class UnicodeUtilsTest {
     assertEquals("¡i", UnicodeUtils.replaceHomoglyphs("¡i", true));
     // we keep this as s, not f
     assertEquals("Coccinella 2-pustulata Linnæus, 1758", UnicodeUtils.replaceHomoglyphs("Coccinella 2-puſtulata Linnæus, 1758", true));
+    // make sure composed chars remain
+    final String composed = "æÆœŒĲĳǈǉȸȹßﬆﬅﬀﬁﬂﬃﬄ";
+    assertEquals(composed, UnicodeUtils.replaceHomoglyphs(composed, true));
   }
 
   @Test

@@ -1267,7 +1267,7 @@ class ParsingJob implements Callable<ParsedName> {
     String before = name;
     name = UnicodeUtils.replaceHomoglyphs(name, true, "⍺");
     name = StringUtils.replaceChars(name, "¡", "i");
-    if (!name.equals(before)) {
+    if (warnings != null && !name.equals(before)) {
       warnings.add(Warnings.HOMOGLYHPS);
     }
 
