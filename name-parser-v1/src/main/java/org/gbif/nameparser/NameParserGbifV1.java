@@ -49,7 +49,7 @@ public class NameParserGbifV1 implements NameParser {
       .put(org.gbif.nameparser.api.NameType.NO_NAME, NameType.NO_NAME)
       .build();
 
-  private final org.gbif.nameparser.api.NameParser parser;
+  private final NameParserGBIF parser;
 
   /**
    * Using the default GBIF RegEx Name Parser.
@@ -66,8 +66,16 @@ public class NameParserGbifV1 implements NameParser {
     this.parser = new NameParserGBIF(timeout);
   }
 
-  public NameParserGbifV1(org.gbif.nameparser.api.NameParser parser) {
+  public NameParserGbifV1(NameParserGBIF parser) {
     this.parser = parser;
+  }
+
+  public long getTimeout() {
+    return parser.getTimeout();
+  }
+
+  public void setTimeout(long timeout) {
+    parser.setTimeout(timeout);
   }
 
   @Override
