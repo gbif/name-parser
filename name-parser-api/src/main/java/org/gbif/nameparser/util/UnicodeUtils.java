@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.chars.CharArraySet;
 import it.unimi.dsi.fastutil.chars.CharSet;
 import it.unimi.dsi.fastutil.ints.*;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +65,7 @@ public class UnicodeUtils {
   static {
     // canonicals to be ignored from the homoglyph list
     final CharSet ignoredCanonicals = new CharArraySet(new char[]{' ', '\'', '-', '﹘'});
-    try (LineReader lr = new LineReader(ClassLoader.getSystemResourceAsStream("unicode/homoglyphs.txt"))) {
+    try (LineReader lr = new LineReader(UnicodeUtils.class.getResourceAsStream("/unicode/homoglyphs.txt"))) {
       // we manage some codepoints differently from the official homoglyph list
       Int2CharMap homoglyphs = new Int2CharOpenHashMap();
       homoglyphs.put(toCodePoint('ſ'), 's');
