@@ -142,7 +142,7 @@ public class RankUtils {
       Maps.immutableEntry("m", MORPH),
       Maps.immutableEntry("morpha", MORPH),
       Maps.immutableEntry("nat", NATIO),
-      Maps.immutableEntry("proles", PROLES),
+      Maps.immutableEntry("proles", PROLE),
       Maps.immutableEntry("pv", PATHOVAR),
       Maps.immutableEntry("sf", SUBFORM),
       Maps.immutableEntry("ssp", SUBSPECIES),
