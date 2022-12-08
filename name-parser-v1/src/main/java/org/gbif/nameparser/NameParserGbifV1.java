@@ -302,7 +302,7 @@ public class NameParserGbifV1 implements NameParser {
       return null;
     }
     if (Rank.RACE == rank) {
-      return org.gbif.nameparser.api.Rank.PROLES;
+      return org.gbif.nameparser.api.Rank.PROLE;
     }
     return convertEnum(org.gbif.nameparser.api.Rank.class, rank);
   }

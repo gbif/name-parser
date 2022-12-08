@@ -88,6 +88,7 @@ public enum Rank {
   INFRAORDER("infraord."),
   PARVORDER("parvord."),
 
+  FALANX("falanges", "falanx"),
   MEGAFAMILY("megafamilies", "megafam."),
   GRANDFAMILY("grandfamilies", "grandfam."),
   SUPERFAMILY("superfamilies", "superfam."),
@@ -105,11 +106,10 @@ public enum Rank {
    * Used for any other unspecific rank above genera.
    */
   SUPRAGENERIC_NAME("supragen."),
-  
+
+  SUPERGENUS("supergenera", "supergen."),
   GENUS("genera", "gen."),
-  
   SUBGENUS("subgenera", "subgen."),
-  
   INFRAGENUS("infragenera", "infrag."),
   
   SUPERSECTION("supersect."),
@@ -146,7 +146,13 @@ public enum Rank {
    * https://en.wikipedia.org/wiki/Grex_(horticulture)
    */
   GREX("gx"),
-  
+
+  /**
+   * type of species in zoology
+   * https://www.wikidata.org/wiki/Q931051
+   */
+  KLEPTON("klepton"),
+
   SUBSPECIES("subspecies", "subsp."),
   
   /**
@@ -176,7 +182,7 @@ public enum Rank {
   /**
    * Botanical legacy rank for a race, recommended in botanical code from 1868
    */
-  PROLES("proles", "prol."),
+  PROLE("proles", "prol."),
   
   /**
    * Zoological legacy rank
@@ -192,13 +198,13 @@ public enum Rank {
    * Zoological legacy rank
    */
   MORPH("morph"),
-  
+
+  SUPERVARIETY("supervarieties", "supervar."),
   VARIETY("varieties", "var."),
-  
   SUBVARIETY("subvarieties", "subvar."),
-  
+
+  SUPERFORM("superf."),
   FORM("f."),
-  
   SUBFORM("subf."),
   
   /**
@@ -264,9 +270,16 @@ public enum Rank {
    * For example Puccinia graminis f. sp. avenae
    */
   FORMA_SPECIALIS("f.sp."),
-  
+
+  /**
+   * Botanical rank
+   */
+  LUSUS("lusi", "lusus"),
+
   CULTIVAR("cv."),
-  
+
+  MUTATIO("mut."),
+
   /**
    * A microbial strain.
    */
@@ -342,8 +355,11 @@ public enum Rank {
       MORPH,
       ABERRATION,
       NATIO,
-      PROLES,
-      CONVARIETY
+      PROLE,
+      CONVARIETY,
+      KLEPTON,
+      FALANX,
+      LUSUS
   );
 
   private static final Map<Rank, Rank> MAJOR_RANKS;
@@ -407,8 +423,10 @@ public enum Rank {
       .put(MORPH, NomCode.ZOOLOGICAL)
       .put(ABERRATION, NomCode.ZOOLOGICAL)
       .put(NATIO, NomCode.ZOOLOGICAL)
+      .put(KLEPTON, NomCode.ZOOLOGICAL)
+      .put(MUTATIO, NomCode.ZOOLOGICAL)
 
-      .put(PROLES, NomCode.BOTANICAL)
+      .put(PROLE, NomCode.BOTANICAL)
       .put(SUPERSECTION, NomCode.BOTANICAL)
       .put(SECTION, NomCode.BOTANICAL)
       .put(SUBSECTION, NomCode.BOTANICAL)
@@ -429,7 +447,8 @@ public enum Rank {
       .put(SEROVAR, NomCode.BACTERIAL)
       .put(CHEMOFORM, NomCode.BACTERIAL)
       .put(FORMA_SPECIALIS, NomCode.BACTERIAL)
-    
+      .put(LUSUS, NomCode.BOTANICAL)
+
       .put(REALM, NomCode.VIRUS)
       .put(SUBREALM, NomCode.VIRUS)
       .build();

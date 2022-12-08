@@ -480,6 +480,10 @@ public abstract class NameParserTest {
     assertName("Achillea millefolium var. pallidotegula", Rank.INFRASPECIFIC_NAME, "Achillea millefolium var. pallidotegula")
         .infraSpecies("Achillea", "millefolium", Rank.VARIETY, "pallidotegula")
         .nothingElse();
+
+    assertName("Monograptus turriculatus mut. minor", MUTATIO, "Monograptus turriculatus mut. minor")
+        .infraSpecies("Monograptus", "turriculatus", MUTATIO, "minor")
+        .nothingElse();
   }
 
   @Test
@@ -2922,6 +2926,9 @@ public abstract class NameParserTest {
         .nothingElse();
     assertName("Toechima sp. East Alligator (J.Russell-Smith 8418) NT Herbarium", "Toechima sp. East Alligator (J.Russell-Smith 8418)")
         .phraseName("Toechima", "East Alligator", SPECIES, "J.Russell-Smith 8418", "NT Herbarium")
+        .nothingElse();
+    assertName("Acacia sp. Mount Hilditch (M.E. Trudgen 19134)", "Acacia sp. Mount Hilditch (M.E. Trudgen 19134)")
+        .phraseName("Acacia", "Mount Hilditch", SPECIES, "M.E. Trudgen 19134", null)
         .nothingElse();
   }
   
