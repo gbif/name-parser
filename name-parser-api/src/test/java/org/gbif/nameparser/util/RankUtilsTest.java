@@ -61,7 +61,7 @@ public class RankUtilsTest {
     assertTrue(ranks.contains(Rank.INFRACOHORT));
     assertFalse(ranks.contains(Rank.SUBGENUS));
     assertFalse(ranks.contains(Rank.SPECIES));
-    assertEquals(60, ranks.size());
+    assertEquals(62, ranks.size());
   }
 
   @Test
@@ -75,7 +75,7 @@ public class RankUtilsTest {
     assertTrue(ranks.contains(Rank.SPECIES));
     assertTrue(ranks.contains(Rank.SUBSPECIES));
     assertTrue(ranks.contains(Rank.NATIO));
-    assertEquals(38, ranks.size());
+    assertEquals(43, ranks.size());
   }
 
   @Test
@@ -85,26 +85,26 @@ public class RankUtilsTest {
     assertTrue(ranks.contains(Rank.FAMILY));
     assertTrue(ranks.contains(Rank.SUBFAMILY));
     assertFalse(ranks.contains(Rank.SUPERFAMILY));
-    assertEquals(9, ranks.size());
+    assertEquals(10, ranks.size());
 
     ranks = RankUtils.between(Rank.GENUS, Rank.FAMILY, false);
     assertFalse(ranks.contains(Rank.GENUS));
     assertFalse(ranks.contains(Rank.FAMILY));
     assertTrue(ranks.contains(Rank.SUBFAMILY));
     assertFalse(ranks.contains(Rank.SUPERFAMILY));
-    assertEquals(7, ranks.size());
+    assertEquals(8, ranks.size());
   }
 
   @Test
   public void testFamilyGroup() {
-    assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.SUBTRIBE));
-    assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.TRIBE));
-    assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.INFRAFAMILY));
-    assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.SUPERFAMILY));
-    
-    assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.ORDER));
-    assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.SECTION));
-    assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.values().contains(Rank.GENUS));
+    assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.SUBTRIBE));
+    assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.TRIBE));
+    assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.INFRAFAMILY));
+    assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.SUPERFAMILY));
+
+    assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.ORDER));
+    assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.SECTION));
+    assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.GENUS));
   }
   
   private void assertInferred(String uninomial, NomCode code, Rank rank) {

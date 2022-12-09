@@ -318,6 +318,7 @@ public enum Rank {
       CLASS,
       ORDER,
       FAMILY,
+      SUBFAMILY,
       GENUS,
       SUBGENUS,
       SPECIES
@@ -338,7 +339,7 @@ public enum Rank {
   );
   
   /**
-   * A set of ranks which are treated differently in different groups of organisms and usually between botany and zoology.
+   * A set of ranks which are treated differently in different groups of organisms; usually between botany and zoology.
    */
   private static final Set<Rank> AMBIGUOUS_RANKS = ImmutableSet.of(
       SUPERSECTION,
