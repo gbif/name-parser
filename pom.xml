@@ -37,15 +37,15 @@
         <main.basedir>${project.basedir}</main.basedir>
 
         <!-- Dependency versions -->
-        <commons-io.version>2.8.0</commons-io.version>
+        <commons-io.version>2.11.0</commons-io.version>
         <commons-lang.version>3.12.0</commons-lang.version>
         <fastutil.version>8.5.9</fastutil.version>
         <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
-        <gbif-api.version>0.166</gbif-api.version>
-        <guava.version>29.0-jre</guava.version>
-        <junit.version>4.13.1</junit.version>
-        <logback.version>1.2.3</logback.version>
-        <slf4j.version>1.7.24</slf4j.version>
+        <gbif-api.version>0.177</gbif-api.version>
+        <guava.version>31.1-jre</guava.version>
+        <junit.version>4.13.2</junit.version>
+        <logback.version>1.4.5</logback.version>
+        <slf4j.version>1.7.36</slf4j.version>
     </properties>
 
     <developers>

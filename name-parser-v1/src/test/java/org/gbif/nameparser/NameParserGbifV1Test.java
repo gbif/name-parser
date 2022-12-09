@@ -68,14 +68,14 @@ public class NameParserGbifV1Test {
   @Test
   public void convertRank() throws Exception {
     for (org.gbif.nameparser.api.Rank t : org.gbif.nameparser.api.Rank.values()) {
-      assertNotNull(NameParserGbifV1.toGbif(t));
+      assertNotNull("rank not mapped: " + t, NameParserGbifV1.toGbif(t));
     }
   }
 
   @Test
   public void convertRankReverse() throws Exception {
     for (org.gbif.api.vocabulary.Rank t : org.gbif.api.vocabulary.Rank.values()) {
-      assertNotNull(NameParserGbifV1.fromGbif(t));
+      assertNotNull("rank not mapped: " + t, NameParserGbifV1.fromGbif(t));
     }
   }
 

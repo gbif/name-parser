@@ -483,6 +483,7 @@ public abstract class NameParserTest {
 
     assertName("Monograptus turriculatus mut. minor", MUTATIO, "Monograptus turriculatus mut. minor")
         .infraSpecies("Monograptus", "turriculatus", MUTATIO, "minor")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
