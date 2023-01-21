@@ -61,7 +61,7 @@ public class RankUtilsTest {
     assertTrue(ranks.contains(Rank.INFRACOHORT));
     assertFalse(ranks.contains(Rank.SUBGENUS));
     assertFalse(ranks.contains(Rank.SPECIES));
-    assertEquals(62, ranks.size());
+    assertEquals(63, ranks.size());
   }
 
   @Test
