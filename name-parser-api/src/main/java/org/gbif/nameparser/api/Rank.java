@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSet;
  */
 public enum Rank {
 
+  SUPERDOMAIN("superdom."),
   DOMAIN("dom."),
   REALM("realm"),
   SUBREALM("subrealm"),
