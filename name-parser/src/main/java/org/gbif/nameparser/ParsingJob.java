@@ -156,6 +156,7 @@ class ParsingJob implements Callable<ParsedName> {
         "))[. ]([" + NAME_LETTERS + "][" + name_letters + "-]+)"
     + ")";
 
+  static final Pattern SENIOR_EPITHET = Pattern.compile("^(" + MONOMIAL + "(?:" + INFRAGENERIC + ")?)(?:\\b| )senior\\b");
   static final String RANK_MARKER_ALL = "("+NOTHO+")? *(" + StringUtils.join(RankUtils.RANK_MARKER_MAP.keySet(), "|") + ")\\.?";
   private static final Pattern RANK_MARKER_ONLY = Pattern.compile("^" + RANK_MARKER_ALL + "$");
 
@@ -796,6 +797,14 @@ class ParsingJob implements Callable<ParsedName> {
     // remember current rank for later reuse
     final Rank preparsingRank = pn.getRank();
 
+    // replace senior epithets as they are taken as authors below
+    m = matcherInterruptable(SENIOR_EPITHET, name);
+    boolean seniorSpecies = false;
+    if (m.find()) {
+      name = m.replaceFirst("$1 zenior");
+      seniorSpecies = true;
+    }
+
     String nameStrongly = normalizeStrong(name);
 
     if (StringUtils.isBlank(nameStrongly)) {
@@ -828,6 +837,10 @@ class ParsingJob implements Callable<ParsedName> {
       }
     }
 
+    // move back senior?
+    if (seniorSpecies) {
+      pn.setSpecificEpithet("senior");
+    }
     // apply saved author prefixes again
     if (!authorPrefixes.isEmpty()) {
       applyAuthorPrefix(authorPrefixes, pn.getBasionymAuthorship());
@@ -1757,10 +1770,12 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   static void logMatcher(Matcher matcher) {
-    int i = -1;
-    while (i < matcher.groupCount()) {
-      i++;
-      LOG.debug("  {}: >{}<", i, matcher.group(i));
+    if (LOG.isDebugEnabled()) {
+      int i = -1;
+      while (i < matcher.groupCount()) {
+        i++;
+        LOG.debug("  {}: >{}<", i, matcher.group(i));
+      }
     }
   }
 

@@ -297,6 +297,7 @@ public class NameParserGbifV1 implements NameParser {
       case MICROPHYLUM:
       case NANOPHYLUM:
 
+      case SUPERDOMAIN:
       case REALM:
       case SUBREALM:
         return Rank.SUPRAGENERIC_NAME;

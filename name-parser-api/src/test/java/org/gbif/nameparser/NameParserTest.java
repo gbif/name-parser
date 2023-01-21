@@ -2942,7 +2942,25 @@ public abstract class NameParserTest {
         .code(ZOOLOGICAL)
         .nothingElse();
   }
-  
+
+  /**
+   * From https://www.gbif.org/species/search?dataset_key=da38f103-4410-43d1-b716-ea6b1b92bbac&origin=SOURCE&issue=PARTIALLY_PARSABLE&advanced=1
+   */
+  @Test
+  public void seniorEpithet() throws Exception {
+    assertName("Mesotrichia senior (Vachal)", "Mesotrichia senior")
+        .species("Mesotrichia", "senior")
+        .basAuthors(null, "Vachal")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    assertName("Xylocopa (Koptortosoma) senior clitelligera Friese", "Xylocopa senior clitelligera")
+        .infraSpecies("Xylocopa", "senior", Rank.INFRASPECIFIC_NAME, "clitelligera")
+        .infraGeneric("Koptortosoma")
+        .combAuthors(null, "Friese")
+        .nothingElse();
+  }
+
   // **************
   // HELPER METHODS
   // **************
