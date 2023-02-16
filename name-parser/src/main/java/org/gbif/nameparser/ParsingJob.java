@@ -489,6 +489,10 @@ class ParsingJob implements Callable<ParsedName> {
     throw new UnparsableNameException(type, scientificName);
   }
 
+  void unparsable(NameType type, String name) throws UnparsableNameException {
+    throw new UnparsableNameException(type, name);
+  }
+
   /**
    * Fully parse the supplied name also trying to extract authorships, a conceptual sec reference, remarks or notes
    * on the nomenclatural status. In some cases the authorship parsing proves impossible and this nameparser will
@@ -542,11 +546,7 @@ class ParsingJob implements Callable<ParsedName> {
     // BOLD/UNITE OTU names
     Matcher m = matcherInterruptable(OTU_PATTERN, name);
     if (m.find()) {
-      pn.setUninomial(m.group(1).toUpperCase());
-      pn.setType(NameType.OTU);
-      pn.setRank(Rank.UNRANKED);
-      pn.setState(ParsedName.State.COMPLETE);
-      return true;
+      unparsable(NameType.OTU, m.group(1).toUpperCase());
     }
 
     // GTDB OTU names

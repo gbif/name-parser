@@ -1255,47 +1255,17 @@ public abstract class NameParserTest {
         .type(OTU)
         .nothingElse();
 
+    // unparsable
+    assertUnparsable("SH1508347.08FU", OTU);
+    assertUnparsable("SH19186714.17FU", OTU);
+    assertUnparsable("SH191814.08FU", OTU);
+    assertUnparsable("SH191814.04FU", OTU);
+    assertUnparsable("BOLD:ACW2100", OTU);
+    assertUnparsable("BOLD:ACW2100", OTU);
+    assertUnparsableName(" BOLD:ACW2100 ", UNRANKED, OTU, "BOLD:ACW2100");
+    assertUnparsableName("Festuca sp. BOLD:ACW2100", UNRANKED, OTU, "BOLD:ACW2100");
+    assertUnparsableName("sh460441.07fu", UNRANKED, OTU, "SH460441.07FU");
 
-    assertName("SH1508347.08FU", "SH1508347.08FU")
-        .monomial("SH1508347.08FU")
-        .type(OTU)
-        .nothingElse();
-    
-    assertName("SH19186714.17FU", "SH19186714.17FU")
-        .monomial("SH19186714.17FU")
-        .type(OTU)
-        .nothingElse();
-    
-    assertName("SH191814.08FU", "SH191814.08FU")
-        .monomial("SH191814.08FU")
-        .type(OTU)
-        .nothingElse();
-    
-    assertName("SH191814.04FU", "SH191814.04FU")
-        .monomial("SH191814.04FU")
-        .type(OTU)
-        .nothingElse();
-    
-    assertName("BOLD:ACW2100", "BOLD:ACW2100")
-        .monomial("BOLD:ACW2100")
-        .type(OTU)
-        .nothingElse();
-    
-    assertName("SH460441.07FU", "SH460441.07FU")
-        .monomial("SH460441.07FU")
-        .type(OTU)
-        .nothingElse();
-    
-    assertName("sh460441.07fu", "SH460441.07FU")
-        .monomial("SH460441.07FU")
-        .type(OTU)
-        .nothingElse();
-    
-    assertName("Festuca sp. BOLD:ACW2100", "BOLD:ACW2100")
-        .monomial("BOLD:ACW2100")
-        .type(OTU)
-        .nothingElse();
-    
     // no OTU names
     assertName("Boldenaria", "Boldenaria")
         .monomial("Boldenaria")

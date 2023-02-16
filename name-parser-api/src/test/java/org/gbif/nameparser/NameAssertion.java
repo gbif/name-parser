@@ -69,6 +69,7 @@ public class NameAssertion {
       if (!tested.contains(p)) {
         switch (p) {
           case EPITHETS:
+            assertNull(n.getUninomial());
             assertNull(n.getGenus());
             assertNull(n.getSpecificEpithet());
             assertNull(n.getInfraspecificEpithet());
