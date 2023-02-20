@@ -263,7 +263,7 @@ public class NameParserGbifV1 implements NameParser {
       case DIVISION: return Rank.PHYLUM;
       case SUBDIVISION: return Rank.SUBPHYLUM;
       case INFRADIVISION: return Rank.INFRAPHYLUM;
-      case PROLE: return Rank.RACE;
+      case PROLES: return Rank.RACE;
 
       case SUPERSECTION:
       case SUPERSERIES:
@@ -312,7 +312,7 @@ public class NameParserGbifV1 implements NameParser {
       return null;
     }
     if (Rank.RACE == rank || Rank.PROLES == rank) {
-      return org.gbif.nameparser.api.Rank.PROLE;
+      return org.gbif.nameparser.api.Rank.PROLES;
     }
     return convertEnum(org.gbif.nameparser.api.Rank.class, rank);
   }

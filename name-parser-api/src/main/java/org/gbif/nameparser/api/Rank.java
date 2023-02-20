@@ -182,8 +182,9 @@ public enum Rank {
   
   /**
    * Botanical legacy rank for a race, recommended in botanical code from 1868
+   * https://en.wikipedia.org/wiki/Race_(biology)
    */
-  PROLE("proles", "prol."),
+  PROLES("proles", "prol."),
   
   /**
    * Zoological legacy rank
@@ -357,7 +358,7 @@ public enum Rank {
       MORPH,
       ABERRATION,
       NATIO,
-      PROLE,
+      PROLES,
       CONVARIETY,
       KLEPTON,
       FALANX,
@@ -428,7 +429,7 @@ public enum Rank {
       .put(KLEPTON, NomCode.ZOOLOGICAL)
       .put(MUTATIO, NomCode.ZOOLOGICAL)
 
-      .put(PROLE, NomCode.BOTANICAL)
+      .put(PROLES, NomCode.BOTANICAL)
       .put(SUPERSECTION, NomCode.BOTANICAL)
       .put(SECTION, NomCode.BOTANICAL)
       .put(SUBSECTION, NomCode.BOTANICAL)

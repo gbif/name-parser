@@ -140,7 +140,7 @@ public class RankTest {
   @Test
   public void testIsLegacy() {
     assertTrue(Rank.NATIO.isLegacy());
-    assertTrue(Rank.PROLE.isLegacy());
+    assertTrue(Rank.PROLES.isLegacy());
   }
   
   @Test
