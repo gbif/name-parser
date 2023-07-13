@@ -1931,6 +1931,12 @@ public abstract class NameParserTest {
         .species("Asellus", "major")
         .warning(Warnings.AUTHORSHIP_REMOVED)
         .nothingElse();
+
+    assertName("Doradidae <Unspecified Agent>", "Doradidae")
+        .monomial("Doradidae")
+        .warning(Warnings.AUTHORSHIP_REMOVED, Warnings.UNUSUAL_CHARACTERS)
+        .doubtful()
+        .nothingElse();
   }
 
   @Test

@@ -294,8 +294,9 @@ class ParsingJob implements Callable<ParsedName> {
       StringUtils.join(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet(), "|") + ")\\.?\\s+", CASE_INSENSITIVE);
   private static final Pattern MANUSCRIPT_NAMES = Pattern.compile("\\b(indet|spp?)[. ](?:nov\\.)?[A-Z0-9][a-zA-Z0-9-]*(?:\\(.+?\\))?");
   private static final Pattern NO_LETTERS = Pattern.compile("^[^a-zA-Z]+$");
+  private static final Pattern NO_NAME_PATTERN = Pattern.compile("\\b(tobedeleted[0-9]*|[\\[(]?(?:DELETE|delete)[)\\]]?)\\b");
   private static final Pattern BAD_AUTHORSHIP = Pattern.compile("(?:" +
-    "\\b(?:not\\s|un)(?:applicable|given|known|specified|certain)|missing|\\?)" +
+    "\\b(?:not\\s|un)(?:applicable|given|known|specified|certain)|missing|<?Unspecified\\sAgent>?|\\?)" +
     "(?:[, ]+(" + YEAR_LOOSE + "))?$", Pattern.CASE_INSENSITIVE);
   private static final Pattern PLACEHOLDER_GENUS = Pattern.compile("^(In|Dummy|Missing|Temp|Unknown|Unplaced|Unspecified) (?=[a-z]+)\\b");
   private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|" +
@@ -906,6 +907,9 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   void detectFurtherUnparsableNames() throws UnparsableNameException, InterruptedException {
+    if (findInterruptable(NO_NAME_PATTERN, name)) {
+      unparsable(NameType.NO_NAME);
+    }
     if (findInterruptable(PLACEHOLDER, name)) {
       unparsable(NameType.PLACEHOLDER);
     }
