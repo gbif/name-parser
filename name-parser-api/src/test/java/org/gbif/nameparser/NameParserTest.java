@@ -83,6 +83,23 @@ public abstract class NameParserTest {
         .nothingElse();
   }
 
+  /**
+   * https://github.com/CatalogueOfLife/xcol/issues/89
+   */
+  @Test
+  @Ignore
+  public void squareGenera() throws Exception {
+    assertName("[Acontia] chia Holland, 1894", "Acontia chia")
+        .species("Acontia", "chia")
+        .combAuthors("1894", "Holland")
+        .nothingElse();
+
+    assertName("[Dexia]", "Melanella hollandri [sic] var. detrita Kucik")
+        .infraSpecies("Melanella", "hollandri", VARIETY, "detrita")
+        .combAuthors(null, "Kucik")
+        .nothingElse();
+  }
+
   @Test
   public void tinfr() throws Exception {
     assertName("Hieracium vulgatum t.infr. arrectariicaule Sudre", "Hieracium vulgatum arrectariicaule")

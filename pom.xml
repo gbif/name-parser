@@ -25,7 +25,6 @@
 
     <modules>
         <module>name-parser</module>
-        <module>name-parser-antlr</module>
         <module>name-parser-api</module>
         <module>name-parser-v1</module>
     </modules>
