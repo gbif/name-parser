@@ -13,16 +13,11 @@
  */
 package org.gbif.nameparser.api;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import javax.annotation.Nonnull;
-
-import org.apache.commons.lang3.ObjectUtils;
-
-import com.google.common.collect.Lists;
+import java.util.*;
 
 import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
 
@@ -358,9 +353,10 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   }
   
   public List<String> listEpithets() {
-    return Lists.newArrayList(infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet).stream()
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+    List<String> epis = new ArrayList<>();
+    Collections.addAll(epis, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet);
+    epis.removeIf(Objects::isNull);
+    return epis;
   }
   
   /**
