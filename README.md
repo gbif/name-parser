@@ -7,7 +7,6 @@ The modules provided by this project are:
 
  - __name-parser__: The main GBIF Name Parser implementing the API natively
  - __name-parser-api__: The minimal API to represent parsed names.
- - __name-parser-antlr__: A highly experimental parser using an ANTLR grammar for parsing.
  - __name-parser-v1__: The GBIF Name Parser wrapped to implement the [GBIF API](https://github.com/gbif/gbif-api/blob/master/src/main/java/org/gbif/api/service/checklistbank/NameParser.java)
 
 The GBIF name parser has been tested with millions of GBIF names over many years.
