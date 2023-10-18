@@ -119,7 +119,19 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * The part of the named hybrid which is considered a hybrid
    */
   private NamePart notho;
-  
+
+  /**
+   * Indicates that the parsed name is the original spelling of the name.
+   * This is usually indicated by placing [sic] after the name.
+   */
+  private boolean originalSpelling;
+
+  /**
+   * Indicates that the parsed name is a corrected spelling of the name.
+   * This is usually indicated by placing corrig. after the name.
+   */
+  private boolean correctedSpelling;
+
   /**
    * Optional qualifiers like cf. or aff. that can precede an epithet.
    */
@@ -149,6 +161,8 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     nominatingParty = pn.nominatingParty;
     candidatus = pn.candidatus;
     notho = pn.notho;
+    originalSpelling = pn.originalSpelling;
+    correctedSpelling = pn.correctedSpelling;
     epithetQualifier = pn.epithetQualifier;
     type = pn.type;
   }
@@ -297,7 +311,23 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   public void setNotho(NamePart notho) {
     this.notho = notho;
   }
-  
+
+  public boolean isOriginalSpelling() {
+    return originalSpelling;
+  }
+
+  public void setOriginalSpelling(boolean originalSpelling) {
+    this.originalSpelling = originalSpelling;
+  }
+
+  public boolean isCorrectedSpelling() {
+    return correctedSpelling;
+  }
+
+  public void setCorrectedSpelling(boolean correctedSpelling) {
+    this.correctedSpelling = correctedSpelling;
+  }
+
   public String getEpithet(NamePart part) {
     switch (part) {
       case GENERIC:
@@ -465,30 +495,31 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (!(o instanceof ParsedName)) return false;
     if (!super.equals(o)) return false;
     ParsedName that = (ParsedName) o;
-    return candidatus == that.candidatus &&
-        rank == that.rank &&
-        code == that.code &&
-           Objects.equals(uninomial, that.uninomial) &&
-           Objects.equals(genus, that.genus) &&
-           Objects.equals(infragenericEpithet, that.infragenericEpithet) &&
-           Objects.equals(specificEpithet, that.specificEpithet) &&
-           Objects.equals(infraspecificEpithet, that.infraspecificEpithet) &&
-           Objects.equals(cultivarEpithet, that.cultivarEpithet) &&
-           Objects.equals(phrase, that.phrase) &&
-           Objects.equals(this.voucher, that.voucher) &&
-           Objects.equals(this.nominatingParty, that.nominatingParty) &&
-        notho == that.notho &&
-           Objects.equals(epithetQualifier, that.epithetQualifier) &&
-        type == that.type;
+    return candidatus == that.candidatus
+           && originalSpelling == that.originalSpelling
+           && correctedSpelling == that.correctedSpelling
+           && rank == that.rank
+           && code == that.code
+           && Objects.equals(uninomial, that.uninomial)
+           && Objects.equals(genus, that.genus)
+           && Objects.equals(infragenericEpithet, that.infragenericEpithet)
+           && Objects.equals(specificEpithet, that.specificEpithet)
+           && Objects.equals(infraspecificEpithet, that.infraspecificEpithet)
+           && Objects.equals(cultivarEpithet, that.cultivarEpithet)
+           && Objects.equals(phrase, that.phrase)
+           && Objects.equals(voucher, that.voucher)
+           && Objects.equals(nominatingParty, that.nominatingParty)
+           && notho == that.notho
+           && Objects.equals(epithetQualifier, that.epithetQualifier)
+           && type == that.type;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet,
-        cultivarEpithet, phrase, voucher, nominatingParty, candidatus, notho, epithetQualifier, type);
+    return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, phrase, voucher, nominatingParty, candidatus, notho, originalSpelling, correctedSpelling, epithetQualifier, type);
   }
 
   @Override
@@ -519,6 +550,12 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     }
     if (cultivarEpithet != null) {
       sb.append(" CV:").append(cultivarEpithet);
+    }
+    if (originalSpelling) {
+      sb.append(" [sic]");
+    }
+    if (correctedSpelling) {
+      sb.append(" corrig.");
     }
     if (phrase != null) {
       sb.append(" STR:").append(phrase);

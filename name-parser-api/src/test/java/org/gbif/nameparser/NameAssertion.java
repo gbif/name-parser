@@ -41,6 +41,8 @@ public class NameAssertion {
     EXTINCT,
     CANDIDATE,
     NOTHO,
+    SIC,
+    CORRIG,
     AUTH,
     EXAUTH,
     BAS,
@@ -91,6 +93,12 @@ public class NameAssertion {
             break;
           case NOTHO:
             assertNull(n.getNotho());
+            break;
+          case SIC:
+            assertFalse(n.isOriginalSpelling());
+            break;
+          case CORRIG:
+            assertFalse(n.isCorrectedSpelling());
             break;
           case AUTH:
             if (n.getCombinationAuthorship() != null) {
@@ -265,7 +273,17 @@ public class NameAssertion {
     assertEquals(notho, n.getNotho());
     return add(NP.NOTHO);
   }
-  
+
+  NameAssertion sic() {
+    assertTrue(n.isOriginalSpelling());
+    return add(NP.SIC);
+  }
+
+  NameAssertion corrig() {
+    assertTrue(n.isCorrectedSpelling());
+    return add(NP.CORRIG);
+  }
+
   NameAssertion warning(String... warnings) {
     assertEquals(Sets.newHashSet(warnings), n.getWarnings());
     return add(NP.WARNING);

@@ -75,7 +75,7 @@ public class ParsedAuthorship {
    * Usually indicates the existance of unusual characters not normally found in scientific names.
    */
   private boolean doubtful;
-  
+
   /**
    * Indicates a manuscript name identified by ined. or ms.
    * Can be either of type scientific name or informal

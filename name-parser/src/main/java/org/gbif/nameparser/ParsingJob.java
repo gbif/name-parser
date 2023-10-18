@@ -174,6 +174,8 @@ class ParsingJob implements Callable<ParsedName> {
   public static final Pattern HYBRID_FORMULA_PATTERN = Pattern.compile("[. ]" + HYBRID_MARKER + " ");
   public static final String EXTINCT_MARKER = "†";
   private static final Pattern EXTINCT_PATTERN = Pattern.compile("[†‡✝]+\\s*");
+  private static final Pattern SIC_PATTERN = Pattern.compile("\\s*[\\[(]\\s*sic\\s*[\\])]\\s*");
+  private static final Pattern CORRIG_PATTERN = Pattern.compile("\\s*corrig\\.\\s*");
 
   @VisibleForTesting
   protected static final Pattern CULTIVAR = Pattern.compile("(?:([. ])cv[. ])?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
@@ -264,7 +266,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern COMMA_AFTER_BASYEAR = Pattern.compile("("+YEAR+")\\s*\\)\\s*,");
   private static final Pattern NORM_APOSTROPHES = Pattern.compile("([\u0060\u00B4\u2018\u2019]+)");
   private static final Pattern NORM_QUOTES = Pattern.compile("([\"'`´]+)");
-  private static final Pattern REPL_GENUS_QUOTE = Pattern.compile("^' *(" + MONOMIAL + ") *'");
+  private static final Pattern REPL_GENUS_QUOTE = Pattern.compile("^['\\[] *(" + MONOMIAL + ") *['\\]]");
   private static final Pattern REPL_ENCLOSING_QUOTE = Pattern.compile("^$");//Pattern.compile("^[',\\s]+|[',\\s]+$");
   private static final Pattern NORM_UPPERCASE_WORDS = Pattern.compile("\\b(\\p{Lu})(\\p{Lu}{2,})\\b");
   private static final Pattern NORM_LOWERCASE_BINOMIAL = Pattern.compile("^(" + EPITHET + ") (" + EPITHET + ")");
@@ -612,7 +614,28 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceFirst("");
     }
 
+    // remove sic marker
+    m = matcherInterruptable(SIC_PATTERN, name);
+    if (m.find()) {
+      pn.setOriginalSpelling(true);
+      name = m.replaceFirst(" ");
+    }
+
+    // remove corrig. marker
+    m = matcherInterruptable(CORRIG_PATTERN, name);
+    if (m.find()) {
+      pn.setCorrectedSpelling(true);
+      name = m.replaceFirst(" ");
+    }
+
     // before any cleaning test for properly quoted candidate names
+    m = matcherInterruptable(IS_CANDIDATUS_QUOTE_PATTERN, scientificName);
+    if (m.find()) {
+      pn.setCandidatus(true);
+      name = m.replaceFirst(m.group(2));
+    }
+
+    // do we have doubtful genera in square brackets?
     m = matcherInterruptable(IS_CANDIDATUS_QUOTE_PATTERN, scientificName);
     if (m.find()) {
       pn.setCandidatus(true);
@@ -1160,10 +1183,15 @@ class ParsingJob implements Callable<ParsedName> {
 
     // normalize all quotes to single "
     name = replAllInterruptable(NORM_QUOTES, name, "'");
-    // remove quotes from genus
-    name = matcherInterruptable(REPL_GENUS_QUOTE, name).replaceFirst("$1 ");
+    // remove quotes or square brackets from doubtful genus
+    Matcher m = matcherInterruptable(REPL_GENUS_QUOTE, name);
+    if (m.find()) {
+      name = m.replaceFirst("$1 ");
+      pn.addWarning(Warnings.DOUBTFUL_GENUS);
+      pn.setDoubtful(true);
+    }
     // remove enclosing quotes
-    Matcher m = matcherInterruptable(REPL_ENCLOSING_QUOTE, name);
+    m = matcherInterruptable(REPL_ENCLOSING_QUOTE, name);
     if (m.find()) {
       name = m.replaceAll("");
       pn.addWarning(Warnings.REPL_ENCLOSING_QUOTE);

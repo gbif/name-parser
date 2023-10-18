@@ -55,48 +55,151 @@ public abstract class NameParserTest {
   /**
    * https://github.com/gbif/name-parser/issues/33
    * https://github.com/gbif/name-parser/issues/66
+   * https://www.ncbi.nlm.nih.gov/books/NBK8808/#A431
    */
   @Test
-  @Ignore
   public void sic() throws Exception {
-    assertName("Turbo porphyrites [sic, porphyria]", "Turbo porphyrites")
-        .species("Turbo", "porphyrites")
-        .partial("[sic, porphyria]")
+    assertName("Ameiva plei (sic) Duméril & Bibron, 1839", "Ameiva plei")
+        .species("Ameiva", "plei")
+        .combAuthors("1839", "Duméril", "Bibron")
+        .sic()
+        .code(ZOOLOGICAL)
         .nothingElse();
 
-    assertName("Melanella hollandri [sic] var. detrita Kucik", "Melanella hollandri [sic] var. detrita Kucik")
+    assertName("†Amnicola kushixiaensis [sic]", "Amnicola kushixiaensis")
+        .species("Amnicola", "kushixiaensis")
+        .extinct()
+        .sic()
+        .nothingElse();
+
+    assertName("†Amnicola (Amnicola) dubrueilliana [sic]", "Amnicola dubrueilliana")
+        .species("Amnicola", "Amnicola", "dubrueilliana")
+        .extinct()
+        .sic()
+        .nothingElse();
+
+    assertName("Anabathron (Scrobs) elongatus [sic]", "Anabathron elongatus")
+        .species("Anabathron", "Scrobs", "elongatus")
+        .sic()
+        .nothingElse();
+
+    assertName("Scaphander lignarius var. brittanica [sic]", "Scaphander lignarius var. brittanica")
+        .infraSpecies("Scaphander", "lignarius", VARIETY, "brittanica")
+        .sic()
+        .nothingElse();
+
+    assertName("†Tulotoma bifarcinata var. contiqua [sic]", "Tulotoma bifarcinata var. contiqua")
+        .infraSpecies("Tulotoma", "bifarcinata", VARIETY, "contiqua")
+        .extinct()
+        .sic()
+        .nothingElse();
+
+    assertName("Scincus homolocephalus (sic) Wiegmann, 1828", "Scincus homolocephalus")
+        .species("Scincus", "homolocephalus")
+        .combAuthors("1828", "Wiegmann")
+        .sic()
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    assertName("Cochlostyla (Dryocochlias) satyrus palawanensis [sic]", "Cochlostyla satyrus palawanensis")
+        .infraSpecies("Cochlostyla","satyrus", INFRASPECIFIC_NAME, "palawanensis")
+        .infraGeneric("Dryocochlias")
+        .sic()
+        .nothingElse();
+
+    assertName("Clionella sinuata borni [sic]", "Clionella sinuata borni")
+        .infraSpecies("Clionella", "sinuata", INFRASPECIFIC_NAME, "borni")
+        .sic()
+        .nothingElse();
+
+    assertName("†Melanopsis (Melanopsis) pterochyla pterochyla [sic]", "Melanopsis pterochyla pterochyla")
+        .infraSpecies("Melanopsis", "pterochyla", INFRASPECIFIC_NAME, "pterochyla")
+        .infraGeneric("Melanopsis")
+        .extinct()
+        .sic()
+        .nothingElse();
+
+    assertName("Melanella hollandri [sic] var. detrita Kucik", "Melanella hollandri var. detrita")
         .infraSpecies("Melanella", "hollandri", VARIETY, "detrita")
         .combAuthors(null, "Kucik")
+        .sic()
         .nothingElse();
 
-    assertName("Alnetoidia (Alnella) [sic] sudzhuchenica Sohi, 1998", "")
+    assertName("Alnetoidia (Alnella) [sic] sudzhuchenica Sohi, 1998", "Alnetoidia sudzhuchenica")
+        .species("Alnetoidia", "Alnella", "sudzhuchenica")
+        .combAuthors("1998", "Sohi")
+        .sic()
+        .code(ZOOLOGICAL)
         .nothingElse();
 
-    assertName("Flavobacterium branchiophila (sic) Wakabayashi et al. 1989", "")
+    assertName("Flavobacterium branchiophila (sic) Wakabayashi et al. 1989", "Flavobacterium branchiophila")
+        .species("Flavobacterium", "branchiophila")
+        .combAuthors("1989", "Wakabayashi", "al.")
+        .sic()
+        .code(ZOOLOGICAL)
         .nothingElse();
 
     // https://lpsn.dsmz.de/text/glossary#corrigendum
-    assertName("Campylobacter lari corrig. Benjamin et al. 1984", "")
+    assertName("Campylobacter lari corrig. Benjamin et al. 1984", "Campylobacter lari")
+        .species("Campylobacter", "lari")
+        .combAuthors("1984", "Benjamin", "al.")
+        .corrig()
+        .code(ZOOLOGICAL)
         .nothingElse();
 
-    assertName("Campylobacter laridis (sic) Benjamin et al. 1984", "")
+    assertName("Campylobacter laridis (sic) Benjamin et al. 1984", "Campylobacter laridis")
+        .species("Campylobacter", "laridis")
+        .combAuthors("1984", "Benjamin", "al.")
+        .sic()
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    assertName("Firmicutes corrig. Gibbons & Murray, 1978", "Firmicutes")
+        .monomial("Firmicutes")
+        .combAuthors("1978", "Gibbons", "Murray")
+        .corrig()
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    assertName("Barleeidae [sic]", "Barleeidae")
+        .monomial("Barleeidae")
+        .sic()
+        .nothingElse();
+
+    assertName("†Sainshandiidae [sic]", "Sainshandiidae")
+        .monomial("Sainshandiidae")
+        .extinct()
+        .sic()
+        .nothingElse();
+
+    assertName("Turbo porphyrites [sic, porphyria]", "Turbo porphyrites")
+        .species("Turbo", "porphyrites")
+        .partial("(sic,porphyria)") // not ideal , but hey
         .nothingElse();
   }
 
-  /**
-   * https://github.com/CatalogueOfLife/xcol/issues/89
-   */
   @Test
-  @Ignore
   public void squareGenera() throws Exception {
     assertName("[Acontia] chia Holland, 1894", "Acontia chia")
         .species("Acontia", "chia")
         .combAuthors("1894", "Holland")
+        .code(ZOOLOGICAL)
+        .doubtful()
+        .warning(Warnings.DOUBTFUL_GENUS)
         .nothingElse();
 
-    assertName("[Dexia]", "Melanella hollandri [sic] var. detrita Kucik")
-        .infraSpecies("Melanella", "hollandri", VARIETY, "detrita")
-        .combAuthors(null, "Kucik")
+    assertName("[Dexia]", "Dexia")
+        .monomial("Dexia")
+        .doubtful()
+        .warning(Warnings.DOUBTFUL_GENUS)
+        .nothingElse();
+
+    assertName("[Diomea] orbicularis Walker, 1858", "Diomea orbicularis")
+        .species("Diomea", "orbicularis")
+        .combAuthors("1858", "Walker")
+        .code(ZOOLOGICAL)
+        .doubtful()
+        .warning(Warnings.DOUBTFUL_GENUS)
         .nothingElse();
   }
 
