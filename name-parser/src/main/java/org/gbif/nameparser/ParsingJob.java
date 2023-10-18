@@ -624,7 +624,7 @@ class ParsingJob implements Callable<ParsedName> {
     // remove corrig. marker
     m = matcherInterruptable(CORRIG_PATTERN, name);
     if (m.find()) {
-      pn.setCorrectedSpelling(true);
+      pn.setOriginalSpelling(false);
       name = m.replaceFirst(" ");
     }
 

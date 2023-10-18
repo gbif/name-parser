@@ -121,16 +121,15 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   private NamePart notho;
 
   /**
-   * Indicates that the parsed name is the original spelling of the name.
+   * If true indicates that the parsed name is the original spelling of the name.
    * This is usually indicated by placing [sic] after the name.
+   *
+   * If false it instead indicates that the parsed name is a corrected spelling of the name,
+   * usually indicated by placing corrig. after the name.
+   *
+   * If null it is unknown or the original spelling was never revised.
    */
-  private boolean originalSpelling;
-
-  /**
-   * Indicates that the parsed name is a corrected spelling of the name.
-   * This is usually indicated by placing corrig. after the name.
-   */
-  private boolean correctedSpelling;
+  private Boolean originalSpelling;
 
   /**
    * Optional qualifiers like cf. or aff. that can precede an epithet.
@@ -162,7 +161,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     candidatus = pn.candidatus;
     notho = pn.notho;
     originalSpelling = pn.originalSpelling;
-    correctedSpelling = pn.correctedSpelling;
     epithetQualifier = pn.epithetQualifier;
     type = pn.type;
   }
@@ -312,20 +310,12 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     this.notho = notho;
   }
 
-  public boolean isOriginalSpelling() {
+  public Boolean isOriginalSpelling() {
     return originalSpelling;
   }
 
-  public void setOriginalSpelling(boolean originalSpelling) {
+  public void setOriginalSpelling(Boolean originalSpelling) {
     this.originalSpelling = originalSpelling;
-  }
-
-  public boolean isCorrectedSpelling() {
-    return correctedSpelling;
-  }
-
-  public void setCorrectedSpelling(boolean correctedSpelling) {
-    this.correctedSpelling = correctedSpelling;
   }
 
   public String getEpithet(NamePart part) {
@@ -500,7 +490,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     ParsedName that = (ParsedName) o;
     return candidatus == that.candidatus
            && originalSpelling == that.originalSpelling
-           && correctedSpelling == that.correctedSpelling
            && rank == that.rank
            && code == that.code
            && Objects.equals(uninomial, that.uninomial)
@@ -519,7 +508,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, phrase, voucher, nominatingParty, candidatus, notho, originalSpelling, correctedSpelling, epithetQualifier, type);
+    return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, phrase, voucher, nominatingParty, candidatus, notho, originalSpelling, epithetQualifier, type);
   }
 
   @Override
@@ -551,10 +540,9 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     if (cultivarEpithet != null) {
       sb.append(" CV:").append(cultivarEpithet);
     }
-    if (originalSpelling) {
+    if (Boolean.TRUE.equals(originalSpelling)) {
       sb.append(" [sic]");
-    }
-    if (correctedSpelling) {
+    } else if (Boolean.FALSE.equals(originalSpelling)) {
       sb.append(" corrig.");
     }
     if (phrase != null) {
