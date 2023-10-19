@@ -273,7 +273,6 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_HYBRID_HOMOGLYPHS = Pattern.compile("[хᕁᕽ᙮ⅹ⤫⤬⨯ｘ\uD835\uDC31\uD835\uDC65\uD835\uDC99\uD835\uDCCD\uD835\uDD01\uD835\uDD35\uD835\uDD69\uD835\uDD9D\uD835\uDDD1\uD835\uDE05\uD835\uDE39\uD835\uDE6D\uD835\uDEA1]");
   private static final Pattern NORM_WHITESPACE = Pattern.compile("(?:\\\\[nr]|\\s)+");
   private static final Pattern REPL_UNDERSCORE = Pattern.compile("_+");
-  private static final Pattern NORM_NO_SQUARE_BRACKETS = Pattern.compile("\\[(.*?)\\]");
   private static final Pattern NORM_BRACKETS_OPEN = Pattern.compile("\\s*([{(\\[])\\s*,?\\s*");
   private static final Pattern NORM_BRACKETS_CLOSE = Pattern.compile("\\s*,?\\s*([})\\]])\\s*");
   private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("( ?[{\\[] ?)+");
