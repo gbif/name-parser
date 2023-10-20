@@ -45,4 +45,19 @@ public interface LinneanName {
   NamePart getNotho();
 
   void setNotho(NamePart notho);
+
+  default String getNamePart(NamePart part) {
+    switch (part) {
+      case GENERIC:
+        return getGenus();
+      case INFRAGENERIC:
+        return getInfragenericEpithet();
+      case SPECIFIC:
+        return getSpecificEpithet();
+      case INFRASPECIFIC:
+        return getInfraspecificEpithet();
+      default:
+        return null;
+    }
+  }
 }
