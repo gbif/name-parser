@@ -592,16 +592,34 @@ public enum Rank {
   }
   
   /**
-   * @return true if this rank is higher than the given other
+   * Checks if the rank is above the other rank, excluding OTHER and UNRANKED from the comparison.
+   * If any of the two ranks is unranked false is returned.
+   * @return true if this rank is higher than the given other, false otherwise or if any of the ranks is unranked
    */
   public boolean higherThan(Rank other) {
-    return ordinal() < other.ordinal();
+    return ordinal() < other.ordinal() && other.notOtherOrUnranked();
   }
-  
+
   /**
-   * @return true if this rank is higher or equal to the given other
+   * Checks if the rank is below the other rank, excluding OTHER and UNRANKED from the comparison.
+   * If any of the two ranks is unranked false is returned.
+   * @return true if this rank is lower than the given other, false otherwise or if any of the ranks is unranked
+   */
+  public boolean lowerThan(Rank other) {
+    return ordinal() > other.ordinal() && notOtherOrUnranked();
+  }
+
+  /**
+   * @return true if this rank is higher or equal to the given other, excluding unranked and other
    */
   public boolean higherOrEqualsTo(Rank other) {
-    return ordinal() <= other.ordinal();
+    return ordinal() <= other.ordinal() && other.notOtherOrUnranked();
+  }
+
+  /**
+   * @return true if this rank is lower or equal to the given other, excluding unranked and other
+   */
+  public boolean lowerOrEqualsTo(Rank other) {
+    return ordinal() >= other.ordinal() && notOtherOrUnranked();
   }
 }

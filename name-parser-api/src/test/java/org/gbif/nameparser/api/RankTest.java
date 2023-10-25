@@ -227,7 +227,9 @@ public class RankTest {
     assertFalse(Rank.SUPERFAMILY.higherThan(Rank.KINGDOM));
     assertFalse(Rank.SPECIES.higherThan(Rank.SUBGENUS));
     assertFalse(Rank.SPECIES.higherThan(Rank.SPECIES));
-  
+    assertFalse(Rank.SPECIES.higherThan(Rank.OTHER));
+    assertFalse(Rank.SPECIES.higherThan(Rank.UNRANKED));
+
     assertTrue(Rank.INFRASPECIFIC_NAME.higherThan(Rank.VARIETY));
     assertTrue(Rank.SUPERFAMILY.higherThan(Rank.FAMILY));
     assertTrue(Rank.SPECIES.higherThan(Rank.VARIETY));
@@ -247,6 +249,7 @@ public class RankTest {
     
     // questionable
     assertFalse(Rank.UNRANKED.higherThan(Rank.VARIETY));
+    assertFalse(Rank.UNRANKED.lowerThan(Rank.VARIETY));
   }
   
   @Test
