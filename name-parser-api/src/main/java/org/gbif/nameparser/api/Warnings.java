@@ -29,6 +29,7 @@ public class Warnings {
   public static final String MISSING_GENUS = "epithet without genus";
   public static final String DOUBTFUL_GENUS = "genus quoted or in square brackets";
   public static final String RANK_MISMATCH = "rank does not fit the parsed name";
+  public static final String CODE_MISMATCH = "nomenclatural code does not fit the parsed name";
   public static final String HTML_ENTITIES = "html entities unescaped";
   public static final String XML_TAGS = "xml tags removed";
   public static final String BLACKLISTED_EPITHET = "blacklisted epithet used";

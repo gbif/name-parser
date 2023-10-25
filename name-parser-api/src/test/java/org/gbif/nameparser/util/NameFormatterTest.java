@@ -444,7 +444,7 @@ public class NameFormatterTest {
         "Achillea Ptarmica (Mill.) W.D.J.Koch"
     );
     
-    pn.setRank(Rank.SECTION);
+    pn.setRank(Rank.SECTION_BOTANY);
     assertName(
         "Ptarmica",
         "Achillea sect. Ptarmica (Mill.) W.D.J.Koch"

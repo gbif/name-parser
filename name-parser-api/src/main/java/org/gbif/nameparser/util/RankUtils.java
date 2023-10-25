@@ -38,13 +38,24 @@ public class RankUtils {
    * Matches all dots ("."), underscores ("_") and dashes ("-").
    */
   private static final Pattern NORMALIZE_RANK_MARKER = Pattern.compile("(?:[._ -]+|\\b(?:notho|agamo))");
-  private static List<Rank> LINNEAN_RANKS_REVERSE = Lists.reverse(Rank.LINNEAN_RANKS);
+  private static final List<Rank> LINNEAN_RANKS_REVERSE = Lists.reverse(Rank.LINNEAN_RANKS);
+  private static final Pattern NORMALIZE_RANK_MARKER_PATTERN = Pattern.compile("\\.");
+
+  /**
+   * @return the normalised rank marker or null if there is none
+   */
+  public static String rankMarker(Rank rank) {
+    return rank == null || rank.getMarker() == null ? null :
+           NORMALIZE_RANK_MARKER_PATTERN.matcher(rank.getMarker())
+                                        .replaceAll("")
+                                        .toLowerCase();
+  }
 
   private static Map<String, Rank> buildRankMarkerMap(Stream<Rank> ranks, Map.Entry<String, Rank>... additions) {
     Map<String, Rank> map = Maps.newHashMap();
     ranks.forEach(r -> {
       if (r.getMarker() != null) {
-        map.put(r.getMarker().replaceAll("\\.", ""), r);
+        map.put(rankMarker(r), r);
       }
     });
     for (Map.Entry<String, Rank> add : additions) {
@@ -58,7 +69,7 @@ public class RankUtils {
   static {
     List<Rank> microbialRanks = Lists.newArrayList();
     for (Rank r : Rank.values()) {
-      if (r.isRestrictedToCode() == NomCode.BACTERIAL && r.isInfraspecific()) {
+      if (r.getCode() == NomCode.BACTERIAL && r.isInfraspecific()) {
         microbialRanks.add(r);
       }
     }
@@ -84,22 +95,24 @@ public class RankUtils {
   );
   
   /**
-   * Map of only infrageneric rank markers to their respective rank enum.
+   * Map of only infrageneric, normalised rank markers to their respective rank enum.
+   * Warning! For section ranks only the botanical rank is given.
+   * You can access the zoological version from the botanical rank via its Rank.sss() method.
    */
   public static final Map<String, Rank> RANK_MARKER_MAP_INFRAGENERIC = buildRankMarkerMap(
       Arrays.stream(Rank.values()).filter(r -> r.isGenusGroup() && r != GENUS),
       
-      Maps.immutableEntry("suprasect", SUPERSECTION),
+      Maps.immutableEntry("suprasect", SUPERSECTION_BOTANY),
       Maps.immutableEntry("supraser", SUPERSERIES),
-      Maps.immutableEntry("sect", SECTION),
-      Maps.immutableEntry("section", SECTION),
+      Maps.immutableEntry("sect", SECTION_BOTANY),
+      Maps.immutableEntry("section", SECTION_BOTANY),
       Maps.immutableEntry("ser", SERIES),
       Maps.immutableEntry("series", SERIES),
       Maps.immutableEntry("subg", SUBGENUS),
       Maps.immutableEntry("subgen", SUBGENUS),
       Maps.immutableEntry("subgenus", SUBGENUS),
-      Maps.immutableEntry("subsect", SUBSECTION),
-      Maps.immutableEntry("subsection", SUBSECTION),
+      Maps.immutableEntry("subsect", SUBSECTION_BOTANY),
+      Maps.immutableEntry("subsection", SUBSECTION_BOTANY),
       Maps.immutableEntry("subser", SUBSERIES),
       Maps.immutableEntry("subseries", SUBSERIES)
   );
@@ -170,7 +183,8 @@ public class RankUtils {
   
   /**
    * Map of rank markers to their respective rank enum.
-   */
+   * Note that the section ranks point to botany only here
+   * */
   public static final Map<String, Rank> RANK_MARKER_MAP = ImmutableMap.copyOf(
       new FluentHashMap<String, Rank>()
           .with(buildRankMarkerMap(Arrays.stream(Rank.values()), Maps.immutableEntry("subser", SUBSERIES)))
@@ -349,13 +363,6 @@ public class RankUtils {
   }
 
   /**
-   * Returns true if r1 is a higher rank than r2 and none of the 2 ranks are uncomparable or ambiguous between codes.
-   */
-  public static boolean higherThanCodeAgnostic(Rank r1, Rank r2) {
-    return (!r1.isUncomparable() && !r2.isUncomparable() && r1.higherThan(r2) && !r1.isAmbiguous() && !r2.isAmbiguous());
-  }
-
-  /**
    * The ranks between the given minimum and maximum
    * @param inclusive if true also include the given min and max ranks
    */
@@ -395,5 +402,68 @@ public class RankUtils {
     }
     return null;
   }
+  /**
+   * Checks if there is a different rank existing in a given nomenclatural rank which is better suited
+   * in case the inout rank is ambiguous, i.e. a rank like section which exists in several codes but in different placement
+   * and we therefore also have several enum instances for it.
+   *
+   * In all cases but the sections currently this will return the original inout rank.
+   * Ony for sections it verifies that the given rank is the correct one for the given code.
+   */
+  public static Rank bestCodeCompliantRank(Rank rank, NomCode code) {
+    switch (rank) {
+      case SUPERSECTION_BOTANY:
+        return selectRank(rank, code, SUPERSECTION_ZOOLOGY, NomCode.ZOOLOGICAL);
+      case SECTION_BOTANY:
+        return selectRank(rank, code, SECTION_ZOOLOGY, NomCode.ZOOLOGICAL);
+      case SUBSECTION_BOTANY:
+        return selectRank(rank, code, SUBSECTION_ZOOLOGY, NomCode.ZOOLOGICAL);
 
+      case SUPERSECTION_ZOOLOGY:
+        return selectRank(rank, code, SUPERSECTION_BOTANY, NomCode.BOTANICAL, NomCode.BACTERIAL, NomCode.CULTIVARS);
+      case SECTION_ZOOLOGY:
+        return selectRank(rank, code, SECTION_BOTANY, NomCode.BOTANICAL, NomCode.BACTERIAL, NomCode.CULTIVARS);
+      case SUBSECTION_ZOOLOGY:
+        return selectRank(rank, code, SUBSECTION_BOTANY, NomCode.BOTANICAL, NomCode.BACTERIAL, NomCode.CULTIVARS);
+    }
+    return rank;
+  }
+
+  public static Rank otherAmbiguousRank(Rank rank) {
+    switch (rank) {
+      case SUPERSECTION_BOTANY:
+        return SUPERSECTION_ZOOLOGY;
+      case SECTION_BOTANY:
+        return SECTION_ZOOLOGY;
+      case SUBSECTION_BOTANY:
+        return SUBSECTION_ZOOLOGY;
+
+      case SUPERSECTION_ZOOLOGY:
+        return SUPERSECTION_BOTANY;
+      case SECTION_ZOOLOGY:
+        return SECTION_BOTANY;
+      case SUBSECTION_ZOOLOGY:
+        return SUBSECTION_BOTANY;
+    }
+    return rank;
+  }
+
+  private static Rank selectRank(Rank original, NomCode code, Rank other, NomCode... otherCodes) {
+    for (NomCode c : otherCodes) {
+      if (c == code) {
+        return other;
+      }
+    }
+    return original;
+  }
+
+  private static final Map<Rank, Rank> SIMILAR_RANKS = ImmutableMap.of(
+      SUPERSECTION_BOTANY, SUPERSECTION_ZOOLOGY,
+      SECTION_BOTANY, SECTION_ZOOLOGY,
+      SUBSECTION_BOTANY, SUBSECTION_ZOOLOGY,
+      // reverse
+      SUPERSECTION_ZOOLOGY, SUPERSECTION_BOTANY,
+      SECTION_ZOOLOGY, SECTION_BOTANY,
+      SUBSECTION_ZOOLOGY, SUBSECTION_BOTANY
+  );
 }

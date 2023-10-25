@@ -223,10 +223,10 @@ class ParsingJob implements Callable<ParsedName> {
         StringUtils.join(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.keySet(), "|") +
       ")\\b");
   private static final Pattern SUPRA_RANK_PREFIX = Pattern.compile("^(" + StringUtils.join(
-      ImmutableMap.builder()
-          .putAll(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC)
-          .putAll(RankUtils.RANK_MARKER_MAP_INFRAGENERIC)
-          .build().keySet()
+      ImmutableSet.builder()
+          .addAll(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet())
+          .addAll(RankUtils.RANK_MARKER_MAP_INFRAGENERIC.keySet())
+          .build()
       , "|") + ")[\\. ] *");
   private static final Pattern RANK_MARKER_AT_END = Pattern.compile("[ .]" +
       RANK_MARKER_ALL.substring(0,RANK_MARKER_ALL.lastIndexOf(')')) +
@@ -713,7 +713,7 @@ class ParsingJob implements Callable<ParsedName> {
     // check for supraspecific ranks at the beginning of the name
     m = matcherInterruptable(SUPRA_RANK_PREFIX, name);
     if (m.find()) {
-      pn.setRank(RankUtils.RANK_MARKER_MAP.get(m.group(1).replace(".", "")));
+      pn.setRank(parseRank(m.group(1)));
       name = m.replaceFirst("");
     }
 
@@ -903,7 +903,7 @@ class ParsingJob implements Callable<ParsedName> {
     // determine rank if not yet assigned or change according to code
     determineRank();
 
-    // determine code if not yet assigned
+    // determine code if not yet assigned - or flag if apparently wrong
     determineCode();
   }
 
@@ -1427,6 +1427,9 @@ class ParsingJob implements Callable<ParsedName> {
   private void determineRank() {
     if (pn.getRank().otherOrUnranked()) {
       pn.setRank(RankUtils.inferRank(pn));
+    } else if (pn.getCode() != null && pn.getRank().hasAmbiguousMarker()) {
+      // check code for ambiguous ranks
+      pn.setRank(RankUtils.bestCodeCompliantRank(pn.getRank(), pn.getCode()));
     }
     // division is used in botany as a synonym for phylum
     if (DIVISION2PHYLUM.containsKey(pn.getRank()) && pn.getCode() != NomCode.ZOOLOGICAL) {
@@ -1438,8 +1441,8 @@ class ParsingJob implements Callable<ParsedName> {
     // no code given?
     if (pn.getCode() == null) {
       // does the rank tell us sth?
-      if (pn.getRank().isRestrictedToCode() != null) {
-        pn.setCode(pn.getRank().isRestrictedToCode());
+      if (pn.getRank().getCode() != null) {
+        pn.setCode(pn.getRank().getCode());
 
       } else if (pn.getCultivarEpithet() != null) {
         pn.setCode(NomCode.CULTIVARS);
@@ -1471,6 +1474,17 @@ class ParsingJob implements Callable<ParsedName> {
         }
       } else if (pn.getNomenclaturalNote() != null && pn.getNomenclaturalNote().contains("illeg")) {
         pn.setCode(NomCode.BOTANICAL);
+      }
+
+    } else {
+      // does the given code make sense?
+      if (pn.getInfragenericEpithet() != null && pn.getRank().isSuprageneric() && pn.getRank().hasAmbiguousMarker()) {
+        Rank other = RankUtils.otherAmbiguousRank(pn.getRank());
+        if (other.isInfragenericStrictly()) {
+          pn.setRank(other);
+          pn.setCode(other.getCode());
+          pn.addWarning(Warnings.CODE_MISMATCH);
+        }
       }
     }
   }
@@ -1642,8 +1656,13 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
 
-  private static Rank parseRank(String rankMarker) {
-    return RankUtils.inferRank(StringUtils.trimToNull(rankMarker));
+  private Rank parseRank(String rankMarker) {
+    Rank r = RankUtils.inferRank(StringUtils.trimToNull(rankMarker));
+    // check code for ambiguous ranks
+    if (r != null && pn.getCode() != null && r.hasAmbiguousMarker()) {
+      r = RankUtils.bestCodeCompliantRank(r, pn.getCode());
+    }
+    return r;
   }
 
   private static boolean infragenericIsAuthor(ParsedName pn) {

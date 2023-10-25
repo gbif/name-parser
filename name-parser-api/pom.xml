@@ -9,6 +9,9 @@
 
     <artifactId>name-parser-api</artifactId>
 
+    <name>GBIF Name Parser API</name>
+    <description>The GBIF Name Parser model classes and interfaces.</description>
+
     <build>
         <resources>
             <resource>

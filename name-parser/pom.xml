@@ -12,7 +12,7 @@
   <packaging>jar</packaging>
 
   <name>GBIF Name Parser</name>
-  <description>GBIF Name Parser</description>
+  <description>THe main GBIF Name Parser implementation</description>
 
   <distributionManagement>
     <site>

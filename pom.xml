@@ -12,7 +12,7 @@
     <version>3.9.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>GBIF Name Parser Motherpom</name>
+    <name>GBIF Name Parser Project</name>
     <description>GBIF Name Parser Motherpom</description>
     <url>https://github.org/gbif/name-parser</url>
 

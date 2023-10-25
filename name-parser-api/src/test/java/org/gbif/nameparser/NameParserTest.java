@@ -765,16 +765,30 @@ public abstract class NameParserTest {
   
   @Test
   public void infraGeneric() throws Exception {
-    // IPNI notho ranks: https://github.com/gbif/name-parser/issues/15
+    // default to botanical ranks for sections
     assertName("Pinus suprasect. Taeda", "Pinus supersect. Taeda")
-        .infraGeneric("Pinus", SUPERSECTION, "Taeda")
-        .code(NomCode.BOTANICAL)
+        .infraGeneric("Pinus", SUPERSECTION_BOTANY, "Taeda")
+        .code(BOTANICAL)
         .nothingElse();
-    
+
+    // with zoological code it is an impossible name! The zoological section is above family rank and cannot be enclosed in a genus
+    assertName("Pinus suprasect. Taeda", ZOOLOGICAL, "Pinus supersect. Taeda")
+        .infraGeneric("Pinus", SUPERSECTION_BOTANY, "Taeda")
+        .code(BOTANICAL)
+        .warning(Warnings.CODE_MISMATCH)
+        .nothingElse();
+
+    // result in the zoological rank equivalent if the code is given!
+    assertName("sect. Taeda", ZOOLOGICAL, "Taeda")
+        .monomial("Taeda", SECTION_ZOOLOGY)
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    // IPNI notho ranks: https://github.com/gbif/name-parser/issues/15
     assertName("Aeonium nothosect. Leugalonium", "Aeonium nothosect. Leugalonium")
-        .infraGeneric("Aeonium", SECTION, "Leugalonium")
+        .infraGeneric("Aeonium", SECTION_BOTANY, "Leugalonium")
         .notho(NamePart.INFRAGENERIC)
-        .code(NomCode.BOTANICAL)
+        .code(BOTANICAL)
         .nothingElse();
     
     assertName("Narcissus nothoser. Dubizettae", "Narcissus nothoser. Dubizettae")
@@ -784,7 +798,7 @@ public abstract class NameParserTest {
         .nothingElse();
     
     assertName("Serapias nothosubsect. Pladiopetalae", "Serapias nothosubsect. Pladiopetalae")
-        .infraGeneric("Serapias", SUBSECTION, "Pladiopetalae")
+        .infraGeneric("Serapias", SUBSECTION_BOTANY, "Pladiopetalae")
         .notho(NamePart.INFRAGENERIC)
         .code(NomCode.BOTANICAL)
         .nothingElse();
@@ -808,7 +822,7 @@ public abstract class NameParserTest {
         .nothingElse();
     
     assertName("Echinocereus sect. Triglochidiata Bravo", "Echinocereus sect. Triglochidiata")
-        .infraGeneric("Echinocereus", SECTION, "Triglochidiata")
+        .infraGeneric("Echinocereus", SECTION_BOTANY, "Triglochidiata")
         .combAuthors(null, "Bravo")
         .code(BOTANICAL)
         .nothingElse();

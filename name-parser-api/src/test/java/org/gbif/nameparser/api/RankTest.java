@@ -13,6 +13,7 @@
  */
 package org.gbif.nameparser.api;
 
+import org.gbif.nameparser.util.RankUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -22,7 +23,17 @@ import static org.junit.Assert.*;
  *
  */
 public class RankTest {
-  
+
+  @Test
+  public void testMarkerVsPlurals() {
+    for (Rank r : Rank.values()) {
+      if (r.getPlural() != null) {
+        assertFalse(r + " plural swapped", r.getPlural().contains("."));
+        assertTrue(r + " plural swapped", r.getPlural().length() >= r.getMarker().length());
+      }
+    }
+  }
+
   @Test
   public void testIsInfraspecific() {
     assertFalse(Rank.SUPERFAMILY.isInfraspecific());
@@ -44,12 +55,28 @@ public class RankTest {
   @Test
   public void testGenusGroup() {
     for (Rank r : Rank.values()) {
-      if (r == Rank.GENUS || (r.isInfrageneric() && !r.isSpeciesOrBelow())) {
+      if (r == Rank.GENUS || r == Rank.SUPERGENUS || (r.isInfrageneric() && !r.isSpeciesOrBelow())) {
         assertTrue(r.name(), r.isGenusGroup());
       } else {
         assertFalse(r.name(), r.isGenusGroup());
       }
     }
+  }
+
+  @Test
+  public void ambiguous() {
+    int counter = 0;
+    for (Rank r : Rank.values()) {
+      if (r.hasAmbiguousMarker()) {
+        counter++;
+        Rank other = RankUtils.otherAmbiguousRank(r);
+        assertNotEquals(other, r);
+        assertNotNull(r.getCode());
+        assertNotNull(other.getCode());
+        assertNotEquals(other.getCode(), r.getCode());
+      }
+    }
+    assertEquals(6, counter);
   }
   
   @Test
@@ -77,7 +104,7 @@ public class RankTest {
     assertTrue(Rank.FAMILY.isLinnean());
     assertTrue(Rank.GENUS.isLinnean());
     assertTrue(Rank.SPECIES.isLinnean());
-    assertFalse(Rank.SUBSECTION.isLinnean());
+    assertFalse(Rank.SUBSECTION_BOTANY.isLinnean());
     assertFalse(Rank.SUBGENUS.isLinnean());
     assertFalse(Rank.SUPERFAMILY.isLinnean());
     assertFalse(Rank.INFRAGENERIC_NAME.isLinnean());
@@ -188,7 +215,7 @@ public class RankTest {
     assertFalse(Rank.FAMILY.isUncomparable());
     assertFalse(Rank.GENUS.isUncomparable());
     assertFalse(Rank.SPECIES.isUncomparable());
-    assertFalse(Rank.SUBSECTION.isUncomparable());
+    assertFalse(Rank.SUBSECTION_BOTANY.isUncomparable());
     assertFalse(Rank.SUBGENUS.isUncomparable());
     assertFalse(Rank.SUPERFAMILY.isUncomparable());
     assertTrue(Rank.INFRAGENERIC_NAME.isUncomparable());

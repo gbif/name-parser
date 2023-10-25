@@ -19,6 +19,7 @@ import org.gbif.nameparser.api.Rank;
 
 import org.junit.Test;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -61,7 +62,7 @@ public class RankUtilsTest {
     assertTrue(ranks.contains(Rank.INFRACOHORT));
     assertFalse(ranks.contains(Rank.SUBGENUS));
     assertFalse(ranks.contains(Rank.SPECIES));
-    assertEquals(63, ranks.size());
+    assertEquals(67, ranks.size());
   }
 
   @Test
@@ -96,6 +97,21 @@ public class RankUtilsTest {
   }
 
   @Test
+  public void testAmbiguousMarkers() {
+    for (Rank rank : new Rank[]{Rank.SUPERSECTION_BOTANY, Rank.SECTION_BOTANY, Rank.SUBSECTION_BOTANY}) {
+      assertEquals(rank, RankUtils.RANK_MARKER_MAP_INFRAGENERIC.get(RankUtils.rankMarker(rank)));
+      assertEquals(rank, RankUtils.RANK_MARKER_MAP.get(RankUtils.rankMarker(rank)));
+      assertTrue(rank.hasAmbiguousMarker());
+      // the same happens for the zoological equivalent
+      Rank zooRank = RankUtils.bestCodeCompliantRank(rank, NomCode.ZOOLOGICAL);
+      assertTrue(zooRank.hasAmbiguousMarker());
+      assertNotEquals(rank, zooRank);
+      assertEquals(rank, RankUtils.RANK_MARKER_MAP_INFRAGENERIC.get(RankUtils.rankMarker(zooRank)));
+      assertEquals(rank, RankUtils.RANK_MARKER_MAP.get(RankUtils.rankMarker(zooRank)));
+    }
+  }
+
+  @Test
   public void testFamilyGroup() {
     assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.SUBTRIBE));
     assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.TRIBE));
@@ -103,7 +119,7 @@ public class RankUtilsTest {
     assertTrue(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.SUPERFAMILY));
 
     assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.ORDER));
-    assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.SECTION));
+    assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.SECTION_BOTANY));
     assertFalse(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.containsValue(Rank.GENUS));
   }
   
@@ -161,7 +177,15 @@ public class RankUtilsTest {
   public void testInferRank2() {
     for (Rank r : Rank.values()) {
       if (r.getMarker() != null) {
-        assertEquals(r.getMarker(), r, RankUtils.inferRank(r.getMarker()));
+        if (r.hasAmbiguousMarker()) {
+          Set<Rank> allRanks = new HashSet<>();
+          for (NomCode code : NomCode.values()) {
+            allRanks.add(RankUtils.bestCodeCompliantRank(r, code));
+          }
+          assertEquals(r.getMarker(), 2, allRanks.size());
+        } else {
+          assertEquals(r.getMarker(), r, RankUtils.inferRank(r.getMarker()));
+        }
       }
     }
   }
@@ -171,7 +195,7 @@ public class RankUtilsTest {
     assertEquals(Rank.SUBSPECIES, RankUtils.inferRank("agamossp."));
     assertEquals(Rank.SUBSPECIES, RankUtils.inferRank("nothossp."));
     for (Rank r : Rank.values()) {
-      if (r.notOtherOrUnranked() && r != Rank.CULTIVAR_GROUP) {
+      if (r.notOtherOrUnranked() && !r.hasAmbiguousMarker() && r != Rank.CULTIVAR_GROUP) {
         assertEquals(r, RankUtils.inferRank(r.getMarker()));
         assertEquals(r, RankUtils.inferRank("notho"+r.getMarker()));
       }

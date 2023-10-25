@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import org.gbif.nameparser.util.RankUtils;
 
 /**
  * An ordered taxonomic rank enumeration with most commonly used values.
@@ -36,90 +37,95 @@ public enum Rank {
 
   SUPERDOMAIN("superdom."),
   DOMAIN("dom."),
-  REALM("realm"),
-  SUBREALM("subrealm"),
+  REALM(NomCode.VIRUS, "realm"),
+  SUBREALM(NomCode.VIRUS, "subrealm"),
   SUPERKINGDOM("superreg."),
   KINGDOM("reg."),
   SUBKINGDOM("subreg."),
   INFRAKINGDOM("infrareg."),
 
-  SUPERPHYLUM("superphyla", "superphyl."),
-  PHYLUM("phyla", "phyl."),
-  SUBPHYLUM("subphyla", "subphyl."),
-  INFRAPHYLUM("infraphyla", "infraphyl."),
-  PARVPHYLUM("parvphyla", "parvphyl."),
-  MICROPHYLUM("microphyla", "microphyl."),
-  NANOPHYLUM("nanophyla", "nanophyl."),
+  SUPERPHYLUM("superphyl.", "superphyla"),
+  PHYLUM("phyl.", "phyla"),
+  SUBPHYLUM("subphyl.", "subphyla"),
+  INFRAPHYLUM("infraphyl.", "infraphyla"),
+  PARVPHYLUM(NomCode.ZOOLOGICAL, "parvphyl.", "parvphyla"),
+  MICROPHYLUM(NomCode.ZOOLOGICAL,"microphyl.", "microphyla"),
+  NANOPHYLUM(NomCode.ZOOLOGICAL,"nanophyl.", "nanophyla"),
 
-  GIGACLASS("gigaclasses","gigacl."),
-  MEGACLASS("megaclasses","megacl."),
-  SUPERCLASS("superclasses", "supercl."),
-  CLASS("classes", "cl."),
-  SUBCLASS("subclasses", "subcl."),
-  INFRACLASS("infraclasses", "infracl."),
-  SUBTERCLASS("subterclasses", "subtercl."),
-  PARVCLASS("parvclasses", "parvcl."),
+  GIGACLASS(NomCode.ZOOLOGICAL,"gigacl.", "gigaclasses"),
+  MEGACLASS(NomCode.ZOOLOGICAL,"megacl.", "megaclasses"),
+  SUPERCLASS("supercl.", "superclasses"),
+  CLASS("cl.", "classes"),
+  SUBCLASS("subcl.", "subclasses"),
+  INFRACLASS("infracl.", "infraclasses"),
+  SUBTERCLASS(NomCode.ZOOLOGICAL,"subtercl.", "subterclasses"),
+  PARVCLASS(NomCode.ZOOLOGICAL,"parvcl.", "parvclasses"),
 
-  SUPERDIVISION("superdiv."),
-  DIVISION("div."),
-  SUBDIVISION("subdiv."),
-  INFRADIVISION("infradiv."),
+  SUPERDIVISION(NomCode.ZOOLOGICAL,"superdiv."),
+  DIVISION(NomCode.ZOOLOGICAL,"div."),
+  SUBDIVISION(NomCode.ZOOLOGICAL,"subdiv."),
+  INFRADIVISION(NomCode.ZOOLOGICAL,"infradiv."),
 
-  SUPERLEGION("superleg."),
-  LEGION("leg."),
-  SUBLEGION("subleg."),
-  INFRALEGION("infraleg."),
+  SUPERLEGION(NomCode.ZOOLOGICAL, "superleg."),
+  LEGION(NomCode.ZOOLOGICAL, "leg."),
+  SUBLEGION(NomCode.ZOOLOGICAL, "subleg."),
+  INFRALEGION(NomCode.ZOOLOGICAL, "infraleg."),
 
-  MEGACOHORT("megacohort"),
-  SUPERCOHORT("supercohort"),
-  COHORT("cohort"),
-  SUBCOHORT("subcohort"),
-  INFRACOHORT("infracohort"),
+  MEGACOHORT(NomCode.ZOOLOGICAL, "megacohort"),
+  SUPERCOHORT(NomCode.ZOOLOGICAL, "supercohort"),
+  COHORT(NomCode.ZOOLOGICAL, "cohort"),
+  SUBCOHORT(NomCode.ZOOLOGICAL, "subcohort"),
+  INFRACOHORT(NomCode.ZOOLOGICAL, "infracohort"),
 
-  GIGAORDER("gigaord."),
-  MAGNORDER("magnord."),
-  GRANDORDER("grandord."),
-  MIRORDER("mirord."),
+  GIGAORDER(NomCode.ZOOLOGICAL, "gigaord."),
+  MAGNORDER(NomCode.ZOOLOGICAL, "magnord."),
+  GRANDORDER(NomCode.ZOOLOGICAL, "grandord."),
+  MIRORDER(NomCode.ZOOLOGICAL, "mirord."),
   SUPERORDER("superord."),
   ORDER("ord."),
-  NANORDER("nanord."),
-  HYPOORDER("hypoord."),
-  MINORDER("minord."),
+  NANORDER(NomCode.ZOOLOGICAL, "nanord."),
+  HYPOORDER(NomCode.ZOOLOGICAL, "hypoord."),
+  MINORDER(NomCode.ZOOLOGICAL, "minord."),
   SUBORDER("subord."),
   INFRAORDER("infraord."),
-  PARVORDER("parvord."),
+  PARVORDER(NomCode.ZOOLOGICAL, "parvord."),
 
-  FALANX("falanges", "falanx"),
-  MEGAFAMILY("megafamilies", "megafam."),
-  GRANDFAMILY("grandfamilies", "grandfam."),
-  SUPERFAMILY("superfamilies", "superfam."),
-  EPIFAMILY("epifamilies", "epifam."),
-  FAMILY("families", "fam."),
-  SUBFAMILY("subfamilies", "subfam."),
-  INFRAFAMILY("infrafamilies", "infrafam."),
+  SUPERSECTION_ZOOLOGY(NomCode.ZOOLOGICAL, "supersect."),
+  SECTION_ZOOLOGY(NomCode.ZOOLOGICAL, "sect."),
+  SUBSECTION_ZOOLOGY(NomCode.ZOOLOGICAL, "subsect."),
+
+  FALANX("falanx", "falanges"),
+  GIGAFAMILY(NomCode.ZOOLOGICAL, "gigafam.", "gigafamilies"),
+  MEGAFAMILY(NomCode.ZOOLOGICAL, "megafam.", "megafamilies"),
+  GRANDFAMILY(NomCode.ZOOLOGICAL, "grandfam.", "grandfamilies"),
+  SUPERFAMILY("superfam.", "superfamilies"),
+  EPIFAMILY(NomCode.ZOOLOGICAL,"epifam.", "epifamilies"),
+  FAMILY("fam.", "families"),
+  SUBFAMILY("subfam.", "subfamilies"),
+  INFRAFAMILY("infrafam.", "infrafamilies"),
 
   SUPERTRIBE("supertrib."),
   TRIBE("trib."),
   SUBTRIBE("subtrib."),
   INFRATRIBE("infratrib."),
-  
+
   /**
    * Used for any other unspecific rank above genera.
    */
   SUPRAGENERIC_NAME("supragen."),
 
-  SUPERGENUS("supergenera", "supergen."),
-  GENUS("genera", "gen."),
-  SUBGENUS("subgenera", "subgen."),
-  INFRAGENUS("infragenera", "infrag."),
+  SUPERGENUS("supergen.", "supergenera"),
+  GENUS("gen.", "genera"),
+  SUBGENUS("subgen.", "subgenera"),
+  INFRAGENUS("infrag.", "infragenera"),
   
-  SUPERSECTION("supersect."),
-  SECTION("sect."),
-  SUBSECTION("subsect."),
+  SUPERSECTION_BOTANY(NomCode.BOTANICAL, "supersect."),
+  SECTION_BOTANY(NomCode.BOTANICAL, "sect."),
+  SUBSECTION_BOTANY(NomCode.BOTANICAL, "subsect."),
   
-  SUPERSERIES("superseries", "superser."),
-  SERIES("series", "ser."),
-  SUBSERIES("subseries", "subser."),
+  SUPERSERIES(NomCode.BOTANICAL, "superser.", "superseries"),
+  SERIES(NomCode.BOTANICAL, "ser.", "series"),
+  SUBSERIES(NomCode.BOTANICAL, "subser.", "subseries"),
   
   /**
    * Used for any other unspecific rank below genera and above species aggregates.
@@ -132,7 +138,7 @@ public enum Rank {
    */
   SPECIES_AGGREGATE("agg."),
   
-  SPECIES("species", "sp."),
+  SPECIES("sp.", "species"),
   
   /**
    * Used for any unspecific rank below species.
@@ -146,15 +152,15 @@ public enum Rank {
    * and individual orchid plants can be selected (and propagated) and named as cultivars
    * https://en.wikipedia.org/wiki/Grex_(horticulture)
    */
-  GREX("gx"),
+  GREX(NomCode.CULTIVARS, "gx"),
 
   /**
    * type of species in zoology
    * https://www.wikidata.org/wiki/Q931051
    */
-  KLEPTON("klepton"),
+  KLEPTON(NomCode.ZOOLOGICAL, "klepton"),
 
-  SUBSPECIES("subspecies", "subsp."),
+  SUBSPECIES("subsp.", "subspecies"),
   
   /**
    * Rank in use from the code for cultivated plants.
@@ -164,8 +170,8 @@ public enum Rank {
    * <p>
    * Sometimes authors also used the words "sort", "type", "selections" or "hybrids" instead of Group which is not legal according to the code.
    */
-  CULTIVAR_GROUP,
-  
+  CULTIVAR_GROUP(NomCode.CULTIVARS),
+
   /**
    * A group of cultivars. These can be roughly comparable to cultivar groups, but convarieties, unlike cultivar groups,
    * do not necessarily contain named varieties, and convarieties are members of traditional "Linnaean" ranks.
@@ -173,7 +179,7 @@ public enum Rank {
    * <p>
    * From Spooner et al., Horticultural Reviews 28 (2003): 1-60
    */
-  CONVARIETY("convarieties", "convar."),
+  CONVARIETY(NomCode.CULTIVARS, "convar.", "convarieties"),
   
   /**
    * Used also for any unspecific rank below subspecies.
@@ -184,26 +190,26 @@ public enum Rank {
    * Botanical legacy rank for a race, recommended in botanical code from 1868
    * https://en.wikipedia.org/wiki/Race_(biology)
    */
-  PROLES("proles", "prol."),
+  PROLES(NomCode.BOTANICAL, "prol.", "proles"),
   
   /**
    * Zoological legacy rank
    */
-  NATIO("natio"),
+  NATIO(NomCode.ZOOLOGICAL, "natio"),
   
   /**
    * Zoological legacy rank
    */
-  ABERRATION("ab."),
+  ABERRATION(NomCode.ZOOLOGICAL, "ab."),
   
   /**
    * Zoological legacy rank
    */
-  MORPH("morph"),
+  MORPH(NomCode.ZOOLOGICAL, "morph"),
 
-  SUPERVARIETY("supervarieties", "supervar."),
-  VARIETY("varieties", "var."),
-  SUBVARIETY("subvarieties", "subvar."),
+  SUPERVARIETY("supervar.", "supervarieties"),
+  VARIETY("var.", "varieties"),
+  SUBVARIETY("subvar.", "subvarieties"),
 
   SUPERFORM("superf."),
   FORM("f."),
@@ -220,49 +226,49 @@ public enum Rank {
    * See <a href="http://link.springer.com/chapter/10.1007/978-94-009-3555-6_171">Problems with the Pathovar Concept</a>
    * For example Pseudomonas syringae pv. lachrymans
    */
-  PATHOVAR("pv."),
+  PATHOVAR(NomCode.BACTERIAL, "pv."),
   
   /**
    * Microbial rank based on biochemical or physiological properties.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Francisella tularensis biovar tularensis
    */
-  BIOVAR("biovar"),
+  BIOVAR(NomCode.BACTERIAL, "biovar"),
   
   /**
    * Microbial rank based on production or amount of production of a particular chemical.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Vibrio alginolyticus chemovar iophagus
    */
-  CHEMOVAR("chemovar"),
+  CHEMOVAR(NomCode.BACTERIAL, "chemovar"),
   
   /**
    * Microbial rank based on morphological characterislics.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Acinetobacter junii morphovar I
    */
-  MORPHOVAR("morphovar"),
+  MORPHOVAR(NomCode.BACTERIAL, "morphovar"),
   
   /**
    * Microbial infrasubspecific rank based on reactions to bacteriophage.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Staphyloccocus aureus phagovar 42D
    */
-  PHAGOVAR("phagovar"),
+  PHAGOVAR(NomCode.BACTERIAL, "phagovar"),
   
   /**
    * Microbial infrasubspecific rank based on antigenic characteristics.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Salmonella enterica serovar Dublin
    */
-  SEROVAR("serovar"),
+  SEROVAR(NomCode.BACTERIAL, "serovar"),
   
   /**
    * Microbial infrasubspecific rank based on chemical constitution.
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Thymus vulgaris ct. geraniol
    */
-  CHEMOFORM("chemoform"),
+  CHEMOFORM(NomCode.BACTERIAL, "chemoform"),
   
   /**
    * Microbial infrasubspecific rank.
@@ -271,16 +277,16 @@ public enum Rank {
    * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
    * For example Puccinia graminis f. sp. avenae
    */
-  FORMA_SPECIALIS("f.sp."),
+  FORMA_SPECIALIS(NomCode.BACTERIAL, "f.sp."),
 
   /**
    * Botanical rank
    */
-  LUSUS("lusi", "lusus"),
+  LUSUS(NomCode.BOTANICAL, "lusi", "lusus"),
 
-  CULTIVAR("cv."),
+  CULTIVAR(NomCode.CULTIVARS, "cv."),
 
-  MUTATIO("mut."),
+  MUTATIO(NomCode.ZOOLOGICAL, "mut."),
 
   /**
    * A microbial strain.
@@ -297,7 +303,7 @@ public enum Rank {
    * The default if not given instead of null.
    */
   UNRANKED;
-  
+
   /**
    * All main Linnean ranks ordered.
    */
@@ -340,20 +346,6 @@ public enum Rank {
       UNRANKED
   );
   
-  /**
-   * A set of ranks which are treated differently in different groups of organisms; usually between botany and zoology.
-   */
-  private static final Set<Rank> AMBIGUOUS_RANKS = ImmutableSet.of(
-      SUPERSECTION,
-      SECTION,
-      SUBSECTION,
-      SUPERSERIES,
-      SERIES,
-      SUBSERIES,
-      OTHER,
-      UNRANKED
-  );
-  
   private static final Set<Rank> LEGACY_RANKS = ImmutableSet.of(
       MORPH,
       ABERRATION,
@@ -365,11 +357,24 @@ public enum Rank {
       LUSUS
   );
 
+  private static final Set<Rank> AMBIGUOUS_MARKER;
   private static final Map<Rank, Rank> MAJOR_RANKS;
   static {
+    Set<Rank> ambiguous = EnumSet.noneOf(Rank.class);
+    Map<String, Rank> ambiguousMarker = new HashMap<>();
+
     Map<Rank, Rank> map = new EnumMap<>(Rank.class);
     Pattern prefixes = Pattern.compile("^(SUPER|SUB(?:TER)?|INFRA|MICRO|NANO|GIGA|MAGN|GRAND|MIR|NAN|HYPO|MIN|PARV|MEGA|EPI)");
     for (Rank r : Rank.values()) {
+      if (r.getMarker() != null) {
+        if (ambiguousMarker.containsKey(r.getMarker())) {
+          ambiguous.add(r);
+          ambiguous.add(ambiguousMarker.get(r.getMarker()));
+        } else {
+          ambiguousMarker.put(r.getMarker(), r);
+        }
+      }
+
       Rank major = r;
       if (r.isInfraspecific()) {
         major = Rank.INFRASPECIFIC_NAME;
@@ -389,96 +394,71 @@ public enum Rank {
     map.put(Rank.SPECIES_AGGREGATE, Rank.SPECIES);
     map.put(Rank.INFRAGENERIC_NAME, Rank.GENUS);
     MAJOR_RANKS = ImmutableMap.copyOf(map);
+    AMBIGUOUS_MARKER = ImmutableSet.copyOf(ambiguous);
   }
 
-  private static final Map<Rank, NomCode> RANK2CODE = ImmutableMap.<Rank, NomCode>builder()
-      .put(PARVPHYLUM, NomCode.ZOOLOGICAL)
-      .put(MICROPHYLUM, NomCode.ZOOLOGICAL)
-      .put(NANOPHYLUM, NomCode.ZOOLOGICAL)
-      .put(GIGACLASS, NomCode.ZOOLOGICAL)
-      .put(MEGACLASS, NomCode.ZOOLOGICAL)
-      .put(SUBTERCLASS, NomCode.ZOOLOGICAL)
-      .put(PARVCLASS, NomCode.ZOOLOGICAL)
-      .put(SUPERDIVISION, NomCode.ZOOLOGICAL)
-      .put(DIVISION, NomCode.ZOOLOGICAL)
-      .put(SUBDIVISION, NomCode.ZOOLOGICAL)
-      .put(INFRADIVISION, NomCode.ZOOLOGICAL)
-      .put(SUPERLEGION, NomCode.ZOOLOGICAL)
-      .put(LEGION, NomCode.ZOOLOGICAL)
-      .put(SUBLEGION, NomCode.ZOOLOGICAL)
-      .put(INFRALEGION, NomCode.ZOOLOGICAL)
-      .put(GIGAORDER, NomCode.ZOOLOGICAL)
-      .put(MAGNORDER, NomCode.ZOOLOGICAL)
-      .put(GRANDORDER, NomCode.ZOOLOGICAL)
-      .put(MIRORDER, NomCode.ZOOLOGICAL)
-      .put(NANORDER, NomCode.ZOOLOGICAL)
-      .put(HYPOORDER, NomCode.ZOOLOGICAL)
-      .put(MINORDER, NomCode.ZOOLOGICAL)
-      .put(PARVORDER, NomCode.ZOOLOGICAL)
-      .put(MEGACOHORT, NomCode.ZOOLOGICAL)
-      .put(SUPERCOHORT, NomCode.ZOOLOGICAL)
-      .put(COHORT, NomCode.ZOOLOGICAL)
-      .put(SUBCOHORT, NomCode.ZOOLOGICAL)
-      .put(INFRACOHORT, NomCode.ZOOLOGICAL)
-      .put(MEGAFAMILY, NomCode.ZOOLOGICAL)
-      .put(GRANDFAMILY, NomCode.ZOOLOGICAL)
-      .put(EPIFAMILY, NomCode.ZOOLOGICAL)
-      .put(MORPH, NomCode.ZOOLOGICAL)
-      .put(ABERRATION, NomCode.ZOOLOGICAL)
-      .put(NATIO, NomCode.ZOOLOGICAL)
-      .put(KLEPTON, NomCode.ZOOLOGICAL)
-      .put(MUTATIO, NomCode.ZOOLOGICAL)
-
-      .put(PROLES, NomCode.BOTANICAL)
-      .put(SUPERSECTION, NomCode.BOTANICAL)
-      .put(SECTION, NomCode.BOTANICAL)
-      .put(SUBSECTION, NomCode.BOTANICAL)
-      .put(SUPERSERIES, NomCode.BOTANICAL)
-      .put(SERIES, NomCode.BOTANICAL)
-      .put(SUBSERIES, NomCode.BOTANICAL)
-      
-      .put(CULTIVAR, NomCode.CULTIVARS)
-      .put(CULTIVAR_GROUP, NomCode.CULTIVARS)
-      .put(CONVARIETY, NomCode.CULTIVARS)
-      .put(GREX, NomCode.CULTIVARS)
-      
-      .put(PATHOVAR, NomCode.BACTERIAL)
-      .put(BIOVAR, NomCode.BACTERIAL)
-      .put(CHEMOVAR, NomCode.BACTERIAL)
-      .put(MORPHOVAR, NomCode.BACTERIAL)
-      .put(PHAGOVAR, NomCode.BACTERIAL)
-      .put(SEROVAR, NomCode.BACTERIAL)
-      .put(CHEMOFORM, NomCode.BACTERIAL)
-      .put(FORMA_SPECIALIS, NomCode.BACTERIAL)
-      .put(LUSUS, NomCode.BOTANICAL)
-
-      .put(REALM, NomCode.VIRUS)
-      .put(SUBREALM, NomCode.VIRUS)
-      .build();
-  
+  private final NomCode code;
   private final String marker;
   private final String plural;
 
   Rank() {
-    this(null);
-  }
-  
-  Rank(String marker) {
-    this.marker = marker;
-    this.plural = name().toLowerCase() + "s";
+    this.code = null;
+    this.marker = null;
+    this.plural = null;
   }
 
-  Rank(String plural, String marker) {
-    this.plural = plural;
+  Rank(NomCode code) {
+    this.code = code;
+    this.marker = null;
+    this.plural = null;
+  }
+
+  Rank(String marker) {
+    this.code = null;
     this.marker = marker;
+    this.plural = plural(this);
+  }
+
+  Rank(NomCode code, String marker) {
+    this.code = code;
+    this.marker = marker;
+    this.plural = plural(this);
+  }
+
+  Rank(String marker, String plural) {
+    this.code = null;
+    this.marker = marker;
+    this.plural = plural;
+  }
+
+  Rank(NomCode code, String marker, String plural) {
+    this.code = code;
+    this.marker = marker;
+    this.plural = plural;
+  }
+
+
+  static String plural(Rank rank) {
+    return rank.name().toLowerCase() + "s";
   }
 
   public String getMarker() {
     return marker;
   }
 
+  public boolean hasAmbiguousMarker() {
+    return AMBIGUOUS_MARKER.contains(this);
+  }
+
   public String getPlural() {
     return plural;
+  }
+
+  /**
+   * @return the nomenclatural code if the rank is restricted to just one code or null otherwise
+   */
+  public NomCode getCode() {
+    return code;
   }
 
   /**
@@ -546,14 +526,14 @@ public enum Rank {
    * @return true if the rank is for family group names, i.e. between family (inclusive) and genus (exclusive).
    */
   public boolean isFamilyGroup() {
-    return MEGAFAMILY.ordinal() <= ordinal() && ordinal() < SUPRAGENERIC_NAME.ordinal();
+    return GIGAFAMILY.ordinal() <= ordinal() && ordinal() < SUPRAGENERIC_NAME.ordinal();
   }
   
   /**
    * @return true if the rank is for genus group names, i.e. between genus (inclusive) and species aggregate (exclusive).
    */
   public boolean isGenusGroup() {
-    return GENUS.ordinal() <= ordinal() && ordinal() < SPECIES_AGGREGATE.ordinal();
+    return SUPERGENUS.ordinal() <= ordinal() && ordinal() < SPECIES_AGGREGATE.ordinal();
   }
   
   /**
@@ -587,16 +567,6 @@ public enum Rank {
   public boolean isUncomparable() {
     return UNCOMPARABLE_RANKS.contains(this);
   }
-  
-  /**
-   * True for ranks which are treated differently in different groups of organisms, usually between botany and zoology.
-   * Example ranks are SERIES or SECTION
-   *
-   * @return true if ambiguous
-   */
-  public boolean isAmbiguous() {
-    return AMBIGUOUS_RANKS.contains(this);
-  }
 
   /**
    * @return true if the rank is considered a legacy rank not used anymore in current nomenclature.
@@ -607,9 +577,11 @@ public enum Rank {
   
   /**
    * @return the nomenclatural code if the rank is restricted to just one code or null otherwise
+   * @deprecated Use {@link #getCode()} instead
    */
+  @Deprecated
   public NomCode isRestrictedToCode() {
-    return RANK2CODE.get(this);
+    return getCode();
   }
   
   /**

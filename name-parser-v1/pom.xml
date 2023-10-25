@@ -9,7 +9,7 @@
 
     <artifactId>name-parser-v1</artifactId>
 
-    <name>GBIF Name Parser - API v1</name>
+    <name>GBIF Name Parser - v1 API</name>
     <description>The GBIF Name Parser implementing the GBIF API version 1</description>
 
     <dependencies>

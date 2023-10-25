@@ -264,8 +264,10 @@ public class NameParserGbifV1 implements NameParser {
       case SUBDIVISION: return Rank.SUBPHYLUM;
       case INFRADIVISION: return Rank.INFRAPHYLUM;
       case PROLES: return Rank.RACE;
+      case SECTION_BOTANY: return Rank.SECTION;
+      case SUBSECTION_BOTANY: return Rank.SUBSECTION;
 
-      case SUPERSECTION:
+      case SUPERSECTION_BOTANY:
       case SUPERSERIES:
         return Rank.INFRAGENERIC_NAME;
 
@@ -278,9 +280,14 @@ public class NameParserGbifV1 implements NameParser {
 
       case SUPERGENUS:
       case FALANX:
+      case GIGAFAMILY:
       case MEGAFAMILY:
       case GRANDFAMILY:
       case EPIFAMILY:
+
+      case SUPERSECTION_ZOOLOGY:
+      case SECTION_ZOOLOGY:
+      case SUBSECTION_ZOOLOGY:
 
       case GIGAORDER:
       case MIRORDER:
@@ -311,10 +318,17 @@ public class NameParserGbifV1 implements NameParser {
     if (rank == null) {
       return null;
     }
-    if (Rank.RACE == rank || Rank.PROLES == rank) {
-      return org.gbif.nameparser.api.Rank.PROLES;
+    switch (rank) {
+      case RACE:
+      case PROLES:
+        return org.gbif.nameparser.api.Rank.PROLES;
+      case SECTION:
+        return org.gbif.nameparser.api.Rank.SECTION_BOTANY;
+      case SUBSECTION:
+        return org.gbif.nameparser.api.Rank.SUBSECTION_BOTANY;
+      default:
+        return convertEnum(org.gbif.nameparser.api.Rank.class, rank);
     }
-    return convertEnum(org.gbif.nameparser.api.Rank.class, rank);
   }
 
   /**
