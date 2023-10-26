@@ -709,6 +709,12 @@ public abstract class NameParserTest {
         .combAuthors("1838", "Guérin-Ménéville")
         .code(NomCode.ZOOLOGICAL)
         .nothingElse();
+    // https://github.com/gbif/name-parser/issues/98
+    assertName("Salmonidae Jarocki or Schinz, 1822", "Salmonidae")
+        .monomial("Salmonidae")
+        .combAuthors("1822", "Jarocki or Schinz")
+        .code(NomCode.ZOOLOGICAL)
+        .nothingElse();
   }
   
   @Test

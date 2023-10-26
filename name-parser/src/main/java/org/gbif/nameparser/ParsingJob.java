@@ -92,7 +92,7 @@ class ParsingJob implements Callable<ParsedName> {
   // common author suffices that can be mistaken for epithets
   static final String AUTHOR_SUFFIX = "(?:bis|ter|d(?:[ae][rnl]?|egli)|van(?: de[nr]?)|zur?)";
   private static final Pattern AUTHOR_SUFFIX_P = Pattern.compile("^" + AUTHOR_SUFFIX + "$");
-  private static final String AUTHOR_TEAM = AUTHOR + "(?:[&,;]+" + AUTHOR + ")*";
+  private static final String AUTHOR_TEAM = AUTHOR + "(?:(?:[&,;]+| or )" + AUTHOR + ")*";
   static final String AUTHORSHIP =
       // ex authors
       "(?:(" + AUTHOR_TEAM + ") ?\\bex[. ])?" +
@@ -105,7 +105,7 @@ class ParsingJob implements Callable<ParsedName> {
   static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/,-][0-9]{1,4})?";
 
   private static final String NOTHO = "notho";
-  static final String RANK_MARKER = ("(?:"+NOTHO+"|agamo)?(?:(?<!f[ .])sp|t\\.infr|" +
+  static final String RANK_MARKER = ("(?:"+NOTHO+"|agamo)?(?:(?<!f[ .])sp|t\\.infr|or|" +
         StringUtils.join(RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.keySet(), "|") +
     ")")
     // avoid hort.ex matches
