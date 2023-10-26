@@ -30,7 +30,6 @@ import static org.junit.Assert.*;
  */
 public class RankUtilsTest {
 
-
   @Test
   public void testNextLowerLinneanRank() throws Exception {
     assertEquals(Rank.SPECIES, RankUtils.nextLowerLinneanRank(Rank.GENUS));
@@ -62,7 +61,7 @@ public class RankUtilsTest {
     assertTrue(ranks.contains(Rank.INFRACOHORT));
     assertFalse(ranks.contains(Rank.SUBGENUS));
     assertFalse(ranks.contains(Rank.SPECIES));
-    assertEquals(67, ranks.size());
+    assertEquals(71, ranks.size());
   }
 
   @Test

@@ -39,28 +39,40 @@ public class RankTest {
   @Test
   public void mayor() {
     for (Rank r : Rank.values()) {
+
+      if (r.lowerOrEqualsTo(Rank.SUPERKINGDOM) && r.higherOrEqualsTo(Rank.INFRAKINGDOM)) {
+        assertEquals(Rank.KINGDOM, r.getMajorRank());
+        assertTrue(r.isSuprageneric());
+        assertFalse(r.isFamilyGroup());
+        assertFalse(r.isGenusGroup());
+      }
       if (r.lowerOrEqualsTo(Rank.SUPERPHYLUM) && r.higherOrEqualsTo(Rank.NANOPHYLUM)) {
         assertEquals(Rank.PHYLUM, r.getMajorRank());
+        assertTrue(r.isSuprageneric());
         assertFalse(r.isFamilyGroup());
         assertFalse(r.isGenusGroup());
       }
       if (r.lowerOrEqualsTo(Rank.GIGACLASS) && r.higherOrEqualsTo(Rank.PARVCLASS)) {
         assertEquals(Rank.CLASS, r.getMajorRank());
+        assertTrue(r.isSuprageneric());
         assertFalse(r.isFamilyGroup());
         assertFalse(r.isGenusGroup());
       }
       if (r.lowerOrEqualsTo(Rank.GIGAORDER) && r.higherOrEqualsTo(Rank.PARVORDER)) {
         assertEquals(Rank.ORDER, r.getMajorRank());
+        assertTrue(r.isSuprageneric());
         assertFalse(r.isFamilyGroup());
         assertFalse(r.isGenusGroup());
       }
       if (r.lowerOrEqualsTo(Rank.GIGAFAMILY) && r.higherOrEqualsTo(Rank.INFRAFAMILY)) {
         assertEquals(Rank.FAMILY, r.getMajorRank());
+        assertTrue(r.isSuprageneric());
         assertTrue(r.isFamilyGroup());
         assertFalse(r.isGenusGroup());
       }
       if (r.lowerOrEqualsTo(Rank.SUPERTRIBE) && r.higherOrEqualsTo(Rank.INFRATRIBE)) {
         assertEquals(Rank.TRIBE, r.getMajorRank());
+        assertTrue(r.isSuprageneric());
         assertTrue(r.isFamilyGroup());
         assertFalse(r.isGenusGroup());
       }
@@ -334,11 +346,11 @@ public class RankTest {
     int counter = 0;
     for (Rank r : Rank.values()) {
       if (r.isLinnean() || r.isUncomparable()) continue;
-      if (r.isRestrictedToCode() != null) continue;
+      if (r.getCode() != null) continue;
       if (r.name().startsWith("SUPER") || r.name().startsWith("SUB") || r.name().startsWith("INFRA")) continue;
       counter++;
       System.out.println(r);
     }
-    assertEquals(7, counter);
+    assertEquals(8, counter);
   }
 }

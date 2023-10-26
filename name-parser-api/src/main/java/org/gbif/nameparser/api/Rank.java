@@ -31,13 +31,24 @@ import java.util.regex.Pattern;
  * Ranks also expose a variety of methods to deal with them programmatically, e.g map them to major ranks only,
  * list Linnean ranks only, etc.
  * Several static methods, lists, sets and maps are provided to help with ordering and lookup from strings.
+ *
+ * Resources used:
+ * https://en.wikipedia.org/wiki/Taxonomic_rank
+ * https://www.wikidoc.org/index.php/Taxonomic_rank
+ * https://www.biolib.cz/en/glossaryterm/id122/
  */
 public enum Rank {
 
   SUPERDOMAIN("superdom."),
   DOMAIN("dom."),
+  SUBDOMAIN("subdom."),
+  INFRADOMAIN("infradom."),
+
+  EMPIRE("imp."),
+
   REALM(NomCode.VIRUS, "realm"),
   SUBREALM(NomCode.VIRUS, "subrealm"),
+
   SUPERKINGDOM("superreg."),
   KINGDOM("reg."),
   SUBKINGDOM("subreg."),
@@ -50,6 +61,8 @@ public enum Rank {
   PARVPHYLUM(NomCode.ZOOLOGICAL, "parvphyl.", "parvphyla"),
   MICROPHYLUM(NomCode.ZOOLOGICAL,"microphyl.", "microphyla"),
   NANOPHYLUM(NomCode.ZOOLOGICAL,"nanophyl.", "nanophyla"),
+
+  CLAUDIUS(NomCode.ZOOLOGICAL,"claud.", "claudius"),
 
   GIGACLASS(NomCode.ZOOLOGICAL,"gigacl.", "gigaclasses"),
   MEGACLASS(NomCode.ZOOLOGICAL,"megacl.", "megaclasses"),
@@ -94,6 +107,7 @@ public enum Rank {
   SUBSECTION_ZOOLOGY(NomCode.ZOOLOGICAL, "subsect."),
 
   FALANX("falanx", "falanges"),
+
   GIGAFAMILY(NomCode.ZOOLOGICAL, "gigafam.", "gigafamilies"),
   MEGAFAMILY(NomCode.ZOOLOGICAL, "megafam.", "megafamilies"),
   GRANDFAMILY(NomCode.ZOOLOGICAL, "grandfam.", "grandfamilies"),
