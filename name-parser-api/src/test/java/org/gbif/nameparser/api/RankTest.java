@@ -37,6 +37,42 @@ public class RankTest {
   }
 
   @Test
+  public void mayor() {
+    for (Rank r : Rank.values()) {
+      if (r.lowerOrEqualsTo(Rank.SUPERPHYLUM) && r.higherOrEqualsTo(Rank.NANOPHYLUM)) {
+        assertEquals(Rank.PHYLUM, r.getMajorRank());
+        assertFalse(r.isFamilyGroup());
+        assertFalse(r.isGenusGroup());
+      }
+      if (r.lowerOrEqualsTo(Rank.GIGACLASS) && r.higherOrEqualsTo(Rank.PARVCLASS)) {
+        assertEquals(Rank.CLASS, r.getMajorRank());
+        assertFalse(r.isFamilyGroup());
+        assertFalse(r.isGenusGroup());
+      }
+      if (r.lowerOrEqualsTo(Rank.GIGAORDER) && r.higherOrEqualsTo(Rank.PARVORDER)) {
+        assertEquals(Rank.ORDER, r.getMajorRank());
+        assertFalse(r.isFamilyGroup());
+        assertFalse(r.isGenusGroup());
+      }
+      if (r.lowerOrEqualsTo(Rank.GIGAFAMILY) && r.higherOrEqualsTo(Rank.INFRAFAMILY)) {
+        assertEquals(Rank.FAMILY, r.getMajorRank());
+        assertTrue(r.isFamilyGroup());
+        assertFalse(r.isGenusGroup());
+      }
+      if (r.lowerOrEqualsTo(Rank.SUPERTRIBE) && r.higherOrEqualsTo(Rank.INFRATRIBE)) {
+        assertEquals(Rank.TRIBE, r.getMajorRank());
+        assertTrue(r.isFamilyGroup());
+        assertFalse(r.isGenusGroup());
+      }
+      if (r.lowerOrEqualsTo(Rank.SUPERGENUS) && r.higherOrEqualsTo(Rank.INFRAGENUS)) {
+        assertEquals(Rank.GENUS, r.getMajorRank());
+        assertFalse(r.isFamilyGroup());
+        assertTrue(r.isGenusGroup());
+      }
+    }
+  }
+
+  @Test
   public void testIsInfraspecific() {
     assertFalse(Rank.SUPERFAMILY.isInfraspecific());
     assertFalse(Rank.KINGDOM.isInfraspecific());

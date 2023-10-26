@@ -390,6 +390,7 @@ public enum Rank {
       map.put(r, major);
     }
     // manual fixes
+    map.put(Rank.NANORDER, Rank.ORDER);
     map.put(Rank.SPECIES_AGGREGATE, Rank.SPECIES);
     map.put(Rank.INFRAGENERIC_NAME, Rank.GENUS);
     MAJOR_RANKS = ImmutableMap.copyOf(map);
