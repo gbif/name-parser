@@ -300,11 +300,16 @@ public class NameParserGbifV1 implements NameParser {
       case MEGACLASS:
       case SUBTERCLASS:
 
+      case CLAUDIUS:
+
       case PARVPHYLUM:
       case MICROPHYLUM:
       case NANOPHYLUM:
 
       case SUPERDOMAIN:
+      case SUBDOMAIN:
+      case INFRADOMAIN:
+      case EMPIRE:
       case REALM:
       case SUBREALM:
         return Rank.SUPRAGENERIC_NAME;
