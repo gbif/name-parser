@@ -13,14 +13,13 @@
  */
 package org.gbif.nameparser.api;
 
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import org.gbif.nameparser.util.RankUtils;
+
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An ordered taxonomic rank enumeration with most commonly used values.
@@ -282,7 +281,7 @@ public enum Rank {
   /**
    * Botanical rank
    */
-  LUSUS(NomCode.BOTANICAL, "lusi", "lusus"),
+  LUSUS(NomCode.BOTANICAL, "lusus", "lusi"),
 
   CULTIVAR(NomCode.CULTIVARS, "cv."),
 
