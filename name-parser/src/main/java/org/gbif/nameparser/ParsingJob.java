@@ -1111,23 +1111,6 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       name = m.replaceAll("$1");
     }
-    // normalize hybrid markers
-    m = matcherInterruptable(NORM_HYBRID_HOMOGLYPHS, name);
-    if (m.find()) {
-      name = m.replaceAll(HYBRID_MARKER);
-    }
-    m = matcherInterruptable(NORM_HYBRIDS_GENUS, name);
-    if (m.find()) {
-      name = m.replaceFirst(HYBRID_MARKER+"$1");
-    }
-    m = matcherInterruptable(NORM_HYBRIDS_EPITH, name);
-    if (m.find()) {
-      name = m.replaceFirst("$1 "+HYBRID_MARKER+"$2");
-    }
-    m = matcherInterruptable(NORM_HYBRIDS_FORMULA, name);
-    if (m.find()) {
-      name = m.replaceAll(" "+HYBRID_MARKER+" ");
-    }
     // capitalize Anonymous author
     m = matcherInterruptable(NORM_ANON, name);
     if (m.find()) {
@@ -1145,7 +1128,25 @@ class ParsingJob implements Callable<ParsedName> {
       name = sb.toString();
     }
 
-    // Capitalize potential owercase genus in binomials
+    // normalize hybrid markers
+    m = matcherInterruptable(NORM_HYBRID_HOMOGLYPHS, name);
+    if (m.find()) {
+      name = m.replaceAll(HYBRID_MARKER);
+    }
+    m = matcherInterruptable(NORM_HYBRIDS_GENUS, name);
+    if (m.find()) {
+      name = m.replaceFirst(HYBRID_MARKER+"$1");
+    }
+    m = matcherInterruptable(NORM_HYBRIDS_EPITH, name);
+    if (m.find()) {
+      name = m.replaceFirst("$1 "+HYBRID_MARKER+"$2");
+    }
+    m = matcherInterruptable(NORM_HYBRIDS_FORMULA, name);
+    if (m.find()) {
+      name = m.replaceAll(" "+HYBRID_MARKER+" ");
+    }
+
+    // Capitalize potential lowercase genus in binomials
     m = matcherInterruptable(NORM_LOWERCASE_BINOMIAL, name);
     if (m.find()) {
       name = m.replaceFirst(StringUtils.capitalize(m.group(1)) + " " + m.group(2));

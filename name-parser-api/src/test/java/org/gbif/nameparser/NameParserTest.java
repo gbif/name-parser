@@ -550,7 +550,15 @@ public abstract class NameParserTest {
         .code(ZOOLOGICAL)
         .nothingElse();
   }
-  
+
+  @Test
+  public void capitalMonomial() throws Exception {
+    // https://github.com/CatalogueOfLife/checklistbank/issues/1262
+    assertName("XENACOELOMORPHA", "Xenacoelomorpha")
+        .monomial("Xenacoelomorpha")
+        .nothingElse();
+  }
+
   @Test
   public void infraSpecies() throws Exception {
     assertName("Poa pratensis subsp. anceps (Gaudin) Dumort., 1824", Rank.SPECIES, "Poa pratensis subsp. anceps")
