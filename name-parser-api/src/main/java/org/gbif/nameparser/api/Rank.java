@@ -50,7 +50,7 @@ public enum Rank {
   SUBREALM(NomCode.VIRUS, "subrealm"),
 
   SUPERKINGDOM("superreg."),
-  KINGDOM("reg."),
+  KINGDOM("regn."),
   SUBKINGDOM("subreg."),
   INFRAKINGDOM("infrareg."),
 
