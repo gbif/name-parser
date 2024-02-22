@@ -87,6 +87,8 @@ public class AuthorshipParsingJob extends ParsingJob {
         if (StringUtils.isBlank(name)) {
             unparsable();
         }
+        // sic/corrig
+        extractSic();
         // extract nom.illeg. and other nomen status notes
         extractNomStatus();
         // extract sec reference

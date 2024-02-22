@@ -613,19 +613,8 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceFirst("");
     }
 
-    // remove sic marker
-    m = matcherInterruptable(SIC_PATTERN, name);
-    if (m.find()) {
-      pn.setOriginalSpelling(true);
-      name = m.replaceFirst(" ");
-    }
-
-    // remove corrig. marker
-    m = matcherInterruptable(CORRIG_PATTERN, name);
-    if (m.find()) {
-      pn.setOriginalSpelling(false);
-      name = m.replaceFirst(" ");
-    }
+    // remove sic & corrig markers
+    extractSic();
 
     // before any cleaning test for properly quoted candidate names
     m = matcherInterruptable(IS_CANDIDATUS_QUOTE_PATTERN, scientificName);
@@ -973,6 +962,21 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
 
+  // remove sic marker
+  void extractSic() throws InterruptedException {
+    Matcher m = matcherInterruptable(SIC_PATTERN, name);
+    if (m.find()) {
+      pn.setOriginalSpelling(true);
+      name = m.replaceFirst(" ");
+    }
+
+    // remove corrig. marker
+    m = matcherInterruptable(CORRIG_PATTERN, name);
+    if (m.find()) {
+      pn.setOriginalSpelling(false);
+      name = m.replaceFirst(" ");
+    }
+  }
 
   void extractNomStatus() throws InterruptedException {
     // extract nom.illeg. and other nomen status notes

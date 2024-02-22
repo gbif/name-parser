@@ -176,6 +176,16 @@ public abstract class NameParserTest {
         .species("Turbo", "porphyrites")
         .partial("(sic,porphyria)") // not ideal , but hey
         .nothingElse();
+
+    assertAuthorship("[sic]")
+            .sic()
+            .nothingElse();
+
+    assertAuthorship("[sic] Walter")
+            .sic()
+            .combAuthors(null, "Walter")
+            .nothingElse();
+
   }
 
   @Test
