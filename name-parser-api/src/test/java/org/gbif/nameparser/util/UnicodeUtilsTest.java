@@ -106,7 +106,7 @@ public class UnicodeUtilsTest {
   @Test
   public void replaceHomoglyphs() {
     assertEquals("rdtrfvgb3weñ54drtfvgxá+ä+.p, …-!§%&\"´`'SLA", UnicodeUtils.replaceHomoglyphs(input1, false));
-    assertEquals("rfvgb3çwßß54dAtfvgx+ä+.p, …-!§%&\"´`'", UnicodeUtils.replaceHomoglyphs(input2, false));
+    assertEquals("rfvgb3çwββ54dAtfvgx+ä+.p, …-!§%&\"´`'", UnicodeUtils.replaceHomoglyphs(input2, false));
     assertEquals("Abies × Picea", UnicodeUtils.replaceHomoglyphs("Abies × Picea", true));
     assertEquals("Jiménez-Ferbans", UnicodeUtils.replaceHomoglyphs("Jiménez‑Ferbans", true));
     assertEquals("Jiménez-Ferbans", UnicodeUtils.replaceHomoglyphs("Jiménez‒Ferbans", true));
