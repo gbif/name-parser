@@ -143,6 +143,25 @@ public class UnicodeUtilsTest {
     assertEquals("SOEZsoezY¥µAAAAAAAECEEEEIIIIDNOOOOOOUUUUYssaaaaaaaeceeeeiiiidnoooooouuuuyy", foldToAscii(test));
   }
 
+  @Test
+  public void decompose() throws Exception {
+    // stays the same
+    for (String x : new String[]{
+            "Euchlanis dilatata β-larga",
+            "Agaricus collinitus β mucosus (Bull.) Fr.",
+            "Navás, 1929",
+            "Carex ×cayouettei",
+            "†Lachnus bonneti",
+            "Coccinella 2-puſtulata",
+            "łachs"
+    }) {
+      assertEquals(x, UnicodeUtils.decompose(x));
+    }
+
+    // decomposed
+    assertEquals("Donatia novae-zelandiae", UnicodeUtils.decompose("Donatia novae-zelandiæ"));
+  }
+
 
   @Test
   public void testDecodeUtf8Garbage() {

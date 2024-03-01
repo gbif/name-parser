@@ -77,12 +77,6 @@
 
     <!-- Test -->
     <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>name-parser-api</artifactId>
-      <classifier>tests</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
