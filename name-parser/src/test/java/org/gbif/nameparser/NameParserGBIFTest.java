@@ -60,6 +60,12 @@ public class NameParserGBIFTest {
    */
   @Test
   public void sic() throws Exception {
+    assertName("Ameiva plei Rosicky, 1955", "Ameiva plei")
+            .species("Ameiva", "plei")
+            .combAuthors("1955", "Rosicky")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
     assertName("Ameiva plei (sic) Duméril & Bibron, 1839", "Ameiva plei")
             .species("Ameiva", "plei")
             .combAuthors("1839", "Duméril", "Bibron")
@@ -1733,6 +1739,18 @@ public class NameParserGBIFTest {
     assertName("Hieracium scorzoneraefolium De la Soie", "Hieracium scorzoneraefolium")
             .species("Hieracium", "scorzoneraefolium")
             .combAuthors(null, "De la Soie")
+            .nothingElse();
+
+    assertName("Sepidium capricorne des Desbrochers des Loges, 1881", "Sepidium capricorne")
+            .species("Sepidium", "capricorne")
+            .combAuthors("1881", "des Desbrochers des Loges")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Sepidium capricorne Desbrochers des Loges, 1881", "Sepidium capricorne")
+            .species("Sepidium", "capricorne")
+            .combAuthors("1881", "Desbrochers des Loges")
+            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Calycostylis aurantiaca Hort. ex Vilmorin", "Calycostylis aurantiaca")
