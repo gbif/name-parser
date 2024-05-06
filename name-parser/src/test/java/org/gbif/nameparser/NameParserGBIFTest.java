@@ -193,6 +193,9 @@ public class NameParserGBIFTest {
             .combAuthors(null, "Walter")
             .nothingElse();
 
+    assertAuthorship("[sic!]")
+            .sic()
+            .nothingElse();
   }
 
   @Test

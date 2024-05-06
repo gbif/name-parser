@@ -174,7 +174,7 @@ class ParsingJob implements Callable<ParsedName> {
   public static final Pattern HYBRID_FORMULA_PATTERN = Pattern.compile("[. ]" + HYBRID_MARKER + " ");
   public static final String EXTINCT_MARKER = "†";
   private static final Pattern EXTINCT_PATTERN = Pattern.compile("[†‡✝]+\\s*");
-  private static final Pattern SIC_PATTERN = Pattern.compile("\\s*[\\[(]\\s*sic\\s*[\\])]\\s*");
+  private static final Pattern SIC_PATTERN = Pattern.compile("\\s*[\\[(]\\s*sic\\s*!?\\s*[\\])]\\s*");
   private static final Pattern CORRIG_PATTERN = Pattern.compile("\\s*corrig\\.\\s*");
 
   @VisibleForTesting
