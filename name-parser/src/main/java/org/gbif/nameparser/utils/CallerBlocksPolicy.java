@@ -13,10 +13,10 @@
  */
 package org.gbif.nameparser.utils;
 
-import java.util.concurrent.*;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.*;
 
 public class CallerBlocksPolicy implements RejectedExecutionHandler {
   private static final Logger LOG = LoggerFactory.getLogger(CallerBlocksPolicy.class);

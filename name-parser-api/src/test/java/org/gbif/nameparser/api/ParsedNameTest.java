@@ -14,11 +14,10 @@
 package org.gbif.nameparser.api;
 
 
-import java.util.Collections;
-
+import com.google.common.collect.Lists;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import java.util.Collections;
 
 import static org.junit.Assert.*;
 

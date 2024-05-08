@@ -203,9 +203,9 @@ public class NameParserGbifV1 implements NameParser {
     gbif.setStrain(pn.getPhrase());
     gbif.setSensu(pn.getTaxonomicNote());
 
-    gbif.setAuthorship(NameFormatter.authorString(pn.getCombinationAuthorship(), false));
+    gbif.setAuthorship(NameFormatter.authorString(pn.getCombinationAuthorship(), false, pn.getCode()));
     gbif.setYear(pn.getCombinationAuthorship().getYear());
-    gbif.setBracketAuthorship(NameFormatter.authorString(pn.getBasionymAuthorship(), false));
+    gbif.setBracketAuthorship(NameFormatter.authorString(pn.getBasionymAuthorship(), false, pn.getCode()));
     gbif.setBracketYear(pn.getBasionymAuthorship().getYear());
 
     gbif.setNomStatus(pn.getNomenclaturalNote());

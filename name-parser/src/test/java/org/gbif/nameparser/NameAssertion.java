@@ -13,13 +13,12 @@
  */
 package org.gbif.nameparser;
 
-import org.gbif.nameparser.api.*;
-
-import java.util.Set;
-
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.gbif.nameparser.api.*;
+
+import java.util.Set;
 
 import static org.gbif.nameparser.api.NomCode.BACTERIAL;
 import static org.gbif.nameparser.api.NomCode.BOTANICAL;

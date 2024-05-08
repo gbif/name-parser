@@ -13,13 +13,12 @@
  */
 package org.gbif.nameparser.api;
 
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -35,13 +34,18 @@ public class ParsedAuthorship {
    * Authorship with years of the name, but excluding any basionym authorship.
    * For binomials the combination authors.
    */
-  private Authorship combinationAuthorship = new Authorship();
+  private ExAuthorship combinationAuthorship = new ExAuthorship();
   
   /**
    * Basionym authorship with years of the name
    */
-  private Authorship basionymAuthorship = new Authorship();
-  
+  private ExAuthorship basionymAuthorship = new ExAuthorship();
+
+  /**
+   * Emendation authorship with years used by bacterial code.
+   */
+  private Authorship emendAuthorship = new Authorship();
+
   /**
    * The sanctioning author for sanctioned fungal names.
    * Fr. or Pers.
@@ -92,6 +96,7 @@ public class ParsedAuthorship {
   public void copy(ParsedAuthorship pa) {
     combinationAuthorship = pa.combinationAuthorship;
     basionymAuthorship = pa.basionymAuthorship;
+    emendAuthorship = pa.emendAuthorship;
     sanctioningAuthor = pa.sanctioningAuthor;
     taxonomicNote = pa.taxonomicNote;
     nomenclaturalNote = pa.nomenclaturalNote;
@@ -107,11 +112,11 @@ public class ParsedAuthorship {
     return combinationAuthorship != null && !combinationAuthorship.isEmpty();
   }
 
-  public Authorship getCombinationAuthorship() {
+  public ExAuthorship getCombinationAuthorship() {
     return combinationAuthorship;
   }
   
-  public void setCombinationAuthorship(Authorship combinationAuthorship) {
+  public void setCombinationAuthorship(ExAuthorship combinationAuthorship) {
     this.combinationAuthorship = combinationAuthorship;
   }
 
@@ -119,14 +124,25 @@ public class ParsedAuthorship {
     return basionymAuthorship != null && !basionymAuthorship.isEmpty();
   }
 
-  public Authorship getBasionymAuthorship() {
+  public ExAuthorship getBasionymAuthorship() {
     return basionymAuthorship;
   }
   
-  public void setBasionymAuthorship(Authorship basionymAuthorship) {
+  public void setBasionymAuthorship(ExAuthorship basionymAuthorship) {
     this.basionymAuthorship = basionymAuthorship;
   }
-  
+
+  public boolean hasEmendAuthorship() {
+    return emendAuthorship != null && !emendAuthorship.isEmpty();
+  }
+  public Authorship getEmendAuthorship() {
+    return emendAuthorship;
+  }
+
+  public void setEmendAuthorship(Authorship emendAuthorship) {
+    this.emendAuthorship = emendAuthorship;
+  }
+
   public String getSanctioningAuthor() {
     return sanctioningAuthor;
   }
@@ -217,7 +233,9 @@ public class ParsedAuthorship {
    * @return true if any kind of authorship exists
    */
   public boolean hasAuthorship() {
-    return (combinationAuthorship != null && combinationAuthorship.exists()) || (basionymAuthorship != null && basionymAuthorship.exists());
+    return (combinationAuthorship != null && combinationAuthorship.exists())
+            || (basionymAuthorship != null && basionymAuthorship.exists())
+            || (emendAuthorship != null && emendAuthorship.exists());
   }
 
   public boolean isExtinct() {
@@ -231,8 +249,8 @@ public class ParsedAuthorship {
   /**
    * @See NameFormatter.authorshipComplete()
    */
-  public String authorshipComplete() {
-    return NameFormatter.authorshipComplete(this);
+  public String authorshipComplete(NomCode code) {
+    return NameFormatter.authorshipComplete(this, code);
   }
 
   @Override
@@ -245,6 +263,7 @@ public class ParsedAuthorship {
         manuscript == that.manuscript &&
         Objects.equals(combinationAuthorship, that.combinationAuthorship) &&
         Objects.equals(basionymAuthorship, that.basionymAuthorship) &&
+        Objects.equals(emendAuthorship, that.emendAuthorship) &&
         Objects.equals(sanctioningAuthor, that.sanctioningAuthor) &&
         Objects.equals(taxonomicNote, that.taxonomicNote) &&
         Objects.equals(nomenclaturalNote, that.nomenclaturalNote) &&
@@ -256,11 +275,11 @@ public class ParsedAuthorship {
 
   @Override
   public int hashCode() {
-    return Objects.hash(extinct, combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, publishedIn, unparsed, doubtful, manuscript, state, warnings);
+    return Objects.hash(extinct, combinationAuthorship, basionymAuthorship, emendAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, publishedIn, unparsed, doubtful, manuscript, state, warnings);
   }
 
   @Override
   public String toString() {
-    return authorshipComplete();
+    return authorshipComplete(null);
   }
 }

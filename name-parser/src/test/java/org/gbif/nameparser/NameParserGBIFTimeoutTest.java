@@ -13,18 +13,17 @@
  */
 package org.gbif.nameparser;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.api.UnparsableNameException;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.time.StopWatch;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import static org.junit.Assert.*;
 
