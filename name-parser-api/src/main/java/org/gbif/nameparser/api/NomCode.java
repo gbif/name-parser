@@ -30,22 +30,25 @@ public enum NomCode {
   
   BACTERIAL('P', "ICNP",
       "International Code of Nomenclature of Prokaryotes",
-      "https://doi.org/10.1099/ijsem.0.000778"),
+      "https://doi.org/10.1099/ijsem.0.005585"),
   BOTANICAL('B', "ICN",
       "International Code of Nomenclature for algae, fungi, and plants",
       "https://www.iapt-taxon.org/nomen/main.php"),
   CULTIVARS('C', "ICNCP",
       "International Code of Nomenclature for Cultivated Plants",
       "https://www.ishs.org/scripta-horticulturae/international-code-nomenclature-cultivated-plants-ninth-edition"),
+  PHYLOGENETIC('Y', "ICPN",
+          "International Code of Phylogenetic Nomenclature (PhyloCode)",
+          "http://phylonames.org/code/"),
   PHYTOSOCIOLOGICAL('S', "ICPN", // S for Syntaxonomy
-      "International Code of Phytosociological Nomenclature",
-      "https://doi.org/10.2307/3236580"),
+           "International Code of Phytosociological Nomenclature",
+      "https://doi.org/10.1111/avsc.12491"),
   VIRUS('V', "ICVCN",
       "International Code of Virus Classifications and Nomenclature",
-      "https://talk.ictvonline.org/information/w/ictv-information/383/ictv-code"),
+      "https://ictv.global/about/code"),
   ZOOLOGICAL('Z', "ICZN",
       "International Code of Zoological Nomenclature",
-      "http://www.iczn.org/code");
+      "https://www.iczn.org/the-code/the-code-online/");
   
   private final String title;
   private final Character abbrev;
