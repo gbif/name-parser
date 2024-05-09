@@ -2126,6 +2126,14 @@ public class NameParserGBIFTest {
 
   @Test
   public void taxonomicNotes() throws Exception {
+    // bacteria
+    assertName("Achromobacter Yabuuchi and Yano, 1981 emend. Yabuuchi et al., 1998", "Achromobacter")
+            .monomial("Achromobacter")
+            .combAuthors("1981", "Yabuuchi", "Yano")
+            .sensu("emend. Yabuuchi et al., 1998")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
     // FishBase https://github.com/CatalogueOfLife/backend/issues/1067
     assertName("Centropyge fisheri (non Snyder, 1904)", "Centropyge fisheri")
             .species("Centropyge", "fisheri")
@@ -2629,7 +2637,7 @@ public class NameParserGBIFTest {
 
     assertAuthorship("Fischer-Le Saux et al., 1999 emend. Akhurst et al., 2004")
             .combAuthors("1999", "Fischer-Le Saux", "al.")
-            .sensu("emend. Akhurst & al. , 2004")
+            .sensu("emend. Akhurst et al., 2004")
             .nothingElse();
 
     assertAuthorship("Trautv. & Meyer sensu lato")

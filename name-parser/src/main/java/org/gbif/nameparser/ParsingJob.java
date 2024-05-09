@@ -321,6 +321,11 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\. *sp(?:ec)?\\b");
   private static final Pattern SENSU_LATU = Pattern.compile("\\bs\\.l\\.\\b");
   private static final Pattern ABREV_AUTHOR_PREFIXES = Pattern.compile("\\b(v\\.(?:d\\.)?)("+AUTHOR+")");
+  private static final Pattern NOTE_NORM_PUNCT = Pattern.compile("([,;)])(?!= )");
+  private static final Pattern NOTE_NORM_OPENB = Pattern.compile("(?<! )([(])");
+  private static final Pattern NOTE_NORM_YEARS = Pattern.compile("(?:\\.(?=" + YEAR + ")|(?<=\\b[a-z]{2,})(?<!\\bal)\\.(?! ))");
+  private static final Pattern NOTE_NORM_AMPER = Pattern.compile("&");
+  private static final Pattern NORM_ET_AL = Pattern.compile("(&|\\bet) al\\b\\.?");
 
   private static final Pattern NOM_REFS = Pattern.compile("[,;.]?[\\p{Lu}\\p{Ll}\\s]*\\b(?:Proceedings|Journal|Annals|Bulletin|Systematics|Taxonomy|Series|Memoirs|Mitteilungen|Berichte)\\b.+$");
   // 4(2): 611
@@ -1029,17 +1034,17 @@ class ParsingJob implements Callable<ParsedName> {
     if (note.startsWith("(") && note.endsWith(")")) {
       note = note.substring(1, note.length()-1);
     }
-    return StringUtils.trimToNull(
-        note
-        // punctuation to be followed by a space. Dots are special because of author initials
-        .replaceAll("([,;)])(?!= )", "$1 ")
-        // opening brackets with space
-        .replaceAll("(?<! )([(])", " $1")
-        // dots before years and after lower case words should have a space
-        .replaceAll("(?:\\.(?=" + YEAR + ")|(?<=\\b[a-z]{2,})\\.(?! ))", ". ")
-        // ands with space
-        .replaceAll("&", " & ")
-    );
+    // punctuation to be followed by a space. Dots are special because of author initials
+    note = NOTE_NORM_PUNCT.matcher(note).replaceAll("$1 ");
+    // opening brackets with space
+    note = NOTE_NORM_OPENB.matcher(note).replaceAll(" $1");
+    // dots before years and after lower case words should have a space
+    note = NOTE_NORM_YEARS.matcher(note).replaceAll(". ");
+    // ands with space
+    note = NOTE_NORM_AMPER.matcher(note).replaceAll(" & ");
+    // prefer et al to & al
+    note = NORM_ET_AL.matcher(note).replaceAll("et al.");
+    return StringUtils.trimToNull(note);
   }
 
   /**
