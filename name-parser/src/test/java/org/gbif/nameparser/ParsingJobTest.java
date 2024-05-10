@@ -13,16 +13,14 @@
  */
 package org.gbif.nameparser;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.Authorship;
 import org.gbif.nameparser.api.Rank;
+import org.junit.Test;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
-
-import com.google.common.collect.Lists;
 
 import static org.junit.Assert.*;
 

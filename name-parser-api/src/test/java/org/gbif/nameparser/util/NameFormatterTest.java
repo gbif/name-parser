@@ -13,16 +13,14 @@
  */
 package org.gbif.nameparser.util;
 
+import com.google.common.collect.Lists;
 import org.gbif.nameparser.api.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

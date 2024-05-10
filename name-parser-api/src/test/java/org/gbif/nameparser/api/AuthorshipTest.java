@@ -13,9 +13,8 @@
  */
 package org.gbif.nameparser.api;
 
-import org.junit.Test;
-
 import com.google.common.collect.Lists;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

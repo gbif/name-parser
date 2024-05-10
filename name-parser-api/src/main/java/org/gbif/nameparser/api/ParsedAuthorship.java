@@ -13,13 +13,12 @@
  */
 package org.gbif.nameparser.api;
 
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  *

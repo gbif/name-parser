@@ -13,14 +13,14 @@
  */
 package org.gbif.nameparser.utils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
 
 public class CallerBlocksPolicyTest {
   private static final Logger LOG = LoggerFactory.getLogger(CallerBlocksPolicyTest.class);
