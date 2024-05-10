@@ -13,9 +13,9 @@
  */
 package org.gbif.nameparser.utils;
 
-import org.junit.Test;
-
 import java.util.regex.Pattern;
+
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 

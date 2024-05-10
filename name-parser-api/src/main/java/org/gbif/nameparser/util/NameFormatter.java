@@ -27,8 +27,6 @@ import java.util.regex.Pattern;
 public class NameFormatter {
   public static final char HYBRID_MARKER = '×';
   private static final String NOTHO_PREFIX = "notho";
-  private static final String ET_AL = "et al.";
-
   private static final Joiner AUTHORSHIP_JOINER = Joiner.on(", ").skipNulls();
   private static final String ITALICS_OPEN = "<i>";
   private static final String ITALICS_CLOSE = "</i>";
@@ -89,18 +87,18 @@ public class NameFormatter {
   /**
    * The full concatenated authorship for parsed names including the sanctioning author.
    */
-  public static String authorshipComplete(ParsedAuthorship n, NomCode code) {
+  public static String authorshipComplete(ParsedAuthorship n) {
     StringBuilder sb = new StringBuilder();
-    appendAuthorship(n, sb, code);
+    appendAuthorship(n, sb);
     return sb.length() == 0 ? null : sb.toString();
   }
   
   /**
    * Renders the authors of an authorship including ex authors, optionally with the year included.
    */
-  public static String authorString(Authorship authors, boolean inclYear, NomCode code) {
+  public static String authorString(Authorship authors, boolean inclYear) {
     StringBuilder sb = new StringBuilder();
-    appendAuthorship(sb, authors, inclYear, code);
+    appendAuthorship(sb, authors, inclYear);
     return sb.length() == 0 ? null : sb.toString();
   }
   
@@ -304,7 +302,7 @@ public class NameFormatter {
     // uninomial, genus, infragen, species or infraspecies authorship
     if (authorship && n.hasAuthorship()) {
       sb.append(" ");
-      appendAuthorship(n, sb, n.getCode());
+      appendAuthorship(n, sb);
     }
     
     // add strain name (phrase names get special treatment)
@@ -453,19 +451,15 @@ public class NameFormatter {
     appendInItalics(sb, n.getGenus(), html);
     return sb;
   }
-
-  /**
-   * @param maxAuthors max length of authors to include and after which et al. is to be inserted. NULL will use all authors
-   * @return
-   */
-  private static String joinAuthors(List<String> authors, Integer maxAuthors) {
-    if (maxAuthors != null && authors.size() > maxAuthors) {
-      return AUTHORSHIP_JOINER.join(authors.subList(0, maxAuthors)) + " " + ET_AL;
+  
+  private static String joinAuthors(List<String> authors, boolean abbrevWithEtAl) {
+    if (abbrevWithEtAl && authors.size() > 2) {
+      return AUTHORSHIP_JOINER.join(authors.subList(0, 1)) + " et al.";
       
     } else if (authors.size() > 1) {
       String end;
       if (AL.matcher(authors.get(authors.size() - 1)).find()) {
-        end = " " + ET_AL;
+        end = " et al.";
       } else {
         end = " & " + authors.get(authors.size() - 1);
       }
@@ -475,53 +469,44 @@ public class NameFormatter {
       return AUTHORSHIP_JOINER.join(authors);
     }
   }
-
-
-  public static void appendAuthorship(StringBuilder sb, ExAuthorship auth, boolean includeYear, NomCode code) {
-    if (auth != null && auth.exists()) {
-      if (auth.hasExAuthors()) {
-        sb.append(joinAuthors(auth.getExAuthors(), NomCode.BACTERIAL == code ? 1 : null));
-        sb.append(" ex ");
-      }
-      appendAuthorship(sb, (Authorship) auth, includeYear, code);
-    }
-  }
+  
   /**
    * Renders the authorship with ex authors and year
    *
    * @param sb StringBuilder to append to
    */
-  public static void appendAuthorship(StringBuilder sb, Authorship auth, boolean includeYear, NomCode code) {
+  public static void appendAuthorship(StringBuilder sb, Authorship auth, boolean includeYear) {
     if (auth != null && auth.exists()) {
       boolean authorsAppended = false;
+      if (auth.hasExAuthors()) {
+        sb.append(joinAuthors(auth.getExAuthors(), false));
+        sb.append(" ex ");
+        authorsAppended = true;
+      }
       if (auth.hasAuthors()) {
-        sb.append(joinAuthors(auth.getAuthors(), NomCode.BACTERIAL == code ? 1 : null));
+        sb.append(joinAuthors(auth.getAuthors(), false));
         authorsAppended = true;
       }
       if (auth.getYear() != null && includeYear) {
         if (authorsAppended) {
-          if (NomCode.BACTERIAL != code) {
-            sb.append(',');
-          }
-          sb.append(' ');
+          sb.append(", ");
         }
         sb.append(auth.getYear());
       }
     }
   }
   
-  private static void appendAuthorship(ParsedAuthorship a, StringBuilder sb, NomCode code) {
-    final int origLength = sb.length();
+  private static void appendAuthorship(ParsedAuthorship a, StringBuilder sb) {
     if (a.hasBasionymAuthorship()) {
       sb.append("(");
-      appendAuthorship(sb, a.getBasionymAuthorship(), true, code);
+      appendAuthorship(sb, a.getBasionymAuthorship(), true);
       sb.append(")");
     }
     if (a.hasCombinationAuthorship()) {
       if (a.hasBasionymAuthorship()) {
         sb.append(" ");
       }
-      appendAuthorship(sb, a.getCombinationAuthorship(), true, code);
+      appendAuthorship(sb, a.getCombinationAuthorship(), true);
       // Render sanctioning author via colon:
       // http://www.iapt-taxon.org/nomen/main.php?page=r50E
       //TODO: remove rendering of sanctioning author according to Paul Kirk!
@@ -529,13 +514,6 @@ public class NameFormatter {
         sb.append(" : ");
         sb.append(a.getSanctioningAuthor());
       }
-    }
-    if (a.hasEmendAuthorship()) {
-      if (origLength < sb.length()) {
-        sb.append(' ');
-      }
-      sb.append("emend. ");
-      appendAuthorship(sb, a.getEmendAuthorship(), true, code);
     }
   }
   

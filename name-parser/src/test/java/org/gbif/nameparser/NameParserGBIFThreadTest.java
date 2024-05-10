@@ -14,13 +14,9 @@
 package org.gbif.nameparser;
 
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.nameparser.utils.NamedThreadFactory;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import java.util.List;
 import java.util.Set;
@@ -28,6 +24,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 
 import static org.junit.Assert.assertEquals;
 

@@ -13,6 +13,7 @@
  */
 package org.gbif.nameparser;
 
+import org.gbif.nameparser.util.UnicodeUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

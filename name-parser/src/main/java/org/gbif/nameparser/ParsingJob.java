@@ -901,7 +901,7 @@ class ParsingJob implements Callable<ParsedName> {
     determineCode();
   }
 
-  void applyAuthorPrefix(Map<String, String> prefixes, ExAuthorship auth) {
+  void applyAuthorPrefix(Map<String, String> prefixes, Authorship auth) {
     applyAuthorPrefix(prefixes, auth.getAuthors());
     applyAuthorPrefix(prefixes, auth.getExAuthors());
   }
@@ -1737,8 +1737,8 @@ class ParsingJob implements Callable<ParsedName> {
     }
   }
 
-  static ExAuthorship parseAuthorship(String ex, String authors, String year) throws InterruptedException {
-    ExAuthorship a = new ExAuthorship();
+  static Authorship parseAuthorship(String ex, String authors, String year) throws InterruptedException {
+    Authorship a = new Authorship();
     if (authors != null) {
       a.setAuthors(splitTeam(authors));
     }

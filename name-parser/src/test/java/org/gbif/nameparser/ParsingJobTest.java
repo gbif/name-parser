@@ -13,15 +13,16 @@
  */
 package org.gbif.nameparser;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.Authorship;
-import org.gbif.nameparser.api.ExAuthorship;
 import org.gbif.nameparser.api.Rank;
-import org.junit.Test;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 import static org.junit.Assert.*;
 
@@ -326,7 +327,7 @@ public class ParsingJobTest {
       if (ParsingJob.LOG.isDebugEnabled()) {
         ParsingJob.logMatcher(m);
       }
-      ExAuthorship auth = ParsingJob.parseAuthorship(m.group(1), m.group(2), m.group(3));
+      Authorship auth = ParsingJob.parseAuthorship(m.group(1), m.group(2), m.group(3));
       if (exAuthor == null) {
         assertFalse(auth.hasExAuthors());
       } else {

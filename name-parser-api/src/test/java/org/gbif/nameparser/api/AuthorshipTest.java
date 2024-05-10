@@ -13,8 +13,9 @@
  */
 package org.gbif.nameparser.api;
 
-import com.google.common.collect.Lists;
 import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -26,7 +27,7 @@ public class AuthorshipTest {
   
   @Test
   public void testAuthorship() throws Exception {
-    ExAuthorship auth = new ExAuthorship();
+    Authorship auth = new Authorship();
     assertNull(auth.toString());
     
     auth.setAuthors(Lists.newArrayList("L."));

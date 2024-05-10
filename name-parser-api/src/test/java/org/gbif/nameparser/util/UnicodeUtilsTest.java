@@ -3,6 +3,8 @@ package org.gbif.nameparser.util;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.gbif.nameparser.util.UnicodeUtils.foldToAscii;
 import static org.junit.Assert.*;
 

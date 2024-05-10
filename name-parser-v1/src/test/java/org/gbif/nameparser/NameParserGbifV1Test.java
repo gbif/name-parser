@@ -19,9 +19,10 @@ import org.gbif.api.vocabulary.NamePart;
 import org.gbif.api.vocabulary.NameType;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.nameparser.api.Warnings;
-import org.junit.Test;
 
 import java.lang.management.ManagementFactory;
+
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 

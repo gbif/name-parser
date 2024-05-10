@@ -23,8 +23,8 @@ import java.util.Objects;
 
 /**
  * Authorship of the name (recombination) or basionym
- * including authors and the year
- * but ex authors or in authors which are regarded as part of the publishedIn citation.
+ * including authors, ex authors and the year
+ * but no in authors which are regarded as part of the publishedIn citation.
  * <p>
  * The parsed authorship for basionyms does not include brackets.
  * Note that the sanctioning author for fungi is part of the ParsedName class.
@@ -35,6 +35,11 @@ public class Authorship {
    * list of authors.
    */
   private List<String> authors = new ArrayList<>();
+  
+  /**
+   * list of authors excluding ex- authors
+   */
+  private List<String> exAuthors = new ArrayList<>();
   
   /**
    * The year the combination or basionym was first published, usually the same as the publishedIn reference.
@@ -64,6 +69,12 @@ public class Authorship {
     this.year = year;
   }
 
+  public Authorship(List<String> authors, List<String> exAuthors, String year) {
+    this.authors = authors;
+    this.exAuthors = exAuthors;
+    this.year = year;
+  }
+
   /**
    * Returns {@code true} if the authors are null or an empty list, false otherwise
    */
@@ -86,6 +97,27 @@ public class Authorship {
     this.authors = authors;
   }
 
+  /**
+   * Returns {@code true} if the ex authorship is null or an empty list, false otherwise
+   */
+  public boolean hasExAuthors() {
+    return exAuthors != null && !exAuthors.isEmpty();
+  }
+
+  public List<String> getExAuthors() {
+    return exAuthors;
+  }
+
+  public void addExAuthor(String author) {
+    if (StringUtils.isBlank(author)) {
+      if (exAuthors == null) exAuthors = new ArrayList<>();
+      exAuthors.add(author);
+    }
+  }
+  public void setExAuthors(List<String> exAuthors) {
+    this.exAuthors = exAuthors;
+  }
+  
   public String getYear() {
     return year;
   }
@@ -108,12 +140,13 @@ public class Authorship {
     if (o == null || getClass() != o.getClass()) return false;
     Authorship that = (Authorship) o;
     return Objects.equals(authors, that.authors) &&
+        Objects.equals(exAuthors, that.exAuthors) &&
         Objects.equals(year, that.year);
   }
   
   @Override
   public int hashCode() {
-    return Objects.hash(authors, year);
+    return Objects.hash(authors, exAuthors, year);
   }
   
   /**
@@ -123,7 +156,7 @@ public class Authorship {
   public String toString() {
     if (exists()) {
       StringBuilder sb = new StringBuilder();
-      NameFormatter.appendAuthorship(sb, this, true, null);
+      NameFormatter.appendAuthorship(sb, this, true);
       return sb.toString();
     }
     return null;

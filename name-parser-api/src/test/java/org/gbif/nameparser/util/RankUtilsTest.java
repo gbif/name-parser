@@ -16,6 +16,7 @@ package org.gbif.nameparser.util;
 import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
+
 import org.junit.Test;
 
 import java.util.HashSet;
