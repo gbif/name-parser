@@ -458,12 +458,12 @@ public class NameFormatter {
   }
 
   /**
-   * @param maxAuthors max length of authors to include and after which et al. is to be inserted. NULL will use all authors
+   * @param maxAuthors max length of authors to include. If exceeding et al. is to be inserted with just a single first author. NULL will use all authors
    * @return
    */
   private static String joinAuthors(List<String> authors, Integer maxAuthors) {
     if (maxAuthors != null && authors.size() > maxAuthors) {
-      return AUTHORSHIP_JOINER.join(authors.subList(0, maxAuthors)) + " " + ET_AL;
+      return authors.get(0) + " " + ET_AL;
       
     } else if (authors.size() > 1) {
       String end;
@@ -488,12 +488,12 @@ public class NameFormatter {
     if (auth != null && auth.exists()) {
       boolean authorsAppended = false;
       if (auth.hasExAuthors()) {
-        sb.append(joinAuthors(auth.getExAuthors(), NomCode.BACTERIAL == code ? 1 : null));
+        sb.append(joinAuthors(auth.getExAuthors(), NomCode.BACTERIAL == code ? 2 : null));
         sb.append(" ex ");
         authorsAppended = true;
       }
       if (auth.hasAuthors()) {
-        sb.append(joinAuthors(auth.getAuthors(), NomCode.BACTERIAL == code ? 1 : null));
+        sb.append(joinAuthors(auth.getAuthors(), NomCode.BACTERIAL == code ? 2 : null));
         authorsAppended = true;
       }
       if (auth.getYear() != null && includeYear) {
@@ -516,7 +516,7 @@ public class NameFormatter {
       sb.append(")");
     }
     if (a.hasCombinationAuthorship()) {
-      if (a.hasBasionymAuthorship()) {
+      if (origLength < sb.length()) {
         sb.append(" ");
       }
       appendAuthorship(sb, a.getCombinationAuthorship(), true, code);

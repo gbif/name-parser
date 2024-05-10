@@ -226,6 +226,18 @@ public class NameFormatterTest {
 
     pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill."));
     assertEquals("(Carl., 1999) Mill., 1887", NameFormatter.authorshipComplete(pn));
+
+    pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill.", "Döring", "Banki", "Robertson"));
+    assertEquals("(Carl., 1999) Mill., Döring, Banki & Robertson, 1887", NameFormatter.authorshipComplete(pn));
+
+    pn.setCode(NomCode.BACTERIAL);
+    assertEquals("(Carl. 1999) Mill. et al. 1887", NameFormatter.authorshipComplete(pn));
+
+    pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill.", "Döring"));
+    assertEquals("(Carl. 1999) Mill. & Döring 1887", NameFormatter.authorshipComplete(pn));
+
+    pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill."));
+    assertEquals("(Carl. 1999) Mill. 1887", NameFormatter.authorshipComplete(pn));
   }
   
   @Test
