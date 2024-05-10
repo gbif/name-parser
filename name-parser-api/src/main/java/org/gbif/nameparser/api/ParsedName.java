@@ -477,9 +477,8 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   /**
    * @See NameFormatter.authorshipComplete()
    */
-  @Override
   public String authorshipComplete() {
-    return NameFormatter.authorshipComplete(this);
+    return NameFormatter.authorshipComplete(this, getCode());
   }
 
   @Override

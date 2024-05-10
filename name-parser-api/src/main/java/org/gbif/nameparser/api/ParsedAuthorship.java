@@ -230,8 +230,8 @@ public class ParsedAuthorship {
   /**
    * @See NameFormatter.authorshipComplete()
    */
-  public String authorshipComplete() {
-    return NameFormatter.authorshipComplete(this);
+  public String authorshipComplete(NomCode code) {
+    return NameFormatter.authorshipComplete(this, code);
   }
 
   @Override
@@ -260,6 +260,6 @@ public class ParsedAuthorship {
 
   @Override
   public String toString() {
-    return authorshipComplete();
+    return authorshipComplete(null);
   }
 }

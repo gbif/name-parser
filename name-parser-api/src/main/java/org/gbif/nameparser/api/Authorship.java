@@ -156,7 +156,7 @@ public class Authorship {
   public String toString() {
     if (exists()) {
       StringBuilder sb = new StringBuilder();
-      NameFormatter.appendAuthorship(sb, this, true);
+      NameFormatter.appendAuthorship(sb, this,true, null);
       return sb.toString();
     }
     return null;
