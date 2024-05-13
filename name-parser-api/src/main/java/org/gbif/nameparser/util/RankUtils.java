@@ -144,7 +144,6 @@ public class RankUtils {
       Maps.immutableEntry("ct", CHEMOFORM),
       Maps.immutableEntry("cv", CULTIVAR),
       Maps.immutableEntry("f", FORM),
-      Maps.immutableEntry("fo", FORM),
       Maps.immutableEntry("form", FORM),
       Maps.immutableEntry("forma", FORM),
       Maps.immutableEntry("fsp", FORMA_SPECIALIS),

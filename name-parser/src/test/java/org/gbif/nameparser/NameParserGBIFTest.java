@@ -2018,6 +2018,12 @@ public class NameParserGBIFTest {
    */
   @Test
   public void avoidNPE() throws Exception {
+    // https://github.com/gbif/portal-feedback/issues/5326#issuecomment-2107283007
+    assertName("Foa fo", "Foa fo")
+            .species("Foa", "fo")
+            .type(SCIENTIFIC)
+            .nothingElse();
+
     assertNoName("\\");
     assertNoName(".");
     assertNoName("@");
