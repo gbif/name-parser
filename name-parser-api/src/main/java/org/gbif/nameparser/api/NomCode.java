@@ -37,7 +37,7 @@ public enum NomCode {
   CULTIVARS('C', "ICNCP",
       "International Code of Nomenclature for Cultivated Plants",
       "https://www.ishs.org/scripta-horticulturae/international-code-nomenclature-cultivated-plants-ninth-edition"),
-  PHYTOSOCIOLOGICAL('S', "ICPN", // S for Syntaxonomy
+  PHYTO('S', "ICPN", // S for Syntaxonomy
            "International Code of Phytosociological Nomenclature",
       "https://doi.org/10.1111/avsc.12491"),
   VIRUS('V', "ICVCN",
@@ -46,7 +46,7 @@ public enum NomCode {
   ZOOLOGICAL('Z', "ICZN",
       "International Code of Zoological Nomenclature",
       "https://www.iczn.org/the-code/the-code-online/"),
-  PHYLOGENETIC('Y', "ICPN",
+  PHYLO('Y', "ICPN",
           "International Code of Phylogenetic Nomenclature (PhyloCode)",
           "http://phylonames.org/code/");
 
