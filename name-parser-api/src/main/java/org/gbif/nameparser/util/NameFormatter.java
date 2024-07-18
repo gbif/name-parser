@@ -13,11 +13,11 @@
  */
 package org.gbif.nameparser.util;
 
-import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
 
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -29,7 +29,6 @@ public class NameFormatter {
   private static final String NOTHO_PREFIX = "notho";
   private static final String ET_AL = "et al.";
 
-  private static final Joiner AUTHORSHIP_JOINER = Joiner.on(", ").skipNulls();
   private static final String ITALICS_OPEN = "<i>";
   private static final String ITALICS_CLOSE = "</i>";
   private static final Pattern AL = Pattern.compile("^al\\.?$");
@@ -472,10 +471,10 @@ public class NameFormatter {
       } else {
         end = " & " + authors.get(authors.size() - 1);
       }
-      return AUTHORSHIP_JOINER.join(authors.subList(0, authors.size() - 1)) + end;
+      return String.join(", ", authors.subList(0, authors.size() - 1)) + end;
       
     } else {
-      return AUTHORSHIP_JOINER.join(authors);
+      return String.join(", ", authors);
     }
   }
 

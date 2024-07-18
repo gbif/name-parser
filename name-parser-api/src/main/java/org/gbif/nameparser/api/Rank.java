@@ -13,10 +13,6 @@
  */
 package org.gbif.nameparser.api;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -320,7 +316,7 @@ public enum Rank {
   /**
    * All main Linnean ranks ordered.
    */
-  public static final List<Rank> LINNEAN_RANKS = ImmutableList.of(
+  public static final List<Rank> LINNEAN_RANKS = List.of(
       KINGDOM,
       PHYLUM,
       CLASS,
@@ -333,7 +329,7 @@ public enum Rank {
   /**
    * An ordered list of all ranks that appear in Darwin Core with their own term.
    */
-  public static final List<Rank> DWC_RANKS = ImmutableList.of(
+  public static final List<Rank> DWC_RANKS = List.of(
       KINGDOM,
       PHYLUM,
       CLASS,
@@ -350,7 +346,7 @@ public enum Rank {
    * For example a subgeneric rank is anything below genus,
    * so one cannot say if its higher or lower than a species for example.
    */
-  private static final Set<Rank> UNCOMPARABLE_RANKS = ImmutableSet.of(
+  private static final Set<Rank> UNCOMPARABLE_RANKS = Set.of(
       SUPRAGENERIC_NAME,
       INFRAGENERIC_NAME,
       INFRASPECIFIC_NAME,
@@ -359,7 +355,7 @@ public enum Rank {
       UNRANKED
   );
   
-  private static final Set<Rank> LEGACY_RANKS = ImmutableSet.of(
+  private static final Set<Rank> LEGACY_RANKS = Set.of(
       MORPH,
       ABERRATION,
       NATIO,
@@ -407,8 +403,8 @@ public enum Rank {
     map.put(Rank.NANORDER, Rank.ORDER);
     map.put(Rank.SPECIES_AGGREGATE, Rank.SPECIES);
     map.put(Rank.INFRAGENERIC_NAME, Rank.GENUS);
-    MAJOR_RANKS = ImmutableMap.copyOf(map);
-    AMBIGUOUS_MARKER = ImmutableSet.copyOf(ambiguous);
+    MAJOR_RANKS = Map.copyOf(map);
+    AMBIGUOUS_MARKER = Set.copyOf(ambiguous);
   }
 
   private final NomCode code;

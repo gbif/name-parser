@@ -13,10 +13,6 @@
  */
 package org.gbif.nameparser.util;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.gbif.nameparser.api.LinneanName;
 import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.Rank;
@@ -37,7 +33,12 @@ public class RankUtils {
    * Matches all dots ("."), underscores ("_") and dashes ("-").
    */
   private static final Pattern NORMALIZE_RANK_MARKER = Pattern.compile("(?:[._ -]+|\\b(?:notho|agamo))");
-  private static final List<Rank> LINNEAN_RANKS_REVERSE = Lists.reverse(Rank.LINNEAN_RANKS);
+  private static final List<Rank> LINNEAN_RANKS_REVERSE;
+  static {
+    var rev = new ArrayList<>(Rank.LINNEAN_RANKS);
+    Collections.reverse(rev);
+    LINNEAN_RANKS_REVERSE = List.copyOf(rev);
+  }
   private static final Pattern NORMALIZE_RANK_MARKER_PATTERN = Pattern.compile("\\.");
 
   /**
@@ -51,7 +52,7 @@ public class RankUtils {
   }
 
   private static Map<String, Rank> buildRankMarkerMap(Stream<Rank> ranks, Map.Entry<String, Rank>... additions) {
-    Map<String, Rank> map = Maps.newHashMap();
+    Map<String, Rank> map = new HashMap<>();
     ranks.forEach(r -> {
       if (r.getMarker() != null) {
         map.put(rankMarker(r), r);
@@ -60,19 +61,19 @@ public class RankUtils {
     for (Map.Entry<String, Rank> add : additions) {
       map.put(add.getKey(), add.getValue());
     }
-    return ImmutableMap.copyOf(map);
+    return Map.copyOf(map);
   }
   
   public static final List<Rank> INFRASUBSPECIFIC_MICROBIAL_RANKS;
   
   static {
-    List<Rank> microbialRanks = Lists.newArrayList();
+    List<Rank> microbialRanks = new ArrayList<>();
     for (Rank r : Rank.values()) {
       if (r.getCode() == NomCode.BACTERIAL && r.isInfraspecific()) {
         microbialRanks.add(r);
       }
     }
-    INFRASUBSPECIFIC_MICROBIAL_RANKS = ImmutableList.copyOf(microbialRanks);
+    INFRASUBSPECIFIC_MICROBIAL_RANKS = List.copyOf(microbialRanks);
   }
   
   /**
@@ -88,9 +89,9 @@ public class RankUtils {
    */
   public static final Map<String, Rank> RANK_MARKER_MAP_SUPRAGENERIC = buildRankMarkerMap(
       Arrays.stream(Rank.values()).filter(Rank::isSuprageneric),
-      Maps.immutableEntry("ib", SUPRAGENERIC_NAME),
-      Maps.immutableEntry("supersubtrib", SUPRAGENERIC_NAME),
-      Maps.immutableEntry("trib", TRIBE)
+      Map.entry("ib", SUPRAGENERIC_NAME),
+      Map.entry("supersubtrib", SUPRAGENERIC_NAME),
+      Map.entry("trib", TRIBE)
   );
   
   /**
@@ -101,34 +102,33 @@ public class RankUtils {
   public static final Map<String, Rank> RANK_MARKER_MAP_INFRAGENERIC = buildRankMarkerMap(
       Arrays.stream(Rank.values()).filter(r -> r.isGenusGroup() && r != GENUS),
       
-      Maps.immutableEntry("suprasect", SUPERSECTION_BOTANY),
-      Maps.immutableEntry("supraser", SUPERSERIES),
-      Maps.immutableEntry("sect", SECTION_BOTANY),
-      Maps.immutableEntry("section", SECTION_BOTANY),
-      Maps.immutableEntry("ser", SERIES),
-      Maps.immutableEntry("series", SERIES),
-      Maps.immutableEntry("subg", SUBGENUS),
-      Maps.immutableEntry("subgen", SUBGENUS),
-      Maps.immutableEntry("subgenus", SUBGENUS),
-      Maps.immutableEntry("subsect", SUBSECTION_BOTANY),
-      Maps.immutableEntry("subsection", SUBSECTION_BOTANY),
-      Maps.immutableEntry("subser", SUBSERIES),
-      Maps.immutableEntry("subseries", SUBSERIES)
+      Map.entry("suprasect", SUPERSECTION_BOTANY),
+      Map.entry("supraser", SUPERSERIES),
+      Map.entry("sect", SECTION_BOTANY),
+      Map.entry("section", SECTION_BOTANY),
+      Map.entry("ser", SERIES),
+      Map.entry("series", SERIES),
+      Map.entry("subg", SUBGENUS),
+      Map.entry("subgen", SUBGENUS),
+      Map.entry("subgenus", SUBGENUS),
+      Map.entry("subsect", SUBSECTION_BOTANY),
+      Map.entry("subsection", SUBSECTION_BOTANY),
+      Map.entry("subser", SUBSERIES),
+      Map.entry("subseries", SUBSERIES)
   );
   
   /**
    * Map of species rank markers.
    */
-  public static final Map<String, Rank> RANK_MARKER_MAP_SPECIFIC = ImmutableMap.<String, Rank>builder()
-      .put("sl", SPECIES_AGGREGATE) // sensu lat
-      .put("agg", SPECIES_AGGREGATE)
-      .put("aggr", SPECIES_AGGREGATE)
-      .put("group", SPECIES_AGGREGATE)
-      .put("sp", SPECIES)
-      .put("spec", SPECIES)
-      .put("species", SPECIES)
-      .put("spp", SPECIES)
-      .build();
+  public static final Map<String, Rank> RANK_MARKER_MAP_SPECIFIC = Map.of(
+      "sl", SPECIES_AGGREGATE, // sensu lat
+      "agg", SPECIES_AGGREGATE,
+      "aggr", SPECIES_AGGREGATE,
+      "group", SPECIES_AGGREGATE,
+      "sp", SPECIES,
+      "spec", SPECIES,
+      "species", SPECIES,
+      "spp", SPECIES);
 
   public static final String ALPHA_DELTA = "ɑα⍺βɣγδẟ";
 
@@ -138,38 +138,38 @@ public class RankUtils {
   public static final Map<String, Rank> RANK_MARKER_MAP_INFRASPECIFIC = buildRankMarkerMap(
       Arrays.stream(Rank.values()).filter(Rank::isInfraspecific),
       
-      Maps.immutableEntry("aberration", ABERRATION),
-      Maps.immutableEntry("bv", BIOVAR),
-      Maps.immutableEntry("conv", CONVARIETY),
-      Maps.immutableEntry("ct", CHEMOFORM),
-      Maps.immutableEntry("cv", CULTIVAR),
-      Maps.immutableEntry("f", FORM),
-      Maps.immutableEntry("form", FORM),
-      Maps.immutableEntry("forma", FORM),
-      Maps.immutableEntry("fsp", FORMA_SPECIALIS),
-      Maps.immutableEntry("fspec", FORMA_SPECIALIS),
-      Maps.immutableEntry("gx", GREX),
-      Maps.immutableEntry("hort", CULTIVAR),
-      Maps.immutableEntry("m", MORPH),
-      Maps.immutableEntry("morpha", MORPH),
-      Maps.immutableEntry("nat", NATIO),
-      Maps.immutableEntry("proles", PROLES),
-      Maps.immutableEntry("pv", PATHOVAR),
-      Maps.immutableEntry("sf", SUBFORM),
-      Maps.immutableEntry("ssp", SUBSPECIES),
-      Maps.immutableEntry("st", STRAIN),
-      Maps.immutableEntry("subf", SUBFORM),
-      Maps.immutableEntry("subform", SUBFORM),
-      Maps.immutableEntry("subsp", SUBSPECIES),
-      Maps.immutableEntry("subv", SUBVARIETY),
-      Maps.immutableEntry("subvar", SUBVARIETY),
-      Maps.immutableEntry("sv", SUBVARIETY),
-      Maps.immutableEntry("tinfr", INFRASPECIFIC_NAME),
-      Maps.immutableEntry("v", VARIETY),
-      Maps.immutableEntry("var", VARIETY),
-      Maps.immutableEntry("nvar", VARIETY),
-      Maps.immutableEntry("\\*+", INFRASPECIFIC_NAME),
-      Maps.immutableEntry("["+ALPHA_DELTA+"]", INFRASPECIFIC_NAME)
+      Map.entry("aberration", ABERRATION),
+      Map.entry("bv", BIOVAR),
+      Map.entry("conv", CONVARIETY),
+      Map.entry("ct", CHEMOFORM),
+      Map.entry("cv", CULTIVAR),
+      Map.entry("f", FORM),
+      Map.entry("form", FORM),
+      Map.entry("forma", FORM),
+      Map.entry("fsp", FORMA_SPECIALIS),
+      Map.entry("fspec", FORMA_SPECIALIS),
+      Map.entry("gx", GREX),
+      Map.entry("hort", CULTIVAR),
+      Map.entry("m", MORPH),
+      Map.entry("morpha", MORPH),
+      Map.entry("nat", NATIO),
+      Map.entry("proles", PROLES),
+      Map.entry("pv", PATHOVAR),
+      Map.entry("sf", SUBFORM),
+      Map.entry("ssp", SUBSPECIES),
+      Map.entry("st", STRAIN),
+      Map.entry("subf", SUBFORM),
+      Map.entry("subform", SUBFORM),
+      Map.entry("subsp", SUBSPECIES),
+      Map.entry("subv", SUBVARIETY),
+      Map.entry("subvar", SUBVARIETY),
+      Map.entry("sv", SUBVARIETY),
+      Map.entry("tinfr", INFRASPECIFIC_NAME),
+      Map.entry("v", VARIETY),
+      Map.entry("var", VARIETY),
+      Map.entry("nvar", VARIETY),
+      Map.entry("\\*+", INFRASPECIFIC_NAME),
+      Map.entry("["+ALPHA_DELTA+"]", INFRASPECIFIC_NAME)
   );
 
   static class FluentHashMap<K, V> extends java.util.HashMap<K, V> {
@@ -183,9 +183,9 @@ public class RankUtils {
    * Map of rank markers to their respective rank enum.
    * Note that the section ranks point to botany only here
    * */
-  public static final Map<String, Rank> RANK_MARKER_MAP = ImmutableMap.copyOf(
+  public static final Map<String, Rank> RANK_MARKER_MAP = Map.copyOf(
       new FluentHashMap<String, Rank>()
-          .with(buildRankMarkerMap(Arrays.stream(Rank.values()), Maps.immutableEntry("subser", SUBSERIES)))
+          .with(buildRankMarkerMap(Arrays.stream(Rank.values()), Map.entry("subser", SUBSERIES)))
           .with(RANK_MARKER_MAP_SUPRAGENERIC)
           .with(RANK_MARKER_MAP_INFRAGENERIC)
           .with(RANK_MARKER_MAP_SPECIFIC)
@@ -201,60 +201,60 @@ public class RankUtils {
    */
   public static final Map<NomCode, Map<String, Rank>> SUFFICES_RANK_MAP =
       // ImmutableMap keeps insertion order
-      ImmutableMap.of(
-          NomCode.BACTERIAL, new ImmutableMap.Builder<String, Rank>()
-              .put("oideae", SUBFAMILY)
-              .put("aceae", FAMILY)
-              .put("ineae", SUBORDER)
-              .put("ales", ORDER)
-              .put("idae", SUBCLASS)
-              .put("inae", SUBTRIBE)
-              .put("eae", TRIBE)
-              .put("ia", CLASS)
-              .build(),
-          NomCode.BOTANICAL, new ImmutableMap.Builder<String, Rank>()
-              .put("mycetidae", SUBCLASS)
-              .put("phycidae", SUBCLASS)
-              .put("mycotina", SUBPHYLUM)
-              .put("phytina", SUBPHYLUM)
-              .put("mycetes", CLASS)
-              .put("phyceae", CLASS)
-              .put("mycota", PHYLUM)
-              .put("opsida", CLASS)
-              .put("oideae", SUBFAMILY)
-              .put("phyta", PHYLUM)
-              .put("ineae", SUBORDER)
-              .put("aceae", FAMILY)
-              .put("idae", SUBCLASS)
-              .put("anae", SUPERORDER)
-              .put("acea", SUPERFAMILY)
-              .put("aria", INFRAORDER)
-              .put("ales", ORDER)
-              .put("inae", SUBTRIBE)
-              .put("eae", TRIBE)
-              .build(),
-          NomCode.ZOOLOGICAL, new ImmutableMap.Builder<String, Rank>()
-              .put("oidea", SUPERFAMILY)
-              .put("oidae", EPIFAMILY)
-              .put("idae", FAMILY)
-              .put("inae", SUBFAMILY)
-              .put("ini", TRIBE)
-              .put("ina", SUBTRIBE)
-              .build(),
-          NomCode.VIRUS, new ImmutableMap.Builder<String, Rank>()
-              .put("viria", REALM)
-              .put("vira", SUBREALM)
-              .put("viriae", KINGDOM)
-              .put("virites", SUBKINGDOM)
-              .put("viricota", PHYLUM)
-              .put("viricotina", SUBPHYLUM)
-              .put("viricetes", CLASS)
-              .put("viricetidae", SUBCLASS)
-              .put("virales", ORDER)
-              .put("virineae", SUBORDER)
-              .put("viridae", FAMILY)
-              .put("virinae", SUBFAMILY)
-              .build()
+      Map.of(
+          NomCode.BACTERIAL, Map.ofEntries(
+              Map.entry("oideae", SUBFAMILY),
+              Map.entry("aceae", FAMILY),
+              Map.entry("ineae", SUBORDER),
+              Map.entry("ales", ORDER),
+              Map.entry("idae", SUBCLASS),
+              Map.entry("inae", SUBTRIBE),
+              Map.entry("eae", TRIBE),
+              Map.entry("ia", CLASS)
+          ),
+          NomCode.BOTANICAL, Map.ofEntries(
+              Map.entry("mycetidae", SUBCLASS),
+              Map.entry("phycidae", SUBCLASS),
+              Map.entry("mycotina", SUBPHYLUM),
+              Map.entry("phytina", SUBPHYLUM),
+              Map.entry("mycetes", CLASS),
+              Map.entry("phyceae", CLASS),
+              Map.entry("mycota", PHYLUM),
+              Map.entry("opsida", CLASS),
+              Map.entry("oideae", SUBFAMILY),
+              Map.entry("phyta", PHYLUM),
+              Map.entry("ineae", SUBORDER),
+              Map.entry("aceae", FAMILY),
+              Map.entry("idae", SUBCLASS),
+              Map.entry("anae", SUPERORDER),
+              Map.entry("acea", SUPERFAMILY),
+              Map.entry("aria", INFRAORDER),
+              Map.entry("ales", ORDER),
+              Map.entry("inae", SUBTRIBE),
+              Map.entry("eae", TRIBE)
+          ),
+          NomCode.ZOOLOGICAL, Map.ofEntries(
+              Map.entry("oidea", SUPERFAMILY),
+              Map.entry("oidae", EPIFAMILY),
+              Map.entry("idae", FAMILY),
+              Map.entry("inae", SUBFAMILY),
+              Map.entry("ini", TRIBE),
+              Map.entry("ina", SUBTRIBE)
+          ),
+          NomCode.VIRUS, Map.ofEntries(
+              Map.entry("viria", REALM),
+              Map.entry("vira", SUBREALM),
+              Map.entry("viriae", KINGDOM),
+              Map.entry("virites", SUBKINGDOM),
+              Map.entry("viricota", PHYLUM),
+              Map.entry("viricotina", SUBPHYLUM),
+              Map.entry("viricetes", CLASS),
+              Map.entry("viricetidae", SUBCLASS),
+              Map.entry("virales", ORDER),
+              Map.entry("virineae", SUBORDER),
+              Map.entry("viridae", FAMILY),
+              Map.entry("virinae", SUBFAMILY)
+          )
       );
   
   private static final Map<String, Rank> GLOBAL_SUFFICES_RANK_MAP;
@@ -286,7 +286,7 @@ public class RankUtils {
         }
       }
     });
-    GLOBAL_SUFFICES_RANK_MAP = ImmutableMap.copyOf(suffices);
+    GLOBAL_SUFFICES_RANK_MAP = Map.copyOf(suffices);
   }
   
   
@@ -455,7 +455,7 @@ public class RankUtils {
     return original;
   }
 
-  private static final Map<Rank, Rank> SIMILAR_RANKS = ImmutableMap.of(
+  private static final Map<Rank, Rank> SIMILAR_RANKS = Map.of(
       SUPERSECTION_BOTANY, SUPERSECTION_ZOOLOGY,
       SECTION_BOTANY, SECTION_ZOOLOGY,
       SUBSECTION_BOTANY, SUBSECTION_ZOOLOGY,

@@ -13,7 +13,6 @@
  */
 package org.gbif.nameparser.util;
 
-import com.google.common.collect.Lists;
 import org.gbif.nameparser.api.*;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -21,6 +20,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -150,7 +150,7 @@ public class NameFormatterTest {
     pn.setCombinationAuthorship(Authorship.yearAuthors("1877"));
     assertEquals("Abies 1877", pn.canonicalName());
     
-    pn.getCombinationAuthorship().setAuthors(Lists.newArrayList("Mill."));
+    pn.getCombinationAuthorship().setAuthors(List.of("Mill."));
     assertEquals("Abies Mill., 1877", pn.canonicalName());
     
     pn.setNotho(NamePart.GENERIC);

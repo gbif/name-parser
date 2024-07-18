@@ -13,7 +13,6 @@
  */
 package org.gbif.nameparser;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
 import org.gbif.nameparser.utils.CallerBlocksPolicy;
@@ -73,7 +72,9 @@ public class NameParserGBIF implements NameParser {
    * The default name parser without an explicit monomials list using the given timeout in milliseconds for parsing.
    */
   public NameParserGBIF(long timeout, ExecutorService executorService) {
-    Preconditions.checkArgument(timeout > 10, "Timeout needs to be at least 10ms");
+    if (timeout < 10) {
+      throw new IllegalArgumentException("Timeout needs to be at least 10ms");
+    }
     LOG.info("Create new name parser with {}ms timeout", timeout);
     this.timeout = timeout;
     this.exec = executorService;
@@ -171,7 +172,7 @@ public class NameParserGBIF implements NameParser {
     return execute(job, scientificName, () -> new UnparsableNameException(NameType.SCIENTIFIC, scientificName));
   }
 
-  public ParserConfigs getConfigs() {
+  public ParserConfigs configs() {
     return configs;
   }
 

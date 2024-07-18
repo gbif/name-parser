@@ -13,10 +13,10 @@
  */
 package org.gbif.nameparser;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.*;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -36,6 +36,7 @@ import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
@@ -55,7 +56,7 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 class ParsingJob implements Callable<ParsedName> {
   static Logger LOG = LoggerFactory.getLogger(ParsingJob.class);
 
-  private static final Map<Rank, Rank> DIVISION2PHYLUM = ImmutableMap.of(
+  private static final Map<Rank, Rank> DIVISION2PHYLUM = Map.of(
       Rank.SUPERDIVISION, Rank.SUPERPHYLUM,
       Rank.DIVISION, Rank.PHYLUM,
       Rank.SUBDIVISION, Rank.SUBPHYLUM,
@@ -87,7 +88,6 @@ class ParsingJob implements Callable<ParsedName> {
       "|" + AUTHOR_TOKEN_3 +
       "|al|f|j|jr|ms|sr|v|v[ao]n|zu[rm]?|bis|d[aeiou]?|de[nrmls]?|degli|e|l[ae]s?|s|ter|'?t|y" +
     ")\\.?";
-  @VisibleForTesting
   static final String AUTHOR = AUTHOR_TOKEN + "(?:[ '-]?" + AUTHOR_TOKEN + ")*";
   // common author suffices that can be mistaken for epithets
   static final String AUTHOR_SUFFIX = "(?:bis|ter|d(?:[ae][rnl]?|egli)|van(?: de[nr]?)|zur?)";
@@ -148,7 +148,6 @@ class ParsingJob implements Callable<ParsedName> {
         throw new IllegalStateException("Failed to read latin-endings.txt from classpath resources", e);
       }
   }
-  @VisibleForTesting
   protected static final String INFRAGENERIC =
     "(?:\\(([" + NAME_LETTERS + "][" + name_letters + "-]+)\\)" +
         "|(?: .+?[. ]| )((?:"+NOTHO+")?(?:" +
@@ -177,7 +176,6 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern SIC_PATTERN = Pattern.compile("\\s*[\\[(]\\s*sic\\s*!?\\s*[\\])]\\s*");
   private static final Pattern CORRIG_PATTERN = Pattern.compile("\\s*corrig\\.\\s*");
 
-  @VisibleForTesting
   protected static final Pattern CULTIVAR = Pattern.compile("(?:([. ])cv[. ])?[\"'] ?((?:[" + NAME_LETTERS + "]?[" + name_letters + "]+[- ]?){1,3}) ?[\"']");
   private static final Pattern CULTIVAR_GROUP = Pattern.compile("(?<!^)\\b[\"']?((?:[" + NAME_LETTERS + "][" + name_letters + "]{2,}[- ]?){1,3})[\"']? (Group|Hybrids|Sort|[Gg]rex|gx)\\b");
   
@@ -218,16 +216,13 @@ class ParsingJob implements Callable<ParsedName> {
   private static final String CANDIDATUS = "(Candidatus\\s|Ca\\.)";
   private static final Pattern IS_CANDIDATUS_PATTERN = Pattern.compile(CANDIDATUS);
   private static final Pattern IS_CANDIDATUS_QUOTE_PATTERN = Pattern.compile("\"" + CANDIDATUS + "(.+)\"", CASE_INSENSITIVE);
-  @VisibleForTesting
   static final Pattern FAMILY_PREFIX = Pattern.compile("^[A-Z][a-z]*(?:aceae|idae) +(" +
         StringUtils.join(RankUtils.RANK_MARKER_MAP_FAMILY_GROUP.keySet(), "|") +
       ")\\b");
-  private static final Pattern SUPRA_RANK_PREFIX = Pattern.compile("^(" + StringUtils.join(
-      ImmutableSet.builder()
-          .addAll(RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet())
-          .addAll(RankUtils.RANK_MARKER_MAP_INFRAGENERIC.keySet())
-          .build()
-      , "|") + ")[\\. ] *");
+  private static final Pattern SUPRA_RANK_PREFIX = Pattern.compile("^(" + Stream.concat(
+              RankUtils.RANK_MARKER_MAP_SUPRAGENERIC.keySet().stream(),
+              RankUtils.RANK_MARKER_MAP_INFRAGENERIC.keySet().stream()
+          ).sorted().distinct().collect(Collectors.joining("|")) + ")[\\. ] *");
   private static final Pattern RANK_MARKER_AT_END = Pattern.compile("[ .]" +
       RANK_MARKER_ALL.substring(0,RANK_MARKER_ALL.lastIndexOf(')')) +
       "|" +
@@ -307,7 +302,6 @@ class ParsingJob implements Callable<ParsedName> {
     "un(?:accepted|allocated|assigned|certain|classed|classified|cultured|described|det(?:ermined)?|ident|known|named|placed|specified)" +
   ")"; // not assigned
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
-  @VisibleForTesting
   static final Pattern PLACEHOLDER = Pattern.compile("^N\\.\\s*N\\.|\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
   private static final Pattern INFORMAL_UNPARSABLE = Pattern.compile(" clade\\b", CASE_INSENSITIVE);
   private static final Pattern DOUBTFUL = Pattern.compile("^[" + AUTHOR_LETTERS + author_letters + HYBRID_MARKER + RankUtils.ALPHA_DELTA + "\":;&*+\\s,.()\\[\\]/'`´0-9-†]+$");
@@ -356,14 +350,12 @@ class ParsingJob implements Callable<ParsedName> {
           .map(String::trim)
           .filter(x -> !StringUtils.isBlank(x))
           .collect(Collectors.toSet());
-      BLACKLIST_EPITHETS = ImmutableSet.copyOf(blacklist);
+      BLACKLIST_EPITHETS = Set.copyOf(blacklist);
     } catch (IOException e) {
       throw new IllegalStateException("Failed to read epithet blacklist from classpath resources", e);
     }
   }
   
-  
-  @VisibleForTesting
   static final Pattern POTENTIAL_NAME_PATTERN = Pattern.compile("^×?" + MONOMIAL + "\\b");
   private static final Pattern REMOVE_INTER_RANKS = Pattern.compile("\\b((?:subsp|ssp|var)[ .].+)\\b("+RANK_MARKER+"\\b.{2,})");
   // allow only short lower case tokens to avoid matching to a real epithet
@@ -481,9 +473,9 @@ class ParsingJob implements Callable<ParsedName> {
    * @param rank the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
    */
   ParsingJob(String scientificName, Rank rank, NomCode code, ParserConfigs configs) {
-    this.scientificName = Preconditions.checkNotNull(scientificName);
-    this.configs = Preconditions.checkNotNull(configs);
-    this.rank = Preconditions.checkNotNull(rank);
+    this.scientificName = Objects.requireNonNull(scientificName);
+    this.configs = Objects.requireNonNull(configs);
+    this.rank = Objects.requireNonNull(rank);
     pn =  new ParsedName();
     pn.setRank(rank);
     pn.setCode(code);
@@ -1182,7 +1174,6 @@ class ParsingJob implements Callable<ParsedName> {
    *
    * @return The normalized name
    */
-  @VisibleForTesting
   String normalizeStrong(String name) throws InterruptedException {
     if (name == null) {
       return null;
@@ -1755,7 +1746,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static List<String> splitTeam(String team) throws InterruptedException {
     // treat semicolon differently. Single author name can contain a comma now!
     if (team.contains(";")) {
-      List<String> authors = Lists.newArrayList();
+      List<String> authors = new ArrayList<>();
       for (String a : AUTHORTEAM_SEMI_SPLITTER.split(team)) {
         Matcher m = matcherInterruptable(AUTHOR_INITIAL_SWAP, a);
         if (m.find()) {
@@ -1775,7 +1766,7 @@ class ParsingJob implements Callable<ParsedName> {
       return sanitizeAuthors(WHITESPACE_SPLITTER.splitToList(team));
     
     } else {
-      return Lists.newArrayList(normAuthor(team, true));
+      return new ArrayList(List.of(normAuthor(team, true)));
     }
   }
   

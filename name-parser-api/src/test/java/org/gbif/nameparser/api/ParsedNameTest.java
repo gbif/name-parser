@@ -14,10 +14,10 @@
 package org.gbif.nameparser.api;
 
 
-import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -44,10 +44,10 @@ public class ParsedNameTest {
     assertEquals(Collections.EMPTY_LIST, pn.listEpithets());
     
     pn.setInfraspecificEpithet("abieta");
-    assertEquals(Lists.newArrayList("abieta"), pn.listEpithets());
+    assertEquals(List.of("abieta"), pn.listEpithets());
 
     pn.setSpecificEpithet("vulgaris");
-    assertEquals(Lists.newArrayList("vulgaris", "abieta"), pn.listEpithets());
+    assertEquals(List.of("vulgaris", "abieta"), pn.listEpithets());
   }
   
   @Test

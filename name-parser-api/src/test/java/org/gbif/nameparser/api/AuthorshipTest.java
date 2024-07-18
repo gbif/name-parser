@@ -13,8 +13,10 @@
  */
 package org.gbif.nameparser.api;
 
-import com.google.common.collect.Lists;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -29,7 +31,7 @@ public class AuthorshipTest {
     Authorship auth = new Authorship();
     assertNull(auth.toString());
     
-    auth.setAuthors(Lists.newArrayList("L."));
+    auth.setAuthors(new ArrayList<>(List.of("L."))); // mutable
     assertEquals("L.", auth.toString());
     
     auth.getAuthors().add("Rohe");
@@ -43,7 +45,7 @@ public class AuthorshipTest {
     auth.getAuthors().add("Rohe");
     assertEquals("L. & Rohe, 1878", auth.toString());
     
-    auth.setExAuthors(Lists.newArrayList("Bassier"));
+    auth.setExAuthors(List.of("Bassier"));
     assertEquals("Bassier ex L. & Rohe, 1878", auth.toString());
   }
 }

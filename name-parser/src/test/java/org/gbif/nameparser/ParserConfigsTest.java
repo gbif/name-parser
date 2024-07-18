@@ -15,9 +15,17 @@ package org.gbif.nameparser;
 
 import org.junit.Test;
 
+import java.io.IOException;
+
 import static org.junit.Assert.assertEquals;
 
 public class ParserConfigsTest {
+
+  @Test
+  public void loadFromAPI() throws InterruptedException, IOException {
+    var cfg = new ParserConfigs();
+    cfg.loadFromCLB();
+  }
 
   @Test
   public void norm() throws InterruptedException {
