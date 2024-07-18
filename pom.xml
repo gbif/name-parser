@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.gbif</groupId>
         <artifactId>motherpom</artifactId>
-        <version>56</version>
+        <version>58-SNAPSHOT</version>
     </parent>
 
     <artifactId>name-parser-motherpom</artifactId>
@@ -31,6 +31,7 @@
 
     <properties>
         <java.version>11</java.version>
+
         <!-- GBIF Motherpom -->
         <release.tagNameBase>name-parser</release.tagNameBase>
         <main.basedir>${project.basedir}</main.basedir>
@@ -47,6 +48,10 @@
         <!-- last logback version to support the SLF4J 1.7 series -->
         <logback.version>1.2.13</logback.version>
         <slf4j.version>1.7.36</slf4j.version>
+
+        <!-- plugins
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        -->
     </properties>
 
     <developers>
@@ -154,4 +159,19 @@
         </dependencies>
     </dependencyManagement>
 
+    <!--
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <release>${java.version}</release>
+                    <showWarnings>true</showWarnings>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    -->
 </project>
