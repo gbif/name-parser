@@ -172,7 +172,7 @@ public class NameParserGBIF implements NameParser {
     return execute(job, scientificName, () -> new UnparsableNameException(NameType.SCIENTIFIC, scientificName));
   }
 
-  public ParserConfigs loadFromCLB() {
+  public ParserConfigs configs() {
     return configs;
   }
 
