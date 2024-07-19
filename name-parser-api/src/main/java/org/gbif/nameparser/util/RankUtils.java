@@ -51,6 +51,7 @@ public class RankUtils {
                                         .toLowerCase();
   }
 
+  @SafeVarargs
   private static Map<String, Rank> buildRankMarkerMap(Stream<Rank> ranks, Map.Entry<String, Rank>... additions) {
     Map<String, Rank> map = new HashMap<>();
     ranks.forEach(r -> {
@@ -191,7 +192,21 @@ public class RankUtils {
           .with(RANK_MARKER_MAP_SPECIFIC)
           .with(RANK_MARKER_MAP_INFRASPECIFIC)
   );
-  
+
+  /**
+   * @return an unmodifiable view of a linked hash map of the given entries in that very order.
+   */
+  @SafeVarargs
+  public static <K,V> Map<K,V> linkedHashMap(Map.Entry<K, V>... entries) {
+    var map = new LinkedHashMap<K,V>();
+    if (entries != null) {
+      for (var e : entries) {
+        map.put(e.getKey(), e.getValue());
+      }
+    }
+    return Collections.unmodifiableMap(map);
+  }
+
   /**
    * An immutable map of name suffices to corresponding ranks for each code.
    * To minimize wrong matches this map is sorted by suffix length with the first suffices being the longest and
@@ -202,7 +217,7 @@ public class RankUtils {
   public static final Map<NomCode, Map<String, Rank>> SUFFICES_RANK_MAP =
       // ImmutableMap keeps insertion order
       Map.of(
-          NomCode.BACTERIAL, Map.ofEntries(
+          NomCode.BACTERIAL, linkedHashMap(
               Map.entry("oideae", SUBFAMILY),
               Map.entry("aceae", FAMILY),
               Map.entry("ineae", SUBORDER),
@@ -212,7 +227,7 @@ public class RankUtils {
               Map.entry("eae", TRIBE),
               Map.entry("ia", CLASS)
           ),
-          NomCode.BOTANICAL, Map.ofEntries(
+          NomCode.BOTANICAL, linkedHashMap(
               Map.entry("mycetidae", SUBCLASS),
               Map.entry("phycidae", SUBCLASS),
               Map.entry("mycotina", SUBPHYLUM),
@@ -233,7 +248,7 @@ public class RankUtils {
               Map.entry("inae", SUBTRIBE),
               Map.entry("eae", TRIBE)
           ),
-          NomCode.ZOOLOGICAL, Map.ofEntries(
+          NomCode.ZOOLOGICAL, linkedHashMap(
               Map.entry("oidea", SUPERFAMILY),
               Map.entry("oidae", EPIFAMILY),
               Map.entry("idae", FAMILY),
@@ -241,23 +256,23 @@ public class RankUtils {
               Map.entry("ini", TRIBE),
               Map.entry("ina", SUBTRIBE)
           ),
-          NomCode.VIRUS, Map.ofEntries(
-              Map.entry("viria", REALM),
-              Map.entry("vira", SUBREALM),
-              Map.entry("viriae", KINGDOM),
-              Map.entry("virites", SUBKINGDOM),
-              Map.entry("viricota", PHYLUM),
+          NomCode.VIRUS, linkedHashMap(
+              Map.entry("viricetidae", SUBCLASS),
               Map.entry("viricotina", SUBPHYLUM),
               Map.entry("viricetes", CLASS),
-              Map.entry("viricetidae", SUBCLASS),
-              Map.entry("virales", ORDER),
+              Map.entry("viricota", PHYLUM),
               Map.entry("virineae", SUBORDER),
+              Map.entry("virites", SUBKINGDOM),
+              Map.entry("virales", ORDER),
               Map.entry("viridae", FAMILY),
-              Map.entry("virinae", SUBFAMILY)
+              Map.entry("virinae", SUBFAMILY),
+              Map.entry("viriae", KINGDOM),
+              Map.entry("viria", REALM),
+              Map.entry("vira", SUBREALM)
           )
       );
   
-  private static final Map<String, Rank> GLOBAL_SUFFICES_RANK_MAP;
+  static final Map<String, Rank> GLOBAL_SUFFICES_RANK_MAP;
   static {
     Set<String> nonUnique = new HashSet<>();
     Map<String, Rank> suffices = new TreeMap<>(new Comparator<String>() {
@@ -286,7 +301,7 @@ public class RankUtils {
         }
       }
     });
-    GLOBAL_SUFFICES_RANK_MAP = Map.copyOf(suffices);
+    GLOBAL_SUFFICES_RANK_MAP = Collections.unmodifiableMap(suffices);
   }
   
   

@@ -127,7 +127,29 @@ public class RankUtilsTest {
     pn.setCode(code);
     assertEquals(rank, RankUtils.inferRank(pn));
   }
-  
+
+  @Test
+  public void testSuffixMapOrdering() {
+    for (var map : RankUtils.SUFFICES_RANK_MAP.entrySet()) {
+      String prev = null;
+      for (var e : map.getValue().entrySet()) {
+        if (prev != null) {
+          assertTrue(e.getValue() + " has longer suffix than the previous entry from "+map.getKey(), prev.length() >= e.getKey().length());
+        }
+        prev = e.getKey();
+      }
+    }
+
+    String prev = null;
+    var x = RankUtils.GLOBAL_SUFFICES_RANK_MAP;
+    for (var e : RankUtils.GLOBAL_SUFFICES_RANK_MAP.entrySet()) {
+      if (prev != null) {
+        assertTrue(e.getValue() + " has longer suffix than the previous entry from the global map", prev.length() >= e.getKey().length());
+      }
+      prev = e.getKey();
+    }
+  }
+
   @Test
   public void testInferRank() {
     assertInferred("Asteraceae", NomCode.BOTANICAL, Rank.FAMILY);
