@@ -17,7 +17,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
 
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
