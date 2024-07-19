@@ -13,6 +13,7 @@
  */
 package org.gbif.nameparser;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 public class ParserConfigsTest {
 
   @Test
+  @Ignore("Requires CLB live API")
   public void loadFromAPI() throws InterruptedException, IOException {
     var cfg = new ParserConfigs();
     cfg.loadFromCLB();
