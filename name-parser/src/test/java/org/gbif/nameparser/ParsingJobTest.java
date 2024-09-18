@@ -46,6 +46,7 @@ public class ParsingJobTest {
 
   @Test
   public void testPlaceholders() throws Exception {
+    assertTrue(ParsingJob.PLACEHOLDER.matcher("Aster indet.").find());
     assertTrue(ParsingJob.PLACEHOLDER.matcher("Asteraceae incertae sedis").find());
     assertTrue(ParsingJob.PLACEHOLDER.matcher("unassigned Abies").find());
     assertTrue(ParsingJob.PLACEHOLDER.matcher("Unident-Boraginaceae").find());
