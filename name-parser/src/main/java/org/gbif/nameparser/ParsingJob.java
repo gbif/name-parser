@@ -296,7 +296,7 @@ class ParsingJob implements Callable<ParsedName> {
     "(?:[, ]+(" + YEAR_LOOSE + "))?$", Pattern.CASE_INSENSITIVE);
   private static final Pattern PLACEHOLDER_GENUS = Pattern.compile("^(In|Dummy|Missing|Temp|Unknown|Unplaced|Unspecified) (?=[a-z]+)\\b");
   private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|" +
-    "deleted?|dummy|incertae ?sedis|[iu]ndet(?:ermined?)?|mixed|" +
+    "deleted?|dummy|incertae ?sedis|[iu]ndet(?:ermin(?:ed|ate)?)?|mixed|" +
     "not (?:assigned|stated)|" +
     "place ?holder|temp|tobedeleted|" +
     "un(?:accepted|allocated|assigned|certain|classed|classified|cultured|described|det(?:ermined)?|ident|known|named|placed|specified)" +

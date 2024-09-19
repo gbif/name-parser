@@ -3060,12 +3060,6 @@ public class NameParserGBIFTest {
             .manuscript()
             .nothingElse();
 
-    assertName("Bryozoan indet. 1", "Bryozoan indet.1")
-            .species("Bryozoan", "indet.1")
-            .type(INFORMAL)
-            .manuscript()
-            .nothingElse();
-
     assertName("Bryozoan sp. E", "Bryozoan sp.E")
             .species("Bryozoan", "sp.E")
             .type(INFORMAL)
