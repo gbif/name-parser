@@ -283,8 +283,11 @@ public class RankTest {
     assertTrue(Rank.INFRASPECIFIC_NAME.higherThan(Rank.VARIETY));
     assertTrue(Rank.SUPERFAMILY.higherThan(Rank.FAMILY));
     assertTrue(Rank.SPECIES.higherThan(Rank.VARIETY));
+    assertTrue(Rank.SPECIES.higherThan(Rank.INFRASPECIFIC_NAME));
+    assertTrue(Rank.SPECIES.higherThan(Rank.INFRASUBSPECIFIC_NAME));
     assertTrue(Rank.GENUS.higherThan(Rank.INFRAGENERIC_NAME));
-    
+    assertTrue(Rank.GENUS.higherThan(Rank.INFRASPECIFIC_NAME));
+
     int expectedHigher = Rank.DWC_RANKS.size() - 1;
     for (Rank r : Rank.DWC_RANKS) {
       int higherCount = 0;

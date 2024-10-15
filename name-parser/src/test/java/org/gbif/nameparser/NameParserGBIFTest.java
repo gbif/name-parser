@@ -305,6 +305,7 @@ public class NameParserGBIFTest {
   @Test
   public void cladeNames() throws Exception {
     assertUnparsable("Amauropeltoid clade", INFORMAL);
+    assertUnparsable("Cyanobacteriota/Melainabacteria clade", Rank.UNRANKED, INFORMAL);
   }
 
   /**
