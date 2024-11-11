@@ -321,6 +321,16 @@ public class NameParserGBIFTest {
             .nothingElse();
   }
 
+  @Test
+  public void nomCons() throws Exception {
+    assertName("Polygala vulgaris L., 1753 [nom. et typ. cons.]", "Polygala vulgaris")
+            .species("Polygala", "vulgaris")
+            .combAuthors("1753", "L.")
+            .nomNote("nom.&typ.cons.")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+  }
+
   /**
    * https://github.com/gbif/name-parser/issues/62
    */

@@ -253,6 +253,7 @@ class ParsingJob implements Callable<ParsedName> {
         + "|orth[. ](?:var|error)"
         + "|nom(?:en)?[. ]"
           + "(?:utiq(?:ue)?[. ])?"
+          + "(?:&typ\\.?)?"
           + "(?:ambig|alter|alt|correct|cons|dubium|dub|herb|illeg|invalid|inval|negatum|neg|novum|nov|nudum|nud|oblitum|obl|praeoccup|prov|prot|transf|superfl|super|rejic|rej)\\b[. ]?"
           + "(?:prop[. ]|proposed\\b)?"
       + ")"
