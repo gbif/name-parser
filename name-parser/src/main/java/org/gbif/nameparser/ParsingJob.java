@@ -1088,7 +1088,9 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // replace underscores
-    name = replAllInterruptable(REPL_UNDERSCORE, name," ");
+    // we don't do this any loonger to avoid badly parsing none names like Basal_Cryptophyceae-1 found in PR2
+    // it does not seem to hurt - real scientific names don't come with underscores
+    //name = replAllInterruptable(REPL_UNDERSCORE, name," ");
 
     // normalise punctuations removing any adjacent space
     m = matcherInterruptable(NORM_PUNCTUATIONS, name);

@@ -3141,6 +3141,15 @@ public class NameParserGBIFTest {
             .nothingElse();
   }
 
+  /**
+   * PR2 names with underscores
+   * https://www.dev.checklistbank.org/dataset/303326
+   */
+  @Test
+  public void pr2() throws Exception {
+    assertUnparsable("Basal_Cryptophyceae-1", NO_NAME);
+  }
+
   // **************
   // HELPER METHODS
   // **************
