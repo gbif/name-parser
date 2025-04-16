@@ -296,6 +296,7 @@ class ParsingJob implements Callable<ParsedName> {
     "\\b(?:not\\s|un)(?:applicable|given|known|specified|certain)|missing|<?Unspecified\\sAgent>?|\\?)" +
     "(?:[, ]+(" + YEAR_LOOSE + "))?$", Pattern.CASE_INSENSITIVE);
   private static final Pattern PLACEHOLDER_GENUS = Pattern.compile("^(In|Dummy|Missing|Temp|Unknown|Unplaced|Unspecified) (?=[a-z]+)\\b");
+  private static final Pattern INDET_SPECIES = Pattern.compile("^("+MONOMIAL + ") (indet|spec|sp)\\.?$");
   private static final String PLACEHOLDER_NAME = "(?:allocation|awaiting|" +
     "deleted?|dummy|incertae ?sedis|[iu]ndet(?:ermin(?:ed|ate)?)?|mixed|" +
     "not (?:assigned|stated)|" +
@@ -657,6 +658,17 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       name = m.replaceFirst("? ");
       pn.setType(NameType.PLACEHOLDER);
+    }
+
+    // resolve indetermined species names
+    m = matcherInterruptable(INDET_SPECIES, name);
+    if (m.find()) {
+      pn.setGenus(m.group(1));
+      pn.setRank(Rank.SPECIES);
+      pn.setType(NameType.INFORMAL);
+      pn.setState(ParsedName.State.COMPLETE);
+      pn.addWarning(Warnings.INDETERMINED);
+      return;
     }
 
     // detect further unparsable names
@@ -1088,7 +1100,7 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     // replace underscores
-    // we don't do this any loonger to avoid badly parsing none names like Basal_Cryptophyceae-1 found in PR2
+    // we don't do this any longer to avoid badly parsing none names like Basal_Cryptophyceae-1 found in PR2
     // it does not seem to hurt - real scientific names don't come with underscores
     //name = replAllInterruptable(REPL_UNDERSCORE, name," ");
 
