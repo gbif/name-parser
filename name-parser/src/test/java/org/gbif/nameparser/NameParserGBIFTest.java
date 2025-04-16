@@ -2507,6 +2507,24 @@ public class NameParserGBIFTest {
 
   @Test
   public void indetNames() throws Exception {
+    assertName("Trametes spec.", "Trametes sp.")
+            .species("Trametes", null)
+            .type(NameType.INFORMAL)
+            .warning(Warnings.INDETERMINED)
+            .nothingElse();
+
+    assertName("Trametes indet.", "Trametes sp.")
+            .species("Trametes", null)
+            .type(NameType.INFORMAL)
+            .warning(Warnings.INDETERMINED)
+            .nothingElse();
+
+    assertName("Camillina indet", "Camillina sp.")
+            .species("Camillina", null)
+            .type(NameType.INFORMAL)
+            .warning(Warnings.INDETERMINED)
+            .nothingElse();
+
     assertName("Nitzschia sinuata var. (Grunow) Lange-Bert.", "Nitzschia sinuata var.")
             .infraSpecies("Nitzschia", "sinuata", Rank.VARIETY, null)
             .type(NameType.INFORMAL)
