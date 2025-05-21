@@ -273,7 +273,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_BRACKETS_CLOSE = Pattern.compile("\\s*,?\\s*([})\\]])\\s*");
   private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("( ?[{\\[] ?)+");
   private static final Pattern NORM_BRACKETS_CLOSE_STRONG = Pattern.compile("( ?[}\\]] ?)+");
-  private static final Pattern NORM_AND = Pattern.compile("\\b *(?<!-)(and|et|und|\\+|,&)(?!-) *\\b");
+  private static final Pattern NORM_AND = Pattern.compile("\\b *(?<!-)(and|et|und|\\+|,&)(?!-)(\\.)? *\\b");
   private static final Pattern NORM_SUBGENUS = Pattern.compile("(" + MONOMIAL + ") (" + MONOMIAL + ") (" + EPITHET + ")");
   private static final Pattern NO_Q_MARKS = Pattern.compile("([" + author_letters + "])\\?+");
   private static final Pattern NORM_PUNCTUATIONS = Pattern.compile("\\s*([.,;:&(){}\\[\\]-])\\s*\\1*\\s*");

@@ -2661,6 +2661,18 @@ public class NameParserGBIFTest {
   }
 
   @Test
+  public void etal() throws Exception {
+    assertAuthorship("Hernández-García et. al., 2023")
+            .combAuthors("2023", "Hernández-García", "al.")
+            .nothingElse();
+
+    assertAuthorship("Fischer-Le Saux et al., 1999 emend. Akhurst et al., 2004")
+            .combAuthors("1999", "Fischer-Le Saux", "al.")
+            .sensu("emend. Akhurst et al., 2004")
+            .nothingElse();
+  }
+
+  @Test
   public void authorshipOnlyNotes() throws Exception {
     assertAuthorship("(auct.) Rolfe")
             .sensu("(auct. ) Rolfe")
