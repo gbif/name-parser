@@ -264,6 +264,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_QUOTES = Pattern.compile("([\"'`´]+)");
   private static final Pattern REPL_GENUS_QUOTE = Pattern.compile("^['\\[] *(" + MONOMIAL + ") *['\\]]");
   private static final Pattern REPL_ENCLOSING_QUOTE = Pattern.compile("^$");//Pattern.compile("^[',\\s]+|[',\\s]+$");
+  private static final Pattern NORM_UPPERCASE_NOMEN = Pattern.compile("^([A-Z])([A-Z]+)\\s+([A-Z]+)(\\s+[A-Z]+)?$");
   private static final Pattern NORM_UPPERCASE_WORDS = Pattern.compile("\\b(\\p{Lu})(\\p{Lu}{2,})\\b");
   private static final Pattern NORM_LOWERCASE_BINOMIAL = Pattern.compile("^(" + EPITHET + ") (" + EPITHET + ")");
   private static final Pattern NORM_HYBRID_HOMOGLYPHS = Pattern.compile("[хᕁᕽ᙮ⅹ⤫⤬⨯ｘ\uD835\uDC31\uD835\uDC65\uD835\uDC99\uD835\uDCCD\uD835\uDD01\uD835\uDD35\uD835\uDD69\uD835\uDD9D\uD835\uDDD1\uD835\uDE05\uD835\uDE39\uD835\uDE6D\uD835\uDEA1]");
@@ -1132,7 +1133,22 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       name = m.replaceFirst("Anon.");
     }
-    // capitalize all entire upper case words
+
+    // treat all caps bi- or trinomen
+    m = matcherInterruptable(NORM_UPPERCASE_NOMEN, name);
+    if (m.find()) {
+      var sb = new StringBuilder();
+      sb.append(m.group(1) + m.group(2).toLowerCase());
+      sb.append(" ");
+      sb.append(m.group(3).toLowerCase());
+      if (m.group(4) != null) {
+        sb.append(" ");
+        sb.append(m.group(4).trim().toLowerCase());
+      }
+      name = sb.toString();
+    }
+
+    // capitalize all other entire upper case words
     m = matcherInterruptable(NORM_UPPERCASE_WORDS, name);
     if (m.find()) {
       StringBuffer sb = new StringBuffer();

@@ -1503,6 +1503,31 @@ public class NameParserGBIFTest {
   }
 
   @Test
+  public void caseSensitive() throws Exception {
+    assertName("CHIONE elevata", "Chione elevata")
+            .species("Chione", "elevata")
+            .nothingElse();
+
+    assertName("CHIONE ELEVATA", "Chione elevata")
+            .species("Chione", "elevata")
+            .nothingElse();
+
+    assertName("CHIONE ELEVATA VULGARIS", "Chione elevata vulgaris")
+            .infraSpecies("Chione", "elevata", INFRASPECIFIC_NAME, "vulgaris")
+            .nothingElse();
+
+    assertName("CHIONE ELEVÄTA", "Chione")
+            .monomial("Chione")
+            .combAuthors(null, "Eleväta")
+            .nothingElse();
+
+    assertName("CHIONE ELEV.", "Chione")
+            .monomial("Chione")
+            .combAuthors(null, "Elev.")
+            .nothingElse();
+  }
+
+  @Test
   public void alphaBetaThetaNames() throws Exception {
     assertName("Euchlanis dilatata β-larga", "Euchlanis dilatata β-larga")
             .infraSpecies("Euchlanis", "dilatata", INFRASPECIFIC_NAME, "β-larga")
