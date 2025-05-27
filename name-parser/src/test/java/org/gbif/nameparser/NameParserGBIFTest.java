@@ -1502,6 +1502,7 @@ public class NameParserGBIFTest {
             .nothingElse();
   }
 
+  // https://github.com/CatalogueOfLife/data/issues/1079
   @Test
   public void caseSensitive() throws Exception {
     assertName("CHIONE elevata", "Chione elevata")
