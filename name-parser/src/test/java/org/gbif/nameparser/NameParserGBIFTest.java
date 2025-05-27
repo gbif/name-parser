@@ -1526,6 +1526,14 @@ public class NameParserGBIFTest {
             .monomial("Chione")
             .combAuthors(null, "Elev.")
             .nothingElse();
+
+    assertName("chione elevata", "Chione elevata")
+            .species("Chione", "elevata")
+            .nothingElse();
+
+    assertName("chione elevata vulgaris", "Chione elevata vulgaris")
+            .infraSpecies("Chione", "elevata", INFRASPECIFIC_NAME, "vulgaris")
+            .nothingElse();
   }
 
   @Test
