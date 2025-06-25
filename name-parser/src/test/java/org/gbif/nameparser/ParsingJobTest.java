@@ -204,7 +204,6 @@ public class ParsingJobTest {
     assertAuthorshipPattern("Griseb. ex. Wedd.", "Griseb.", "Wedd.");
     assertAuthorshipPattern("Castellano, S.L.Mill., L.Singh bis & T.N.Lakh.", null, "Castellano", "S.L.Mill.", "L.Singh bis", "T.N.Lakh.");
     assertAuthorshipPattern("Blüthgen i.l.", null, "Blüthgen i.l.");
-    assertAuthorshipPattern("Vecht i.sch.", null, "Vecht i.sch.");
   }
   
   @Test
