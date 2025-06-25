@@ -1839,6 +1839,14 @@ public class NameParserGBIFTest {
             .combAuthors(null, "H.da C.Monteiro Filho")
             .code(NomCode.BOTANICAL)
             .nothingElse();
+
+    assertName("Stenosigma humerale Giordani Soika, 1990", "Stenosigma humerale")
+            .species("Stenosigma", "humerale")
+            .combAuthors("1990", "Giordani Soika")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+
   }
 
   /**
@@ -2232,6 +2240,7 @@ public class NameParserGBIFTest {
             .sensu("according to Hollerback & Krasavina, 1971")
             .nothingElse();
 
+    assertSensu("Vespa emarginata Linnaeus, 1758: Fabricius, 1793", "Fabricius, 1793");
     assertSensu("Trifolium repens sensu Baker f.", "sensu Baker f.");
     assertSensu("Achillea millefolium sensu latu", "sensu latu");
     assertSensu("Achillea millefolium s.str.", "s.str.");

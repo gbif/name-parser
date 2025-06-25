@@ -93,13 +93,17 @@ class ParsingJob implements Callable<ParsedName> {
   static final String AUTHOR_SUFFIX = "(?:bis|ter|d(?:[ae][rnl]?|egli)|van(?: de[nr]?)|zur?)";
   private static final Pattern AUTHOR_SUFFIX_P = Pattern.compile("^" + AUTHOR_SUFFIX + "$");
   private static final String AUTHOR_TEAM = AUTHOR + "(?:(?:[&,;]+| or )" + AUTHOR + ")*";
+  // remarks often found after entire authorships
+  private static final String AUTHORSHIP_REMARKS = "i\\.l\\.|i\\.sch\\.";
+  private static final String SANCT_AUTHORS = "Pers\\.?|Fr\\.?";
+  private static final Pattern SANCT_AUTHORS_P = Pattern.compile("^" + SANCT_AUTHORS + "$");
   static final String AUTHORSHIP =
       // ex authors
       "(?:(" + AUTHOR_TEAM + ") ?\\bex[. ])?" +
       // main authors
-      "(" + AUTHOR_TEAM + ")" +
+      "(" + AUTHOR_TEAM + "(?:\\s?" + AUTHORSHIP_REMARKS + ")?)" +
       // 2 well known sanction authors for fungus, see POR-2454
-      "(?: *: *(Pers\\.?|Fr\\.?))?";
+      "(?: *: *("+SANCT_AUTHORS+"))?";
   static final Pattern AUTHOR_TEAM_PATTERN = Pattern.compile("^" + AUTHOR_TEAM + "$");
   private static final String YEAR = "[12][0-9][0-9][0-9?]";
   static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/,-][0-9]{1,4})?";
@@ -241,6 +245,7 @@ class ParsingJob implements Callable<ParsedName> {
           "|(?:(?:ss[. ])?[aA]uctt?|[eE]mend|[fF]ide|[nN]on|not|[nN]ec|[sS]ec|[sS]ensu|[aA]ccording to)(?:[. (]|\\.?$).*" +
         ")\\)?" +
       ")");
+  static final Pattern EXTRACT_SENSU_COLON = Pattern.compile("(.{10,})\\s?:\\s?([^)]{5,}$)");
   private static final String NOV_RANKS = "((?:[sS]ub)?(?:[fF]am|[gG]en|[sS]s?p(?:ec)?|[vV]ar|[fF](?:orma?)?))";
   private static final Pattern NOV_RANK_MARKER = Pattern.compile("\\b(" + NOV_RANKS + ")\\b");
   static final String MANUSCRIPT_STATUS = "(?:(?:comb[. ]?)?ined|ms|in press|unpublished)\\.?($|\\s)";
@@ -970,6 +975,15 @@ class ParsingJob implements Callable<ParsedName> {
     if (m.find()) {
       pn.setTaxonomicNote(lowerCaseFirstChar(normNote(m.group(1))));
       name = m.replaceFirst("");
+    } else {
+      m = matcherInterruptable(EXTRACT_SENSU_COLON, name);
+      if (m.find()) {
+        var sensuAuthor = m.group(2);
+        if (!SANCT_AUTHORS_P.matcher(sensuAuthor).find()) {
+          pn.setTaxonomicNote(normNote(sensuAuthor));
+          name = m.replaceFirst("$1");
+        }
+      }
     }
   }
 
