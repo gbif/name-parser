@@ -126,7 +126,7 @@ public class RankTest {
         assertNotEquals(other.getCode(), r.getCode());
       }
     }
-    assertEquals(12, counter);
+    assertEquals(6, counter);
   }
   
   @Test

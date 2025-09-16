@@ -268,7 +268,7 @@ public class NameParserGbifV1 implements NameParser {
       case SUBSECTION_BOTANY: return Rank.SUBSECTION;
 
       case SUPERSECTION_BOTANY:
-      case SUPERSERIES_BOTANY:
+      case SUPERSERIES:
         return Rank.INFRAGENERIC_NAME;
 
       case KLEPTON:

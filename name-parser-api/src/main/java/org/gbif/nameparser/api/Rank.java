@@ -102,10 +102,6 @@ public enum Rank {
   SECTION_ZOOLOGY(NomCode.ZOOLOGICAL, "sect."),
   SUBSECTION_ZOOLOGY(NomCode.ZOOLOGICAL, "subsect."),
 
-  SUPERSERIES_ZOOLOGY(NomCode.ZOOLOGICAL, "superser.", "superseries"),
-  SERIES_ZOOLOGY(NomCode.ZOOLOGICAL, "ser.", "series"),
-  SUBSERIES_ZOOLOGY(NomCode.ZOOLOGICAL, "subser.", "subseries"),
-
   FALANX("falanx", "falanges"),
 
   GIGAFAMILY(NomCode.ZOOLOGICAL, "gigafam.", "gigafamilies"),
@@ -136,9 +132,9 @@ public enum Rank {
   SECTION_BOTANY(NomCode.BOTANICAL, "sect."),
   SUBSECTION_BOTANY(NomCode.BOTANICAL, "subsect."),
   
-  SUPERSERIES_BOTANY(NomCode.BOTANICAL, "superser.", "superseries"),
-  SERIES_BOTANY(NomCode.BOTANICAL, "ser.", "series"),
-  SUBSERIES_BOTANY(NomCode.BOTANICAL, "subser.", "subseries"),
+  SUPERSERIES(NomCode.BOTANICAL, "superser.", "superseries"),
+  SERIES(NomCode.BOTANICAL, "ser.", "series"),
+  SUBSERIES(NomCode.BOTANICAL, "subser.", "subseries"),
   
   /**
    * Used for any other unspecific rank below genera and above species aggregates.
