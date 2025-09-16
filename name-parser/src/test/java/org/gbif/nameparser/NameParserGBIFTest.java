@@ -837,7 +837,7 @@ public class NameParserGBIFTest {
             .nothingElse();
 
     assertName("Narcissus nothoser. Dubizettae", "Narcissus nothoser. Dubizettae")
-            .infraGeneric("Narcissus", SERIES, "Dubizettae")
+            .infraGeneric("Narcissus", SERIES_BOTANY, "Dubizettae")
             .notho(NamePart.INFRAGENERIC)
             .code(NomCode.BOTANICAL)
             .nothingElse();
