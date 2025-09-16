@@ -97,25 +97,25 @@ public class RankUtils {
   
   /**
    * Map of only infrageneric, normalised rank markers to their respective rank enum.
-   * Warning! For section ranks only the botanical rank is given.
+   * Warning! For section and series ranks only the botanical rank is given.
    * You can access the zoological version from the botanical rank via its Rank.sss() method.
    */
   public static final Map<String, Rank> RANK_MARKER_MAP_INFRAGENERIC = buildRankMarkerMap(
       Arrays.stream(Rank.values()).filter(r -> r.isGenusGroup() && r != GENUS),
       
       Map.entry("suprasect", SUPERSECTION_BOTANY),
-      Map.entry("supraser", SUPERSERIES),
+      Map.entry("supraser", SUPERSERIES_BOTANY),
       Map.entry("sect", SECTION_BOTANY),
       Map.entry("section", SECTION_BOTANY),
-      Map.entry("ser", SERIES),
-      Map.entry("series", SERIES),
+      Map.entry("ser", SERIES_BOTANY),
+      Map.entry("series", SERIES_BOTANY),
       Map.entry("subg", SUBGENUS),
       Map.entry("subgen", SUBGENUS),
       Map.entry("subgenus", SUBGENUS),
       Map.entry("subsect", SUBSECTION_BOTANY),
       Map.entry("subsection", SUBSECTION_BOTANY),
-      Map.entry("subser", SUBSERIES),
-      Map.entry("subseries", SUBSERIES)
+      Map.entry("subser", SUBSERIES_BOTANY),
+      Map.entry("subseries", SUBSERIES_BOTANY)
   );
   
   /**
@@ -186,7 +186,7 @@ public class RankUtils {
    * */
   public static final Map<String, Rank> RANK_MARKER_MAP = Map.copyOf(
       new FluentHashMap<String, Rank>()
-          .with(buildRankMarkerMap(Arrays.stream(Rank.values()), Map.entry("subser", SUBSERIES)))
+          .with(buildRankMarkerMap(Arrays.stream(Rank.values()), Map.entry("subser", SUBSERIES_BOTANY)))
           .with(RANK_MARKER_MAP_SUPRAGENERIC)
           .with(RANK_MARKER_MAP_INFRAGENERIC)
           .with(RANK_MARKER_MAP_SPECIFIC)
@@ -438,6 +438,20 @@ public class RankUtils {
         return selectRank(rank, code, SECTION_BOTANY, NomCode.BOTANICAL, NomCode.BACTERIAL, NomCode.CULTIVARS);
       case SUBSECTION_ZOOLOGY:
         return selectRank(rank, code, SUBSECTION_BOTANY, NomCode.BOTANICAL, NomCode.BACTERIAL, NomCode.CULTIVARS);
+
+      case SUPERSERIES_BOTANY:
+        return selectRank(rank, code, SUPERSERIES_ZOOLOGY, NomCode.ZOOLOGICAL);
+      case SERIES_BOTANY:
+        return selectRank(rank, code, SERIES_ZOOLOGY, NomCode.ZOOLOGICAL);
+      case SUBSERIES_BOTANY:
+        return selectRank(rank, code, SUBSERIES_ZOOLOGY, NomCode.ZOOLOGICAL);
+
+      case SUPERSERIES_ZOOLOGY:
+        return selectRank(rank, code, SUPERSERIES_BOTANY, NomCode.BOTANICAL, NomCode.BACTERIAL, NomCode.CULTIVARS);
+      case SERIES_ZOOLOGY:
+        return selectRank(rank, code, SERIES_BOTANY, NomCode.BOTANICAL, NomCode.BACTERIAL, NomCode.CULTIVARS);
+      case SUBSERIES_ZOOLOGY:
+        return selectRank(rank, code, SUBSERIES_BOTANY, NomCode.BOTANICAL, NomCode.BACTERIAL, NomCode.CULTIVARS);
     }
     return rank;
   }
@@ -457,6 +471,20 @@ public class RankUtils {
         return SECTION_BOTANY;
       case SUBSECTION_ZOOLOGY:
         return SUBSECTION_BOTANY;
+
+      case SUPERSERIES_BOTANY:
+        return SUPERSERIES_ZOOLOGY;
+      case SERIES_BOTANY:
+        return SERIES_ZOOLOGY;
+      case SUBSERIES_BOTANY:
+        return SUBSERIES_ZOOLOGY;
+
+      case SUPERSERIES_ZOOLOGY:
+        return SUPERSERIES_BOTANY;
+      case SERIES_ZOOLOGY:
+        return SERIES_BOTANY;
+      case SUBSERIES_ZOOLOGY:
+        return SUBSERIES_BOTANY;
     }
     return rank;
   }
