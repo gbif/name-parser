@@ -128,14 +128,16 @@ public class ParserConfigs {
     //Type type = new TypeToken<ArrayList<ParsedName>>(){}.getType();
     var configs = gson.fromJson(resp.body(), Wrapper.class);
     int failed = 0;
-    for (var pnc : configs.result) {
-      try {
-        String[] ids = pnc.id.split("\\|");
-        add(ids[0], ids[1], pnc);
-      } catch (Exception e) {
-        LOG.warn("Failed to load parser config {}: {}", pnc.id, pnc, e);
-        failed++;
-      }
+    if (configs.result != null) {
+        for (var pnc : configs.result) {
+          try {
+            String[] ids = pnc.id.split("\\|");
+            add(ids[0], ids[1], pnc);
+          } catch (Exception e) {
+            LOG.warn("Failed to load parser config {}: {}", pnc.id, pnc, e);
+            failed++;
+          }
+        }
     }
     LOG.info("Loaded {} parser configs from ChecklistBank. {} failed", configs.result.size(), failed);
     return configs.result.size() - failed;
