@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 
 public class ParserConfigs {
   private static final Logger LOG = LoggerFactory.getLogger(ParserConfigs.class);
-  private final static URI CONFIG_URL = URI.create("https://api.checklistbank.org/parser/name/config?limit=1000");
+  private final static URI CONFIG_DEFAULT_URL = URI.create("https://api.checklistbank.org/parser/name/config?limit=1000");
   private final static Pattern MORE_WS = Pattern.compile("[\\s,.+'\"&_—|-]+");
   private final static Pattern MORE_WS2 = Pattern.compile("\\s*([(){}\\[\\]]+)\\s*");
 
@@ -111,14 +111,22 @@ public class ParserConfigs {
     }
   }
 
-  /**
-   * Loads all configs from the central ChecklistBank API
-   * @return number of configs added
-   */
+/**
+ * Loads all configs from the central ChecklistBank API
+ * @return number of configs added
+ */
   public int loadFromCLB() throws IOException, InterruptedException {
+      return load(CONFIG_DEFAULT_URL);
+  }
+
+    /**
+     * Loads all configs from the given URL
+     * @return number of configs added
+     */
+  public int load(URI configUrl) throws IOException, InterruptedException {
     HttpClient client = HttpClient.newHttpClient();
     HttpRequest request = HttpRequest.newBuilder()
-            .uri(CONFIG_URL)
+            .uri(configUrl)
             .header("Accept", "application/json")
             .GET()
             .build();
