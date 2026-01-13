@@ -14,6 +14,7 @@
 package org.gbif.nameparser;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.ParsedAuthorship;
@@ -123,7 +124,7 @@ public class ParserConfigs {
      * Loads all configs from the given URL
      * @return number of configs added
      */
-  public int load(URI configUrl) throws IOException, InterruptedException {
+  public int load(URI configUrl) throws IOException, JsonSyntaxException, InterruptedException {
     HttpClient client = HttpClient.newHttpClient();
     HttpRequest request = HttpRequest.newBuilder()
             .uri(configUrl)
@@ -134,21 +135,24 @@ public class ParserConfigs {
 
     Gson gson = new Gson();
     //Type type = new TypeToken<ArrayList<ParsedName>>(){}.getType();
-    var configs = gson.fromJson(resp.body(), Wrapper.class);
-    int failed = 0;
-    if (configs.result != null) {
-        for (var pnc : configs.result) {
-          try {
-            String[] ids = pnc.id.split("\\|");
-            add(ids[0], ids[1], pnc);
-          } catch (Exception e) {
-            LOG.warn("Failed to load parser config {}: {}", pnc.id, pnc, e);
-            failed++;
+      Wrapper configs = null;
+      configs = gson.fromJson(resp.body(), Wrapper.class);
+      int loaded = 0;
+      int failed = 0;
+      if (configs.result != null) {
+          for (var pnc : configs.result) {
+            try {
+              String[] ids = pnc.id.split("\\|");
+              add(ids[0], ids[1], pnc);
+              loaded++;
+            } catch (Exception e) {
+              LOG.warn("Failed to load parser config {}: {}", pnc.id, pnc, e);
+              failed++;
+            }
           }
-        }
-    }
-    LOG.info("Loaded {} parser configs from ChecklistBank. {} failed", configs.result.size(), failed);
-    return configs.result.size() - failed;
+      }
+      LOG.info("Loaded {} parser configs from ChecklistBank. {} failed", loaded, failed);
+    return loaded - failed;
   }
 
   static class Wrapper {

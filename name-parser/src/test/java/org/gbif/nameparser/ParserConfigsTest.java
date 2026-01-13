@@ -13,12 +13,15 @@
  */
 package org.gbif.nameparser;
 
+import com.google.gson.JsonSyntaxException;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URI;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ParserConfigsTest {
 
@@ -27,6 +30,19 @@ public class ParserConfigsTest {
   public void loadFromAPI() throws InterruptedException, IOException {
     var cfg = new ParserConfigs();
     cfg.loadFromCLB();
+  }
+
+  @Test(expected = JsonSyntaxException.class)
+  public void loadHtml() throws InterruptedException, IOException {
+    var cfg = new ParserConfigs();
+    cfg.load(URI.create("https://www.google.com"));
+  }
+
+  @Test
+  public void load404() throws InterruptedException, IOException {
+    var cfg = new ParserConfigs();
+    int loaded = cfg.load(URI.create("https://api.checklistbank.org/doesNotExist/999"));
+    assertEquals(0, loaded);
   }
 
   @Test
