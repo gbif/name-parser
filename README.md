@@ -12,3 +12,4 @@ The modules provided by this project are:
 The GBIF name parser has been tested with millions of GBIF names over many years.
 An extensive body of [unit tests](name-parser/src/test/java/org/gbif/nameparser/NameParserGBIFTest.java) has been created over the years that guarantee high parsing qualities.
 
+
