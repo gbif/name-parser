@@ -186,17 +186,26 @@ public final class AntlrNameMatcher {
 
     @Override
     public void enterRankedInfraspec(SciNameParser.RankedInfraspecContext ctx) {
-      String marker = ctx.LOWER_WORD(0).getText();
-      Rank r = lookupInfraspecificRank(marker);
-      if (r == null) {
-        invalidRankMarker = true;
-        return;
+      String marker;
+      String epithet;
+      if (ctx.GREEK_RANK() != null) {
+        // Greek-letter rank substitute (α, β, γ ...) — treat as an infraspecific rank marker
+        marker = ctx.GREEK_RANK().getText();
+        epithet = ctx.LOWER_WORD(0).getText();
+      } else {
+        marker = ctx.LOWER_WORD(0).getText();
+        epithet = ctx.LOWER_WORD(1).getText();
+        Rank r = lookupInfraspecificRank(marker);
+        if (r == null) {
+          invalidRankMarker = true;
+          return;
+        }
       }
       nc.infraspecificRankMarker = marker;
       if (ctx.HYBRID() != null) {
         nc.hybridInfraspecies = true;
       }
-      nc.infraspecificEpithet = ctx.LOWER_WORD(1).getText();
+      nc.infraspecificEpithet = epithet;
     }
 
     @Override
@@ -284,19 +293,28 @@ public final class AntlrNameMatcher {
 
   /**
    * Look up an infrageneric rank marker (e.g. "subg", "sect").
-   * Returns null if the marker is not a known rank.
+   * Returns null if the marker is not a known rank. The "notho" / "agamo" prefixes are
+   * stripped before lookup so e.g. "nothosect" resolves to {@code SECTION_BOTANY}.
    */
   private static Rank lookupInfragenericRank(String marker) {
     if (marker == null) return null;
-    return RankUtils.RANK_MARKER_MAP_INFRAGENERIC.get(marker.toLowerCase());
+    String key = stripNothoPrefix(marker.toLowerCase());
+    return RankUtils.RANK_MARKER_MAP_INFRAGENERIC.get(key);
   }
 
   /**
-   * Look up an infraspecific rank marker (e.g. "subsp", "var", "f").
-   * Returns null if the marker is not a known rank.
+   * Look up an infraspecific rank marker (e.g. "subsp", "var", "f"). The "notho" / "agamo"
+   * prefixes are stripped before lookup so e.g. "nothovar" resolves to {@code VARIETY}.
    */
   private static Rank lookupInfraspecificRank(String marker) {
     if (marker == null) return null;
-    return RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.get(marker.toLowerCase());
+    String key = stripNothoPrefix(marker.toLowerCase());
+    return RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.get(key);
+  }
+
+  private static String stripNothoPrefix(String marker) {
+    if (marker.startsWith("notho")) return marker.substring(5);
+    if (marker.startsWith("agamo")) return marker.substring(5);
+    return marker;
   }
 }

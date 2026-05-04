@@ -44,10 +44,13 @@ epithet
 // After the species epithet there can be:
 //   - a ranked infraspecific (subsp. baltica)               → 3-parted with rank marker
 //   - a middle epithet followed by a ranked infraspec       → 4-parted with rank marker
+//   - a Greek-letter rank substitute (β mucosus)            → 3-parted with greek rank
+//   - a middle epithet then a bare last epithet             → 4-parted without rank marker
 //   - a bare last epithet (no rank marker)                  → 3-parted, last token → infraspec slot
 epithetTail
     : rankedInfraspec
     | middleEpithet rankedInfraspec
+    | middleEpithet bareInfraspec
     | bareInfraspec
     ;
 
@@ -60,9 +63,11 @@ bareInfraspec
     : HYBRID? LOWER_WORD
     ;
 
-// rank-marker. epithet  — listener validates the rank marker against RankUtils
+// rank-marker. epithet  — listener validates the rank marker against RankUtils.
+// Two forms: classic dotted rank marker, or a Greek-letter substitute.
 rankedInfraspec
     : LOWER_WORD DOT HYBRID? LOWER_WORD
+    | GREEK_RANK HYBRID? LOWER_WORD
     ;
 
 // Optional basionym in parens followed by optional combination part.
@@ -116,22 +121,31 @@ SEMI    : ';' ;
 COLON   : ':' ;
 DOT     : '.' ;
 
-INITIAL : [A-Z] '.' ([A-Z] '.')* ;
+// Greek letters and other single-letter rank substitutes ("Genus species α epi") that the
+// existing parser treats like a rank marker. Also "***" used in old fungi names as a rank stand-in.
+GREEK_RANK : [αβγδεζηθικλμνξοπρστυφχψω⍺] | '***' ;
+
+// Initial like "L." or "J.D.", optionally with a hyphenated lowercase tail like "C.-k."
+INITIAL : [A-Z] '.' ('-' [a-z]+ '.')? ([A-Z] '.' ('-' [a-z]+ '.')?)* ;
 
 YEAR    : [12] [0-9] [0-9] [0-9?] [a-h?]? ;
 
-// Latin letter classes with diacritics. Approximates \p{Lu}/\p{Ll} via the BMP Latin blocks
-// commonly seen in scientific names (Latin-1 Supplement, Latin Extended A/B, Greek lowercase).
-fragment UPPER : [A-ZÀ-ÖØ-Þ] ;
-fragment LOWER : [a-zà-öø-ÿα-ωāăąćčďđēěğīĭıłńňōőřśšţťůūűźżž] ;
+// Latin/extended Latin letter classes via Unicode properties. ANTLR4 supports \p{...} ranges.
+fragment UPPER : [\p{Lu}] ;
+fragment LOWER : [\p{Ll}] ;
 
+// UPPER_WORD: must start with uppercase, may contain hyphens or apostrophes mid-word (e.g.
+// "Müller-Aargauer", "O'Donelli"). The leading uppercase is required so we don't consume
+// epithets like "d'urvilleana".
 UPPER_WORD
-    : UPPER (UPPER | LOWER)+ ('-' (UPPER | LOWER)+)?
+    : UPPER (UPPER | LOWER)+ (('-' | '\'') (UPPER | LOWER)+)*
     ;
 
-// Apostrophes in epithets: "o'donelli", "d'urvilleana".
+// Apostrophes in epithets: "o'donelli", "d'urvilleana". Multiple hyphens are common too
+// ("friderici-et-pauli"). After an apostrophe, uppercase is allowed so author names like
+// "d'Urv." lex as a single LOWER_WORD token instead of breaking on the apostrophe.
 LOWER_WORD
-    : LOWER+ (('\'' | '-') LOWER+)*
+    : LOWER+ (('\'' | '-') (UPPER | LOWER)+)*
     ;
 
 WS      : [ \t\r\n]+ -> skip ;
