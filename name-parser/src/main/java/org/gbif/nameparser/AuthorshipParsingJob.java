@@ -126,31 +126,29 @@ public class AuthorshipParsingJob extends ParsingJob {
 
     private void parseNormalisedAuthorship() throws UnparsableNameException, InterruptedException {
         LOG.debug("Parse normed authorship: {}", name);
-        Matcher m = matcherInterruptable(AUTHORSHIP_PATTERN, name);
-        if (m.find()) {
-            // #9 any remainder
-            if (StringUtils.isBlank(m.group(9))) {
-                pn.setState(ParsedName.State.COMPLETE);
-            } else {
-                pn.setState(ParsedName.State.PARTIAL);
-                pn.addUnparsed(m.group(9).trim());
-                LOG.debug("Partial match with unparsed remains \"{}\" for: {}", pn.getUnparsed(), name);
-            }
-            if (LOG.isDebugEnabled()) {
-                logMatcher(m);
-            }
-
-            // #1/2/3/4 basionym authorship (ex/auth/sanct/year)
-            pn.setBasionymAuthorship(parseAuthorship(m.group(1), m.group(2), m.group(4)));
-            // #5/6/7/8 authorship (ex/auth/sanct/year)
-            pn.setCombinationAuthorship(parseAuthorship(m.group(5), m.group(6), m.group(8)));
-            // sanctioning author
-            if (m.group(7) != null) {
-                pn.setSanctioningAuthor(m.group(7));
-            }
-
-        } else {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException("Interrupted!");
+        }
+        java.util.Optional<org.gbif.nameparser.antlr.AntlrAuthorshipMatcher.AuthorshipMatch> match =
+                org.gbif.nameparser.antlr.AntlrAuthorshipMatcher.match(name);
+        if (match.isEmpty()) {
             unparsable();
+            return;
+        }
+        org.gbif.nameparser.antlr.AntlrAuthorshipMatcher.AuthorshipMatch m = match.get();
+
+        if (StringUtils.isBlank(m.remainder)) {
+            pn.setState(ParsedName.State.COMPLETE);
+        } else {
+            pn.setState(ParsedName.State.PARTIAL);
+            pn.addUnparsed(m.remainder.trim());
+            LOG.debug("Partial match with unparsed remains \"{}\" for: {}", pn.getUnparsed(), name);
+        }
+
+        pn.setBasionymAuthorship(parseAuthorship(m.basionymExAuthors, m.basionymAuthors, m.basionymYear));
+        pn.setCombinationAuthorship(parseAuthorship(m.combinationExAuthors, m.combinationAuthors, m.combinationYear));
+        if (m.combinationSanctAuthor != null) {
+            pn.setSanctioningAuthor(m.combinationSanctAuthor);
         }
     }
 }

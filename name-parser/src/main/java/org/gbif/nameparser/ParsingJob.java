@@ -1544,84 +1544,84 @@ class ParsingJob implements Callable<ParsedName> {
    */
   private boolean parseNormalisedName(String name) throws InterruptedException {
     LOG.debug("Parse normed name string: {}", name);
-    Matcher matcher = matcherInterruptable(NAME_PATTERN, name);
-    if (matcher.find()) {
-      if (StringUtils.isBlank(matcher.group(23))) {
-        pn.setState(ParsedName.State.COMPLETE);
-      } else {
-        LOG.debug("Partial match with unparsed remains \"{}\" for: {}", matcher.group(23), name);
-        pn.setState(ParsedName.State.PARTIAL);
-        pn.addUnparsed(matcher.group(23).trim());
-      }
-      if (LOG.isDebugEnabled()) {
-        logMatcher(matcher);
-      }
-      // the match can be the genus part of an infrageneric, bi- or trinomial, the uninomial or even the infrageneric epithet!
-      setUninomialOrGenus(matcher, pn);
-      boolean bracketSubrankFound = false;
-      if (matcher.group(2) != null) {
-        bracketSubrankFound = true;
-        pn.setInfragenericEpithet(StringUtils.trimToNull(matcher.group(2)));
-      } else if (matcher.group(4) != null) {
-        setRank(matcher.group(3));
-        pn.setInfragenericEpithet(StringUtils.trimToNull(matcher.group(4)));
-      }
-      setEpithetQualifier(NamePart.SPECIFIC, matcher.group(5));
-      pn.setSpecificEpithet(StringUtils.trimToNull(matcher.group(6)));
-      if (matcher.group(7) != null && matcher.group(7).length() > 1 && !matcher.group(7).contains("null")) {
-        // 4 parted name, so its below subspecies
-        pn.setRank(Rank.INFRASUBSPECIFIC_NAME);
-      }
-      setEpithetQualifier(NamePart.INFRASPECIFIC, matcher.group(8));
-      setRank(matcher.group(9));
-      pn.setInfraspecificEpithet(StringUtils.trimToNull(matcher.group(10)));
-
-      // microbial ranks
-      if (matcher.group(11) != null) {
-        setRank(matcher.group(11));
-        pn.setInfraspecificEpithet(matcher.group(12));
-      }
-
-      // indet rank markers
-      if (matcher.group(13) != null) {
-        setRank(matcher.group(13));
-        ignoreAuthorship = true;
-      }
-
-      // make sure (infra)specific epithet is not a rank marker!
-      lookForIrregularRankMarker();
-
-      if (pn.isIndetermined()) {
-        ignoreAuthorship = true;
-      }
-
-      // entire authorship, not stored in ParsedName
-      if (!ignoreAuthorship && matcher.group(14) != null) {
-        // #19/20/21/22 authorship (ex/auth/sanct/year)
-        pn.setCombinationAuthorship(parseAuthorship(matcher.group(19), matcher.group(20), matcher.group(22)));
-        // sanctioning author
-        if (matcher.group(21) != null) {
-          pn.setSanctioningAuthor(matcher.group(21));
-        }
-        // #15/16/17/18 basionym authorship (ex/auth/sanct/year)
-        pn.setBasionymAuthorship(parseAuthorship(matcher.group(15), matcher.group(16), matcher.group(18)));
-        if (bracketSubrankFound && infragenericIsAuthor(pn)) {
-          // rather an author than a infrageneric rank. Swap in case of monomials
-          pn.setBasionymAuthorship(parseAuthorship(null, pn.getInfragenericEpithet(), null));
-          pn.setInfragenericEpithet(null);
-          // check if we need to move genus to uninomial
-          if (pn.getGenus() != null && pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null) {
-            pn.setUninomial(pn.getGenus());
-            pn.setGenus(null);
-          }
-          LOG.debug("swapped subrank with bracket author: {}", pn.getBasionymAuthorship());
-        }
-      }
-
-      return true;
+    if (Thread.currentThread().isInterrupted()) {
+      throw new InterruptedException("Interrupted!");
+    }
+    java.util.Optional<org.gbif.nameparser.antlr.NameComponents> match =
+        org.gbif.nameparser.antlr.AntlrNameMatcher.match(name);
+    if (match.isEmpty()) {
+      return false;
+    }
+    org.gbif.nameparser.antlr.NameComponents nc = match.get();
+    if (nc.getMonomialOrGenus() == null) {
+      return false;
     }
 
-    return false;
+    if (StringUtils.isBlank(nc.getRemainder())) {
+      pn.setState(ParsedName.State.COMPLETE);
+    } else {
+      LOG.debug("Partial match with unparsed remains \"{}\" for: {}", nc.getRemainder(), name);
+      pn.setState(ParsedName.State.PARTIAL);
+      pn.addUnparsed(nc.getRemainder().trim());
+    }
+
+    // monomial → uninomial / genus / infrageneric
+    setUninomialOrGenus(nc, pn);
+
+    boolean bracketSubrankFound = false;
+    if (nc.getSubgenusParens() != null) {
+      bracketSubrankFound = true;
+      pn.setInfragenericEpithet(StringUtils.trimToNull(nc.getSubgenusParens()));
+    } else if (nc.getInfragenericEpithet() != null) {
+      setRank(nc.getInfragenericRankMarker());
+      pn.setInfragenericEpithet(StringUtils.trimToNull(nc.getInfragenericEpithet()));
+    }
+
+    pn.setSpecificEpithet(StringUtils.trimToNull(nc.getSpecificEpithet()));
+    if (nc.getMiddleEpithet() != null && nc.getMiddleEpithet().length() > 1) {
+      // 4 parted name, so its below subspecies
+      pn.setRank(Rank.INFRASUBSPECIFIC_NAME);
+    }
+
+    if (nc.getInfraspecificRankMarker() != null) {
+      setRank(nc.getInfraspecificRankMarker());
+    }
+    pn.setInfraspecificEpithet(StringUtils.trimToNull(nc.getInfraspecificEpithet()));
+
+    // (microbial-rank, indet-rank, and epithet-qualifier slots are not yet surfaced by the
+    // ANTLR grammar — falling back to whatever lookForIrregularRankMarker can recover.)
+
+    lookForIrregularRankMarker();
+
+    if (pn.isIndetermined()) {
+      ignoreAuthorship = true;
+    }
+
+    if (!ignoreAuthorship && nc.hasAuthorship()) {
+      pn.setCombinationAuthorship(parseAuthorship(
+          nc.getCombinationExAuthors(),
+          nc.getCombinationAuthors(),
+          nc.getCombinationYear()));
+      if (nc.getCombinationSanctAuthor() != null) {
+        pn.setSanctioningAuthor(nc.getCombinationSanctAuthor());
+      }
+      pn.setBasionymAuthorship(parseAuthorship(
+          nc.getBasionymExAuthors(),
+          nc.getBasionymAuthors(),
+          nc.getBasionymYear()));
+      if (bracketSubrankFound && infragenericIsAuthor(pn)) {
+        // rather an author than an infrageneric rank. Swap in case of monomials
+        pn.setBasionymAuthorship(parseAuthorship(null, pn.getInfragenericEpithet(), null));
+        pn.setInfragenericEpithet(null);
+        if (pn.getGenus() != null && pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null) {
+          pn.setUninomial(pn.getGenus());
+          pn.setGenus(null);
+        }
+        LOG.debug("swapped subrank with bracket author: {}", pn.getBasionymAuthorship());
+      }
+    }
+
+    return true;
   }
 
   private void setEpithetQualifier(NamePart part, String qualifier) {
@@ -1737,6 +1737,23 @@ class ParsingJob implements Callable<ParsedName> {
       pn.setGenus(monomial);
 
     } else if (pn.getRank().isInfragenericStrictly()){
+      pn.setInfragenericEpithet(monomial);
+
+    } else {
+      pn.setUninomial(monomial);
+    }
+  }
+
+  private void setUninomialOrGenus(org.gbif.nameparser.antlr.NameComponents nc, ParsedName pn) {
+    String monomial = StringUtils.trimToNull(nc.getMonomialOrGenus());
+    if (nc.getSubgenusParens() != null
+        || nc.getInfragenericEpithet() != null
+        || nc.getSpecificEpithet() != null
+        || nc.getInfraspecificEpithet() != null
+        || pn.getRank().isSpeciesOrBelow()) {
+      pn.setGenus(monomial);
+
+    } else if (pn.getRank().isInfragenericStrictly()) {
       pn.setInfragenericEpithet(monomial);
 
     } else {

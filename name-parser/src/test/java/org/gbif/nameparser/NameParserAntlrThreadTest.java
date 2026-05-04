@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 
 
 @Ignore("Manual longer runnng test to test parse in multithreaded environment")
-public class NameParserGBIFThreadTest {
+public class NameParserAntlrThreadTest {
   static final String NAME = "Oreocharis aurea var. cordato-ovata K.Y. Pan, A.L. Weitzman & Skog, ";
   static final int REPEAT = 10;
 
@@ -43,7 +43,7 @@ public class NameParserGBIFThreadTest {
 
     Stopwatch watch = Stopwatch.createStarted();
     for (int i = 0; i < REPEAT; i++) {
-      NameParserGBIF parser = new NameParserGBIF();
+      NameParserAntlr parser = new NameParserAntlr();
       for (int year = 1800; year < 2016; year++) {
         ParsedName pn = parser.parse(NAME+year);
       }
@@ -52,7 +52,7 @@ public class NameParserGBIFThreadTest {
   }
 
   private void warm() throws UnparsableNameException, InterruptedException {
-    NameParserGBIF parser = new NameParserGBIF();
+    NameParserAntlr parser = new NameParserAntlr();
     ParsedName pn = parser.parse(NAME);
   }
 
@@ -114,7 +114,7 @@ public class NameParserGBIFThreadTest {
     Set<Thread> workers = Thread.getAllStackTraces().keySet();
     workers.forEach(t -> System.out.println(t.getName()));
     long wsize = workers.stream()
-                        .filter(t -> t.getName().startsWith(NameParserGBIF.THREAD_NAME))
+                        .filter(t -> t.getName().startsWith(NameParserAntlr.THREAD_NAME))
                         .count();
     System.out.println(wsize + " worker threads still existing");
     assertEquals(0, wsize);
@@ -125,7 +125,7 @@ public class NameParserGBIFThreadTest {
     ExecutorService exec = Executors.newFixedThreadPool(5, new NamedThreadFactory("test-executor"));
     List<ParseMeStatic> jobs = Lists.newArrayList();
     for (int x = 1; x < 5; x++) {
-      jobs.add(new ParseMeStatic(NameParserGBIFTimeoutTest.TIMEOUT_NAME));
+      jobs.add(new ParseMeStatic(NameParserAntlrTimeoutTest.TIMEOUT_NAME));
     }
 
     // this blocks until all jobs are done
@@ -136,14 +136,14 @@ public class NameParserGBIFThreadTest {
     Set<Thread> workers = Thread.getAllStackTraces().keySet();
     workers.forEach(t -> System.out.println(t.getName()));
     long wsize = workers.stream()
-                        .filter(t -> t.getName().startsWith(NameParserGBIF.THREAD_NAME))
+                        .filter(t -> t.getName().startsWith(NameParserAntlr.THREAD_NAME))
                         .count();
     System.out.println(wsize + " worker threads still existing");
     assertEquals(0, wsize);
   }
 
   static class ParseMe implements Callable<ParsedName> {
-    NameParserGBIF parser = new NameParserGBIF();
+    NameParserAntlr parser = new NameParserAntlr();
     final int i;
 
     ParseMe(int i) {
@@ -157,7 +157,7 @@ public class NameParserGBIFThreadTest {
   }
 
   static class ParseMeStatic implements Callable<ParsedName> {
-    static final NameParserGBIF parser = new NameParserGBIF();
+    static final NameParserAntlr parser = new NameParserAntlr();
     final String name;
 
     ParseMeStatic(int i) {

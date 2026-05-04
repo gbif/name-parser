@@ -26,7 +26,6 @@
     <modules>
         <module>name-parser</module>
         <module>name-parser-api</module>
-        <module>name-parser-v1</module>
     </modules>
 
     <properties>
@@ -40,8 +39,8 @@
         <commons-io.version>2.16.1</commons-io.version>
         <commons-lang.version>3.15.0</commons-lang.version>
         <fastutil.version>8.5.13</fastutil.version>
+        <antlr.version>4.13.2</antlr.version>
         <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
-        <gbif-api.version>1.16.5</gbif-api.version>
         <gson.version>2.11.0</gson.version>
         <guava.version>33.0.0-jre</guava.version>
         <junit.version>4.13.2</junit.version>
@@ -80,6 +79,11 @@
                 <version>${gson.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-runtime</artifactId>
+                <version>${antlr.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.code.findbugs</groupId>
                 <artifactId>jsr305</artifactId>
                 <version>${findbugs-jsr305.version}</version>
@@ -94,19 +98,6 @@
                 <artifactId>name-parser-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.gbif</groupId>
-                <artifactId>name-parser-gbif</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- GBIF -->
-            <dependency>
-                <groupId>org.gbif</groupId>
-                <artifactId>gbif-api</artifactId>
-                <version>${gbif-api.version}</version>
-            </dependency>
-
             <!-- Logging -->
             <dependency>
                 <groupId>org.slf4j</groupId>

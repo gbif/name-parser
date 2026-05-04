@@ -25,15 +25,16 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 /**
- * The default GBIF name parser build on regular expressions.
+ * The GBIF name parser using an ANTLR grammar for the core structural match.
+ * Pre-cleaning, normalization, NameType detection and post-processing are still done with regex/Java.
  * In order to avoid long running regex matches it runs the core parsing in a background threadpool
  * which is shared across all instances of the parser.
  *
  * Make sure to reuse the instance as much as possible and don't forget to close it for the threads to shutdown properly.
  */
-public class NameParserGBIF implements NameParser {
-  public static final String THREAD_NAME = "NameParser-worker";
-  private static final Logger LOG = LoggerFactory.getLogger(NameParserGBIF.class);
+public class NameParserAntlr implements NameParser {
+  public static final String THREAD_NAME = "NameParserAntlr-worker";
+  private static final Logger LOG = LoggerFactory.getLogger(NameParserAntlr.class);
 
   /**
    * We use a cached daemon threadpool to run the parsing in the background so we can control
@@ -46,21 +47,21 @@ public class NameParserGBIF implements NameParser {
   /**
    * The default name parser without an explicit monomials list using the default timeout of 1s for parsing.
    */
-  public NameParserGBIF() {
+  public NameParserAntlr() {
     this(1000);
   }
 
   /**
    * @param timeout max parsing time in milliseconds
    */
-  public NameParserGBIF(long timeout) {
+  public NameParserAntlr(long timeout) {
     this(timeout, 0, 100);
   }
 
   /**
    * @param timeout max parsing time in milliseconds
    */
-  public NameParserGBIF(long timeout, int corePoolSize, int maxPoolSize) {
+  public NameParserAntlr(long timeout, int corePoolSize, int maxPoolSize) {
     this(timeout, new ThreadPoolExecutor(corePoolSize, maxPoolSize,
         2*timeout, TimeUnit.MILLISECONDS,
         new SynchronousQueue<>(),
@@ -71,7 +72,7 @@ public class NameParserGBIF implements NameParser {
   /**
    * The default name parser without an explicit monomials list using the given timeout in milliseconds for parsing.
    */
-  public NameParserGBIF(long timeout, ExecutorService executorService) {
+  public NameParserAntlr(long timeout, ExecutorService executorService) {
     if (timeout < 10) {
       throw new IllegalArgumentException("Timeout needs to be at least 10ms");
     }

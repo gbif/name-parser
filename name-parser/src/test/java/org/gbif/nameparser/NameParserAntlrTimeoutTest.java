@@ -30,14 +30,14 @@ import static org.junit.Assert.*;
 /**
  *
  */
-public class NameParserGBIFTimeoutTest {
+public class NameParserAntlrTimeoutTest {
 
   public static final String TIMEOUT_NAME = "Desmarestia ligulata subsp. muelleri (M.E.Ramirez, A.F.Peters, S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, A.F.Peters, E.C.Yang, A.F.Peters, E.C.Yang & F.C.Küpper & van Reine, 2014) S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, A.F.Peters, E.C.Yang, A.F.Peters, E.C.Yang, F.C.Küpper, van Reine, S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, A.F.Peters, E.C.Yang, A.F.Peters, E.C.Yang, A.F.Peters, S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, A.F.Peters, E.C.Yang, A.F.Peters, E.C.Yang & F.C.Küpper & van Reine, 2014) S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, A.F.Peters, E.C.Yang, A.F.Peters, E.C.Yang, F.C.Küpper, van Reine, S.S.Y. Wong, A.H.Y. Ngan, Riggs, J.L.L. Teng, A.F.Peters, E.C.Yang, A.F.Peters, E.C.Yang, F.C.Küpper & van Reine, 2014";
   public static final String TIMEOUT_AUTHORSHIP = "Coloma, Carvajal-Endara, Dueñas, Paredes-Recalde, Morales-Mite, Almeida-Reinoso et al., 2012)";
 
   final int extra = 100;
 
-  NameParser parser = new NameParserGBIF(11, 0, 10);
+  NameParser parser = new NameParserAntlr(11, 0, 10);
   StopWatch watch = new StopWatch();
 
   @Before
@@ -94,7 +94,7 @@ public class NameParserGBIFTimeoutTest {
     TimeUnit.MILLISECONDS.sleep(extra);
 
     Set<Thread> threads = Thread.getAllStackTraces().keySet().stream()
-                                .filter(t -> t.getName().startsWith(NameParserGBIF.THREAD_NAME))
+                                .filter(t -> t.getName().startsWith(NameParserAntlr.THREAD_NAME))
                                 .collect(Collectors.toSet());
     for (Thread t : threads) {
       System.out.println(t.getName() + "  -->  " + t.getState());

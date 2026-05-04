@@ -37,15 +37,15 @@ import static org.junit.Assert.*;
 /**
  *
  */
-public class NameParserGBIFTest {
-  private static Logger LOG = LoggerFactory.getLogger(NameParserGBIFTest.class);
+public class NameParserAntlrTest {
+  private static Logger LOG = LoggerFactory.getLogger(NameParserAntlrTest.class);
   private static final boolean DEBUG = true;
   //private static final boolean DEBUG = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 
   private final NameParser parser;
 
-  public NameParserGBIFTest() {
-    this.parser = new NameParserGBIF(DEBUG ? 99999999 : 1000);
+  public NameParserAntlrTest() {
+    this.parser = new NameParserAntlr(DEBUG ? 99999999 : 1000);
   }
 
   @After
