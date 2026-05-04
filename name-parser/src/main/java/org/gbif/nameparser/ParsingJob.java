@@ -1577,12 +1577,14 @@ class ParsingJob implements Callable<ParsedName> {
       pn.setInfragenericEpithet(StringUtils.trimToNull(nc.getInfragenericEpithet()));
     }
 
+    setEpithetQualifier(NamePart.SPECIFIC, nc.getSpecificQualifier());
     pn.setSpecificEpithet(StringUtils.trimToNull(nc.getSpecificEpithet()));
     if (nc.getMiddleEpithet() != null && nc.getMiddleEpithet().length() > 1) {
       // 4 parted name, so its below subspecies
       pn.setRank(Rank.INFRASUBSPECIFIC_NAME);
     }
 
+    setEpithetQualifier(NamePart.INFRASPECIFIC, nc.getInfraspecificQualifier());
     if (nc.getInfraspecificRankMarker() != null) {
       setRank(nc.getInfraspecificRankMarker());
     }

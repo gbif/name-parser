@@ -164,10 +164,18 @@ public final class AntlrNameMatcher {
 
     @Override
     public void enterEpithet(SciNameParser.EpithetContext ctx) {
+      if (ctx.qualifier() != null) {
+        nc.specificQualifier = qualifierText(ctx.qualifier());
+      }
       if (ctx.HYBRID() != null) {
         nc.hybridSpecies = true;
       }
       nc.specificEpithet = ctx.LOWER_WORD().getText();
+    }
+
+    private static String qualifierText(SciNameParser.QualifierContext q) {
+      // surface as "aff", "cf", "nr" — ParsingJob.setEpithetQualifier appends the trailing dot
+      return q.QUALIFIER().getText();
     }
 
     @Override
@@ -178,6 +186,9 @@ public final class AntlrNameMatcher {
     @Override
     public void enterBareInfraspec(SciNameParser.BareInfraspecContext ctx) {
       // a bare last epithet without a rank marker — slot it as the infraspecific epithet
+      if (ctx.qualifier() != null) {
+        nc.infraspecificQualifier = qualifierText(ctx.qualifier());
+      }
       if (ctx.HYBRID() != null) {
         nc.hybridInfraspecies = true;
       }
@@ -186,6 +197,9 @@ public final class AntlrNameMatcher {
 
     @Override
     public void enterRankedInfraspec(SciNameParser.RankedInfraspecContext ctx) {
+      if (ctx.qualifier() != null) {
+        nc.infraspecificQualifier = qualifierText(ctx.qualifier());
+      }
       String marker;
       String epithet;
       if (ctx.GREEK_RANK() != null) {

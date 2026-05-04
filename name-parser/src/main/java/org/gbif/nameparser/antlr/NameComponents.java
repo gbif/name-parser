@@ -35,12 +35,18 @@ public class NameComponents {
   String infragenericRankMarker;
   String infragenericEpithet;
 
+  // Group 5: specific epithet identification qualifier ("aff.", "cf.", "nr.")
+  String specificQualifier;
+
   // Group 6: specific epithet (the first lowercase epithet after the genus)
   String specificEpithet;
   boolean hybridSpecies;
 
   // Group 7: bare middle epithet (4-parted name, no rank marker)
   String middleEpithet;
+
+  // Group 8: infraspecific epithet identification qualifier
+  String infraspecificQualifier;
 
   // Group 9 + 10: ranked infraspecific: "subsp. baltica"
   String infraspecificRankMarker;
@@ -69,9 +75,11 @@ public class NameComponents {
   public String getSubgenusParens() { return subgenusParens; }
   public String getInfragenericRankMarker() { return infragenericRankMarker; }
   public String getInfragenericEpithet() { return infragenericEpithet; }
+  public String getSpecificQualifier() { return specificQualifier; }
   public String getSpecificEpithet() { return specificEpithet; }
   public boolean isHybridSpecies() { return hybridSpecies; }
   public String getMiddleEpithet() { return middleEpithet; }
+  public String getInfraspecificQualifier() { return infraspecificQualifier; }
   public String getInfraspecificRankMarker() { return infraspecificRankMarker; }
   public String getInfraspecificEpithet() { return infraspecificEpithet; }
   public boolean isHybridInfraspecies() { return hybridInfraspecies; }
