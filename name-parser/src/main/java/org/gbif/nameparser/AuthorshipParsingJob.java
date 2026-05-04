@@ -19,31 +19,7 @@ import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.api.UnparsableNameException;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class AuthorshipParsingJob extends ParsingJob {
-
-    /**
-     * Pattern that matches an authorship only.
-     * This is more reliable than parsing a name with authorship as we know there should be no epithets, just an authorship.
-     */
-    static final Pattern AUTHORSHIP_PATTERN = Pattern.compile("^" +
-            "(?:\\(" +
-            // #1/2/3 basionym authorship (ex/auth/sanct)
-            "(?:" + AUTHORSHIP + "\\.?)?" +
-            // #4 basionym year
-            "[, ]?(" + YEAR_LOOSE + ")?" +
-            "\\))?" +
-
-            // #5/6/7 authorship (ex/auth/sanct)
-            "(?:" + AUTHORSHIP + ")?" +
-            // #8 year with or without brackets
-            "(?: ?\\(?,?(" + YEAR_LOOSE + ")\\)?)?" +
-
-            // #9 any remainder
-            "(\\b.*?)??$");
-
 
     /**
      * @param authorship the full authorship incl basionym, ex authors, nomenclatural reference and remarks

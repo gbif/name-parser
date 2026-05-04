@@ -19,8 +19,6 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.gbif.nameparser.api.Rank;
-import org.gbif.nameparser.util.RankUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,12 +71,6 @@ public final class AntlrNameMatcher {
     PopulatingListener listener = new PopulatingListener(nc, source);
     new ParseTreeWalker().walk(listener, tree);
 
-    if (listener.invalidRankMarker) {
-      // a structural rule fired but the lower-case word in the rank-marker slot is not a real
-      // rank — treat as no-match so the caller can fall through to the unparsable handling
-      return Optional.empty();
-    }
-
     // collect any unconsumed tokens as the remainder string (mirrors NAME_PATTERN group 23)
     int nextIdx = parser.getCurrentToken().getTokenIndex();
     int lastIdx = tokens.size() - 1; // includes EOF
@@ -113,7 +105,6 @@ public final class AntlrNameMatcher {
   private static class PopulatingListener extends SciNameBaseListener {
     private final NameComponents nc;
     private final String source;
-    boolean invalidRankMarker = false;
 
     PopulatingListener(NameComponents nc, String source) {
       this.nc = nc;
@@ -152,13 +143,8 @@ public final class AntlrNameMatcher {
 
     @Override
     public void enterRankedInfrageneric(SciNameParser.RankedInfragenericContext ctx) {
-      String marker = ctx.LOWER_WORD().getText();
-      Rank r = lookupInfragenericRank(marker);
-      if (r == null) {
-        invalidRankMarker = true;
-        return;
-      }
-      nc.infragenericRankMarker = marker;
+      // grammar predicate already validated the rank marker
+      nc.infragenericRankMarker = ctx.LOWER_WORD().getText();
       nc.infragenericEpithet = ctx.UPPER_WORD().getText();
     }
 
@@ -207,13 +193,9 @@ public final class AntlrNameMatcher {
         marker = ctx.GREEK_RANK().getText();
         epithet = ctx.LOWER_WORD(0).getText();
       } else {
+        // grammar predicate already validated the rank marker
         marker = ctx.LOWER_WORD(0).getText();
         epithet = ctx.LOWER_WORD(1).getText();
-        Rank r = lookupInfraspecificRank(marker);
-        if (r == null) {
-          invalidRankMarker = true;
-          return;
-        }
       }
       nc.infraspecificRankMarker = marker;
       if (ctx.HYBRID() != null) {
@@ -305,30 +287,4 @@ public final class AntlrNameMatcher {
     return r;
   }
 
-  /**
-   * Look up an infrageneric rank marker (e.g. "subg", "sect").
-   * Returns null if the marker is not a known rank. The "notho" / "agamo" prefixes are
-   * stripped before lookup so e.g. "nothosect" resolves to {@code SECTION_BOTANY}.
-   */
-  private static Rank lookupInfragenericRank(String marker) {
-    if (marker == null) return null;
-    String key = stripNothoPrefix(marker.toLowerCase());
-    return RankUtils.RANK_MARKER_MAP_INFRAGENERIC.get(key);
-  }
-
-  /**
-   * Look up an infraspecific rank marker (e.g. "subsp", "var", "f"). The "notho" / "agamo"
-   * prefixes are stripped before lookup so e.g. "nothovar" resolves to {@code VARIETY}.
-   */
-  private static Rank lookupInfraspecificRank(String marker) {
-    if (marker == null) return null;
-    String key = stripNothoPrefix(marker.toLowerCase());
-    return RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.get(key);
-  }
-
-  private static String stripNothoPrefix(String marker) {
-    if (marker.startsWith("notho")) return marker.substring(5);
-    if (marker.startsWith("agamo")) return marker.substring(5);
-    return marker;
-  }
 }

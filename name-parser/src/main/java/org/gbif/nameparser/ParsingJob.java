@@ -93,18 +93,8 @@ class ParsingJob implements Callable<ParsedName> {
   static final String AUTHOR_SUFFIX = "(?:bis|ter|d(?:[ae][rnl]?|egli)|van(?: de[nr]?)|zur?)";
   private static final Pattern AUTHOR_SUFFIX_P = Pattern.compile("^" + AUTHOR_SUFFIX + "$");
   private static final String AUTHOR_TEAM = AUTHOR + "(?:(?:[&,;]+| or )" + AUTHOR + ")*";
-  // remarks often found after entire authorships
-  private static final String AUTHORSHIP_REMARKS = "i\\.l\\.|i\\.sch\\.";
   private static final String SANCT_AUTHORS = "Pers\\.?|Fr\\.?";
   private static final Pattern SANCT_AUTHORS_P = Pattern.compile("^" + SANCT_AUTHORS + "$");
-  static final String AUTHORSHIP =
-      // ex authors
-      "(?:(" + AUTHOR_TEAM + ") ?\\bex[. ])?" +
-      // main authors
-      "(" + AUTHOR_TEAM + "(?:\\s?" + AUTHORSHIP_REMARKS + ")?)" +
-      // 2 well known sanction authors for fungus, see POR-2454
-      "(?: *: *("+SANCT_AUTHORS+"))?";
-  static final Pattern AUTHOR_TEAM_PATTERN = Pattern.compile("^" + AUTHOR_TEAM + "$");
   private static final String YEAR = "[12][0-9][0-9][0-9?]";
   static final String YEAR_LOOSE = YEAR + "[abcdh?]?(?:[/,-][0-9]{1,4})?";
 
@@ -130,8 +120,6 @@ class ParsingJob implements Callable<ParsedName> {
   private static final String UNALLOWED_EPITHETS = "aff|and|cf|des|from|ms|of|the|where";
   private static final String UNALLOWED_EPITHET_ENDING =
       "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
-  // allow for cf/aff markers before epithets
-  static final String EPI_QUALIFIER = "(?:\\b(aff|cf|nr)[?. ])?";
   static final String EPITHET = "(?:[0-9]+-?|[a-z]-|[αβγδ]-|[doml]'|(?:van|novae) [a-z])?"
             // avoid matching to rank markers
             + "(?!"+RANK_MARKER+"\\b)"
@@ -274,7 +262,6 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_LOWERCASE_BINOMIAL = Pattern.compile("^(" + EPITHET + ") (" + EPITHET + ")");
   private static final Pattern NORM_HYBRID_HOMOGLYPHS = Pattern.compile("[хᕁᕽ᙮ⅹ⤫⤬⨯ｘ\uD835\uDC31\uD835\uDC65\uD835\uDC99\uD835\uDCCD\uD835\uDD01\uD835\uDD35\uD835\uDD69\uD835\uDD9D\uD835\uDDD1\uD835\uDE05\uD835\uDE39\uD835\uDE6D\uD835\uDEA1]");
   private static final Pattern NORM_WHITESPACE = Pattern.compile("(?:\\\\[nr]|\\s)+");
-  private static final Pattern REPL_UNDERSCORE = Pattern.compile("_+");
   private static final Pattern NORM_BRACKETS_OPEN = Pattern.compile("\\s*([{(\\[])\\s*,?\\s*");
   private static final Pattern NORM_BRACKETS_CLOSE = Pattern.compile("\\s*,?\\s*([})\\]])\\s*");
   private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("( ?[{\\[] ?)+");
@@ -366,56 +353,6 @@ class ParsingJob implements Callable<ParsedName> {
   
   static final Pattern POTENTIAL_NAME_PATTERN = Pattern.compile("^×?" + MONOMIAL + "\\b");
   private static final Pattern REMOVE_INTER_RANKS = Pattern.compile("\\b((?:subsp|ssp|var)[ .].+)\\b("+RANK_MARKER+"\\b.{2,})");
-  // allow only short lower case tokens to avoid matching to a real epithet
-  private static final String SKIP_AUTHORS = "(?:\\b[ \\p{Ll}'(-]{0,3}\\p{Lu}.*?\\b)??";
-  public static final Pattern NAME_PATTERN = Pattern.compile("^" +
-             // #1 genus/monomial
-             "(×?(?:\\?|" + MONOMIAL + "))" +
-             // #2 or #4 subgenus/section with #3 infrageneric rank marker
-             "(?:(?<!ceae)" + INFRAGENERIC + ")?" +
-             // #5+6 species
-             "(?:(?:\\b| )"+EPI_QUALIFIER+"(×?" + EPITHET + ")" +
-                "(?:" +
-                // any superfluous intermediate bits before terminal epithets, e.g. species authors
-                "(?:.*?)" +
-                // #7 superfluous subspecies epithet
-                "( ×?" + EPITHET + ")?" +
-                // #8 infraspecies qualifier
-                " ?"+ EPI_QUALIFIER +
-                // #9 infraspecies rank
-                "[. ]?(" + RANK_MARKER + ")?" +
-                // #10 infraspecies epitheton, avoid matching to bis and degli which is part of (Italian) author names
-                "[. ](×?\"?(?!" + AUTHOR_SUFFIX + "\\b)" + EPITHET + "\"?)" +
-                ")?" +
-              ")?" +
-
-             "(?: " +
-               // #11 microbial rank
-               "(" + RANK_MARKER_MICROBIAL + ")[ .]" +
-               // #12 microbial infrasubspecific epithet
-               "(\\S+)" +
-             ")?" +
-
-             // #13 indet rank marker after epithets
-             "([. ]" + RANK_MARKER + ")?" +
-
-             // #14 entire authorship incl basionyms and year
-             "([., ]?" +
-               "(?:\\(" +
-                 // #15/16/17 basionym authorship (ex/auth/sanct)
-                 "(?:" + AUTHORSHIP + ")?" +
-                 // #18 basionym year
-                 "[, ]?(" + YEAR_LOOSE + ")?" +
-               "\\))?" +
-
-               // #19/20/21 authorship (ex/auth/sanct)
-               "(?:" + AUTHORSHIP + ")?" +
-               // #22 year with or without brackets
-               "(?: ?\\(?,?(" + YEAR_LOOSE + ")\\)?)?" +
-             ")" +
-
-             // #23 any remainder
-             "(\\b.*?)??$");
 
   // Allowable phrase rank marker
   private static final String AUTHOR_WS = AUTHOR_TOKEN + "(?:[ '-]*" + AUTHOR_TOKEN + ")*";
@@ -1728,24 +1665,6 @@ class ParsingJob implements Callable<ParsedName> {
    *  b) the uninomial for names of rank genus or higher
    *  c) the infrageneric epithet in case its a standalone infrageneric name (which is hard to detect)
    */
-  private void setUninomialOrGenus(Matcher matcher, ParsedName pn) {
-    // the match can be the genus part of a bi/trinomial or a uninomial
-    String monomial = StringUtils.trimToNull(matcher.group(1));
-    if (matcher.group(2) != null
-        || matcher.group(4) != null
-        || matcher.group(6) != null
-        || matcher.group(10) != null
-        || pn.getRank().isSpeciesOrBelow()) { //  && pn.getRank().isRestrictedToCode() != NomCode.CULTIVARS
-      pn.setGenus(monomial);
-
-    } else if (pn.getRank().isInfragenericStrictly()){
-      pn.setInfragenericEpithet(monomial);
-
-    } else {
-      pn.setUninomial(monomial);
-    }
-  }
-
   private void setUninomialOrGenus(org.gbif.nameparser.antlr.NameComponents nc, ParsedName pn) {
     String monomial = StringUtils.trimToNull(nc.getMonomialOrGenus());
     if (nc.getSubgenusParens() != null
