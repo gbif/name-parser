@@ -94,34 +94,46 @@ public final class AntlrAuthorshipMatcher {
       m.combinationYear = ap.year;
     }
 
+    tokens.fill();
     int nextIdx = parser.getCurrentToken().getTokenIndex();
     int lastIdx = tokens.size() - 1;
-    StringBuilder remainder = new StringBuilder();
+    int firstStart = -1;
+    int lastStop = -1;
     for (int i = nextIdx; i < lastIdx; i++) {
       Token t = tokens.get(i);
       if (t.getType() == Token.EOF) break;
-      if (remainder.length() > 0) remainder.append(' ');
-      remainder.append(t.getText());
+      if (firstStart < 0) firstStart = t.getStartIndex();
+      lastStop = t.getStopIndex();
     }
-    if (remainder.length() > 0) {
-      m.remainder = remainder.toString();
+    if (firstStart >= 0 && lastStop >= firstStart && lastStop < source.length()) {
+      m.remainder = source.substring(firstStart, lastStop + 1);
     }
     return Optional.of(m);
   }
+
+  /** See {@link AntlrNameMatcher#splitOnEx} — same regex, lifted here so the standalone
+   *  authorship matcher splits "Wedd.ex Sch.Bip." too even after NORM_PUNCTUATIONS has
+   *  collapsed the whitespace around the dot. */
+  private static final java.util.regex.Pattern EX_AUTHOR_SPLIT =
+      java.util.regex.Pattern.compile("(?i)(?<=\\W)ex\\.?(?=\\s|\\b)");
 
   private static AuthorshipParts extractAuthorshipParts(SciNameParser.CombPartContext cp, String source) {
     AuthorshipParts out = new AuthorshipParts();
     if (cp.authorBlob() != null) {
       String blob = sourceTextOf(cp.authorBlob(), source);
       if (blob != null) {
-        String lc = blob.toLowerCase();
-        int idx = lc.lastIndexOf(" ex ");
-        int dotIdx = lc.lastIndexOf(" ex. ");
-        if (dotIdx > idx) idx = dotIdx;
-        if (idx >= 0) {
-          out.exAuthors = blob.substring(0, idx).trim();
-          int skip = (dotIdx == idx) ? 5 : 4;
-          out.authors = blob.substring(idx + skip).trim();
+        java.util.regex.Matcher m = EX_AUTHOR_SPLIT.matcher(blob);
+        int matchStart = -1;
+        int matchEnd = -1;
+        while (m.find()) {
+          matchStart = m.start();
+          matchEnd = m.end();
+        }
+        if (matchStart >= 0) {
+          out.exAuthors = blob.substring(0, matchStart).trim();
+          String tail = blob.substring(matchEnd).trim();
+          if (tail.startsWith(".")) tail = tail.substring(1).trim();
+          out.authors = tail;
         } else {
           out.authors = blob.trim();
         }

@@ -52,8 +52,11 @@ public final class AntlrNameMatcher {
 
     CommonTokenStream tokens = new CommonTokenStream(lexer);
     SciNameParser parser = new SciNameParser(tokens);
+    // Stay silent on parser errors. ANTLR's default error strategy will try to recover by
+    // skipping tokens — for our use that's fine because the unconsumed tail becomes the
+    // remainder slot, mirroring NAME_PATTERN group 23. The grammar has no EOF anchor so
+    // the parser stops naturally at the first token that can't extend the rule.
     parser.removeErrorListeners();
-    parser.addErrorListener(errorListener);
 
     SciNameParser.NameContext tree;
     try {
@@ -71,18 +74,52 @@ public final class AntlrNameMatcher {
     PopulatingListener listener = new PopulatingListener(nc, source);
     new ParseTreeWalker().walk(listener, tree);
 
-    // collect any unconsumed tokens as the remainder string (mirrors NAME_PATTERN group 23)
+    // collect unconsumed tokens as the remainder string (mirrors NAME_PATTERN group 23).
+    // Source-substring slicing keeps original spacing (":377", "(sic)" etc).
+    //
+    // Two sources of "unconsumed" tokens:
+    //   1. The trailing slice — tokens beyond parser.getCurrentToken() that the parser
+    //      never reached because the rule simply ran out of matchable input.
+    //   2. Error-recovered tokens — when adaptive prediction commits to an alternative
+    //      whose body can't fully match, ANTLR's default error strategy advances past the
+    //      offending tokens. Those land directly under the root rule context as terminal
+    //      children rather than under a named subrule, so we walk the tree once to detect
+    //      them. Without this, "Combretum Loefl. (1758) (= Grislea L. 1753)." would lose
+    //      its trailing synonym block when the second LPAREN couldn't be re-parsed.
+    // Force the lexer to drain the rest of the stream so we see ALL trailing tokens. The
+    // parser may have stopped early (lazy buffering) before pulling the full input.
+    tokens.fill();
+    java.util.List<int[]> spans = new java.util.ArrayList<>();
     int nextIdx = parser.getCurrentToken().getTokenIndex();
-    int lastIdx = tokens.size() - 1; // includes EOF
-    StringBuilder remainder = new StringBuilder();
+    int lastIdx = tokens.size() - 1;
+    int firstStart = -1;
+    int lastStop = -1;
     for (int i = nextIdx; i < lastIdx; i++) {
       Token t = tokens.get(i);
       if (t.getType() == Token.EOF) break;
-      if (remainder.length() > 0) remainder.append(' ');
-      remainder.append(t.getText());
+      if (firstStart < 0) firstStart = t.getStartIndex();
+      lastStop = t.getStopIndex();
     }
-    if (remainder.length() > 0) {
-      nc.remainder = remainder.toString();
+    if (firstStart >= 0 && lastStop >= firstStart) {
+      spans.add(new int[]{firstStart, lastStop});
+    }
+    // Pick up tokens absorbed by error recovery: any TerminalNode child of `name` whose
+    // parent isn't one of the rule contexts is an error node.
+    for (int i = 0; i < tree.getChildCount(); i++) {
+      org.antlr.v4.runtime.tree.ParseTree child = tree.getChild(i);
+      if (child instanceof org.antlr.v4.runtime.tree.TerminalNode) {
+        Token t = ((org.antlr.v4.runtime.tree.TerminalNode) child).getSymbol();
+        if (t.getType() == Token.EOF) continue;
+        spans.add(new int[]{t.getStartIndex(), t.getStopIndex()});
+      }
+    }
+    if (!spans.isEmpty()) {
+      spans.sort(java.util.Comparator.comparingInt(a -> a[0]));
+      int s = spans.get(0)[0];
+      int e = spans.get(spans.size() - 1)[1];
+      if (s >= 0 && e >= s && e < source.length()) {
+        nc.remainder = source.substring(s, e + 1);
+      }
     }
     return Optional.of(nc);
   }
@@ -187,15 +224,22 @@ public final class AntlrNameMatcher {
         nc.infraspecificQualifier = qualifierText(ctx.qualifier());
       }
       String marker;
-      String epithet;
+      String epithet = null;
       if (ctx.GREEK_RANK() != null) {
         // Greek-letter rank substitute (α, β, γ ...) — treat as an infraspecific rank marker
         marker = ctx.GREEK_RANK().getText();
         epithet = ctx.LOWER_WORD(0).getText();
+      } else if (ctx.COMPOSITE_RANK() != null) {
+        // composite token with embedded dot, e.g. "t.infr.", "f.sp." — strip the dot(s)
+        // for the rank-marker key so the downstream lookup hits "tinfr" / "fsp"
+        marker = ctx.COMPOSITE_RANK().getText().replace(".", "");
+        epithet = ctx.LOWER_WORD(0).getText();
       } else {
-        // grammar predicate already validated the rank marker
+        // dotted form ("subsp. baltica"), bare form ("natio danubicus") or indet ("var.")
         marker = ctx.LOWER_WORD(0).getText();
-        epithet = ctx.LOWER_WORD(1).getText();
+        if (ctx.LOWER_WORD().size() > 1) {
+          epithet = ctx.LOWER_WORD(1).getText();
+        }
       }
       nc.infraspecificRankMarker = marker;
       if (ctx.HYBRID() != null) {
@@ -267,20 +311,31 @@ public final class AntlrNameMatcher {
     String main;
   }
 
+  /** Matches the literal "ex" (with optional trailing dot) when surrounded by a word boundary
+   *  on each side. Compatible with "hort. ex Hoffmanns.", "hort.ex Hoffmanns." (post-NORM
+   *  punctuation that strips spaces around dots), and "Backer ex K.Heyne". */
+  private static final java.util.regex.Pattern EX_AUTHOR_SPLIT =
+      java.util.regex.Pattern.compile("(?i)(?<=\\W)ex\\.?(?=\\s|\\b)");
+
   private static ExSplit splitOnEx(String blob) {
     ExSplit r = new ExSplit();
     if (blob == null) return r;
-    // match a standalone " ex " or " ex. " (case-insensitive), preferring the last occurrence
-    // since an early "ex" might be part of an author name
-    String lc = blob.toLowerCase();
-    int idx = lc.lastIndexOf(" ex ");
-    int dotIdx = lc.lastIndexOf(" ex. ");
-    if (dotIdx > idx) idx = dotIdx;
-    if (idx >= 0) {
-      r.ex = blob.substring(0, idx).trim();
-      // skip past " ex " or " ex. "
-      int skip = (dotIdx == idx) ? 5 : 4;
-      r.main = blob.substring(idx + skip).trim();
+    // find the LAST occurrence — an early "ex" could be part of an author name, the canonical
+    // ex-author marker comes between authors so it sits at most one author from the end
+    java.util.regex.Matcher m = EX_AUTHOR_SPLIT.matcher(blob);
+    int matchStart = -1;
+    int matchEnd = -1;
+    while (m.find()) {
+      matchStart = m.start();
+      matchEnd = m.end();
+    }
+    if (matchStart >= 0) {
+      r.ex = blob.substring(0, matchStart).trim();
+      r.main = blob.substring(matchEnd).trim();
+      // drop a leading dot left over after splitting "hort.ex" → "hort." / "Hoffmanns."
+      if (r.main.startsWith(".")) {
+        r.main = r.main.substring(1).trim();
+      }
     } else {
       r.main = blob.trim();
     }

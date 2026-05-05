@@ -79,8 +79,14 @@ public class AuthorshipParsingJob extends ParsingJob {
         name = normBrackets(name);
         name = normWsPunct(name);
 
-        // main authorship parsing
-        parseNormalisedAuthorship();
+        // main authorship parsing — if extractSecReference / extractNomStatus pulled
+        // everything out (e.g. "(auct.) Rolfe" → entirely sensu), there's nothing left for
+        // the structural matcher and that's a complete parse, not an error.
+        if (StringUtils.isBlank(name)) {
+            pn.setState(ParsedName.State.COMPLETE);
+        } else {
+            parseNormalisedAuthorship();
+        }
 
         if (state != null) {
             pn.setState(state);

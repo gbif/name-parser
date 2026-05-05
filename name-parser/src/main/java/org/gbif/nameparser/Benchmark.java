@@ -32,16 +32,14 @@ import java.util.List;
 /**
  * Standalone benchmark for {@link NameParserAntlr}.
  *
- * Reads a TSV input file with up to three columns: scientific name, rank, nomenclatural code.
- * Rank and code are optional and matched case-insensitively against the {@link Rank} and
- * {@link NomCode} enum constant names. Lines starting with '#' or matching the literal header
- * "name\trank\tcode" are skipped. Empty lines and blank names are ignored.
+ * Reads a text input file with a scientific name per row.
+ * Lines starting with '#' are skipped. Empty lines and blank names are ignored.
  *
  * Reports count, average, min, max, p50 and p95 parsing times to stdout, and writes a per-name
  * log sorted by descending parse time to a configurable log file.
  *
  * Usage:
- *   java org.gbif.nameparser.Benchmark &lt;input.tsv&gt; [output.log]
+ *   java org.gbif.nameparser.Benchmark &lt;input.txt&gt; [output.log]
  */
 public class Benchmark {
   private final NameParserAntlr parser;
@@ -52,7 +50,7 @@ public class Benchmark {
 
   public static void main(String[] args) throws Exception {
     if (args.length < 1) {
-      System.err.println("Usage: Benchmark <input.tsv> [output.log]");
+      System.err.println("Usage: Benchmark <input.txt> [output.log]");
       System.exit(1);
     }
     Path input = Paths.get(args[0]);
@@ -70,11 +68,9 @@ public class Benchmark {
     List<Timing> timings = new ArrayList<>();
     int parseFailures = 0;
     long warmup = 50;
-    long lineNo = 0;
     try (BufferedReader r = Files.newBufferedReader(tsv, StandardCharsets.UTF_8)) {
       String line;
       while ((line = r.readLine()) != null) {
-        lineNo++;
         if (line.isEmpty() || line.startsWith("#")) continue;
         String name = line.trim();
         if (name.isEmpty()) continue;
@@ -106,25 +102,7 @@ public class Benchmark {
     return i < cols.length ? cols[i].trim() : "";
   }
 
-  private static Rank parseRank(String s) {
-    if (s == null || s.isEmpty()) return Rank.UNRANKED;
-    try {
-      return Rank.valueOf(s.toUpperCase());
-    } catch (IllegalArgumentException e) {
-      return Rank.UNRANKED;
-    }
-  }
-
-  private static NomCode parseCode(String s) {
-    if (s == null || s.isEmpty()) return null;
-    try {
-      return NomCode.valueOf(s.toUpperCase());
-    } catch (IllegalArgumentException e) {
-      return null;
-    }
-  }
-
-  static final class Timing {
+   static final class Timing {
     final String name;
     final long nanos;
     final boolean parsed;
@@ -163,6 +141,7 @@ public class Benchmark {
       long p95 = percentile(sorted, 95);
 
       out.printf("Parsed names: %d (%d failed)%n", count(), failures());
+      out.printf("Total:   %s%n", fmt(sum));
       out.printf("Average: %s%n", fmt(avg));
       out.printf("Min:     %s%n", fmt(min));
       out.printf("p50:     %s%n", fmt(p50));

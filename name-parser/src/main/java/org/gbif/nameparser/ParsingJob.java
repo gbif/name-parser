@@ -832,7 +832,7 @@ class ParsingJob implements Callable<ParsedName> {
     if (state != null) {
       pn.setState(state);
     }
-    
+
     // determine name type
     determineNameType(name);
 
@@ -1505,6 +1505,19 @@ class ParsingJob implements Callable<ParsedName> {
     // monomial → uninomial / genus / infrageneric
     setUninomialOrGenus(nc, pn);
 
+    // wire the grammar's HYBRID flags through to the ParsedName notho slots so the formatter
+    // can re-render the leading "× " on output.
+    if (nc.isHybridGenus()) {
+      pn.setNotho(pn.getRank() != null && pn.getRank().isInfragenericStrictly()
+          ? NamePart.INFRAGENERIC : NamePart.GENERIC);
+    }
+    if (nc.isHybridSpecies()) {
+      pn.setNotho(NamePart.SPECIFIC);
+    }
+    if (nc.isHybridInfraspecies()) {
+      pn.setNotho(NamePart.INFRASPECIFIC);
+    }
+
     boolean bracketSubrankFound = false;
     if (nc.getSubgenusParens() != null) {
       bracketSubrankFound = true;
@@ -1516,8 +1529,10 @@ class ParsingJob implements Callable<ParsedName> {
 
     setEpithetQualifier(NamePart.SPECIFIC, nc.getSpecificQualifier());
     pn.setSpecificEpithet(StringUtils.trimToNull(nc.getSpecificEpithet()));
-    if (nc.getMiddleEpithet() != null && nc.getMiddleEpithet().length() > 1) {
-      // 4 parted name, so its below subspecies
+    String middle = nc.getMiddleEpithet();
+    if (middle != null && middle.length() > 1 && !"null".equalsIgnoreCase(middle)) {
+      // 4 parted name, so its below subspecies. The "null" placeholder ("Genus species
+      // null sub") doesn't count — ParsingJob has already flagged NULL_EPITHET.
       pn.setRank(Rank.INFRASUBSPECIFIC_NAME);
     }
 
@@ -1642,7 +1657,16 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   private Rank parseRank(String rankMarker) {
-    Rank r = RankUtils.inferRank(StringUtils.trimToNull(rankMarker));
+    String key = StringUtils.trimToNull(rankMarker);
+    if (key != null) {
+      String lc = key.toLowerCase();
+      // strip "notho" / "agamo" prefix — RankUtils.inferRank doesn't know about these and would
+      // return null for "nothovar" or "agamosp", losing the rank info.
+      if (lc.startsWith(NOTHO) || lc.startsWith("agamo")) {
+        key = key.substring(5);
+      }
+    }
+    Rank r = RankUtils.inferRank(key);
     // check code for ambiguous ranks
     if (r != null && pn.getCode() != null && r.hasAmbiguousMarker()) {
       r = RankUtils.bestCodeCompliantRank(r, pn.getCode());
