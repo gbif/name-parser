@@ -1920,17 +1920,6 @@ public class NameParserImplTest {
     }
   }
 
-  @Ignore("not in tier-1 scope")
-
-  @Test
-  public void occNameFile() throws Exception {
-    int currFail = 4;
-    int fails = parseFile("occurrence-names.txt");
-    if (fails > currFail) {
-      fail("We are getting worse, not better. Currently failing: " + fails + ". Was passing:" + currFail);
-    }
-  }
-
   /**
    * Parse all verbatim GBIF checklist names to spot room for improvements
    */

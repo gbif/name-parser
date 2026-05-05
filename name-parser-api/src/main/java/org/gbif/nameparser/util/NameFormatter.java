@@ -323,13 +323,7 @@ public class NameFormatter {
     // Add phrase name
     if (showPhrase && n.isPhraseName()) {
       String phrase = n.getPhrase();
-      String voucher = n.getVoucher();
-      String nominatingParty = n.getNominatingParty();
       appendIfNotEmpty(sb, " ").append(phrase);
-      if (voucher != null && showVoucher)
-        sb.append(" (").append(voucher).append(")");
-      if (nominatingParty != null && showNominatingParty)
-        sb.append(" ").append(nominatingParty);
     }
     
     // add sensu/sec reference

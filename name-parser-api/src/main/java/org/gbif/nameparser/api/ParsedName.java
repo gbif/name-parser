@@ -47,7 +47,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   private Rank rank = Rank.UNRANKED;
   
   private NomCode code;
-  
+
   /**
    * Represents the monomial for genus, families or names at higher ranks which do not have further epithets.
    */
@@ -69,22 +69,11 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   private String infraspecificEpithet;
   
   private String cultivarEpithet;
-  
+
+  /**
+   * Final phrase part of the name when type=INFORMAL.
+   */
   private String phrase;
-
-  /**
-   * The voucher in a phrase name
-   *
-   * @see NameType#INFORMAL
-   */
-  private String voucher;
-
-  /**
-   * The nominating party for a phrase name
-   *
-   * @see NameType#INFORMAL
-   */
-  private String nominatingParty;
 
   /**
    * A bacterial candidate name.
@@ -143,8 +132,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     infraspecificEpithet = pn.infraspecificEpithet;
     cultivarEpithet = pn.cultivarEpithet;
     phrase = pn.phrase;
-    voucher = pn.voucher;
-    nominatingParty = pn.nominatingParty;
     candidatus = pn.candidatus;
     notho = pn.notho;
     originalSpelling = pn.originalSpelling;
@@ -261,22 +248,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   
   public void setPhrase(String phrase) {
     this.phrase = phrase;
-  }
-
-  public String getVoucher() {
-    return voucher;
-  }
-
-  public void setVoucher(String voucher) {
-    this.voucher = voucher;
-  }
-
-  public String getNominatingParty() {
-    return nominatingParty;
-  }
-
-  public void setNominatingParty(String nominatingParty) {
-    this.nominatingParty = nominatingParty;
   }
 
   public boolean isCandidatus() {
@@ -430,7 +401,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * @return True if this is a phrase name
    */
   public boolean isPhraseName() {
-    return phrase != null && !this.phrase.isEmpty() && this.voucher != null && !this.voucher.isEmpty();
+    return phrase != null && !this.phrase.isEmpty();
   }
   
   /**
@@ -485,8 +456,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
            && Objects.equals(infraspecificEpithet, that.infraspecificEpithet)
            && Objects.equals(cultivarEpithet, that.cultivarEpithet)
            && Objects.equals(phrase, that.phrase)
-           && Objects.equals(voucher, that.voucher)
-           && Objects.equals(nominatingParty, that.nominatingParty)
            && notho == that.notho
            && Objects.equals(epithetQualifier, that.epithetQualifier)
            && type == that.type;
@@ -494,7 +463,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, phrase, voucher, nominatingParty, candidatus, notho, originalSpelling, epithetQualifier, type);
+    return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, phrase, candidatus, notho, originalSpelling, epithetQualifier, type);
   }
 
   @Override
@@ -533,12 +502,6 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     }
     if (phrase != null) {
       sb.append(" STR:").append(phrase);
-    }
-    if (voucher != null) {
-      sb.append(" VOU:").append(voucher);
-    }
-    if (nominatingParty != null) {
-      sb.append(" NP:").append(nominatingParty);
     }
     if (getCombinationAuthorship() != null) {
       sb.append(" A:").append(getCombinationAuthorship());

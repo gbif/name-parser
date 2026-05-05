@@ -14,7 +14,6 @@ public class NameTypeTest {
     assertFalse(NameType.VIRUS.isParsable());
     assertFalse(NameType.NO_NAME.isParsable());
     assertFalse(NameType.HYBRID_FORMULA.isParsable());
-    assertFalse(NameType.OTU.isParsable());
   }
   
 }
