@@ -1,7 +1,7 @@
 package org.gbif.nameparser;
 
-import org.gbif.nameparser.api.NomCode;
-import org.gbif.nameparser.api.Rank;
+import org.gbif.nameparser.api.NameParser;
+import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.UnparsableNameException;
 
 import java.io.BufferedReader;
@@ -14,33 +14,34 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Standalone benchmark for {@link NameParserGBIF}.
+ * Standalone benchmark for {@link NameParserImpl}.
  *
- * Reads a TSV input file with up to three columns: scientific name, rank, nomenclatural code.
- * Rank and code are optional and matched case-insensitively against the {@link Rank} and
- * {@link NomCode} enum constant names. Lines starting with '#' or matching the literal header
- * "name\trank\tcode" are skipped. Empty lines and blank names are ignored.
+ * Reads a text input file with a scientific name per row.
+ * Lines starting with '#' are skipped.
+ * Empty lines and blank names are ignored.
  *
  * Reports count, average, min, max, p50 and p95 parsing times to stdout, and writes a per-name
  * log sorted by descending parse time to a configurable log file.
  *
  * Usage:
- *   java org.gbif.nameparser.Benchmark &lt;input.tsv&gt; [output.log]
+ *   java org.gbif.nameparser.Benchmark &lt;input.txt&gt; [output.log]
  */
 public class Benchmark {
-  private final NameParserGBIF parser;
+  private final NameParser parser;
 
-  public Benchmark(NameParserGBIF parser) {
+  public Benchmark(NameParser parser) {
     this.parser = parser;
   }
 
   public static void main(String[] args) throws Exception {
     Path input;
     if (args.length < 1) {
-      input = Paths.get("name-parser/src/test/resources/all-names.txt");
+      input = Paths.get("name-parser/src/test/resources/benchmark-data.txt");
       if (Files.exists(input)) {
         System.out.println("Use bundled all-names.txt");
       } else {
@@ -52,12 +53,11 @@ public class Benchmark {
     }
     Path log = args.length > 1 ? Paths.get(args[1]) : Paths.get("benchmark.log");
 
-    try (NameParserGBIF parser = new NameParserGBIF(5_000)) {
-      Result r = new Benchmark(parser).run(input);
-      r.report(System.out);
-      r.writeSortedLog(log);
-      System.out.println("Wrote per-name log to " + log.toAbsolutePath());
-    }
+    NameParser parser = new NameParserImpl();
+    Result r = new Benchmark(parser).run(input);
+    r.report(System.out);
+    r.writeSortedLog(log);
+    System.out.println("Wrote per-name log to " + log.toAbsolutePath());
   }
 
   public Result run(Path tsv) throws IOException {
@@ -73,20 +73,20 @@ public class Benchmark {
 
         long t0 = System.nanoTime();
         boolean ok = true;
+        NameType type = null;
         try {
-          parser.parse(name);
+          var pn = parser.parse(name, null, null, null);
+          type = pn.getType();
         } catch (UnparsableNameException e) {
           ok = false;
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          throw new IOException("Interrupted", e);
+          type = e.getType();
         }
         long elapsed = System.nanoTime() - t0;
 
         if (warmup > 0) {
           warmup--;
         } else {
-          timings.add(new Timing(name, elapsed, ok));
+          timings.add(new Timing(name, elapsed, ok, type));
           if (!ok) parseFailures++;
         }
       }
@@ -98,11 +98,13 @@ public class Benchmark {
     final String name;
     final long nanos;
     final boolean parsed;
+    final NameType type;
 
-    Timing(String name, long nanos, boolean parsed) {
+    Timing(String name, long nanos, boolean parsed, NameType type) {
       this.name = name;
       this.nanos = nanos;
       this.parsed = parsed;
+      this.type = type;
     }
   }
 
@@ -139,18 +141,31 @@ public class Benchmark {
       out.printf("p50:     %s%n", fmt(p50));
       out.printf("p95:     %s%n", fmt(p95));
       out.printf("Max:     %s%n", fmt(max));
+
+      out.println();
+      out.println("Breakdown by name type:");
+      Map<NameType, long[]> byType = new EnumMap<>(NameType.class);
+      for (Timing t : timings) {
+        NameType key = t.type != null ? t.type : NameType.NO_NAME;
+        byType.computeIfAbsent(key, k -> new long[1])[0]++;
+      }
+      byType.entrySet().stream()
+          .sorted((a, b) -> Long.compare(b.getValue()[0], a.getValue()[0]))
+          .forEach(e -> out.printf("  %-20s %d%n", e.getKey(), e.getValue()[0]));
     }
 
     public void writeSortedLog(Path out) throws IOException {
       List<Timing> sorted = new ArrayList<>(timings);
       sorted.sort(Comparator.comparingLong((Timing t) -> t.nanos).reversed());
       try (BufferedWriter w = Files.newBufferedWriter(out, StandardCharsets.UTF_8)) {
-        w.write("# nanos\tmillis\tparsed\trank\tcode\tname\n");
+        w.write("# nanos\tmillis\tparsed\ttype\tname\n");
         for (Timing t : sorted) {
           w.write(t.nanos + "\t");
           w.write(String.format("%.3f", t.nanos / 1_000_000.0));
           w.write("\t");
           w.write(t.parsed ? "Y" : "N");
+          w.write("\t");
+          w.write(t.type != null ? t.type.name() : "");
           w.write("\t");
           w.write(t.name);
           w.write("\n");
