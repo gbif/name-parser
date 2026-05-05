@@ -8,7 +8,7 @@ old regex parser.
 
 | Suite                          | Pass | Fail | Err | Skip |
 |--------------------------------|-----:|-----:|----:|-----:|
-| `NameParserAntlrTest`          |   84 |   10 |   0 |    4 |
+| `NameParserAntlrTest`          |   86 |    8 |   0 |    4 |
 | `NameParserAntlrTimeoutTest`   |    1 |    1 |   0 |    0 |
 | `NameParserAntlrThreadTest`    |    0 |    0 |   0 |    1 |
 | `ParsingJobTest`               |   13 |    0 |   0 |    0 |
@@ -45,6 +45,13 @@ timeout behaviour. Either rewrite the test or accept the new behaviour as a perf
 - **`namesWithAuthorFile` / `noHybrids` lex errors** — `UPPER_WORD` now accepts single-letter
   hyphen compounds (`Z-X`) and a new `SINGLE_UPPER` token covers lone author initials (`F`).
 - **`occNameFile`** — failure count dropped from 63 to 5 (baseline is 4).
+- **`Arrhoges (Antarctohoges)` swap** — `infragenericIsAuthor` now also returns true when
+  there's no comb authorship at all (a bare zoological monomial); the swap call moved
+  outside the `nc.hasAuthorship()` gate so it runs even when the parens land in
+  `subgenusParens` instead of `basionymGroup`.
+- **`Canis lupus subsp. Linnaeus, 1758` BOTANICAL stamping** — `setRank("subsp")` only
+  flips the code to BOTANICAL when an infraspecific epithet was actually parsed; the
+  epithet is now slotted before `setRank` runs so the order matches.
 
 ## Known remaining failures
 
@@ -65,17 +72,10 @@ specialised pre-cleanup:
    `Cymbella cistula var. sinus regis`). After a complete trinomial, `regis` shouldn't be
    pulled into authorship. A bare LOWER_WORD with no continuation should fall through to
    remainder; my last attempt at this regressed other tests.
-4. **`Arrhoges (Antarctohoges)` swap** (`infraGeneric:887`) — zoological subgenus that is
-   actually an author needs swapping in `ParsingJob`. `infragenericIsAuthor` returns false
-   because `Antarctohoges` ends in a Latin ending. Needs a code-aware override.
-5. **`Canis lupus subsp. Linnaeus, 1758`** (`indetNames:2581`) — `setRank("subsp")`
-   unconditionally stamps BOTANICAL even though there's no infraspecific epithet and the
-   trailing year suggests zoological. Conditional BOTANICAL stamping caused regressions
-   elsewhere — needs a more careful rule.
-6. **`(= Grislea L. 1753).` remainder leading char** (`nomNotes:2153`) — the legacy parser
+4. **`(= Grislea L. 1753).` remainder leading char** (`nomNotes:2153`) — the legacy parser
    captured the closing `)` of `(1758)` as the start of the remainder. The balanced
    `yearMaybe` consumes it instead, so the partial string is missing the leading `)`.
-7. **`Passiflora eglandulosa ... shit ...`** (`blacklisted:507`) — the test expects the
+5. **`Passiflora eglandulosa ... shit ...`** (`blacklisted:507`) — the test expects the
    blacklisted "shit" epithet to be detected and slotted as the infraspecific epithet. The
    pre-cleanup would need to identify the blacklist word inside a bibliographic reference.
 

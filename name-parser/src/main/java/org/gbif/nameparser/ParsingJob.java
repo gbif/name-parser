@@ -1537,10 +1537,12 @@ class ParsingJob implements Callable<ParsedName> {
     }
 
     setEpithetQualifier(NamePart.INFRASPECIFIC, nc.getInfraspecificQualifier());
+    // set the infraspecific epithet BEFORE setRank so the BOTANICAL stamping in setRank
+    // can tell apart real "subsp. X" trinomials from indet "subsp." (no epithet).
+    pn.setInfraspecificEpithet(StringUtils.trimToNull(nc.getInfraspecificEpithet()));
     if (nc.getInfraspecificRankMarker() != null) {
       setRank(nc.getInfraspecificRankMarker());
     }
-    pn.setInfraspecificEpithet(StringUtils.trimToNull(nc.getInfraspecificEpithet()));
 
     // (microbial-rank, indet-rank, and epithet-qualifier slots are not yet surfaced by the
     // ANTLR grammar — falling back to whatever lookForIrregularRankMarker can recover.)
@@ -1563,16 +1565,19 @@ class ParsingJob implements Callable<ParsedName> {
           nc.getBasionymExAuthors(),
           nc.getBasionymAuthors(),
           nc.getBasionymYear()));
-      if (bracketSubrankFound && infragenericIsAuthor(pn)) {
-        // rather an author than an infrageneric rank. Swap in case of monomials
-        pn.setBasionymAuthorship(parseAuthorship(null, pn.getInfragenericEpithet(), null));
-        pn.setInfragenericEpithet(null);
-        if (pn.getGenus() != null && pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null) {
-          pn.setUninomial(pn.getGenus());
-          pn.setGenus(null);
-        }
-        LOG.debug("swapped subrank with bracket author: {}", pn.getBasionymAuthorship());
+    }
+
+    // The author-swap fires for bare zoological monomials too — "Arrhoges (Antarctohoges)"
+    // has no authorship rule of its own; the parens land in subgenusParens. Run the swap
+    // outside the hasAuthorship() gate so those still get reinterpreted.
+    if (bracketSubrankFound && infragenericIsAuthor(pn)) {
+      pn.setBasionymAuthorship(parseAuthorship(null, pn.getInfragenericEpithet(), null));
+      pn.setInfragenericEpithet(null);
+      if (pn.getGenus() != null && pn.getSpecificEpithet() == null && pn.getInfraspecificEpithet() == null) {
+        pn.setUninomial(pn.getGenus());
+        pn.setGenus(null);
       }
+      LOG.debug("swapped subrank with bracket author: {}", pn.getBasionymAuthorship());
     }
 
     return true;
@@ -1611,7 +1616,10 @@ class ParsingJob implements Callable<ParsedName> {
       } else {
         setRankIfNotContradicting(rank);
       }
-      if (rankMarker.toLowerCase().startsWith("subsp")) {
+      if (rankMarker.toLowerCase().startsWith("subsp") && pn.getInfraspecificEpithet() != null) {
+        // "subsp." is a botanical convention — but for indet trinomials like
+        // "Canis lupus subsp. Linnaeus, 1758" (rank marker with no epithet) the year tells
+        // us the name is actually zoological. Only stamp BOTANICAL when we have an epithet.
         pn.setCode(NomCode.BOTANICAL);
       }
       if (rankMarker.startsWith(NOTHO)) {
@@ -1675,11 +1683,21 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   private static boolean infragenericIsAuthor(ParsedName pn) {
-      return pn.getBasionymAuthorship().isEmpty()
-          && pn.getSpecificEpithet() == null
-          && pn.getInfraspecificEpithet() == null
-          && !pn.getRank().isInfragenericStrictly()
-          && !LATIN_ENDINGS.matcher(pn.getInfragenericEpithet()).find();
+      if (!pn.getBasionymAuthorship().isEmpty()
+          || pn.getSpecificEpithet() != null
+          || pn.getInfraspecificEpithet() != null
+          || pn.getRank().isInfragenericStrictly()) {
+        return false;
+      }
+      // A bare monomial with parens but no comb authorship — "Arrhoges (Antarctohoges)" —
+      // is by convention a zoological genus with basionym author, not a botanical genus
+      // with subgenus. The Latin-ending heuristic alone fails for word like "Antarctohoges"
+      // (ends in "es") so we additionally accept the swap when no combination author is
+      // present at all: there's nothing else for the parens to be.
+      if (pn.getCombinationAuthorship().isEmpty()) {
+        return true;
+      }
+      return !LATIN_ENDINGS.matcher(pn.getInfragenericEpithet()).find();
   }
 
   /**
