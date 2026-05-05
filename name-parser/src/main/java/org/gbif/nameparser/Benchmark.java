@@ -102,28 +102,6 @@ public class Benchmark {
     return new Result(timings, parseFailures);
   }
 
-  private static String col(String[] cols, int i) {
-    return i < cols.length ? cols[i].trim() : "";
-  }
-
-  private static Rank parseRank(String s) {
-    if (s == null || s.isEmpty()) return Rank.UNRANKED;
-    try {
-      return Rank.valueOf(s.toUpperCase());
-    } catch (IllegalArgumentException e) {
-      return Rank.UNRANKED;
-    }
-  }
-
-  private static NomCode parseCode(String s) {
-    if (s == null || s.isEmpty()) return null;
-    try {
-      return NomCode.valueOf(s.toUpperCase());
-    } catch (IllegalArgumentException e) {
-      return null;
-    }
-  }
-
   static final class Timing {
     final String name;
     final long nanos;
@@ -163,6 +141,7 @@ public class Benchmark {
       long p95 = percentile(sorted, 95);
 
       out.printf("Parsed names: %d (%d failed)%n", count(), failures());
+      out.printf("Total:   %s%n", fmt(sum));
       out.printf("Average: %s%n", fmt(avg));
       out.printf("Min:     %s%n", fmt(min));
       out.printf("p50:     %s%n", fmt(p50));

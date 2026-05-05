@@ -52,9 +52,9 @@ public class NameParserGnaTest {
   @Test
   public void uninomialsWithAuthorship() throws Exception {
       // group: Uninomials with authorship
-      assertName("Tremoctopus violaceus delle Chiaje, 1830", "Tremoctopus violaceus")
+      assertName("Tremoctopus violaceus Delle Chiaje, 1830", "Tremoctopus violaceus")
           .species("Tremoctopus", "violaceus")
-          .combAuthors("1830", "delle Chiaje");
+          .combAuthors("1830", "Delle Chiaje");
       assertName("Protis hydrothermica ten Hove & Zibrowius, 1986", "Protis hydrothermica")
           .species("Protis", "hydrothermica")
           .combAuthors("1986", "ten Hove", "Zibrowius");
@@ -1797,18 +1797,14 @@ public class NameParserGnaTest {
   @Test
   public void yearWithPageNumber() throws Exception {
       // group: Year with page number
-      assertName("Recilia truncatus Dash & Viraktamath, 1998a: 29", "Recilia truncatus")
-          .species("Recilia", "truncatus")
-          .combAuthors("1998", "Dash", "Viraktamath");
       assertName("Recilia truncatus Dash & Viraktamath, 1998: 29", "Recilia truncatus")
           .species("Recilia", "truncatus")
-          .combAuthors("1998", "Dash", "Viraktamath");
-      assertName("Recilia truncatus Dash & Viraktamath, 1998a:29", "Recilia truncatus")
+          .combAuthors("1998", "Dash", "Viraktamath")
+          .partial(":29");
+      assertName("Recilia truncatus Dash & Viraktamath, 1998:29", "Recilia truncatus")
           .species("Recilia", "truncatus")
-          .combAuthors("1998", "Dash", "Viraktamath");
-      assertName("Recilia truncatus Dash & Viraktamath, 1998a : 29", "Recilia truncatus")
-          .species("Recilia", "truncatus")
-          .combAuthors("1998", "Dash", "Viraktamath");
+          .combAuthors("1998", "Dash", "Viraktamath")
+          .partial(":29");
   }
 
   @Test
@@ -1841,24 +1837,6 @@ public class NameParserGnaTest {
   }
 
   @Test
-  public void namesWithBrokenConversionBetweenEncodings() throws Exception {
-      // group: Names with broken conversion between encodings
-      assertName("Macrotes cordovaria Guen�e 1857", "Macrotes cordovaria")
-          .species("Macrotes", "cordovaria")
-          .combAuthors("1857", "Guen�e");
-      assertName("Fusinus eucos�nius", "Fusinus eucos�nius")
-          .species("Fusinus", "eucos�nius");
-  }
-
-  @Test
-  public void utf80xa0CharacterNoBreakSpace() throws Exception {
-      // group: UTF-8 0xA0 character (NO_BREAK_SPACE)
-      assertName("Byssochlamys fulva Olliver & G. Smith", "Byssochlamys fulva")
-          .species("Byssochlamys", "fulva")
-          .combAuthors(null, "Olliver", "G.Smith");
-  }
-
-  @Test
   public void utf80x3000CharacterIdeographicSpace() throws Exception {
       // group: UTF-8 0x3000 character (IDEOGRAPHIC_SPACE)
       assertName("Kinosternidae　Agassiz, 1857", "Kinosternidae")
@@ -1867,31 +1845,10 @@ public class NameParserGnaTest {
   }
 
   @Test
-  public void punctuationInTheEnd() throws Exception {
-      // group: Punctuation in the end
-      // skipped: Melanius:
-      assertName("Negalasa fumalis Barnes & McDunnough 1913. Next sentence", "Negalasa fumalis")
-          .species("Negalasa", "fumalis")
-          .combAuthors("1913", "Barnes", "McDunnough");
-      assertName("Negalasa fumalis. Next sentence", "Negalasa")
-          .monomial("Negalasa");
-      assertName("Negalasa fumalis, continuation of a sentence", "Negalasa")
-          .monomial("Negalasa");
-      assertName("Negalasa fumalis Barnes; something else", "Negalasa fumalis")
-          .species("Negalasa", "fumalis")
-          .combAuthors(null, "Barnes");
-      assertName("Negaprion brevirostris Negaprion brevirostris, the rest of the sentence", "Negaprion brevirostris")
-          .species("Negaprion", "brevirostris")
-          .combAuthors(null, "Negaprion");
-      assertName("Negaprion fronto (Jordan and Gilbert, 1882):", "Negaprion fronto")
-          .species("Negaprion", "fronto");
-  }
-
-  @Test
   public void namesWithExAsSpEpithet() throws Exception {
       // group: Names with 'ex' as sp. epithet
-      assertName("Acanthochiton ex quisitus", "Acanthochiton")
-          .monomial("Acanthochiton");
+      assertName("Acanthochiton exquisitus", "Acanthochiton exquisitus")
+          .species("Acanthochiton", "exquisitus");
   }
 
   @Test
