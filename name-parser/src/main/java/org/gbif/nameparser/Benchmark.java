@@ -1,16 +1,3 @@
-/*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.gbif.nameparser;
 
 import org.gbif.nameparser.api.NomCode;
@@ -51,11 +38,18 @@ public class Benchmark {
   }
 
   public static void main(String[] args) throws Exception {
+    Path input;
     if (args.length < 1) {
-      System.err.println("Usage: Benchmark <input.tsv> [output.log]");
-      System.exit(1);
+      input = Paths.get("name-parser/src/test/resources/all-names.txt");
+      if (Files.exists(input)) {
+        System.out.println("Use bundled all-names.txt");
+      } else {
+        System.out.println("Usage: Benchmark <input.txt> [output.log]");
+        System.exit(1);
+      }
+    } else {
+      input = Paths.get(args[0]);
     }
-    Path input = Paths.get(args[0]);
     Path log = args.length > 1 ? Paths.get(args[1]) : Paths.get("benchmark.log");
 
     try (NameParserGBIF parser = new NameParserGBIF(5_000)) {
@@ -70,11 +64,9 @@ public class Benchmark {
     List<Timing> timings = new ArrayList<>();
     int parseFailures = 0;
     long warmup = 50;
-    long lineNo = 0;
     try (BufferedReader r = Files.newBufferedReader(tsv, StandardCharsets.UTF_8)) {
       String line;
       while ((line = r.readLine()) != null) {
-        lineNo++;
         if (line.isEmpty() || line.startsWith("#")) continue;
         String name = line.trim();
         if (name.isEmpty()) continue;
