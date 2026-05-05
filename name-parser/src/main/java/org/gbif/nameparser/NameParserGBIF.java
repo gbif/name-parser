@@ -78,6 +78,7 @@ public class NameParserGBIF implements NameParser {
     LOG.info("Create new name parser with {}ms timeout", timeout);
     this.timeout = timeout;
     this.exec = executorService;
+    configs.loadInternalDefaults();
   }
 
   public long getTimeout() {

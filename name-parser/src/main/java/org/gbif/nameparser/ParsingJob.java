@@ -550,6 +550,37 @@ class ParsingJob implements Callable<ParsedName> {
       return true;
     }
 
+    // binomial-prefix override? Used to recover names whose specific epithet would
+    // otherwise be absorbed into the authorship as a particle (e.g. "Bolitoglossa la Campbell, ...").
+    ParserConfigs.PrefixMatch pm = configs.forPrefix(name);
+    if (pm != null) {
+      pn.copy(pm.parsedName);
+      LOG.debug("Binomial prefix override found for name: {}", name);
+      if (pm.remainder == null) {
+        return true;
+      }
+      try {
+        ParsedName auth = new AuthorshipParsingJob(pm.remainder, configs).call();
+        pn.setBasionymAuthorship(auth.getBasionymAuthorship());
+        pn.setCombinationAuthorship(auth.getCombinationAuthorship());
+        if (auth.getSanctioningAuthor() != null) {
+          pn.setSanctioningAuthor(auth.getSanctioningAuthor());
+        }
+        if (auth.getState() == ParsedName.State.PARTIAL) {
+          pn.setState(ParsedName.State.PARTIAL);
+          if (auth.getUnparsed() != null) {
+            pn.addUnparsed(auth.getUnparsed());
+          }
+        } else {
+          pn.setState(ParsedName.State.COMPLETE);
+        }
+      } catch (UnparsableNameException e) {
+        pn.setState(ParsedName.State.PARTIAL);
+        pn.addUnparsed(pm.remainder);
+      }
+      return true;
+    }
+
     // BOLD/UNITE OTU names
     Matcher m = matcherInterruptable(OTU_PATTERN, name);
     if (m.find()) {
@@ -1789,6 +1820,9 @@ class ParsingJob implements Callable<ParsedName> {
    * Splits an author team by either ; or ,
    */
   private static List<String> splitTeam(String team) throws InterruptedException {
+    // Spanish " y " is captured as a separator by the AUTHOR_TEAM regex; normalize
+    // it to a comma so the standard splitter can handle it.
+    team = team.replace(" y ", ",");
     // treat semicolon differently. Single author name can contain a comma now!
     if (team.contains(";")) {
       List<String> authors = new ArrayList<>();

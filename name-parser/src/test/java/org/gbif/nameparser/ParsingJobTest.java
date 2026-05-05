@@ -152,7 +152,7 @@ public class ParsingJobTest {
     assertAuthorTeamPattern("An der Lan");
     assertAuthorTeamPattern("Bor & s'Jacob",  "Bor", "s'Jacob");
     assertAuthorTeamPattern("Brunner von Wattenwyl v.W.");
-    assertAuthorTeamPattern("Martinez y Saez");
+    assertAuthorTeamPattern("Martinez y Saez", "Martinez", "Saez");
     assertAuthorTeamPattern("Da Silva e Castro");
     assertAuthorTeamPattern("LafuenteRoca & Carbonell",  "LafuenteRoca", "Carbonell");
     assertAuthorTeamPattern("Mas-ComaBargues & Esteban",  "Mas-ComaBargues", "Esteban");

@@ -1861,7 +1861,7 @@ public class NameParserGnaTest {
           .species("Dicranum", "saxatile")
           .combAuthors("1802", "Lagasca", "Segura", "García", "Clemente", "Rubio");
       assertName("Carabus (Tanaocarabus) hendrichsi Bolvar y Pieltain, Rotger & Coronado 1967", "Carabus hendrichsi")
-          .species("Carabus", "hendrichsi")
+          .species("Carabus", "Tanaocarabus", "hendrichsi")
           .combAuthors("1967", "Bolvar", "Pieltain", "Rotger", "Coronado");
   }
 
