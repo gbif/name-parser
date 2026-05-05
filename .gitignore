@@ -4,7 +4,15 @@ target/
 .idea/
 .DS_Store
 
+**/.classpath
+**/.project
+**/.settings
+**/.factorypath
+
 # Package Files #
 *.jar
 *.war
 *.ear
+
+# repo specifics
+benchmark.log
