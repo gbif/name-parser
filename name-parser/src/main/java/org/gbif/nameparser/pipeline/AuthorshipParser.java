@@ -32,6 +32,7 @@ public final class AuthorshipParser {
     Authorship combination = new Authorship();
     Authorship basionym = new Authorship();
     boolean basionymPresent;
+    boolean yearRange;
     String sanctioningAuthor;
     int unparsedFrom = -1;
     String unparsedText;
@@ -54,7 +55,7 @@ public final class AuthorshipParser {
         if (basColon > basFrom) {
           basEnd = basColon;
         }
-        parseAuthors(tokens, basFrom, basEnd, s.basionym);
+        s.yearRange |= parseAuthors(tokens, basFrom, basEnd, s.basionym);
         s.basionymPresent = true;
         i = close + 1;
       }
@@ -73,7 +74,7 @@ public final class AuthorshipParser {
           combEnd = colon;
         }
       }
-      parseAuthors(tokens, combFrom, combEnd, s.combination);
+      s.yearRange |= parseAuthors(tokens, combFrom, combEnd, s.combination);
       // Whether or not a sanctioning author was extracted, the entire trailing span
       // belongs to combination + sanctioning; nothing is unparsed afterwards.
       i = n;
@@ -116,11 +117,13 @@ public final class AuthorshipParser {
   /**
    * Parses author list within [from, to), populating {@code into}. Handles "ex"
    * splitting (ex authors come before main authors).
+   * @return true if a year range was detected (e.g. "1845-1847", "1987-92")
    */
-  private static void parseAuthors(List<Token> tokens, int from, int to, Authorship into) {
+  private static boolean parseAuthors(List<Token> tokens, int from, int to, Authorship into) {
     List<String> authors = new ArrayList<>();
     List<String> exAuthors = null;
     StringBuilder cur = new StringBuilder();
+    boolean yearRange = false;
     int i = from;
 
     while (i < to) {
@@ -131,6 +134,17 @@ public final class AuthorshipParser {
         flush(cur, authors);
         into.setYear(t.text);
         i++;
+        // Detect year range: NUMBER + OTHER("-" or "/") + NUMBER → keep first year only
+        if (i + 1 < to) {
+          Token sep = tokens.get(i);
+          if (sep.kind == TokenKind.OTHER && (sep.text.equals("-") || sep.text.equals("/"))) {
+            Token nx = tokens.get(i + 1);
+            if (nx.kind == TokenKind.NUMBER && nx.text.length() >= 1 && nx.text.length() <= 4) {
+              yearRange = true;
+              i += 2; // skip separator and trailing year
+            }
+          }
+        }
         continue;
       }
 
@@ -226,9 +240,10 @@ public final class AuthorshipParser {
             // following a surname is an initial, not the filius suffix, so we don't
             // collapse it here.
             if (AUTHOR_SUFFIXES.contains(nxt)) {
-              // ensure trailing dot then suffix without intervening space
+              // abbreviated surname ends with '.': "Burm.f." — no separator needed
+              // full surname ends with a letter: "Hooker f." — use a space
               if (cur.length() > 0 && cur.charAt(cur.length() - 1) != '.') {
-                cur.append('.');
+                cur.append(' ');
               }
               cur.append(nxt);
               i++;
@@ -300,6 +315,7 @@ public final class AuthorshipParser {
     if (exAuthors != null && !exAuthors.isEmpty()) {
       into.setExAuthors(invertAll(exAuthors));
     }
+    return yearRange;
   }
 
   /**
@@ -504,9 +520,16 @@ public final class AuthorshipParser {
 
   static NomCode inferCode(AuthState s) {
     if (s.sanctioningAuthor != null) return NomCode.BOTANICAL;
-    if (s.basionym.getYear() != null) return NomCode.ZOOLOGICAL;
-    if (s.basionymPresent) return NomCode.BOTANICAL;
-    if (s.combination.getYear() != null) return NomCode.ZOOLOGICAL;
+    // Any year (basionym or combination) is a strong zoological signal: year citation is
+    // mandatory in zoological nomenclature but optional in botanical.
+    if ((s.basionymPresent && s.basionym.getYear() != null) || s.combination.getYear() != null) {
+      return NomCode.ZOOLOGICAL;
+    }
+    // No years: two-part citation (original author in parens + recombination author) without
+    // years is the standard botanical pattern; one-part basionym-only is zoological.
+    if (s.basionymPresent) {
+      return s.combination.hasAuthors() ? NomCode.BOTANICAL : NomCode.ZOOLOGICAL;
+    }
     return null;
   }
 }

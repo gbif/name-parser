@@ -5,16 +5,13 @@ import com.google.common.collect.Lists;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
-import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -963,10 +960,10 @@ public class NameParserImplTest {
     assertUnparsable("N.n. (Chitinivorax)", PLACEHOLDER);
 
     // https://github.com/gbif/checklistbank/issues/48
-    assertUnparsable("Gen.nov. sp.nov.", NO_NAME);
-    assertUnparsable("Gen.nov.", NO_NAME);
+    assertUnparsable("Gen.nov. sp.nov.", NameType.OTHER);
+    assertUnparsable("Gen.nov.", NameType.OTHER);
 
-    assertUnparsable("Aster indet.", PLACEHOLDER);
+    assertName("Aster indet.", "Aster sp.").species("Aster", null).type(NameType.INFORMAL).warning(Warnings.INDETERMINED).nothingElse();
     assertUnparsable("Asteraceae incertae sedis", PLACEHOLDER);
     assertUnparsable("unassigned Abies", PLACEHOLDER);
     assertUnparsable("Unident-Boraginaceae", PLACEHOLDER);
@@ -1359,7 +1356,7 @@ public class NameParserImplTest {
   }
 
   protected void assertHybridFormula(String name) throws InterruptedException {
-    assertUnparsable(name, HYBRID_FORMULA);
+    assertUnparsable(name, FORMULA);
   }
 
   @Test
@@ -1370,33 +1367,33 @@ public class NameParserImplTest {
             .phraseName("Desulfobacterota", "B")
             .nothingElse();
     // unparsable identifiers
-    assertUnparsable("UBA3054", NO_NAME);
-    assertUnparsable("F0040", NO_NAME);
-    assertUnparsable("AABM5-125-24", NO_NAME);
-    assertUnparsable("B130-G9", NO_NAME);
-    assertUnparsable("BMS3Abin14", NO_NAME);
-    assertUnparsable("4572-55", NO_NAME);
-    assertUnparsable("T1SED10-198M", NO_NAME);
-    assertUnparsable("BMS3Abin14", NO_NAME);
-    assertUnparsable("UBA11359_C", NO_NAME);
-    assertUnparsable("01-FULL-45-15b", NO_NAME);
-    assertUnparsable("E44-bin80", NO_NAME);
-    assertUnparsable("E2", NO_NAME);
-    assertUnparsable("9FT-COMBO-53-11", NO_NAME);
-    assertUnparsable("AqS3", NO_NAME);
-    assertUnparsable("Gp7-AA8", NO_NAME);
-    assertUnparsable("0-14-0-10-38-17 sp002774085", NO_NAME);
-    assertUnparsable("01-FULL-45-15b sp001822655", NO_NAME);
-    assertUnparsable("18JY21-1 sp004344915", NO_NAME);
-    assertUnparsable("SH1508347.08FU", NO_NAME);
-    assertUnparsable("SH19186714.17FU", NO_NAME);
-    assertUnparsable("SH191814.08FU", NO_NAME);
-    assertUnparsable("SH191814.04FU", NO_NAME);
-    assertUnparsable("BOLD:ACW2100", NO_NAME);
-    assertUnparsable("BOLD:ACW2100", NO_NAME);
-    assertUnparsableName(" BOLD:ACW2100 ", UNRANKED, NO_NAME, "BOLD:ACW2100");
-    assertUnparsableName("Festuca sp. BOLD:ACW2100", UNRANKED, NO_NAME, "BOLD:ACW2100");
-    assertUnparsableName("sh460441.07fu", UNRANKED, NO_NAME, "SH460441.07FU");
+    assertUnparsable("UBA3054", NameType.OTHER);
+    assertUnparsable("F0040", NameType.OTHER);
+    assertUnparsable("AABM5-125-24", NameType.OTHER);
+    assertUnparsable("B130-G9", NameType.OTHER);
+    assertUnparsable("BMS3Abin14", NameType.OTHER);
+    assertUnparsable("4572-55", NameType.OTHER);
+    assertUnparsable("T1SED10-198M", NameType.OTHER);
+    assertUnparsable("BMS3Abin14", NameType.OTHER);
+    assertUnparsable("UBA11359_C", NameType.OTHER);
+    assertUnparsable("01-FULL-45-15b", NameType.OTHER);
+    assertUnparsable("E44-bin80", NameType.OTHER);
+    assertUnparsable("E2", NameType.OTHER);
+    assertUnparsable("9FT-COMBO-53-11", NameType.OTHER);
+    assertUnparsable("AqS3", NameType.OTHER);
+    assertUnparsable("Gp7-AA8", NameType.OTHER);
+    assertUnparsable("0-14-0-10-38-17 sp002774085", NameType.OTHER);
+    assertUnparsable("01-FULL-45-15b sp001822655", NameType.OTHER);
+    assertUnparsable("18JY21-1 sp004344915", NameType.OTHER);
+    assertUnparsable("SH1508347.08FU", NameType.OTHER);
+    assertUnparsable("SH19186714.17FU", NameType.OTHER);
+    assertUnparsable("SH191814.08FU", NameType.OTHER);
+    assertUnparsable("SH191814.04FU", NameType.OTHER);
+    assertUnparsable("BOLD:ACW2100", NameType.OTHER);
+    assertUnparsable("BOLD:ACW2100", NameType.OTHER);
+    assertUnparsableName(" BOLD:ACW2100 ", UNRANKED, NameType.OTHER, "BOLD:ACW2100");
+    assertUnparsableName("Festuca sp. BOLD:ACW2100", UNRANKED, NameType.OTHER, "BOLD:ACW2100");
+    assertUnparsableName("sh460441.07fu", UNRANKED, NameType.OTHER, "SH460441.07FU");
 
     // no OTU names
     assertName("Boldenaria", "Boldenaria")
@@ -1882,7 +1879,7 @@ public class NameParserImplTest {
         ParsedName pn = parser.parse(name);
         fail("Expected " + name + " to be unparsable");
       } catch (UnparsableNameException ex) {
-        assertEquals("Bad name type for: "+name, NameType.NO_NAME, ex.getType());
+        assertEquals("Bad name type for: "+name, NameType.OTHER, ex.getType());
         assertEquals(name, ex.getName());
       }
     }
@@ -1898,7 +1895,7 @@ public class NameParserImplTest {
         ParsedName pn = parser.parse(name);
         fail("Expected " + name + " to be unparsable hybrid");
       } catch (UnparsableNameException ex) {
-        assertEquals(NameType.HYBRID_FORMULA, ex.getType());
+        assertEquals(NameType.FORMULA, ex.getType());
         assertEquals(name, ex.getName());
       }
     }
@@ -1936,15 +1933,19 @@ public class NameParserImplTest {
   @Test
   @Ignore
   public void colFile() throws Exception {
-    java.io.File logFile = new java.io.File("target/col-names-parsed.log");
+    try (var in = getClass().getResourceAsStream("/col-names.tsv")) {
+      parseInput(in, "target/col-names-parsed.log");
+    }
+  }
+
+  private void parseInput(InputStream stream, String logFN) throws Exception {
+    File logFile = new File(logFN);
     logFile.getParentFile().mkdirs();
     Map<NameType, Integer> parseTypes = new HashMap<>();
     int counter = 0;
     long start = System.currentTimeMillis();
-    try (java.io.BufferedReader br = new java.io.BufferedReader(
-            new java.io.InputStreamReader(
-                getClass().getResourceAsStream("/col-names.tsv"), "UTF-8"));
-         java.io.BufferedWriter bw = new java.io.BufferedWriter(new java.io.FileWriter(logFile))) {
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+         BufferedWriter bw = new BufferedWriter(new FileWriter(logFile))) {
       bw.write("# type\tname\n");
       String line = br.readLine(); // skip header
       while ((line = br.readLine()) != null) {
@@ -2012,7 +2013,7 @@ public class NameParserImplTest {
           LOG.debug("{} {}", pn.getState(), name);
         }
       } catch (UnparsableNameException ex) {
-        if (ex.getType().isParsable() || ex.getType() == NO_NAME) {
+        if (ex.getType().isParsable() || ex.getType() == NameType.OTHER) {
           parseFails++;
           LOG.warn("{}: {}", ex.getType(), name);
         }
@@ -2395,7 +2396,7 @@ public class NameParserImplTest {
   @Test
   public void nonNames() throws Exception {
     // the entire name ends up as a taxonomic note, consider this as unparsed...
-    assertUnparsable("non  Ramaria fagetorum Maas Geesteranus 1976 nomen nudum = Ramaria subbotrytis sensu auct. europ.", Rank.SPECIES, NameType.NO_NAME);
+    assertUnparsable("non  Ramaria fagetorum Maas Geesteranus 1976 nomen nudum = Ramaria subbotrytis sensu auct. europ.", Rank.SPECIES, NameType.OTHER);
 
     assertName("Hebeloma album Peck 1900 non ss. auct. europ.", "Hebeloma album")
             .species("Hebeloma", "album")
@@ -2708,8 +2709,6 @@ public class NameParserImplTest {
 //
     //assertUnparsableType(NameType.DOUBTFUL, "siRNA");
   }
-
-  @Ignore("not in tier-3 scope")
 
   @Test
   public void indetNames() throws Exception {
@@ -3558,7 +3557,7 @@ public class NameParserImplTest {
    */
   @Test
   public void pr2() throws Exception {
-    assertUnparsable("Basal_Cryptophyceae-1", NO_NAME);
+    assertUnparsable("Basal_Cryptophyceae-1", NameType.OTHER);
   }
 
   // **************
@@ -3578,7 +3577,7 @@ public class NameParserImplTest {
   }
 
   private void assertNoName(String name) throws InterruptedException {
-    assertUnparsable(name, NO_NAME);
+    assertUnparsable(name, NameType.OTHER);
   }
 
   private void assertUnparsable(String name, NameType type) throws InterruptedException {

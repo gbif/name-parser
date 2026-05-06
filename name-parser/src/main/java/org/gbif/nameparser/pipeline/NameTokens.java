@@ -45,11 +45,11 @@ public final class NameTokens {
       Token t = ts.get(i);
       if (t.kind == TokenKind.HYBRID_MARK) {
         if (genus != null && lowerEpithets.isEmpty()) {
-          ctx.name.setNotho(NamePart.SPECIFIC);
+          ctx.name.addNotho(NamePart.SPECIFIC);
         } else if (genus == null) {
-          ctx.name.setNotho(NamePart.GENERIC);
+          ctx.name.addNotho(NamePart.GENERIC);
         } else {
-          ctx.name.setNotho(NamePart.INFRASPECIFIC);
+          ctx.name.addNotho(NamePart.INFRASPECIFIC);
         }
         i++;
         continue;
@@ -128,21 +128,43 @@ public final class NameTokens {
             ctx.name.setType(NameType.INFORMAL);
             i++;
             if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
+            // A number immediately following the indet marker becomes the informal phrase
+            if (i < boundary && ts.get(i).kind == TokenKind.NUMBER) {
+              ctx.name.setPhrase(ts.get(i).text);
+              i++;
+            }
             continue;
           }
           // 3. infraspecific rank marker (with notho-prefix support)
           boolean[] notho = new boolean[1];
           Rank rmInfra = RankMarkers.matchInfraspecificAllowNotho(w, notho);
-          if (rmInfra != null && hasInfraspecificEpithetAfter(ts, i, boundary)) {
-            inlineRank = rmInfra;
-            inlineRankNotho = notho[0];
-            markerIdxInEpithets = lowerEpithets.size();
-            i++;
-            if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
-            // microbial "f. sp." → forma specialis: skip the "sp" + dot too
-            if (i + 1 < boundary && ts.get(i).kind == TokenKind.WORD
-                && ts.get(i).text.equalsIgnoreCase("sp")) {
-              inlineRank = Rank.FORMA_SPECIALIS;
+          if (rmInfra != null) {
+            if (hasInfraspecificEpithetAfter(ts, i, boundary)) {
+              inlineRank = rmInfra;
+              inlineRankNotho = notho[0];
+              markerIdxInEpithets = lowerEpithets.size();
+              i++;
+              if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
+              // microbial "f. sp." → forma specialis: skip the "sp" + dot too
+              if (i + 1 < boundary && ts.get(i).kind == TokenKind.WORD
+                  && ts.get(i).text.equalsIgnoreCase("sp")) {
+                inlineRank = Rank.FORMA_SPECIALIS;
+                i++;
+                if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
+              }
+            } else if (!lowerEpithets.isEmpty()) {
+              // Trailing rank marker with no following epithet = indetermined infraspecific
+              indet = true;
+              inlineRank = rmInfra;
+              inlineRankNotho = notho[0];
+              markerIdxInEpithets = lowerEpithets.size();
+              i++;
+              if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
+            } else {
+              // Rank marker before any lower epithet and no following epithet:
+              // treat it as the specific epithet (e.g. "Foa fo" — "fo" is the
+              // species name, not a forma rank indicator).
+              lowerEpithets.add(w);
               i++;
               if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
             }
@@ -274,12 +296,23 @@ public final class NameTokens {
     }
     if (indet) {
       ctx.name.setType(NameType.INFORMAL);
-      if (lowerEpithets.isEmpty() && infraspecific == null) {
-        if (ctx.name.getRank() == null || ctx.name.getRank() == Rank.UNRANKED) {
+      if (infraspecific == null) {
+        if (lowerEpithets.isEmpty()
+            && (ctx.name.getRank() == null || ctx.name.getRank() == Rank.UNRANKED)) {
           ctx.name.setRank(Rank.SPECIES);
         }
-        ctx.name.addWarning(Warnings.INDETERMINED);
+        if (ctx.name.getPhrase() == null) {
+          ctx.name.addWarning(Warnings.INDETERMINED);
+        }
       }
+    }
+    // Caller-supplied infraspecific rank on a binomial with no infraspecific epithet
+    // → treat as indeterminate infraspecific (e.g. "Lepidoptera alba DC." + SUBSPECIES)
+    if (!indet && requested != null && requested != Rank.UNRANKED
+        && requested.isInfraspecific() && specific != null && infraspecific == null) {
+      ctx.name.setType(NameType.INFORMAL);
+      ctx.name.setRank(requested);
+      ctx.name.addWarning(Warnings.INDETERMINED);
     }
     if (requested == Rank.SPECIES && infraspecific != null) {
       ctx.name.addWarning(Warnings.SUBSPECIES_ASSIGNED);
@@ -289,6 +322,39 @@ public final class NameTokens {
   /** Title-cases all-caps or all-lower-case Latin words used as a genus/uninomial. */
   private static String recoverCase(ParseContext ctx, String text, boolean isGenus) {
     if (text.length() < 2) return text;
+
+    // For hyphenated genera, normalize subsequent segments to lowercase under specific conditions:
+    // - first segment is ≤ 3 chars (short prefix like "Eu-", "Le-", "Uva-"), OR
+    // - name has 3+ hyphenated segments (e.g. "Prunus-Lauro-Cerasus")
+    // This does NOT apply when subsequent segments already start lowercase.
+    if (isGenus && text.indexOf('-') >= 0) {
+      String[] parts = text.split("-", -1);
+      if (parts.length >= 2) {
+        boolean needsNorm = false;
+        for (int k = 1; k < parts.length; k++) {
+          if (!parts[k].isEmpty() && Character.isUpperCase(parts[k].codePointAt(0))) {
+            needsNorm = true;
+            break;
+          }
+        }
+        if (needsNorm && (parts[0].length() <= 3 || parts.length >= 3)) {
+          StringBuilder sb = new StringBuilder(parts[0]);
+          for (int k = 1; k < parts.length; k++) {
+            sb.append('-');
+            String p = parts[k];
+            if (!p.isEmpty() && Character.isUpperCase(p.codePointAt(0))) {
+              int cpLen = Character.charCount(p.codePointAt(0));
+              sb.appendCodePoint(Character.toLowerCase(p.codePointAt(0)));
+              sb.append(p.substring(cpLen));
+            } else {
+              sb.append(p);
+            }
+          }
+          return sb.toString();
+        }
+      }
+    }
+
     boolean upper = isAllLetterCase(text, true);
     boolean lower = !upper && isAllLetterCase(text, false);
     if (!upper && !lower) return text;

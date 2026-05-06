@@ -63,6 +63,8 @@ public final class AuthorshipSplit {
               || w.equalsIgnoreCase("species") || w.equalsIgnoreCase("indet")) {
             i++;
             if (i < n && tokens.get(i).kind == TokenKind.DOT) i++;
+            // A number immediately after an indet marker is the informal phrase, not authorship
+            if (i < n && tokens.get(i).kind == TokenKind.NUMBER) i++;
             continue;
           }
           // Aggregate suffix words within the name section
@@ -201,7 +203,12 @@ public final class AuthorshipSplit {
   private static boolean hasEpithetAfterMarker(List<Token> tokens, int markerIdx, int n, boolean infrageneric) {
     int k = markerIdx + 1;
     if (k < n && tokens.get(k).kind == TokenKind.DOT) k++;
-    if (k >= n) return false;
+    if (k >= n) {
+      // "f" is ambiguous: could be forma-rank or the "filius" author suffix.
+      // Treat a trailing "f." as filius (not a rank marker) to avoid misclassification.
+      String mw = tokens.get(markerIdx).text.toLowerCase();
+      return !mw.equals("f");
+    }
     Token t = tokens.get(k);
     if (t.kind != TokenKind.WORD) return false;
     if (infrageneric) return t.startsUpper();

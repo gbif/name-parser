@@ -33,6 +33,7 @@ public final class StripAndStash {
       "\\s*,?\\s+(" +
           "(?:nom|comb|orth)\\b\\.?(?:\\s+[a-zA-Z][a-zA-Z.]*)*" +
           "|spec\\b\\.?\\s*nov\\b\\.?" +
+          "|nov\\b\\.?\\s+spec\\b\\.?" +
           ")\\s*(?=$|,\\s*non(?:n\\.?)?\\b|,\\s*nec\\b)",
       Pattern.CASE_INSENSITIVE);
 
@@ -106,6 +107,35 @@ public final class StripAndStash {
       if (!s.equals(before)) {
         ctx.name.addWarning(org.gbif.nameparser.api.Warnings.HOMOGLYHPS);
       }
+    }
+
+    // Normalize double (or more) underscores between letters to a single space
+    // (e.g. "Pseudocercospora__dendrobii" → "Pseudocercospora dendrobii").
+    if (s.indexOf("__") >= 0) {
+      s = s.replaceAll("_{2,}", " ").trim();
+    }
+
+    // Strip trailing OTU-code identifiers (e.g. "Oxalis barrelieri XXZ_21243") — store
+    // as pendingUnparsed so the name portion is still parsed normally.
+    if (s.contains(" ") && ctx.pendingUnparsed == null) {
+      java.util.regex.Matcher otuM = java.util.regex.Pattern
+          .compile("\\s+([A-Z0-9]{3,}_\\d{3,})$").matcher(s);
+      if (otuM.find()) {
+        ctx.pendingUnparsed = otuM.group(1);
+        s = s.substring(0, otuM.start()).trim();
+      }
+    }
+
+    // Strip HTML tags and decode HTML entities (e.g. "<i>sensu</i> Author" or "&amp;").
+    if (s.indexOf('<') >= 0 || s.indexOf('&') >= 0) {
+      // Strip HTML-tagged taxonomic connectors entirely (tag + content), e.g. <i>sensu</i>
+      s = s.replaceAll("<[^>]+>(?:sensu|auct\\.?|s\\.l\\.?|s\\.str\\.?|sec\\.?)</[^>]+>", "");
+      // Strip remaining HTML tags but keep their text content
+      s = s.replaceAll("<[^>]+>", "");
+      // Decode basic HTML entities
+      s = s.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&nbsp;", " ");
+      // Clean up any extra whitespace introduced by tag removal
+      s = s.replaceAll("\\s{2,}", " ").trim();
     }
 
     // Candidatus prefix — quoted "Candidatus …" or bare "Candidatus …" / "Ca. …".

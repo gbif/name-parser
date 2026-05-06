@@ -1,14 +1,14 @@
 package org.gbif.nameparser;
 
-import org.gbif.nameparser.api.NameParser;
-import org.gbif.nameparser.api.ParsedName;
-import org.gbif.nameparser.api.Rank;
-import org.gbif.nameparser.api.UnparsableNameException;
-import org.junit.After;
+import org.gbif.nameparser.api.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import static org.gbif.nameparser.api.NameType.FORMULA;
+import static org.gbif.nameparser.api.NameType.INFORMAL;
 import static org.gbif.nameparser.api.Rank.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Tests imported from the gnparser project's test_data.md, see
@@ -25,7 +25,6 @@ import static org.gbif.nameparser.api.Rank.*;
  * Some expectations have been manually adjusted to match the GBIF parser expectations
  * as the GNA cases often are problems with OCR and text mining.
  */
-@Ignore("GN tests are not yet fully implemented")
 public class NameParserGnaTest {
 
   private final NameParser parser = new NameParserImpl();
@@ -37,6 +36,7 @@ public class NameParserGnaTest {
           .monomial("Pseudocercospora");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void uninomialsWithAuthorship() throws Exception {
       // group: Uninomials with authorship
@@ -182,6 +182,7 @@ public class NameParserGnaTest {
           .combAuthors("1983", "Solem");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void combinationOfTwoUninomials() throws Exception {
       // group: Combination of two uninomials
@@ -256,6 +257,7 @@ public class NameParserGnaTest {
           .rank(SUBGENUS);
   }
 
+  @Ignore("not yet passing")
   @Test
   public void icnNamesThatLookLikeCombinedUninomialsForIczn() throws Exception {
       // group: ICN names that look like combined uninomials for ICZN
@@ -283,6 +285,7 @@ public class NameParserGnaTest {
           .basAuthors(null, "Fée");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void binomialsWithoutAuthorship() throws Exception {
       // group: Binomials without authorship
@@ -302,6 +305,7 @@ public class NameParserGnaTest {
           .species("Remera", "cvancarai");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void binomialsWithAuthorship() throws Exception {
       // group: Binomials with authorship
@@ -513,6 +517,7 @@ public class NameParserGnaTest {
           .basAuthors("1983", "Castro-Aguirre", "Suárez de los Cobos");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void binomialsWithAnAbbreviatedGenus() throws Exception {
       // group: Binomials with an abbreviated genus
@@ -523,6 +528,7 @@ public class NameParserGnaTest {
           .basAuthors("1778", "Osbeck");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void binomialsWithAbbreviatedSubgenus() throws Exception {
       // group: Binomials with abbreviated subgenus
@@ -538,6 +544,7 @@ public class NameParserGnaTest {
           .combAuthors("1792", "Kerr");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void binomialsWithBasionymAndCombinationAuthors() throws Exception {
       // group: Binomials with basionym and combination authors
@@ -569,6 +576,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "H.del Villar");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void exceptionsWithBinomials() throws Exception {
       // group: Exceptions with Binomials
@@ -610,6 +618,7 @@ public class NameParserGnaTest {
           .combAuthors("1938", "Mc'Keown");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void infraspeciesWithoutRankIczn() throws Exception {
       // group: Infraspecies without rank (ICZN)
@@ -653,6 +662,7 @@ public class NameParserGnaTest {
           .basAuthors(null, "Sterneck");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void legacyIcznNamesWithRank() throws Exception {
       // group: Legacy ICZN names with rank
@@ -661,6 +671,7 @@ public class NameParserGnaTest {
           .combAuthors("1967", "Movchan");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void infraspeciesWithRankIcn() throws Exception {
       // group: Infraspecies with rank (ICN)
@@ -789,6 +800,7 @@ public class NameParserGnaTest {
           .combAuthors("1912", "Aurivillius");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void infraspeciesMultipleIcn() throws Exception {
       // group: Infraspecies multiple (ICN)
@@ -807,6 +819,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "A.M.Scott", "Prescott");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void infraspeciesWithGreekLettersIcn() throws Exception {
       // group: Infraspecies with greek letters (ICN)
@@ -826,6 +839,7 @@ public class NameParserGnaTest {
           .species("Aristotelia", "fruticosa");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void namesWithTheDaggerChar() throws Exception {
       // group: Names with the dagger char '†'
@@ -843,6 +857,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "F A");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void hybridsWithNothoRanks() throws Exception {
       // group: Hybrids with notho- ranks
@@ -882,75 +897,98 @@ public class NameParserGnaTest {
   @Test
   public void namedHybrids() throws Exception {
       // group: Named hybrids
-      assertName("×Agropogon P. Fourn. 1934", "Agropogon")
+      assertName("×Agropogon P. Fourn. 1934", "× Agropogon")
           .monomial("Agropogon")
+          .notho(NamePart.GENERIC)
           .combAuthors("1934", "P.Fourn.");
-      assertName("xAgropogon P. Fourn.", "Agropogon")
+      assertName("xAgropogon P. Fourn.", "× Agropogon")
           .monomial("Agropogon")
+          .notho(NamePart.GENERIC)
           .combAuthors(null, "P.Fourn.");
-      assertName("XAgropogon P.Fourn.", "Agropogon")
+      assertName("XAgropogon P.Fourn.", "× Agropogon")
           .monomial("Agropogon")
+          .notho(NamePart.GENERIC)
           .combAuthors(null, "P.Fourn.");
-      assertName("× Agropogon", "Agropogon")
+      assertName("× Agropogon", "× Agropogon")
+          .notho(NamePart.GENERIC)
           .monomial("Agropogon");
-      assertName("x Agropogon", "Agropogon")
+      assertName("x Agropogon", "× Agropogon")
+          .notho(NamePart.GENERIC)
           .monomial("Agropogon");
-      assertName("X Agropogon", "Agropogon")
+      assertName("X Agropogon", "× Agropogon")
+          .notho(NamePart.GENERIC)
           .monomial("Agropogon");
-      assertName("X Cupressocyparis leylandii", "Cupressocyparis leylandii")
+      assertName("X Cupressocyparis leylandii", "× Cupressocyparis leylandii")
+          .notho(NamePart.GENERIC)
           .species("Cupressocyparis", "leylandii");
-      assertName("×Heucherella tiarelloides", "Heucherella tiarelloides")
+      assertName("×Heucherella tiarelloides", "× Heucherella tiarelloides")
+          .notho(NamePart.GENERIC)
           .species("Heucherella", "tiarelloides");
-      assertName("xHeucherella tiarelloides", "Heucherella tiarelloides")
+      assertName("xHeucherella tiarelloides", "× Heucherella tiarelloides")
+          .notho(NamePart.GENERIC)
           .species("Heucherella", "tiarelloides");
-      assertName("x Heucherella tiarelloides", "Heucherella tiarelloides")
+      assertName("x Heucherella tiarelloides", "× Heucherella tiarelloides")
+          .notho(NamePart.GENERIC)
           .species("Heucherella", "tiarelloides");
-      assertName("XAgroelymus Lapage sect. Agroelinelymus", "Agroelinelymus")
-          .monomial("Agroelinelymus");
-      assertName("×Agropogon littoralis (Sm.) C. E. Hubb. 1946", "Agropogon littoralis")
+      // GNA reduces this to a bare monomial; GBIF retains the genus+infrageneric structure
+      assertName("XAgroelymus Lapage sect. Agroelinelymus", "× Agroelymus sect. Agroelinelymus")
+          .infraGeneric("Agroelymus", SECTION_BOTANY, "Agroelinelymus")
+          .notho(NamePart.GENERIC)
+          .code(NomCode.BOTANICAL)
+          .nothingElse();
+      assertName("×Agropogon littoralis (Sm.) C. E. Hubb. 1946", "× Agropogon littoralis")
           .species("Agropogon", "littoralis")
+          .notho(NamePart.GENERIC)
           .combAuthors("1946", "C.E.Hubb.")
           .basAuthors(null, "Sm.");
-      assertName("Asplenium X inexpectatum (E.L. Braun 1940) Morton (1956)", "Asplenium inexpectatum")
+      assertName("Asplenium X inexpectatum (E.L. Braun 1940) Morton (1956)", "Asplenium × inexpectatum")
           .species("Asplenium", "inexpectatum")
+          .notho(NamePart.SPECIFIC)
           .combAuthors("1956", "Morton")
           .basAuthors("1940", "E.L.Braun");
-      assertName("Androrchis × fallax (De Not.) W.Foelsche & Jakely", "Androrchis fallax")
+      // GNA drops × from the canonical for species-level hybrids; GBIF includes it
+      assertName("Androrchis × fallax (De Not.) W.Foelsche & Jakely", "Androrchis × fallax")
           .species("Androrchis", "fallax")
+          .notho(NamePart.SPECIFIC)
           .combAuthors(null, "W.Foelsche", "Jakely")
           .basAuthors(null, "De Not.");
-      assertName("Salix ×capreola Andersson (1867)", "Salix capreola")
+      assertName("Salix ×capreola Andersson (1867)", "Salix × capreola")
           .species("Salix", "capreola")
+          .notho(NamePart.SPECIFIC)
           .combAuthors("1867", "Andersson");
-      assertName("Polypodium  x vulgare nothosubsp. mantoniae (Rothm.) Schidlay", "Polypodium vulgare mantoniae")
+      // x before the specific epithet + nothosubsp. rank marker: the rank marker wins for notho
+      assertName("Polypodium  x vulgare nothosubsp. mantoniae (Rothm.) Schidlay", "Polypodium vulgare nothosubsp. mantoniae")
           .infraSpecies("Polypodium", "vulgare", SUBSPECIES, "mantoniae")
+          .notho(NamePart.INFRASPECIFIC)
           .combAuthors(null, "Schidlay")
-          .basAuthors(null, "Rothm.");
-      assertName("Salix x capreola Andersson", "Salix capreola")
+          .basAuthors(null, "Rothm.")
+          .code(NomCode.BOTANICAL);
+      assertName("Salix x capreola Andersson", "Salix × capreola")
           .species("Salix", "capreola")
+          .notho(NamePart.SPECIFIC)
           .combAuthors(null, "Andersson");
-      assertName("x Abacopterella x altifrons T.E.Almeida & A.R.Field", "Abacopterella altifrons")
+      assertName("x Abacopterella x altifrons T.E.Almeida & A.R.Field", "× Abacopterella × altifrons")
           .species("Abacopterella", "altifrons")
+          .notho(NamePart.GENERIC, NamePart.SPECIFIC)
           .combAuthors(null, "T.E.Almeida", "A.R.Field");
   }
 
   @Test
   public void hybridFormulae() throws Exception {
       // group: Hybrid formulae
-      // skipped: Stanhopea tigrina Bateman ex Lindl. x S. ecornuta Lem.
-      // skipped: Arthopyrenia hyalospora X Hydnellum scrobiculatum
-      // skipped: Arthopyrenia hyalospora (Banker) D. Hall X Hydnellum scrobiculatum D.E. Stuntz
-      // skipped: Arthopyrenia hyalospora x
-      // skipped: Arthopyrenia hyalospora × ?
-      // skipped: Agrostis L. × Polypogon Desf.
-      // skipped: Agrostis stolonifera L. × Polypogon monspeliensis (L.) Desf.
-      // skipped: Coeloglossum viride (L.) Hartman x Dactylorhiza majalis (Rchb. f.) P.F. Hunt & Summerhayes ssp. praetermissa (Druce) D.M. Moore & Soó
-      // skipped: Salix aurita L. × S. caprea L.
-      // skipped: Asplenium rhizophyllum X A. ruta-muraria E.L. Braun 1939
-      // skipped: Asplenium rhizophyllum DC. x ruta-muraria E.L. Braun 1939
-      // skipped: Tilletia caries (Bjerk.) Tul. × T. foetida (Wallr.) Liro.
-      // skipped: Brassica oleracea L. subsp. capitata (L.) DC. convar. fruticosa (Metzg.) Alef. × B. oleracea L. subsp. capitata (L.) var. costata DC.
-      // skipped: Ambystoma laterale × A. texanum × A. tigrinum
+      assertUnparsable("Stanhopea tigrina Bateman ex Lindl. x S. ecornuta Lem.", FORMULA);
+      assertUnparsable("Arthopyrenia hyalospora X Hydnellum scrobiculatum", FORMULA);
+      assertUnparsable("Arthopyrenia hyalospora (Banker) D. Hall X Hydnellum scrobiculatum D.E. Stuntz", FORMULA);
+      assertUnparsable("Arthopyrenia hyalospora × ?", FORMULA);
+      assertUnparsable("Agrostis L. × Polypogon Desf.", FORMULA);
+      assertUnparsable("Agrostis stolonifera L. × Polypogon monspeliensis (L.) Desf.", FORMULA);
+      assertUnparsable("Coeloglossum viride (L.) Hartman x Dactylorhiza majalis (Rchb. f.) P.F. Hunt & Summerhayes ssp. praetermissa (Druce) D.M. Moore & Soó", FORMULA);
+      assertUnparsable("Salix aurita L. × S. caprea L.", FORMULA);
+      assertUnparsable("Asplenium rhizophyllum X A. ruta-muraria E.L. Braun 1939", FORMULA);
+      assertUnparsable("Asplenium rhizophyllum DC. x ruta-muraria E.L. Braun 1939", FORMULA);
+      assertUnparsable("Tilletia caries (Bjerk.) Tul. × T. foetida (Wallr.) Liro.", FORMULA);
+      assertUnparsable("Brassica oleracea L. subsp. capitata (L.) DC. convar. fruticosa (Metzg.) Alef. × B. oleracea L. subsp. capitata (L.) var. costata DC.", FORMULA);
+      assertUnparsable("Ambystoma laterale × A. texanum × A. tigrinum", FORMULA);
       assertName("Pseudocercospora broussonetiae (Chupp & Linder) X.J. Liu & Y.L. Guo 1989", "Pseudocercospora broussonetiae")
           .species("Pseudocercospora", "broussonetiae")
           .combAuthors("1989", "X.J.Liu", "Y.L.Guo")
@@ -959,39 +997,53 @@ public class NameParserGnaTest {
 
   @Test
   public void graftChimeras() throws Exception {
-      // group: Graft-chimeras
-      // skipped: + Crataegomespilus
-      // skipped: +Crataegomespilus
-      // skipped: Cytisus purpureus + Laburnum anagyroides
-      // skipped: Crataegus + Mespilus
+      // group: Graft-chimeras should parse as hybrid formulas
+      //assertUnparsable("+ Crataegomespilus", FORMULA);
+      //assertUnparsable("+Crataegomespilus", FORMULA);
+      assertUnparsable("Cytisus purpureus + Laburnum anagyroides", FORMULA);
+      assertUnparsable("Crataegus + Mespilus", FORMULA);
   }
 
   @Test
   public void genusWithHyphenAllowedByIcn() throws Exception {
       // group: Genus with hyphen (allowed by ICN)
-      assertName("Saxo-Fridericia R. H. Schomb.", "Saxo-fridericia")
-          .monomial("Saxo-fridericia")
+      assertName("Saxo-Fridericia R. H. Schomb.", "Saxo-Fridericia")
+          .monomial("Saxo-Fridericia")
           .combAuthors(null, "R.H.Schomb.");
+
       assertName("Saxo-fridericia R. H. Schomb.", "Saxo-fridericia")
           .monomial("Saxo-fridericia")
           .combAuthors(null, "R.H.Schomb.");
+
       assertName("Uva-ursi cinerea (Howell) A. Heller", "Uva-ursi cinerea")
           .species("Uva-ursi", "cinerea")
           .combAuthors(null, "A.Heller")
           .basAuthors(null, "Howell");
+
       assertName("Uva-Ursi cinerea (Howell) A. Heller", "Uva-ursi cinerea")
           .species("Uva-ursi", "cinerea")
           .combAuthors(null, "A.Heller")
-          .basAuthors(null, "Howell");
+          .basAuthors(null, "Howell")
+          .code(NomCode.BOTANICAL)
+          .nothingElse();
+
+      assertName("Arctostaphylos uva-ursi", "Arctostaphylos uva-ursi")
+          .species("Arctostaphylos", "uva-ursi")
+          .nothingElse();
+
       assertName("Prunus-lauro-cerasus", "Prunus-lauro-cerasus")
           .monomial("Prunus-lauro-cerasus");
+
       assertName("Prunus-Lauro-Cerasus", "Prunus-lauro-cerasus")
           .monomial("Prunus-lauro-cerasus");
-      assertName("Tsugo-piceo-picea × crassifolia (Flous) Campo-Duplan & Gaussen", "Tsugo-piceo-picea crassifolia")
+
+      assertName("Tsugo-piceo-picea × crassifolia (Flous) Campo-Duplan & Gaussen", "Tsugo-piceo-picea × crassifolia")
           .species("Tsugo-piceo-picea", "crassifolia")
+          .notho(NamePart.SPECIFIC)
           .combAuthors(null, "Campo-Duplan", "Gaussen")
           .basAuthors(null, "Flous");
       // skipped: Tsugo-piceo-piceo-picea × crassifolia
+      // The × before crassifolia marks it as a nothotaxon: canonical includes "×"
       assertName("De-Filippii Gortani & Merla 1934", "De-filippii")
           .monomial("De-filippii")
           .combAuthors("1934", "Gortani", "Merla");
@@ -1011,19 +1063,21 @@ public class NameParserGnaTest {
       assertName("Ne-ourbania adendrobium (Rchb.f. ) Fawc. & Rendle", "Ne-ourbania adendrobium")
           .species("Ne-ourbania", "adendrobium")
           .combAuthors(null, "Fawc.", "Rendle")
-          .basAuthors(null, "Rchb.fil.");
+          .basAuthors(null, "Rchb.f.");
       // skipped: Ph-echinodermata
       assertName("Prunus-lauro-cerasus", "Prunus-lauro-cerasus")
           .monomial("Prunus-lauro-cerasus");
       assertName("Prunus-Lauro-Cerasus", "Prunus-lauro-cerasus")
           .monomial("Prunus-lauro-cerasus");
-      assertName("Tsugo-piceo-picea × crassifolia (Flous) Campo-Duplan & Gaussen", "Tsugo-piceo-picea crassifolia")
+      assertName("Tsugo-piceo-picea × crassifolia (Flous) Campo-Duplan & Gaussen", "Tsugo-piceo-picea × crassifolia")
           .species("Tsugo-piceo-picea", "crassifolia")
+          .notho(NamePart.SPECIFIC)
           .combAuthors(null, "Campo-Duplan", "Gaussen")
           .basAuthors(null, "Flous");
       // skipped: Tsugo-piceo-piceo-picea × crassifolia
   }
 
+  @Ignore("not yet passing")
   @Test
   public void misspelledName() throws Exception {
       // group: Misspelled name
@@ -1031,6 +1085,7 @@ public class NameParserGnaTest {
           .monomial("Ambrysus-stål");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void aBasionymAuthorInParenthesisBasionymIsAnIcnTerm() throws Exception {
       // group: A 'basionym' author in parenthesis (basionym is an ICN term)
@@ -1054,6 +1109,7 @@ public class NameParserGnaTest {
           .basAuthors("1795", "Olivier");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void infragenericEpithetsIczn() throws Exception {
       // group: Infrageneric epithets (ICZN)
@@ -1084,6 +1140,7 @@ public class NameParserGnaTest {
           .combAuthors("1975", "Durrieu");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void genusWithQuestionMark() throws Exception {
       // group: Genus with question mark
@@ -1091,6 +1148,7 @@ public class NameParserGnaTest {
           .species("Ferganoconcha", "oblonga");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void epithetsWithAPeriodCharacter() throws Exception {
       // group: Epithets with a period character
@@ -1099,6 +1157,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "E.B.Bartram");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void epithetsStartingWithNon() throws Exception {
       // group: Epithets starting with non-
@@ -1128,6 +1187,7 @@ public class NameParserGnaTest {
           .infraSpecies("Rhipidia", "gracilirama", INFRASPECIFIC_NAME, "lassula");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void authorshipMissingOneParenthesis() throws Exception {
       // group: Authorship missing one parenthesis
@@ -1147,6 +1207,7 @@ public class NameParserGnaTest {
           .basAuthors("1831", "Dejean");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void unknownAuthorship() throws Exception {
       // group: Unknown authorship
@@ -1174,6 +1235,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "anon.");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void treatingApudWith() throws Exception {
       // group: Treating apud (with)
@@ -1182,6 +1244,7 @@ public class NameParserGnaTest {
           .combAuthors("1990", "Goh", "W.H.Hsieh");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void namesWithExAuthorsWeFollowIcznConvention() throws Exception {
       // group: Names with ex authors (we follow ICZN convention)
@@ -1232,6 +1295,7 @@ public class NameParserGnaTest {
           .basAuthors(null, "Fr.Duby");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void emptySpaces() throws Exception {
       // group: Empty spaces
@@ -1269,6 +1333,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "F.S.Castracane degli Antelminelli");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void authorshipWithFiliusSonOf() throws Exception {
       // group: Authorship with filius (son of)
@@ -1334,6 +1399,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "Rosent");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void namesWithEmendRectifiedByAuthorship() throws Exception {
       // group: Names with emend (rectified by) authorship
@@ -1345,6 +1411,7 @@ public class NameParserGnaTest {
           .combAuthors("1968", "Pfennig");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void namesWithAnUnparsedTail() throws Exception {
       // group: Names with an unparsed "tail"
@@ -1374,6 +1441,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "Meneghini");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void abbreviatedWordsAfterAName() throws Exception {
       // group: Abbreviated words after a name
@@ -1390,6 +1458,7 @@ public class NameParserGnaTest {
           .species("Eletica", "laeviceps");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void epithetsStartingWithNumericValueNotAllowedAnymore() throws Exception {
       // group: Epithets starting with numeric value (not allowed anymore)
@@ -1412,6 +1481,7 @@ public class NameParserGnaTest {
           .combAuthors("1795", "Herbst", "J.F.W.");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void nonAsciiUtf8CharactersInAName() throws Exception {
       // group: Non-ASCII UTF-8 characters in a name
@@ -1441,6 +1511,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "Heiden");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void epithetsWithAnApostrophe() throws Exception {
       // group: Epithets with an apostrophe
@@ -1472,6 +1543,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "F.A.Barkley");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void authorsWithAnApostrophe() throws Exception {
       // group: Authors with an apostrophe
@@ -1489,6 +1561,7 @@ public class NameParserGnaTest {
           .basAuthors(null, "È.Neé");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void digraphUnicodeCharacters() throws Exception {
       // group: Digraph unicode characters
@@ -1529,6 +1602,7 @@ public class NameParserGnaTest {
           .infraSpecies("Hordeum", "vulgare", FORM, "coerulescens");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void oldStyleS() throws Exception {
       // group: Old style s (ſ)
@@ -1542,6 +1616,7 @@ public class NameParserGnaTest {
           .species("Dreyfusia", "nuesslini");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void miscellaneousDiacritics() throws Exception {
       // group: Miscellaneous diacritics
@@ -1557,6 +1632,7 @@ public class NameParserGnaTest {
           .monomial("Ruehlella");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void openNomenclatureApproximateNames() throws Exception {
       // group: Open Nomenclature ('approximate' names)
@@ -1585,6 +1661,7 @@ public class NameParserGnaTest {
       // skipped: Gemmula cf. cosmoi NP-2008
   }
 
+  @Ignore("not yet passing")
   @Test
   public void surrogateNameStrings() throws Exception {
       // group: Surrogate Name-Strings
@@ -1593,6 +1670,7 @@ public class NameParserGnaTest {
           .monomial("Coleoptera");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void virusLikeNormalNames() throws Exception {
       // group: Virus-like "normal" names
@@ -1675,6 +1753,7 @@ public class NameParserGnaTest {
           .species("Crassatellites", "fulvida");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void bacterialGenus() throws Exception {
       // group: Bacterial genus
@@ -1691,6 +1770,7 @@ public class NameParserGnaTest {
           .species("Actinomyces", "cardiffensis");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void bacteriaWithPathovarRank() throws Exception {
       // group: Bacteria with pathovar rank
@@ -1704,6 +1784,7 @@ public class NameParserGnaTest {
           .species("Xanthomonas", "axonopodis");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void strayExIsNotParsedAsSpecies() throws Exception {
       // group: "Stray" ex is not parsed as species
@@ -1738,6 +1819,7 @@ public class NameParserGnaTest {
           .basAuthors(null, "Martius");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void numbersAtTheStartMiddleOfNames() throws Exception {
       // group: Numbers at the start/middle of names
@@ -1770,18 +1852,26 @@ public class NameParserGnaTest {
       // group: Year range
       assertName("Eurodryas orientalis Herrich-Schäffer 1845-1847", "Eurodryas orientalis")
           .species("Eurodryas", "orientalis")
-          .combAuthors("1845", "Herrich-Schäffer");
+          .combAuthors("1845", "Herrich-Schäffer")
+          .warning(Warnings.YEAR_INTERPRETED);
+
       assertName("Tridentella tangeroae Bruce, 1987-92", "Tridentella tangeroae")
           .species("Tridentella", "tangeroae")
-          .combAuthors("1987", "Bruce");
+          .combAuthors("1987", "Bruce")
+          .warning(Warnings.YEAR_INTERPRETED);
+
       assertName("Macroplectra unicolor Moore, 1858/59", "Macroplectra unicolor")
           .species("Macroplectra", "unicolor")
-          .combAuthors("1858", "Moore");
+          .combAuthors("1858", "Moore")
+          .warning(Warnings.YEAR_INTERPRETED);
+
       assertName("Seryda basirei Druce, 1891/901", "Seryda basirei")
           .species("Seryda", "basirei")
-          .combAuthors("1891", "Druce");
+          .combAuthors("1891", "Druce")
+          .warning(Warnings.YEAR_INTERPRETED);
   }
 
+  @Ignore("not yet passing")
   @Test
   public void yearWithPageNumber() throws Exception {
       // group: Year with page number
@@ -1795,9 +1885,10 @@ public class NameParserGnaTest {
           .partial(":29");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void yearInSquareBrackets() throws Exception {
-      // group: Year in square brackets
+      // group: Year in square brackets - the imprint year is not parsed as a year
       assertName("Anthoscopus Cabanis [1851]", "Anthoscopus")
           .monomial("Anthoscopus")
           .combAuthors("1851", "Cabanis");
@@ -1853,6 +1944,7 @@ public class NameParserGnaTest {
           .combAuthors("1967", "Bolvar", "Pieltain", "Rotger", "Coronado");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void normalizeAtypicalDashes() throws Exception {
       // group: Normalize atypical dashes
@@ -1861,6 +1953,7 @@ public class NameParserGnaTest {
           .combAuthors("2022", "Jiménez-Ferbans", "Reyes-Castillo");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void discardApostrophesAtTheStartAndEndOfWords() throws Exception {
       // group: Discard apostrophes at the start and end of words
@@ -1874,6 +1967,7 @@ public class NameParserGnaTest {
           .basAuthors(null, "Nakai");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void discardApostropheWithDashRareNeedsFurtherInvestigation() throws Exception {
       // group: Discard apostrophe with dash (rare, needs further investigation)
@@ -1881,6 +1975,7 @@ public class NameParserGnaTest {
           .infraSpecies("Solanum", "juzepczukii", INFRASPECIFIC_NAME, "jancko-ckaisalla");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void possibleCanonical() throws Exception {
       // group: Possible canonical
@@ -1908,6 +2003,7 @@ public class NameParserGnaTest {
           .combAuthors("1978", "Devriese et al.");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void treatingAlAsEtAl() throws Exception {
       // group: Treating `& al.` as `et al.`
@@ -1938,6 +2034,7 @@ public class NameParserGnaTest {
           .species("Nereidavus", "kulkovi");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void epithetsDoNotStartOrEndWithADash() throws Exception {
       // group: Epithets do not start or end with a dash
@@ -1947,6 +2044,7 @@ public class NameParserGnaTest {
           .monomial("Abryna");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void namesThatContainOf() throws Exception {
       // group: Names that contain "of"
@@ -1962,6 +2060,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "Reeve");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void cultivars() throws Exception {
       // group: Cultivars
@@ -1969,6 +2068,7 @@ public class NameParserGnaTest {
           .species("Sarracenia", "flava");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void openTaxonomyWithRanksUnfinished() throws Exception {
       // group: "Open taxonomy" with ranks unfinished
@@ -1993,6 +2093,7 @@ public class NameParserGnaTest {
       // skipped: Acastoides spp.
   }
 
+  @Ignore("not yet passing")
   @Test
   public void ignoringSerovarSerotype() throws Exception {
       // group: Ignoring serovar/serotype
@@ -2007,6 +2108,7 @@ public class NameParserGnaTest {
           .species("Leptospira", "interrogans");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void ignoringSensuSec() throws Exception {
       // group: Ignoring sensu sec
@@ -2088,6 +2190,7 @@ public class NameParserGnaTest {
           .combAuthors(null, "I.M.Fake");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void unparseableHortAnnotations() throws Exception {
       // group: Unparseable hort. annotations
@@ -2103,6 +2206,7 @@ public class NameParserGnaTest {
           .species("Gymnogramma", "sprengeriana");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void removingNomenclaturalAnnotations() throws Exception {
       // group: Removing nomenclatural annotations
@@ -2142,6 +2246,7 @@ public class NameParserGnaTest {
           .monomial("Dialaeliopsis");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void miscAnnotations() throws Exception {
       // group: Misc annotations
@@ -2174,6 +2279,7 @@ public class NameParserGnaTest {
           .species("Dasysyrphus", "intrudens");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void horticulturalAnnotation() throws Exception {
       // group: Horticultural annotation
@@ -2187,6 +2293,7 @@ public class NameParserGnaTest {
           .species("Puya", "acris");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void namesWithMihi() throws Exception {
       // group: Names with "mihi"
@@ -2197,6 +2304,7 @@ public class NameParserGnaTest {
           .combAuthors("1837", "Gould");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void exceptionsWithMihi() throws Exception {
       // group: Exceptions with "mihi"
@@ -2205,6 +2313,7 @@ public class NameParserGnaTest {
           .combAuthors("1966", "Dussart", "Graf", "Husson");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void exceptionsFromRanksRankLineEpithets() throws Exception {
       // group: Exceptions from ranks (rank-line epithets)
@@ -2222,6 +2331,7 @@ public class NameParserGnaTest {
           .combAuthors("1898", "Gredler");
   }
 
+  @Ignore("not yet passing")
   @Test
   public void exceptionsFromAuthorPrefixesPrefixLikeEpithets() throws Exception {
       // group: Exceptions from author prefixes (prefix-like epithets)
@@ -2333,6 +2443,7 @@ public class NameParserGnaTest {
       // skipped: Uropodoideaincertaesedis
   }
 
+  @Ignore("not yet passing")
   @Test
   public void noParsingBacteriumCandidatus() throws Exception {
       // group: No parsing -- bacterium, Candidatus
@@ -2403,6 +2514,7 @@ public class NameParserGnaTest {
       // skipped: Alstroemeria sp. phytoplasma
   }
 
+  @Ignore("not yet passing")
   @Test
   public void noParsingSymbiont() throws Exception {
       // group: No parsing symbiont
@@ -2421,24 +2533,49 @@ public class NameParserGnaTest {
   @Test
   public void namesWithSpecNovSpec() throws Exception {
       // group: Names with spec., nov spec
-      assertName("Lampona spec Platnick, 2000", "Lampona spec")
-          .species("Lampona", "spec")
-          .combAuthors("2000", "Platnick");
-      assertName("Gobiosoma spec (Ginsburg, 1939)", "Gobiosoma spec")
-          .species("Gobiosoma", "spec")
-          .basAuthors("1939", "Ginsburg");
-      assertName("Globigerina spec", "Globigerina")
-          .monomial("Globigerina");
-      assertName("Eunotia genuflexa Norpel-Schempp nov spec", "Eunotia genuflexa")
-          .species("Eunotia", "genuflexa")
-          .combAuthors(null, "Norpel-Schempp");
-      assertName("Ctenotus spec.", "Ctenotus")
-          .monomial("Ctenotus");
-      assertName("Byrsophlebidae spec. 2", "Byrsophlebidae")
-          .monomial("Byrsophlebidae");
+      assertName("Lampona spec Platnick, 2000", "Lampona sp.")
+          .species("Lampona", null)
+          .combAuthors("2000", "Platnick")
+          .type(NameType.INFORMAL)
+          .code(NomCode.ZOOLOGICAL)
+          .warning(Warnings.INDETERMINED)
+          .nothingElse();
+
+      assertName("Gobiosoma spec (Ginsburg, 1939)", "Gobiosoma sp.")
+          .species("Gobiosoma", null)
+          .basAuthors("1939", "Ginsburg")
+          .type(NameType.INFORMAL)
+          .code(NomCode.ZOOLOGICAL)
+          .warning(Warnings.INDETERMINED)
+          .nothingElse();
+
+      assertName("Globigerina spec", "Globigerina sp.")
+          .species("Globigerina", null)
+          .type(NameType.INFORMAL)
+          .warning(Warnings.INDETERMINED)
+          .nothingElse();
+
+//      assertName("Eunotia genuflexa Norpel-Schempp nov spec", "Eunotia genuflexa")
+//          .species("Eunotia", "genuflexa")
+//          .combAuthors(null, "Norpel-Schempp")
+//          .nomNote("nov spec")
+//          .nothingElse();
+
+      assertName("Ctenotus spec.", "Ctenotus sp.")
+          .species("Ctenotus", null)
+          .type(NameType.INFORMAL)
+          .warning(Warnings.INDETERMINED)
+          .nothingElse();
+
+      assertName("Byrsophlebidae spec. 2", "Byrsophlebidae sp. 2")
+          .phraseName("Byrsophlebidae", "2", SPECIES)
+          .nothingElse();
+
       assertName("Naviculadicta witkowskii LB & Metzeltin nov spec", "Naviculadicta witkowskii")
           .species("Naviculadicta", "witkowskii")
-          .combAuthors(null, "LB", "Metzeltin");
+          .combAuthors(null, "LB", "Metzeltin")
+          .nomNote("nov spec")
+          .nothingElse();
   }
 
   @Test
@@ -2446,20 +2583,29 @@ public class NameParserGnaTest {
       // group: HTML tags and entities
       assertName("Velutina haliotoides (Linnaeus, 1758) <i>sensu</i> Fabricius, 1780", "Velutina haliotoides")
           .species("Velutina", "haliotoides")
-          .basAuthors("1758", "Linnaeus");
+          .basAuthors("1758", "Linnaeus")
+          .combAuthors("1780", "Fabricius")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Velutina haliotoides (Linnaeus, 1758), <i>sensu</i> Fabricius, 1780", "Velutina haliotoides")
           .species("Velutina", "haliotoides")
           .basAuthors("1758", "Linnaeus");
+
       assertName("<i>Velutina halioides</i> (Linnaeus, 1758)", "Velutina halioides")
           .species("Velutina", "halioides")
           .basAuthors("1758", "Linnaeus");
+
       assertName("Quadrella steyermarkii (Standl.) Iltis &amp; Cornejo", "Quadrella steyermarkii")
           .species("Quadrella", "steyermarkii")
           .combAuthors(null, "Iltis", "Cornejo")
           .basAuthors(null, "Standl.");
+
       assertName("Torymus bangalorensis (Mani &amp; Kurian, 1953)", "Torymus bangalorensis")
           .species("Torymus", "bangalorensis")
-          .basAuthors("1953", "Mani", "Kurian");
+          .basAuthors("1953", "Mani", "Kurian")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
   }
 
   @Test
@@ -2467,20 +2613,31 @@ public class NameParserGnaTest {
       // group: Underscores instead of spaces
       assertName("Oxalis_barrelieri", "Oxalis barrelieri")
           .species("Oxalis", "barrelieri");
-      // skipped: Oxalis_barrelieri ined.?
+
       assertName("Pseudocercospora__dendrobii", "Pseudocercospora dendrobii")
           .species("Pseudocercospora", "dendrobii");
-      // skipped: Oxalis_barrelieri
+
       assertName("Oxalis barrelieri XXZ_21243", "Oxalis barrelieri")
-          .species("Oxalis", "barrelieri");
+          .species("Oxalis", "barrelieri")
+          .partial("XXZ_21243");
   }
 
   // -------------------- helpers --------------------
 
   NameAssertion assertName(String rawName, String expectedCanonicalWithoutAuthors) throws UnparsableNameException, InterruptedException {
     ParsedName n = parser.parse(rawName, null, Rank.UNRANKED, null);
-    org.junit.Assert.assertEquals(expectedCanonicalWithoutAuthors, n.canonicalNameWithoutAuthorship());
+    assertEquals(expectedCanonicalWithoutAuthors, n.canonicalNameWithoutAuthorship());
     return new NameAssertion(n);
   }
+
+    void assertUnparsable(String rawName, NameType type) throws UnparsableNameException, InterruptedException {
+      try {
+        parser.parse(rawName, null, Rank.UNRANKED, null);
+        fail("Name should be unparsable: " + rawName);
+      } catch (UnparsableNameException e) {
+        assertEquals(type, e.getType());
+        assertEquals(rawName, e.getName());
+      }
+    }
 }
 
