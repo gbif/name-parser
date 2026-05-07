@@ -38,7 +38,7 @@
 
         <!-- Dependency versions -->
         <commons-io.version>2.16.1</commons-io.version>
-        <commons-lang.version>3.15.0</commons-lang.version>
+        <commons-lang.version>3.18.0</commons-lang.version>
         <fastutil.version>8.5.13</fastutil.version>
         <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
         <gbif-api.version>1.16.5</gbif-api.version>
