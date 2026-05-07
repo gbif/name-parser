@@ -33,7 +33,6 @@ pipeline {
       steps {
         withMaven(
             globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
-            mavenSettingsConfig: 'bfc2be1e-f172-4b84-bd26-8b033aad06cb',
             traceability: true
         ) {
             sh '''mvn -B clean verify deploy -U -T 2 -Pjenkins'''
