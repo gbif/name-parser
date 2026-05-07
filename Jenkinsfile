@@ -35,7 +35,7 @@ pipeline {
             globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
             traceability: true
         ) {
-            sh '''mvn -B clean verify deploy -U -T 2 -Pjenkins'''
+            sh '''mvn -B clean verify deploy -U -T 2'''
         }
       }
     }
@@ -62,7 +62,7 @@ pipeline {
             mavenSettingsConfig: 'bfc2be1e-f172-4b84-bd26-8b033aad06cb',
             traceability: true
         ) {
-            sh '''mvn -B release:prepare release:perform -T 2 -Pjenkins $RELEASE_ARGS'''
+            sh '''mvn -B release:prepare release:perform -T 2 $RELEASE_ARGS'''
         }
       }
     }
