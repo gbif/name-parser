@@ -66,6 +66,32 @@ public class ParsingJobTest {
   }
 
   @Test
+  public void testEpithetNoLookbehindEquivalence() throws Exception {
+    // EPITHET_NO_LOOKBEHIND drops the heavy negative lookbehind; isValidEpithet replaces it.
+    // Combined, the two must accept/reject the same strings as the original EPITHET pattern.
+    Pattern epi      = Pattern.compile("^"+ ParsingJob.EPITHET +"$");
+    Pattern epiNoLb  = Pattern.compile("^"+ ParsingJob.EPITHET_NO_LOOKBEHIND +"$");
+
+    String[] cases = {
+        // accepts
+        "alba", "biovas", "serovat", "novo-zelandia", "elevar", "zelandia",
+        // rejects via UNALLOWED_EPITHET_ENDING
+        "serovar", "genotype", "agamovar", "cultivar", "serotype", "cytoform", "chemoform", "biovar",
+        // rejects via UNALLOWED_EPITHETS (whole-word)
+        "aff", "and", "cf", "des", "from", "ms", "of", "the", "where",
+        // rejects via author-token / ex / la / le / van / von trailing word
+        "ex", "la", "le", "van", "von", "fil", "filius", "hort", "junior", "senior",
+        // tricky: trailing word after a hyphen still counts
+        "novo-ex", "novo-biovar"
+    };
+    for (String s : cases) {
+      boolean origAccepted = epi.matcher(s).find();
+      boolean newAccepted = epiNoLb.matcher(s).find() && ParsingJob.isValidEpithet(s);
+      assertEquals("equivalence break for: " + s, origAccepted, newAccepted);
+    }
+  }
+
+  @Test
   public void testAuthorteam() throws Exception {
     assertAuthorTeamPattern("Jarocki or Schinz",  "Jarocki or Schinz");
     assertAuthorTeamPattern("van der Wulp",  "van der Wulp");

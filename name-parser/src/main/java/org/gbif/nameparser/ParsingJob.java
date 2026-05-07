@@ -70,7 +70,6 @@ class ParsingJob implements Callable<ParsedName> {
   private static final String AUTHOR_TOKEN_3 = "fil|filius|hort|jun|junior|sen|senior";
   // common name suffices (ms=manuscript, not yet published)
   private static final String AUTHOR_TOKEN = "(?:" +
-      // formerly (?<=\bden )heede — replaced with the full literal alternative since RE2/J does not support lookbehind
       "den heede" +
       "|(?:\\p{Lu}|-[a-z])[\\p{Lu}\\p{Ll}'-]*" +
       "|" + AUTHOR_TOKEN_3 +
@@ -123,18 +122,24 @@ class ParsingJob implements Callable<ParsedName> {
       "bacilliform|coliform|coryneform|cytoform|chemoform|biovar|serovar|genomovar|agamovar|cultivar|genotype|serotype|subtype|ribotype|isolate";
   // allow for cf/aff markers before epithets
   static final String EPI_QUALIFIER = "(?:\\b(aff|cf|nr)[?. ])?";
-  // NOTE: this still uses lookbehinds — the (?<! d) and the larger negative-lookbehind
-  // alternation with UNALLOWED_EPITHETS / UNALLOWED_EPITHET_ENDING / author prefixes. They are
-  // kept here in M2 because rewriting them via Java-side post-validation requires loop-based
-  // re-matching at every EPITHET capture site (STARTING_EPITHET, NORM_LOWERCASE_BINOMIAL,
-  // NORM_SUBGENUS, NAME_PATTERN groups #5/6/7/10, …) and is most cleanly done together with
-  // the RE2/J engine swap in M3. RE2/J cannot compile this pattern as-is.
+  // EPITHET keeps its negative lookbehinds for NAME_PATTERN-embedded use: the trailing
+  // alternation participates in NAME_PATTERN's backtracking, so moving it to Java post-validation
+  // would change parse outcomes. The standalone outer call sites (STARTING_EPITHET,
+  // NORM_LOWERCASE_BINOMIAL, NORM_SUBGENUS) instead use EPITHET_NO_LOOKBEHIND below +
+  // the isValidEpithet() Java check, since at those sites the regex is anchored or the
+  // post-validation can simply skip the rewrite without changing the parse outcome.
   static final String EPITHET = "(?:[0-9]+-?|[a-z]-|[αβγδ]-|[doml]'|(?:van|novae) [a-z])?"
             // avoid matching to rank markers
             + "(?!"+RANK_MARKER+"\\b)"
             + "[" + name_letters + "αβγδ][" + name_letters + "+-]*(?<! d)[" + name_letters + "]"
             // avoid epithets and those ending with the unallowed endings, e.g. serovar and author suffices like filius
             + "(?<!(?:\\b(?:ex|l[ae]|v[ao]n|"+AUTHOR_TOKEN_3+")\\.?|\\b(?:"+UNALLOWED_EPITHETS+")|"+ UNALLOWED_EPITHET_ENDING +"))(?=\\b)";
+  // EPITHET with the heavy trailing negative lookbehind dropped. Callers MUST post-validate
+  // captured groups with isValidEpithet(...).
+  static final String EPITHET_NO_LOOKBEHIND = "(?:[0-9]+-?|[a-z]-|[αβγδ]-|[doml]'|(?:van|novae) [a-z])?"
+            + "(?!"+RANK_MARKER+"\\b)"
+            + "[" + name_letters + "αβγδ][" + name_letters + "+-]*(?<! d)[" + name_letters + "]"
+            + "(?=\\b)";
   static final String MONOMIAL =
     "[" + NAME_LETTERS + "](?:\\.|[" + name_letters + "]+)(?:-[" + NAME_LETTERS + "]?[" + name_letters + "]+)?";
   // a pattern matching typical latin word endings. Helps identify name parts from authors
@@ -267,21 +272,20 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern NORM_APOSTROPHES = Pattern.compile("([\u0060\u00B4\u2018\u2019]+)");
   private static final Pattern NORM_QUOTES = Pattern.compile("([\"'`´]+)");
   private static final Pattern REPL_GENUS_QUOTE = Pattern.compile("^['\\[] *(" + MONOMIAL + ") *['\\]]");
-  private static final Pattern REPL_ENCLOSING_QUOTE = Pattern.compile("^$");//Pattern.compile("^[',\\s]+|[',\\s]+$");
   private static final Pattern NORM_UPPERCASE_NOMEN = Pattern.compile("^([A-Z])([A-Z]+)\\s+([A-Z]+)(\\s+[A-Z]+)?$");
   private static final Pattern NORM_UPPERCASE_WORDS = Pattern.compile("\\b(\\p{Lu})(\\p{Lu}{2,})\\b");
-  private static final Pattern NORM_LOWERCASE_BINOMIAL = Pattern.compile("^(" + EPITHET + ") (" + EPITHET + ")");
+  private static final Pattern NORM_LOWERCASE_BINOMIAL = Pattern.compile("^(" + EPITHET_NO_LOOKBEHIND + ") (" + EPITHET_NO_LOOKBEHIND + ")");
   private static final Pattern NORM_HYBRID_HOMOGLYPHS = Pattern.compile("[хᕁᕽ᙮ⅹ⤫⤬⨯ｘ\uD835\uDC31\uD835\uDC65\uD835\uDC99\uD835\uDCCD\uD835\uDD01\uD835\uDD35\uD835\uDD69\uD835\uDD9D\uD835\uDDD1\uD835\uDE05\uD835\uDE39\uD835\uDE6D\uD835\uDEA1]");
-  private static final Pattern NORM_WHITESPACE = Pattern.compile("(?:\\\\[nr]|\\s)+", Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern NORM_WHITESPACE = Pattern.compile("(?:\\\\[nr]|\\s)++", Pattern.UNICODE_CHARACTER_CLASS);
   private static final Pattern REPL_UNDERSCORE = Pattern.compile("_+");
   private static final Pattern NORM_BRACKETS_OPEN = Pattern.compile("\\s*([{(\\[])\\s*,?\\s*");
   private static final Pattern NORM_BRACKETS_CLOSE = Pattern.compile("\\s*,?\\s*([})\\]])\\s*");
-  private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("( ?[{\\[] ?)+");
-  private static final Pattern NORM_BRACKETS_CLOSE_STRONG = Pattern.compile("( ?[}\\]] ?)+");
+  private static final Pattern NORM_BRACKETS_OPEN_STRONG = Pattern.compile("(?: ?[{\\[] ?)++");
+  private static final Pattern NORM_BRACKETS_CLOSE_STRONG = Pattern.compile("(?: ?[}\\]] ?)++");
   // (?<!-) lookbehind dropped — emulated via a post-find check at the NORM_AND callsite.
   private static final Pattern NORM_AND = Pattern.compile("\\b *(and|et|und|\\+|,&)(?!-)(\\.)? *\\b");
-  private static final Pattern NORM_SUBGENUS = Pattern.compile("(" + MONOMIAL + ") (" + MONOMIAL + ") (" + EPITHET + ")");
-  private static final Pattern NO_Q_MARKS = Pattern.compile("([" + author_letters + "])\\?+");
+  private static final Pattern NORM_SUBGENUS = Pattern.compile("(" + MONOMIAL + ") (" + MONOMIAL + ") (" + EPITHET_NO_LOOKBEHIND + ")");
+  private static final Pattern NO_Q_MARKS = Pattern.compile("([" + author_letters + "])\\?++");
   // The chars [.,;:&(){}\[\]-] which normalizePunctuations collapses (with surrounding whitespace) to a single occurrence.
   private static final String NORM_PUNCT_CHARS = ".,;:&(){}[]-";
   private static final Pattern NORM_YEAR = Pattern.compile("[\"'\\[]+\\s*(" + YEAR_LOOSE + ")\\s*[\"'\\]]+");
@@ -308,7 +312,7 @@ class ParsingJob implements Callable<ParsedName> {
     "deleted?|dummy|incertae ?sedis|[iu]ndet(?:ermin(?:ed|ate)?)?|mixed|" +
     "not (?:assigned|stated)|" +
     "place ?holder|temp|tobedeleted|" +
-    "un(?:accepted|allocated|assigned|certain|classed|classified|cultured|described|det(?:ermined)?|ident|known|named|placed|specified)" +
+    "un(?:accepted|allocated|assigned|certain|class(?:ed|ified)|cultured|described|det(?:ermined)?|ident|known|named|placed|specified)" +
   ")"; // not assigned
   private static final Pattern REMOVE_PLACEHOLDER_INFRAGENERIC = Pattern.compile("\\b\\( ?"+PLACEHOLDER_NAME+" ?\\) ", CASE_INSENSITIVE);
   static final Pattern PLACEHOLDER = Pattern.compile("^N\\.\\s*N\\.|\\b"+PLACEHOLDER_NAME+"\\b", CASE_INSENSITIVE);
@@ -320,7 +324,7 @@ class ParsingJob implements Callable<ParsedName> {
   private static final Pattern AMPERSAND_ENTITY = Pattern.compile("& *amp +");
 
   private static final Pattern XML_TAGS = Pattern.compile("< */? *[a-zA-Z] *>");
-  private static final Pattern STARTING_EPITHET = Pattern.compile("^\\s*(" + EPITHET + ")\\b");
+  private static final Pattern STARTING_EPITHET = Pattern.compile("^\\s*(" + EPITHET_NO_LOOKBEHIND + ")\\b");
   // Collapses "f. sp", "f.sp", "f sp", "f. spec", … to a contiguous "fsp" so that the rank-marker
   // regex never sees "sp" preceded by "f " or "f.". Replaces the former (?<!f[ .])sp lookbehind.
   private static final Pattern FORM_SPECIALIS = Pattern.compile("\\bf\\.? *sp(?:ec)?\\b");
@@ -467,6 +471,63 @@ class ParsingJob implements Callable<ParsedName> {
       //Group 6 is any additional notes
       + "\\s*(" + NOTE + ")?$"
   );
+
+  // Reproduces the trailing negative-lookbehind in EPITHET as a Java post-check so that
+  // EPITHET_NO_LOOKBEHIND-based patterns (STARTING_EPITHET, NORM_LOWERCASE_BINOMIAL, NORM_SUBGENUS)
+  // remain semantically equivalent. Built from the same UNALLOWED_EPITHETS /
+  // UNALLOWED_EPITHET_ENDING / AUTHOR_TOKEN_3 string constants the regex itself uses.
+  private static final java.util.Set<String> EPITHET_FORBIDDEN_TRAILING_WORD;
+  private static final String[] EPITHET_FORBIDDEN_ENDING;
+  static {
+    java.util.Set<String> trail = new java.util.HashSet<>();
+    // ex|l[ae]|v[ao]n
+    java.util.Collections.addAll(trail, "ex", "la", "le", "van", "von");
+    // AUTHOR_TOKEN_3 = "fil|filius|hort|jun|junior|sen|senior"
+    for (String s : AUTHOR_TOKEN_3.split("\\|")) trail.add(s);
+    // UNALLOWED_EPITHETS = "aff|and|cf|des|from|ms|of|the|where"
+    for (String s : UNALLOWED_EPITHETS.split("\\|")) trail.add(s);
+    EPITHET_FORBIDDEN_TRAILING_WORD = java.util.Collections.unmodifiableSet(trail);
+    EPITHET_FORBIDDEN_ENDING = UNALLOWED_EPITHET_ENDING.split("\\|");
+  }
+
+  static boolean isValidEpithet(String s) {
+    if (s == null || s.isEmpty()) return true;
+    // literal trailing-string forbidden (e.g. "biovar", "isolate")
+    for (String suf : EPITHET_FORBIDDEN_ENDING) {
+      if (s.endsWith(suf)) return false;
+    }
+    // trailing word (preceded by ASCII non-word char or start) forbidden
+    int i = s.length();
+    while (i > 0) {
+      char c = s.charAt(i - 1);
+      if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')) {
+        break;
+      }
+      i--;
+    }
+    return !EPITHET_FORBIDDEN_TRAILING_WORD.contains(s.substring(i));
+  }
+
+  // Cheap pre-filters used to short-circuit expensive regexes when none of the
+  // literal markers the regex needs to match can possibly appear in the input.
+  // Soundness contract: must return true whenever the corresponding regex could match.
+  private static boolean containsAny(String s, String... needles) {
+    for (String n : needles) {
+      if (s.contains(n)) return true;
+    }
+    return false;
+  }
+
+  private static boolean containsAnyIgnoreCase(String s, String... needles) {
+    for (String n : needles) {
+      int nLen = n.length();
+      int max = s.length() - nLen;
+      for (int i = 0; i <= max; i++) {
+        if (s.regionMatches(true, i, n, 0, nLen)) return true;
+      }
+    }
+    return false;
+  }
 
   static Matcher matcherInterruptable(Pattern pattern, String text) throws InterruptedException {
     if (Thread.currentThread().isInterrupted()) {
@@ -725,13 +786,6 @@ class ParsingJob implements Callable<ParsedName> {
       name = m.replaceFirst(m.group(2));
     }
 
-    // do we have doubtful genera in square brackets?
-    m = matcherInterruptable(IS_CANDIDATUS_QUOTE_PATTERN, scientificName);
-    if (m.find()) {
-      pn.setCandidatus(true);
-      name = m.replaceFirst(m.group(2));
-    }
-  
     // preparse nomenclatural references
     preparseNomRef();
 
@@ -1029,6 +1083,10 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   void extractPublishedIn() throws InterruptedException {
+    // cheap pre-filter: REPL_IN_REF requires "in ", "IN " or "apud" somewhere
+    if (!containsAny(name, "in ", "IN ", "apud")) {
+      return;
+    }
     Matcher m = matcherInterruptable(REPL_IN_REF, name);
     if (m.find()) {
       pn.setPublishedIn(normNote(concat(m.group(2), m.group(3))));
@@ -1063,6 +1121,12 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   void removePlaceholderAuthor() throws InterruptedException {
+    // cheap pre-filter: BAD_AUTHORSHIP only matches placeholder authorship literals
+    if (name.indexOf('?') < 0
+        && !containsAnyIgnoreCase(name,
+            "applicable", "given", "known", "specified", "certain", "missing", "Agent")) {
+      return;
+    }
     Matcher m = matcherInterruptable(BAD_AUTHORSHIP, name);
     // check match was more than just ?
     if (m.find() && m.group(0).length()>2) {
@@ -1074,11 +1138,24 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   void extractSecReference() throws InterruptedException {
-    Matcher m = matcherInterruptable(EXTRACT_SENSU, name);
-    if (m.find()) {
+    // cheap pre-filter: EXTRACT_SENSU only triggers on a small set of sensu/auct/etc. markers.
+    // EXTRACT_SENSU_COLON requires a colon. If neither marker class is present, skip both.
+    boolean sensuCandidate = containsAnyIgnoreCase(name,
+        "sensu", "auct", "emend", "fide", "non", "nec", "sec",
+        "according", "excl", "mut.char", "p.p", "ampl", "str", "lat")
+        || name.contains("not")
+        // bare ss?[. ](l|s)[. ] forms documented in EXTRACT_SENSU but not covered above
+        || name.contains("s.l") || name.contains("s.s") || name.contains("ss.")
+        || name.contains("s. l") || name.contains("s. s") || name.contains("ss. ");
+    boolean colonCandidate = name.indexOf(':') >= 0;
+    if (!sensuCandidate && !colonCandidate) {
+      return;
+    }
+    Matcher m = sensuCandidate ? matcherInterruptable(EXTRACT_SENSU, name) : null;
+    if (m != null && m.find()) {
       pn.setTaxonomicNote(lowerCaseFirstChar(normNote(m.group(1))));
       name = m.replaceFirst("");
-    } else {
+    } else if (colonCandidate) {
       m = matcherInterruptable(EXTRACT_SENSU_COLON, name);
       if (m.find()) {
         var sensuAuthor = m.group(2);
@@ -1109,6 +1186,11 @@ class ParsingJob implements Callable<ParsedName> {
   void extractNomStatus() throws InterruptedException {
     // extract nom.illeg. and other nomen status notes
     // includes manuscript notes, e.g. ined.
+    // cheap pre-filter: pattern requires comb/nov/nom/nomen/orth/ined/ms/in press/unpublished
+    if (!containsAnyIgnoreCase(name, "nom", "nov", "comb", "orth", "ined", "press", "unpub")
+        && !name.contains("ms")) {
+      return;
+    }
     Matcher m = matcherInterruptable(EXTRACT_NOMSTATUS, name);
     if (m.find()) {
       StringBuffer sb = new StringBuffer();
@@ -1318,7 +1400,7 @@ class ParsingJob implements Callable<ParsedName> {
 
     // Capitalize potential lowercase genus in binomials
     m = matcherInterruptable(NORM_LOWERCASE_BINOMIAL, name);
-    if (m.find()) {
+    if (m.find() && isValidEpithet(m.group(1)) && isValidEpithet(m.group(2))) {
       name = m.replaceFirst(StringUtils.capitalize(m.group(1)) + " " + m.group(2));
     }
 
@@ -1359,13 +1441,6 @@ class ParsingJob implements Callable<ParsedName> {
       pn.addWarning(Warnings.DOUBTFUL_GENUS);
       pn.setDoubtful(true);
     }
-    // remove enclosing quotes
-    m = matcherInterruptable(REPL_ENCLOSING_QUOTE, name);
-    if (m.find()) {
-      name = m.replaceAll("");
-      pn.addWarning(Warnings.REPL_ENCLOSING_QUOTE);
-    }
-
     // no question marks after letters (after years they should remain)
     name = noQMarks(name);
 
@@ -1386,7 +1461,7 @@ class ParsingJob implements Callable<ParsedName> {
 
     // add ? genus when name starts with an epithet
     m = matcherInterruptable(STARTING_EPITHET, name);
-    if (m.find()) {
+    if (m.find() && isValidEpithet(m.group(1))) {
       name = m.replaceFirst("? $1");
       pn.addWarning(Warnings.MISSING_GENUS);
     }
@@ -1395,7 +1470,8 @@ class ParsingJob implements Callable<ParsedName> {
     m = matcherInterruptable(NORM_SUBGENUS, name);
     if (m.find()) {
       // make sure epithet is not a rank mismatch or author suffix
-      if (parseRank(m.group(3)) == null && !AUTHOR_SUFFIX_P.matcher(m.group(3)).find()){
+      if (parseRank(m.group(3)) == null && !AUTHOR_SUFFIX_P.matcher(m.group(3)).find()
+          && isValidEpithet(m.group(3))){
         name = m.replaceAll("$1($2)$3");
       }
     }
@@ -1412,9 +1488,8 @@ class ParsingJob implements Callable<ParsedName> {
   }
 
   // Replaces the former NORM_PUNCTUATIONS regex "\s*([.,;:&(){}\[\]-])\s*\1*\s*" → "$1".
-  // RE2/J does not support in-pattern backreferences, so this is hand-rolled.
-  // For each occurrence of one of the target chars, surrounding whitespace and runs of that
-  // same char (with interleaved whitespace) are collapsed to a single instance of the char.
+  // Hand-rolled: for each occurrence of one of the target chars, surrounding whitespace
+  // and runs of that same char (with interleaved whitespace) are collapsed to a single instance.
   static String normalizePunctuations(String name) {
     if (name == null || name.isEmpty()) return name;
     StringBuilder sb = new StringBuilder(name.length());
