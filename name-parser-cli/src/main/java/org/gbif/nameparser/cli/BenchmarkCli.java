@@ -22,8 +22,8 @@ import java.util.Map;
  *
  * <p>Lines starting with {@code #} and blank names are skipped. By default <b>every</b>
  * input row is timed — JIT warmup is opt-in via {@code --warmup}, in which case the
- * benchmark first does an untimed pass over the input to let HotSpot warm up, then
- * a timed pass that parses and reports on every name.
+ * benchmark first parses 100 names from the input untimed to let HotSpot warm up,
+ * then a timed pass that parses and reports on every name.
  *
  * <p>Timings are accumulated in primitive {@code long} arrays so the run stays cheap
  * and never keeps name strings in memory — this CLI is purely about measuring
@@ -32,13 +32,15 @@ import java.util.Map;
  * <p>Options:
  * <ul>
  *   <li>{@code --input=PATH}  source file (default: {@code data/benchmark-data.txt})</li>
- *   <li>{@code --warmup}      run an extra untimed pass over the input first to warm
- *       up the JIT before the timed pass</li>
+ *   <li>{@code --warmup}      parse the first 100 names untimed first to warm up
+ *       the JIT before the timed pass</li>
  *   <li>{@code -h --help}     print usage and exit</li>
  * </ul>
  */
 public final class BenchmarkCli {
   static final Path DEFAULT_INPUT = Paths.get("data/benchmark-data.txt");
+  /** Number of names parsed during the optional --warmup pre-pass. */
+  private static final int WARMUP_NAMES = 100;
 
   private final NameParser parser;
 
@@ -62,7 +64,7 @@ public final class BenchmarkCli {
     try (NameParser parser = new NameParserGBIF()) {
       BenchmarkCli bench = new BenchmarkCli(parser);
       if (warmup) {
-        System.err.println("Warming up the JIT — parsing the input once without timing…");
+        System.err.println("Warming up the JIT — parsing the first " + WARMUP_NAMES + " names without timing…");
         bench.warmup(input);
       }
       Result r = bench.run(input);
@@ -71,14 +73,16 @@ public final class BenchmarkCli {
   }
 
   /**
-   * Untimed parse pass over the entire input, used to warm up the JIT before
-   * timing. Output and exceptions are discarded — this is purely about touching
-   * the parser code paths.
+   * Untimed parse pass used to warm up the JIT before timing. Output and
+   * exceptions are discarded — this is purely about touching the parser code
+   * paths. Stops after {@link #WARMUP_NAMES} names so the warmup cost stays
+   * bounded regardless of input size.
    */
   public void warmup(Path tsv) throws IOException {
+    int n = 0;
     try (BufferedReader r = Files.newBufferedReader(tsv, StandardCharsets.UTF_8)) {
       String line;
-      while ((line = r.readLine()) != null) {
+      while (n < WARMUP_NAMES && (line = r.readLine()) != null) {
         if (line.isEmpty() || line.startsWith("#")) continue;
         String name = line.trim();
         if (name.isEmpty()) continue;
@@ -87,6 +91,7 @@ public final class BenchmarkCli {
         } catch (UnparsableNameException | InterruptedException ignored) {
           // counted in the timed pass
         }
+        n++;
       }
     }
   }
@@ -144,8 +149,8 @@ public final class BenchmarkCli {
     System.out.println("Usage: name-parser-cli benchmark [options]");
     System.out.println();
     System.out.println("Measure parser throughput on a name-per-line input file.");
-    System.out.println("By default every input row is timed; --warmup adds an extra");
-    System.out.println("untimed pass first so HotSpot is warm before the timed pass.");
+    System.out.println("By default every input row is timed; --warmup parses the first");
+    System.out.println("100 names untimed first so HotSpot is warm before the timed pass.");
     System.out.println();
     System.out.println("Options:");
     System.out.println("  --input=PATH    source file (default: data/benchmark-data.txt)");
