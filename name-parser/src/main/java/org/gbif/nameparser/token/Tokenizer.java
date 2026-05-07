@@ -12,6 +12,15 @@ public final class Tokenizer {
 
   private Tokenizer() {}
 
+  private static boolean isAllUpperCase(String s) {
+    for (int i = 0; i < s.length(); ) {
+      int cp = s.codePointAt(i);
+      if (Character.isLetter(cp) && !Character.isUpperCase(cp)) return false;
+      i += Character.charCount(cp);
+    }
+    return true;
+  }
+
   public static List<Token> tokenize(String input) {
     final int n = input.length();
     List<Token> out = new ArrayList<>(Math.max(4, n / 4));
@@ -56,6 +65,15 @@ public final class Tokenizer {
           if (leftOk && rightOk) {
             kind = TokenKind.HYBRID_MARK;
           }
+        } else if (word.length() >= 2
+            && (word.charAt(0) == 'x' || word.charAt(0) == 'X')
+            && Character.isUpperCase(word.codePointAt(1))
+            && !isAllUpperCase(word)) {
+          // xFoo / XFoo: leading x/X directly attached to a capitalised word — split
+          // into a HYBRID_MARK token followed by the remaining word.
+          out.add(new Token(TokenKind.HYBRID_MARK, word.substring(0, 1), wordStart, wordStart + 1));
+          out.add(new Token(TokenKind.WORD, word.substring(1), wordStart + 1, i));
+          continue;
         }
         out.add(new Token(kind, word, wordStart, i));
         continue;

@@ -1,5 +1,7 @@
 package org.gbif.nameparser.api;
 
+import java.util.Set;
+
 public interface LinneanName {
   Rank getRank();
 
@@ -29,9 +31,11 @@ public interface LinneanName {
 
   void setInfraspecificEpithet(String infraSpecies);
 
-  NamePart getNotho();
+  Set<NamePart> getNotho();
 
   void setNotho(NamePart notho);
+
+  void addNotho(NamePart notho);
 
   default String getNamePart(NamePart part) {
     switch (part) {

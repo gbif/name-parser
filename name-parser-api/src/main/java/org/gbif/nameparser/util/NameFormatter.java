@@ -92,6 +92,10 @@ public class NameFormatter {
     return sb.length() == 0 ? null : sb.toString();
   }
   
+  private static boolean hasNotho(ParsedName n, NamePart part) {
+    return n.getNotho() != null && n.getNotho().contains(part);
+  }
+
   private static void openItalics(StringBuilder sb) {
     sb.append(ITALICS_OPEN);
   }
@@ -167,7 +171,7 @@ public class NameFormatter {
     
     if (n.getUninomial() != null) {
       // higher rank names being just a uninomial!
-      if (hybridMarker && NamePart.GENERIC == n.getNotho()) {
+      if (hybridMarker && hasNotho(n, NamePart.GENERIC)) {
         sb.append(HYBRID_MARKER)
             .append(" ");
       }
@@ -186,7 +190,7 @@ public class NameFormatter {
             // but use rank markers for botanical names (unless its no defined rank)
             if (NomCode.ZOOLOGICAL == n.getCode()) {
               sb.append("(");
-              if (hybridMarker && NamePart.INFRAGENERIC == n.getNotho()) {
+              if (hybridMarker && hasNotho(n, NamePart.INFRAGENERIC)) {
                 sb.append(HYBRID_MARKER)
                     .append(' ');
               }
@@ -199,7 +203,7 @@ public class NameFormatter {
             if (rankMarker) {
               // If we know the rank we use explicit rank markers
               // this is how botanical infrageneric names are formed, see http://www.iapt-taxon.org/nomen/main.php?page=art21
-              if (appendRankMarker(sb, n.getRank(), hybridMarker && NamePart.INFRAGENERIC == n.getNotho())) {
+              if (appendRankMarker(sb, n.getRank(), hybridMarker && hasNotho(n, NamePart.INFRAGENERIC))) {
                 sb.append(' ');
               }
             }
@@ -246,7 +250,7 @@ public class NameFormatter {
           sb.append(n.getEpithetQualifier().get(NamePart.SPECIFIC))
               .append(" ");
         }
-        if (hybridMarker && NamePart.SPECIFIC == n.getNotho()) {
+        if (hybridMarker && hasNotho(n, NamePart.SPECIFIC)) {
           sb.append(HYBRID_MARKER)
               .append(" ");
         }
@@ -356,7 +360,7 @@ public class NameFormatter {
       sb.append(n.getEpithetQualifier().get(NamePart.INFRASPECIFIC))
           .append(" ");
     }
-    if (hybridMarker && NamePart.INFRASPECIFIC == n.getNotho()) {
+    if (hybridMarker && hasNotho(n, NamePart.INFRASPECIFIC)) {
       if (rankMarker && n.getRank() != null && isInfraspecificMarker(n.getRank())) {
         sb.append("notho");
       } else {
@@ -428,7 +432,7 @@ public class NameFormatter {
       sb.append(n.getEpithetQualifier().get(NamePart.GENERIC ))
         .append(" ");
     }
-    if (hybridMarker && NamePart.GENERIC == n.getNotho()) {
+    if (hybridMarker && hasNotho(n, NamePart.GENERIC)) {
       sb.append(HYBRID_MARKER)
           .append(" ");
     }
@@ -466,6 +470,8 @@ public class NameFormatter {
   public static void appendAuthorship(StringBuilder sb, Authorship auth, boolean includeYear, NomCode code) {
     if (auth != null && auth.exists()) {
       boolean authorsAppended = false;
+      // we don't want to include the year for botanical names
+      includeYear = includeYear && code != NomCode.BOTANICAL;
       if (auth.hasExAuthors()) {
         sb.append(joinAuthors(auth.getExAuthors(), NomCode.BACTERIAL == code ? 2 : null));
         sb.append(" ex ");

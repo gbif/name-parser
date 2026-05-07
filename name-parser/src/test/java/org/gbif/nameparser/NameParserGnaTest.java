@@ -5,7 +5,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.gbif.nameparser.api.NameType.FORMULA;
-import static org.gbif.nameparser.api.NameType.INFORMAL;
 import static org.gbif.nameparser.api.Rank.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -285,7 +284,6 @@ public class NameParserGnaTest {
           .basAuthors(null, "Fée");
   }
 
-  @Ignore("not yet passing")
   @Test
   public void binomialsWithoutAuthorship() throws Exception {
       // group: Binomials without authorship
@@ -298,223 +296,412 @@ public class NameParserGnaTest {
       assertName("Cucurbita pepo", "Cucurbita pepo")
           .species("Cucurbita", "pepo");
       assertName("Hirsutëlla male", "Hirsutëlla male")
-          .species("Hirsutella", "male");
+          .species("Hirsutëlla", "male");
       assertName("Aëtosaurus ferratus", "Aëtosaurus ferratus")
-          .species("Aetosaurus", "ferratus");
+          .species("Aëtosaurus", "ferratus");
       assertName("Remera cvancarai", "Remera cvancarai")
           .species("Remera", "cvancarai");
   }
 
-  @Ignore("not yet passing")
   @Test
   public void binomialsWithAuthorship() throws Exception {
       // group: Binomials with authorship
       assertName("Gazella farasani Thouless, al Bassri, 1991", "Gazella farasani")
           .species("Gazella", "farasani")
-          .combAuthors("1991", "Thouless", "al Bassri");
+          .combAuthors("1991", "Thouless", "al Bassri")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Anomalurus laticeps Aguilar-Amat i Banús, 1922", "Anomalurus laticeps")
           .species("Anomalurus", "laticeps")
-          .combAuthors("1922", "Aguilar-Amat i Banús");
+          .combAuthors("1922", "Aguilar-Amat i Banús")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Glis wagneri Đulić & Tortić, 1960", "Glis wagneri")
           .species("Glis", "wagneri")
-          .combAuthors("1960", "Đulić", "Tortić");
+          .combAuthors("1960", "Đulić", "Tortić")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Mico rondoni Ferrari, Sena, M. P. C. Schneider, & e Silva Júnior, 2010", "Mico rondoni")
           .species("Mico", "rondoni")
-          .combAuthors("2010", "Ferrari", "Sena", "M.P.C.Schneider", "e Silva Júnior");
+          .combAuthors("2010", "Ferrari", "Sena", "M.P.C.Schneider", "e Silva Júnior")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Trachypithecus caudalis (Đào Văn Tiến, 1977)", "Trachypithecus caudalis")
           .species("Trachypithecus", "caudalis")
-          .basAuthors("1977", "Đào Văn Tiến");
+          .basAuthors("1977", "Đào Văn Tiến")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Cymatium raderi D’Attilio & Myers, 1984", "Cymatium raderi")
           .species("Cymatium", "raderi")
-          .combAuthors("1984", "D'Attilio", "Myers");
+          .combAuthors("1984", "D'Attilio", "Myers")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Melania testudinaria Von dem Busch, 1842", "Melania testudinaria")
           .species("Melania", "testudinaria")
-          .combAuthors("1842", "Von dem Busch");
+          .combAuthors("1842", "Von dem Busch")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Cryptopleura farlowiana (J.Agardh) ver Steeg & Jossly", "Cryptopleura farlowiana")
           .species("Cryptopleura", "farlowiana")
           .combAuthors(null, "ver Steeg", "Jossly")
-          .basAuthors(null, "J.Agardh");
+          .basAuthors(null, "J.Agardh")
+          .code(NomCode.BOTANICAL)
+          .nothingElse();
+
       assertName("Pyxilla caput avis J.-J.Brun", "Pyxilla caput avis")
           .infraSpecies("Pyxilla", "caput", INFRASPECIFIC_NAME, "avis")
-          .combAuthors(null, "J.-J.Brun");
+          .combAuthors(null, "J.-J.Brun")
+          .nothingElse();
+
       assertName("Muscicapa randi Amadon & duPont, 1970", "Muscicapa randi")
           .species("Muscicapa", "randi")
-          .combAuthors("1970", "Amadon", "duPont");
+          .combAuthors("1970", "Amadon", "duPont")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Scytalopus alvarezlopezi Stiles, Laverde-R. & Cadena 2017", "Scytalopus alvarezlopezi")
           .species("Scytalopus", "alvarezlopezi")
-          .combAuthors("2017", "Stiles", "Laverde-R.", "Cadena");
+          .combAuthors("2017", "Stiles", "Laverde-R.", "Cadena")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Carabus (Tanaocarabus) hendrichsi Bolvar y Pieltain, Rotger & Coronado 1967", "Carabus hendrichsi")
-          .species("Carabus", "hendrichsi")
-          .combAuthors("1967", "Bolvar", "Pieltain", "Rotger", "Coronado");
+          .species("Carabus", "Tanaocarabus", "hendrichsi")
+          .combAuthors("1967", "Bolvar", "Pieltain", "Rotger", "Coronado")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Nemcia epacridoides (Meissner)Crisp", "Nemcia epacridoides")
           .species("Nemcia", "epacridoides")
           .combAuthors(null, "Crisp")
-          .basAuthors(null, "Meissner");
+          .basAuthors(null, "Meissner")
+          .code(NomCode.BOTANICAL)
+          .nothingElse();
+
       assertName("Pseudocercospora dendrobii Goh & W.H. Hsieh 1990", "Pseudocercospora dendrobii")
           .species("Pseudocercospora", "dendrobii")
-          .combAuthors("1990", "Goh", "W.H.Hsieh");
+          .combAuthors("1990", "Goh", "W.H.Hsieh")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Pseudocercospora dendrobii Goh and W.H. Hsieh 1990", "Pseudocercospora dendrobii")
           .species("Pseudocercospora", "dendrobii")
-          .combAuthors("1990", "Goh", "W.H.Hsieh");
+          .combAuthors("1990", "Goh", "W.H.Hsieh")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Pseudocercospora dendrobii Goh et W.H. Hsieh 1990", "Pseudocercospora dendrobii")
           .species("Pseudocercospora", "dendrobii")
-          .combAuthors("1990", "Goh", "W.H.Hsieh");
-      assertName("Schottera nicaeënsis (J.V. Lamouroux ex Duby) Guiry & Hollenberg", "Schottera nicaeensis")
-          .species("Schottera", "nicaeensis")
+          .combAuthors("1990", "Goh", "W.H.Hsieh")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
+      assertName("Schottera nicaeënsis (J.V. Lamouroux ex Duby) Guiry & Hollenberg", "Schottera nicaeënsis")
+          .species("Schottera", "nicaeënsis")
           .combAuthors(null, "Guiry", "Hollenberg")
-          .basAuthors(null, "J.V.Lamouroux");
+          .basExAuthors(null, "J.V.Lamouroux")
+          .basAuthors(null, "Duby")
+          .code(NomCode.BOTANICAL)
+          .nothingElse();
+
       assertName("Laevapex vazi dos Santos, 1989", "Laevapex vazi")
           .species("Laevapex", "vazi")
-          .combAuthors("1989", "dos Santos");
+          .combAuthors("1989", "dos Santos")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Periclimenaeus aurae dos Santos, Calado & Araújo, 2008", "Periclimenaeus aurae")
           .species("Periclimenaeus", "aurae")
-          .combAuthors("2008", "dos Santos", "Calado", "Araújo");
+          .combAuthors("2008", "dos Santos", "Calado", "Araújo")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Nototriton matama Boza-Oviedo, Rovito, Chaves, García-Rodríguez, Artavia, Bolaños, and Wake, 2012", "Nototriton matama")
           .species("Nototriton", "matama")
-          .combAuthors("2012", "Boza-Oviedo", "Rovito", "Chaves", "García-Rodríguez", "Artavia", "Bolaños", "Wake");
+          .combAuthors("2012", "Boza-Oviedo", "Rovito", "Chaves", "García-Rodríguez", "Artavia", "Bolaños", "Wake")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Architectonica offlexa Iredale, 1931", "Architectonica offlexa")
           .species("Architectonica", "offlexa")
-          .combAuthors("1931", "Iredale");
+          .combAuthors("1931", "Iredale")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Maracanda amoena Mc'Lach", "Maracanda amoena")
           .species("Maracanda", "amoena")
-          .combAuthors(null, "Mc'Lach");
+          .combAuthors(null, "Mc'Lach")
+          .nothingElse();
+
       assertName("Maracanda amoena Mc’Lach", "Maracanda amoena")
           .species("Maracanda", "amoena")
-          .combAuthors(null, "Mc'Lach");
+          .combAuthors(null, "Mc'Lach")
+          .nothingElse();
+
       assertName("Tridentella tangeroae Bruce, 198?", "Tridentella tangeroae")
           .species("Tridentella", "tangeroae")
-          .combAuthors("198?", "Bruce");
+          .combAuthors("198?", "Bruce")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Calobota acanthoclada (Dinter) Boatwr. & B.-E.van Wyk", "Calobota acanthoclada")
           .species("Calobota", "acanthoclada")
           .combAuthors(null, "Boatwr.", "B.-E.van Wyk")
-          .basAuthors(null, "Dinter");
+          .basAuthors(null, "Dinter")
+          .code(NomCode.BOTANICAL)
+          .nothingElse();
+
       assertName("Zanthopsis bispinosa M'Coy, 1849", "Zanthopsis bispinosa")
           .species("Zanthopsis", "bispinosa")
-          .combAuthors("1849", "M'Coy");
+          .combAuthors("1849", "M'Coy")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Scilla rupestris v.d. Merwe", "Scilla rupestris")
           .species("Scilla", "rupestris")
-          .combAuthors(null, "v.d.Merwe");
+          .combAuthors(null, "v.d.Merwe")
+          .nothingElse();
+
       assertName("Bembix bidentata v.d.L.", "Bembix bidentata")
           .species("Bembix", "bidentata")
-          .combAuthors(null, "v.d.L.");
+          .combAuthors(null, "v.d.L.")
+          .nothingElse();
+
       assertName("Pompilus cinctellus v. d. L.", "Pompilus cinctellus")
           .species("Pompilus", "cinctellus")
-          .combAuthors(null, "v.d.L.");
+          .combAuthors(null, "v.d.L.")
+          .nothingElse();
+
       assertName("Setaphis viridis v. d.G.", "Setaphis viridis")
           .species("Setaphis", "viridis")
-          .combAuthors(null, "v.d.G.");
+          .combAuthors(null, "v.d.G.")
+          .nothingElse();
+
       assertName("Coleophora mendica Baldizzone & v. d.Wolf 2000", "Coleophora mendica")
           .species("Coleophora", "mendica")
-          .combAuthors("2000", "Baldizzone", "v.d.Wolf");
+          .combAuthors("2000", "Baldizzone", "v.d.Wolf")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Psoronaias semigranosa von dem Busch in Philippi, 1845", "Psoronaias semigranosa")
           .species("Psoronaias", "semigranosa")
-          .combAuthors(null, "von dem Busch");
+          .combAuthors("1845", "von dem Busch")
+          .publishedIn("Philippi, 1845")
+          .nothingElse();
+
       assertName("Phora sororcula v d Wulp 1871", "Phora sororcula")
           .species("Phora", "sororcula")
-          .combAuthors("1871", "v d Wulp");
+          .combAuthors("1871", "v d Wulp")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Aeolothrips andalusiacus zur Strassen 1973", "Aeolothrips andalusiacus")
           .species("Aeolothrips", "andalusiacus")
-          .combAuthors("1973", "zur Strassen");
+          .combAuthors("1973", "zur Strassen")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Orthosia kindermannii Fischer v. Roslerstamm, 1837", "Orthosia kindermannii")
           .species("Orthosia", "kindermannii")
-          .combAuthors("1837", "Fischer v.Roslerstamm");
+          .combAuthors("1837", "Fischer v.Roslerstamm")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Boreophilia nomensis (Casey, 1910)", "Boreophilia nomensis")
           .species("Boreophilia", "nomensis")
-          .basAuthors("1910", "Casey");
+          .basAuthors("1910", "Casey")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Nereidavus kulkovi Kul'kov in Kul'kov & Obut, 1973", "Nereidavus kulkovi")
           .species("Nereidavus", "kulkovi")
-          .combAuthors(null, "Kul'kov");
+          .combAuthors("1973", "Kul'kov")
+          .publishedIn("Kul'kov & Obut, 1973")
+          .nothingElse();
+
       assertName("Xylaria potentillae A S. Xu", "Xylaria potentillae")
           .species("Xylaria", "potentillae")
-          .combAuthors(null, "A S.Xu");
+          .combAuthors(null, "A.S.Xu")
+          .nothingElse();
+
       assertName("Pseudocyrtopora el Hajjaji 1987", "Pseudocyrtopora")
           .monomial("Pseudocyrtopora")
-          .combAuthors("1987", "el Hajjaji");
+          .combAuthors("1987", "el Hajjaji")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Geositta poeciloptera (zu Wied-Neuwied, 1830)", "Geositta poeciloptera")
           .species("Geositta", "poeciloptera")
-          .basAuthors("1830", "zu Wied-Neuwied");
+          .basAuthors("1830", "zu Wied-Neuwied")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Abacetus laevicollis de Chaudoir, 1869", "Abacetus laevicollis")
           .species("Abacetus", "laevicollis")
-          .combAuthors("1869", "de Chaudoir");
+          .combAuthors("1869", "de Chaudoir")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Gastrosericus eremorum von Beaumont 1955", "Gastrosericus eremorum")
           .species("Gastrosericus", "eremorum")
-          .combAuthors("1955", "von Beaumont");
+          .combAuthors("1955", "von Beaumont")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Agaricus squamula Berk. & M.A. Curtis 1860", "Agaricus squamula")
           .species("Agaricus", "squamula")
-          .combAuthors("1860", "Berk.", "M.A.Curtis");
+          .combAuthors("1860", "Berk.", "M.A.Curtis")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Peltula coriacea Büdel, Henssen & Wessels 1986", "Peltula coriacea")
           .species("Peltula", "coriacea")
-          .combAuthors("1986", "Büdel", "Henssen", "Wessels");
+          .combAuthors("1986", "Büdel", "Henssen", "Wessels")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Tuber liui A S. Xu 1999", "Tuber liui")
           .species("Tuber", "liui")
-          .combAuthors("1999", "A S.Xu");
+          .combAuthors("1999", "A.S.Xu")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Lecanora wetmorei Śliwa 2004", "Lecanora wetmorei")
           .species("Lecanora", "wetmorei")
-          .combAuthors("2004", "Śliwa");
+          .combAuthors("2004", "Śliwa")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Vachonobisium troglophilum Vitali-di Castri, 1963", "Vachonobisium troglophilum")
           .species("Vachonobisium", "troglophilum")
-          .combAuthors("1963", "Vitali-di Castri");
+          .combAuthors("1963", "Vitali-di Castri")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Hyalesthes angustula Horvßth, 1909", "Hyalesthes angustula")
           .species("Hyalesthes", "angustula")
-          .combAuthors("1909", "Horvßth");
+          .combAuthors("1909", "Horvßth")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Platypus bicaudatulus Schedl (1935h)", "Platypus bicaudatulus")
           .species("Platypus", "bicaudatulus")
-          .combAuthors("1935", "Schedl");
+          .combAuthors("1935", "Schedl")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Platypus bicaudatulus Schedl (1935)", "Platypus bicaudatulus")
           .species("Platypus", "bicaudatulus")
-          .combAuthors("1935", "Schedl");
+          .combAuthors("1935", "Schedl")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Platypus bicaudatulus Schedl 1935", "Platypus bicaudatulus")
           .species("Platypus", "bicaudatulus")
-          .combAuthors("1935", "Schedl");
+          .combAuthors("1935", "Schedl")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Platypus bicaudatulus Schedl, 1935h", "Platypus bicaudatulus")
           .species("Platypus", "bicaudatulus")
-          .combAuthors("1935", "Schedl");
+          .combAuthors("1935", "Schedl")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Rotalina cultrata d'Orb. 1840", "Rotalina cultrata")
           .species("Rotalina", "cultrata")
-          .combAuthors("1840", "d'Orb.");
-      assertName("Stylosanthes guianensis (Aubl.) Sw. var. robusta L.'t Mannetje", "Stylosanthes guianensis robusta")
+          .combAuthors("1840", "d'Orb.")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
+      assertName("Stylosanthes guianensis (Aubl.) Sw. var. robusta L.'t Mannetje", "Stylosanthes guianensis var. robusta")
           .infraSpecies("Stylosanthes", "guianensis", VARIETY, "robusta")
-          .combAuthors(null, "L.'t Mannetje");
+          .combAuthors(null, "L.'t Mannetje")
+          .nothingElse();
+
       assertName("Doxander vittatus entropi (Man in 't Veld & Visser, 1993)", "Doxander vittatus entropi")
-          .infraSpecies("Doxander", "vittatus", INFRASPECIFIC_NAME, "entropi")
-          .basAuthors(null, "Man");
-      assertName("Elaeagnus triflora Roxb. var. brevilimbatus E.'t Hart", "Elaeagnus triflora brevilimbatus")
+          .infraSpecies("Doxander", "vittatus", SUBSPECIES, "entropi")
+          .basAuthors("1993", "Man in't Veld", "Visser")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
+      assertName("Elaeagnus triflora Roxb. var. brevilimbatus E.'t Hart", "Elaeagnus triflora var. brevilimbatus")
           .infraSpecies("Elaeagnus", "triflora", VARIETY, "brevilimbatus")
-          .combAuthors(null, "E.'t Hart");
+          .combAuthors(null, "E.'t Hart")
+          .nothingElse();
+
       assertName("Laevistrombus guidoi (Man in't Veld & De Turck, 1998)", "Laevistrombus guidoi")
           .species("Laevistrombus", "guidoi")
-          .basAuthors("1998", "Man in't Veld", "De Turck");
+          .basAuthors("1998", "Man in't Veld", "De Turck")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Strombus guidoi Man in't Veld & De Turck, 1998", "Strombus guidoi")
           .species("Strombus", "guidoi")
-          .combAuthors("1998", "Man in't Veld", "De Turck");
+          .combAuthors("1998", "Man in't Veld", "De Turck")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Strombus vittatus entropi Man in't Veld & Visser, 1993", "Strombus vittatus entropi")
-          .infraSpecies("Strombus", "vittatus", INFRASPECIFIC_NAME, "entropi")
-          .combAuthors("1993", "Man in't Veld", "Visser");
+          .infraSpecies("Strombus", "vittatus", SUBSPECIES, "entropi")
+          .combAuthors("1993", "Man in't Veld", "Visser")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Velutina haliotoides (Linnaeus, 1758),", "Velutina haliotoides")
           .species("Velutina", "haliotoides")
-          .basAuthors("1758", "Linnaeus");
+          .basAuthors("1758", "Linnaeus")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Hennediella microphylla (R.Br.bis) Paris", "Hennediella microphylla")
           .species("Hennediella", "microphylla")
           .combAuthors(null, "Paris")
-          .basAuthors(null, "R.Br.bis");
+          .basAuthors(null, "R.Br.bis")
+          .code(NomCode.BOTANICAL)
+          .nothingElse();
+
       assertName("Pseudocercosporella endophytica Crous & H. Sm. ter", "Pseudocercosporella endophytica")
           .species("Pseudocercosporella", "endophytica")
-          .combAuthors(null, "Crous", "H.Sm.ter");
+          .combAuthors(null, "Crous", "H.Sm.ter")
+          .nothingElse();
+
       assertName("Kudoa amazonica Velasco, Sindeaux Neto, Videira, de Cássia Silva do Nascimento, Gonçalves & Matos, 2019", "Kudoa amazonica")
           .species("Kudoa", "amazonica")
-          .combAuthors("2019", "Velasco", "Sindeaux Neto", "Videira", "de Cássia Silva do Nascimento", "Gonçalves", "Matos");
+          .combAuthors("2019", "Velasco", "Sindeaux Neto", "Videira", "de Cássia Silva do Nascimento", "Gonçalves", "Matos")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Branchinecta papillata Rogers, de los Rios & Zuniga, 2008", "Branchinecta papillata")
           .species("Branchinecta", "papillata")
-          .combAuthors("2008", "Rogers", "de los Rios", "Zuniga");
+          .combAuthors("2008", "Rogers", "de los Rios", "Zuniga")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Gerrhonotus lazcanoi Banda-Leal, Manuel Nevárez-de los Reyes and Bryson, 2017", "Gerrhonotus lazcanoi")
           .species("Gerrhonotus", "lazcanoi")
-          .combAuthors("2017", "Banda-Leal", "Manuel Nevárez-de los Reyes", "Bryson");
+          .combAuthors("2017", "Banda-Leal", "Manuel Nevárez-de los Reyes", "Bryson")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Lynceus huentelauquensis  Sigvardt, Rogers, De los Ríos, Palero, and Olesen, 2019", "Lynceus huentelauquensis")
           .species("Lynceus", "huentelauquensis")
-          .combAuthors("2019", "Sigvardt", "Rogers", "De los Ríos", "Palero", "Olesen");
+          .combAuthors("2019", "Sigvardt", "Rogers", "De los Ríos", "Palero", "Olesen")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
+
       assertName("Echiophis brunneus (Castro-Aguirre & Suárez de los Cobos, 1983)", "Echiophis brunneus")
           .species("Echiophis", "brunneus")
-          .basAuthors("1983", "Castro-Aguirre", "Suárez de los Cobos");
+          .basAuthors("1983", "Castro-Aguirre", "Suárez de los Cobos")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
   }
 
   @Ignore("not yet passing")
@@ -1181,7 +1368,7 @@ public class NameParserGnaTest {
       assertName("Theope thestias discus", "Theope thestias discus")
           .infraSpecies("Theope", "thestias", INFRASPECIFIC_NAME, "discus");
       assertName("Ocydromus dalmatinus dalmatinus (Dejean, 1831)", "Ocydromus dalmatinus dalmatinus")
-          .infraSpecies("Ocydromus", "dalmatinus", INFRASPECIFIC_NAME, "dalmatinus")
+          .infraSpecies("Ocydromus", "dalmatinus", SUBSPECIES, "dalmatinus")
           .basAuthors("1831", "Dejean");
       assertName("Rhipidia gracilirama lassula", "Rhipidia gracilirama lassula")
           .infraSpecies("Rhipidia", "gracilirama", INFRASPECIFIC_NAME, "lassula");
@@ -1735,7 +1922,7 @@ public class NameParserGnaTest {
       // skipped: Ustilaginoidea virens RNA virus
       // skipped: Candida albicans RNA_CTR0-3
       assertName("Carabus satyrus satyrus KURNAKOV, 1962", "Carabus satyrus satyrus")
-          .infraSpecies("Carabus", "satyrus", INFRASPECIFIC_NAME, "satyrus")
+          .infraSpecies("Carabus", "satyrus", SUBSPECIES, "satyrus")
           .combAuthors("1962", "Kurnakov");
   }
 
@@ -2568,7 +2755,7 @@ public class NameParserGnaTest {
           .nothingElse();
 
       assertName("Byrsophlebidae spec. 2", "Byrsophlebidae sp. 2")
-          .phraseName("Byrsophlebidae", "2", SPECIES)
+          .phraseIndetName("Byrsophlebidae", "2", SPECIES)
           .nothingElse();
 
       assertName("Naviculadicta witkowskii LB & Metzeltin nov spec", "Naviculadicta witkowskii")

@@ -3,6 +3,7 @@ package org.gbif.nameparser.pipeline;
 import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.UnparsableNameException;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -81,6 +82,14 @@ public final class Preflight {
   private static final Pattern QUESTION_PREFIX = Pattern.compile("^\\?\\s+\\p{Ll}");
   private static final Pattern NN_PLACEHOLDER = Pattern.compile(
       "^N\\.\\s*[Nn]\\.?(?:\\s*\\(.*\\))?\\s*$");
+  // "Genus indet." / "Genus indet" patterns are INFORMAL, not PLACEHOLDER
+  private static final Pattern INDET_SPECIES = Pattern.compile(
+      "^[\\p{Lu}][\\p{L}\\-]+(?:\\s+[\\p{Lu}][\\p{L}]+)?\\s+(?:indet|undet)\\.?\\s*$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+
+  // "clade" as a standalone word: a phylogenetic clade label, not a Linnean name.
+  private static final Pattern CLADE_KEYWORD = Pattern.compile(
+      "\\bclade\\b", Pattern.CASE_INSENSITIVE);
 
   private Preflight() {}
 
@@ -91,7 +100,7 @@ public final class Preflight {
   static void run(String original, String working) throws UnparsableNameException {
     String s = working.trim();
     if (s.isEmpty()) {
-      throw new UnparsableNameException(NameType.NO_NAME, original);
+      throw new UnparsableNameException(NameType.OTHER, original);
     }
 
     // Inputs that are too short or that are just an HTML entity stub (no real
@@ -102,34 +111,51 @@ public final class Preflight {
       String t = s.trim();
       boolean isAbbrev = t.length() == 2 && t.charAt(1) == '.' && Character.isLetter(t.charAt(0));
       if (!isAbbrev) {
-        throw new UnparsableNameException(NameType.NO_NAME, original);
+        throw new UnparsableNameException(NameType.OTHER, original);
       }
     }
     if (s.matches("&[a-zA-Z]+;") || s.matches("&#\\d+;")) {
-      throw new UnparsableNameException(NameType.NO_NAME, original);
+      throw new UnparsableNameException(NameType.OTHER, original);
     }
 
     // NO_NAME markers (text deletion / discard tags).
     String lower = s.toLowerCase();
     if (lower.contains("tobedeleted")
         || lower.contains("(delete)")
-        || s.startsWith("@")) {
-      throw new UnparsableNameException(NameType.NO_NAME, original);
+        || s.startsWith("@")
+        || lower.matches("(?:.*\\s)?delete(?:\\s.*|,.*|\\s*)")
+        || lower.contains("[delete]")
+        || lower.contains("[none]")
+        || lower.startsWith("non ")) {
+      throw new UnparsableNameException(NameType.OTHER, original);
     }
 
-    // Placeholder first — some placeholder strings contain "virus" (e.g. "uncultured virus").
-    if (PLACEHOLDER_KEYWORDS.matcher(s).find()
+    // Placeholder keywords first — some placeholder strings contain "virus" (e.g.
+    // "uncultured virus") and the explicit keyword wins over the virus marker.
+    if ((PLACEHOLDER_KEYWORDS.matcher(s).find()
         || NN_PLACEHOLDER.matcher(s).matches()
         || PLACEHOLDER_PREFIX.matcher(s).find()
-        || QUESTION_PREFIX.matcher(s).find()
         || s.startsWith("[unassigned]")
-        || s.equalsIgnoreCase("Unaccepted")) {
+        || s.equalsIgnoreCase("Unaccepted"))
+        && !INDET_SPECIES.matcher(s).matches()) {
       throw new UnparsableNameException(NameType.PLACEHOLDER, original);
     }
 
-    // Virus
+    // Virus — check before the leading-question-mark placeholder so that "? circular
+    // satellites" reads as a virus rather than an unstructured placeholder.
     if (VIRUS.matcher(s).find()) {
       throw new UnparsableNameException(NameType.VIRUS, original);
+    }
+
+    // Leading "? <epithet>" with no virus marker — treat as placeholder.
+    if (QUESTION_PREFIX.matcher(s).find()
+        && !INDET_SPECIES.matcher(s).matches()) {
+      throw new UnparsableNameException(NameType.PLACEHOLDER, original);
+    }
+
+    // Phylogenetic clade label — not a Linnean name.
+    if (CLADE_KEYWORD.matcher(s).find()) {
+      throw new UnparsableNameException(NameType.INFORMAL, original);
     }
 
     // Pure code-like NO_NAME — use the normalised (trimmed) form as the exception name.
@@ -137,39 +163,39 @@ public final class Preflight {
         || OTU_GTDB_UBA.matcher(s).matches()
         || GEN_NOV.matcher(s).matches()
         || s.startsWith("@")) {
-      throw new UnparsableNameException(NameType.NO_NAME, s);
+      throw new UnparsableNameException(NameType.OTHER, s);
     }
     // SH identifiers are canonical in uppercase.
     if (OTU_SH.matcher(s).matches()) {
-      throw new UnparsableNameException(NameType.NO_NAME, s.toUpperCase());
+      throw new UnparsableNameException(NameType.OTHER, s.toUpperCase());
     }
     // pure alphanumeric mash with digit (no spaces) and no obvious Latin epithet
     if (!s.contains(" ") && PURE_ALPHANUM.matcher(s).matches() && hasDigit(s)
         && !isPlausibleSingleWordName(s)) {
-      throw new UnparsableNameException(NameType.NO_NAME, s);
+      throw new UnparsableNameException(NameType.OTHER, s);
     }
     // PR2-style underscored name with hyphenated digit suffix → NO_NAME
     if (PR2_LIKE.matcher(s).matches() && s.contains("-") && hasDigit(s)) {
-      throw new UnparsableNameException(NameType.NO_NAME, s);
+      throw new UnparsableNameException(NameType.OTHER, s);
     }
     // GTDB/SILVA specimen codes ending with "sp" + 8+ digits (e.g. "18JY21-1 sp004344915").
     if (s.contains(" ") && OTU_SPECIMEN_SUFFIX.matcher(s).find()) {
-      throw new UnparsableNameException(NameType.NO_NAME, s);
+      throw new UnparsableNameException(NameType.OTHER, s);
     }
     // Multi-word input whose last token is a known OTU code (e.g. "Festuca sp. BOLD:ACW2100").
     if (s.contains(" ")) {
       String last = s.substring(s.lastIndexOf(' ') + 1);
       if (OTU_BOLD.matcher(last).matches()) {
-        throw new UnparsableNameException(NameType.NO_NAME, last);
+        throw new UnparsableNameException(NameType.OTHER, last);
       }
       if (OTU_SH.matcher(last).matches()) {
-        throw new UnparsableNameException(NameType.NO_NAME, last.toUpperCase());
+        throw new UnparsableNameException(NameType.OTHER, last.toUpperCase());
       }
     }
 
     // Hybrid formula — only when the cross sits between two distinct name spans.
     if (looksLikeHybridFormula(s)) {
-      throw new UnparsableNameException(NameType.HYBRID_FORMULA, original);
+      throw new UnparsableNameException(NameType.FORMULA, original);
     }
   }
 
@@ -184,7 +210,10 @@ public final class Preflight {
       boolean asciiX = !cross && (c == 'x' || c == 'X')
           && i > 0 && i + 1 < n
           && s.charAt(i - 1) == ' ' && s.charAt(i + 1) == ' ';
-      if (!cross && !asciiX) continue;
+      boolean plus = !cross && !asciiX && c == '+'
+          && i > 0 && i + 1 < n
+          && s.charAt(i - 1) == ' ' && s.charAt(i + 1) == ' ';
+      if (!cross && !asciiX && !plus) continue;
       if (i == 0 || s.charAt(i - 1) != ' ') continue;
       // Right of cross must be whitespace-separated; otherwise ×x is a notho marker
       // glued to an epithet (e.g. "var. ×alpina").
@@ -197,26 +226,30 @@ public final class Preflight {
       if (countLatinWords(left) >= 2 || hasAuthorAbbrev(left)) {
         return true;
       }
+      // Graft-chimera formula: single genus on each side (e.g. "Crataegus + Mespilus")
+      if (plus && countLatinWords(left) == 1
+          && !left.isEmpty() && Character.isUpperCase(left.codePointAt(0))
+          && !right.isEmpty() && Character.isUpperCase(right.trim().codePointAt(0))) {
+        return true;
+      }
     }
     return false;
   }
 
   private static int countLatinWords(String s) {
-    java.util.regex.Matcher m = java.util.regex.Pattern
-        .compile("[\\p{L}][\\p{L}.\\-]+", Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+    Matcher m = Pattern.compile("[\\p{L}][\\p{L}.\\-]+", Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
     int count = 0;
     while (m.find()) count++;
     return count;
   }
 
   private static boolean containsLatinWord(String s) {
-    return java.util.regex.Pattern
-        .compile("[\\p{L}]{2,}", Pattern.UNICODE_CHARACTER_CLASS).matcher(s).find();
+    return Pattern.compile("[\\p{L}]{2,}", Pattern.UNICODE_CHARACTER_CLASS).matcher(s).find();
   }
 
   private static boolean hasAuthorAbbrev(String s) {
-    return java.util.regex.Pattern
-        .compile("\\b[\\p{Lu}][\\p{L}]*\\.", Pattern.UNICODE_CHARACTER_CLASS).matcher(s).find();
+    return Pattern.compile("\\b[\\p{Lu}][\\p{L}]*\\.", Pattern.UNICODE_CHARACTER_CLASS)
+        .matcher(s).find();
   }
 
   private static int countLetters(String s) {

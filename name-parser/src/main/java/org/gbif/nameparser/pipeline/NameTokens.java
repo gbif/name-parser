@@ -5,6 +5,7 @@ import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.api.Warnings;
+import org.gbif.nameparser.token.AuthorParticles;
 import org.gbif.nameparser.token.Token;
 import org.gbif.nameparser.token.TokenKind;
 
@@ -39,6 +40,10 @@ public final class NameTokens {
     boolean inlineRankNotho = false;
     boolean indet = false;
     String cfAffQualifier = null;
+    // Tracks the most recently skipped mid-name author span so that, when a second
+    // infraspecific marker overrides the first, we can describe the dropped middle
+    // classification ("Intermediate classification removed: subsp.X Author") in a warning.
+    String pendingMidNameAuthor = null;
 
     int i = 0;
     while (i < boundary) {
@@ -63,6 +68,17 @@ public final class NameTokens {
         i += 3;
         continue;
       }
+      // After the species epithet, "(BasionymAuth) CombAuth …" sits between species and
+      // an infraspecific rank marker. Skip the parens + comb-author span so the rank
+      // marker that follows can be classified normally.
+      if (t.kind == TokenKind.OPEN_PAREN
+          && genus != null && !lowerEpithets.isEmpty()) {
+        int after = skipParenAuthorBlock(ts, i, boundary);
+        if (after > i) {
+          i = after;
+          continue;
+        }
+      }
       // abbreviated genus: single capital letter then DOT, only when no genus yet
       if (genus == null
           && t.kind == TokenKind.WORD
@@ -82,6 +98,7 @@ public final class NameTokens {
         if (genus != null && t.startsUpper()) {
           int after = AuthorshipSplit.midNameAuthorEnd(ts, i, boundary);
           if (after > i) {
+            pendingMidNameAuthor = renderAuthorSpan(ts, i, after);
             i = after;
             continue;
           }
@@ -135,14 +152,44 @@ public final class NameTokens {
             }
             continue;
           }
+          // 2b. "sp." between species and infraspecific epithet is almost always a
+          // misspelling of "ssp." (subspecies). Only triggers when there's already a
+          // species epithet and a lower epithet follows.
+          if (w.equalsIgnoreCase("sp") && lowerEpithets.size() == 1
+              && markerIdxInEpithets < 0
+              && hasInfraspecificEpithetAfter(ts, i, boundary)) {
+            inlineRank = Rank.SUBSPECIES;
+            markerIdxInEpithets = lowerEpithets.size();
+            i++;
+            if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
+            continue;
+          }
           // 3. infraspecific rank marker (with notho-prefix support)
           boolean[] notho = new boolean[1];
           Rank rmInfra = RankMarkers.matchInfraspecificAllowNotho(w, notho);
           if (rmInfra != null) {
             if (hasInfraspecificEpithetAfter(ts, i, boundary)) {
+              ctx.explicitInfraMarker = true;
+              // Second marker overriding the first: the previous classification
+              // (oldRank.epithet + author) was an intermediate level the model can't
+              // hold, so warn about the drop.
+              if (inlineRank != null && markerIdxInEpithets >= 0
+                  && markerIdxInEpithets < lowerEpithets.size()) {
+                String oldMarker = inlineRank.getMarker();
+                String oldEpithet = lowerEpithets.get(markerIdxInEpithets);
+                StringBuilder sb = new StringBuilder(Warnings.REMOVED_PREFIX);
+                if (oldMarker != null) sb.append(oldMarker).append(' ');
+                sb.append(oldEpithet);
+                if (pendingMidNameAuthor != null && !pendingMidNameAuthor.isEmpty()) {
+                  sb.append(' ').append(pendingMidNameAuthor);
+                }
+                ctx.name.addWarning(sb.toString());
+                ctx.name.addWarning(Warnings.QUADRINOMIAL);
+              }
               inlineRank = rmInfra;
               inlineRankNotho = notho[0];
               markerIdxInEpithets = lowerEpithets.size();
+              pendingMidNameAuthor = null;
               i++;
               if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
               // microbial "f. sp." → forma specialis: skip the "sp" + dot too
@@ -317,6 +364,64 @@ public final class NameTokens {
     if (requested == Rank.SPECIES && infraspecific != null) {
       ctx.name.addWarning(Warnings.SUBSPECIES_ASSIGNED);
     }
+  }
+
+  /**
+   * Renders the WORD/DOT tokens in [from, to) into the canonical inline author form
+   * ("B. Boivin" → "B.Boivin"). Used to record the dropped author span when an
+   * intermediate classification is overridden by a later rank marker.
+   */
+  private static String renderAuthorSpan(List<Token> ts, int from, int to) {
+    StringBuilder sb = new StringBuilder();
+    for (int j = from; j < to; j++) {
+      Token t = ts.get(j);
+      if (t.kind == TokenKind.WORD) {
+        if (sb.length() > 0 && sb.charAt(sb.length() - 1) != '.') sb.append(' ');
+        sb.append(t.text);
+      } else if (t.kind == TokenKind.DOT) {
+        if (sb.length() > 0 && sb.charAt(sb.length() - 1) != '.') sb.append('.');
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
+   * If a "(...) Author" span sits between the species epithet and an infraspecific rank
+   * marker, returns the index of the rank-marker token. Otherwise returns -1.
+   */
+  private static int skipParenAuthorBlock(List<Token> ts, int openIdx, int boundary) {
+    int depth = 1;
+    int j = openIdx + 1;
+    while (j < boundary && depth > 0) {
+      TokenKind k = ts.get(j).kind;
+      if (k == TokenKind.OPEN_PAREN) depth++;
+      else if (k == TokenKind.CLOSE_PAREN) depth--;
+      if (depth == 0) break;
+      j++;
+    }
+    if (j >= boundary || depth != 0) return -1;
+    j++; // skip past the close paren
+    while (j < boundary) {
+      Token t = ts.get(j);
+      if (t.kind == TokenKind.WORD) {
+        if (t.startsUpper()) { j++; continue; }
+        if (AuthorParticles.isParticle(t.text)) { j++; continue; }
+        String w = stripDot(t.text);
+        boolean[] notho = new boolean[1];
+        if (RankMarkers.matchInfraspecificAllowNotho(w, notho) != null) {
+          return j;
+        }
+        return -1;
+      }
+      if (t.kind == TokenKind.DOT
+          || t.kind == TokenKind.AMPERSAND
+          || t.kind == TokenKind.COMMA) {
+        j++;
+        continue;
+      }
+      return -1;
+    }
+    return -1;
   }
 
   /** Title-cases all-caps or all-lower-case Latin words used as a genus/uninomial. */

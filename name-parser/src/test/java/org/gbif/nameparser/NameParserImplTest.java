@@ -3,7 +3,6 @@ package org.gbif.nameparser;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -11,10 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.gbif.nameparser.api.NamePart.INFRASPECIFIC;
 import static org.gbif.nameparser.api.NamePart.SPECIFIC;
@@ -39,7 +34,6 @@ public class NameParserImplTest {
    * https://github.com/gbif/name-parser/issues/66
    * https://www.ncbi.nlm.nih.gov/books/NBK8808/#A431
    */
-  @Ignore("authorship polish — deferred")
   @Test
   public void sic() throws Exception {
     assertName("Ameiva plei Rosicky, 1955", "Ameiva plei")
@@ -164,13 +158,14 @@ public class NameParserImplTest {
     assertName("Turbo porphyrites [sic, porphyria]", "Turbo porphyrites")
             .species("Turbo", "porphyrites")
             .partial("(sic,porphyria)") // not ideal , but hey
+            .sic()
             .nothingElse();
 
     assertAuthorship("[sic]")
             .sic()
             .nothingElse();
 
-    assertAuthorship("[sic] Walter")
+    assertAuthorship("[sic] Walter", "Walter")
             .sic()
             .combAuthors(null, "Walter")
             .nothingElse();
@@ -179,8 +174,6 @@ public class NameParserImplTest {
             .sic()
             .nothingElse();
   }
-
-  @Ignore("not in tier-1 scope")
 
   @Test
   public void squareGenera() throws Exception {
@@ -207,8 +200,6 @@ public class NameParserImplTest {
             .nothingElse();
   }
 
-  @Ignore("not in tier-1 scope")
-
   @Test
   public void tinfr() throws Exception {
     assertName("Hieracium vulgatum t.infr. arrectariicaule Sudre", "Hieracium vulgatum arrectariicaule")
@@ -233,12 +224,11 @@ public class NameParserImplTest {
   /**
    * https://github.com/gbif/name-parser/issues/80
    */
-  @Ignore("not in tier-1 scope")
   @Test
   public void CkYang() throws Exception {
     assertName("Nemopistha sinica C.-k. Yang, 1986", "Nemopistha sinica")
             .species("Nemopistha", "sinica")
-            .combAuthors("1986", "C.-k.Yang")
+            .combAuthors("1986", "C.-K.Yang")
             .code(ZOOLOGICAL)
             .nothingElse();
   }
@@ -268,7 +258,7 @@ public class NameParserImplTest {
             .nothingElse();
 
     assertName("Jezzinothrips cretacicus amazur Strassen, 1973", "Jezzinothrips cretacicus amazur")
-            .infraSpecies("Jezzinothrips", "cretacicus", INFRASPECIFIC_NAME, "amazur")
+            .infraSpecies("Jezzinothrips", "cretacicus", SUBSPECIES, "amazur")
             .combAuthors("1973", "Strassen")
             .code(ZOOLOGICAL)
             .nothingElse();
@@ -283,17 +273,30 @@ public class NameParserImplTest {
             .species("Agrostis", "compressa")
             .combAuthors(null, "Willd.")
             .nomNote("nom.superfl.")
+            .code(BOTANICAL)
             .nothingElse();
   }
 
   /**
    * https://github.com/gbif/name-parser/issues/68
    */
-  @Ignore("authorship polish — deferred")
   @Test
   public void cladeNames() throws Exception {
+    // keyword clade to throw unparsable
     assertUnparsable("Amauropeltoid clade", INFORMAL);
     assertUnparsable("Cyanobacteriota/Melainabacteria clade", Rank.UNRANKED, INFORMAL);
+    // no clades
+    assertName("Endococcus cladiae Zhurb. & Pino-Bodas", "Endococcus cladiae")
+        .species("Endococcus", "cladiae")
+        .combAuthors(null, "Zhurb.", "Pino-Bodas")
+        .nothingElse();
+
+    assertName("Clada tricostata clada (Clada) Pascoe, 1887", "Clada tricostata clada")
+        .infraSpecies("Clada", "tricostata", SUBSPECIES, "clada")
+        .combAuthors("1887", "Pascoe")
+        .basAuthors(null, "Clada")
+        .code(ZOOLOGICAL)
+        .nothingElse();
   }
 
   /**
@@ -365,7 +368,6 @@ public class NameParserImplTest {
   /**
    * https://github.com/gbif/name-parser/issues/58
    */
-  @Ignore("authorship polish — deferred")
   @Test
   public void vdAuthors() throws Exception {
     assertName("Taraxacum dunense v. Soest", "Taraxacum dunense")
@@ -382,7 +384,6 @@ public class NameParserImplTest {
   /**
    * https://github.com/gbif/name-parser/issues/56
    */
-  @Ignore("authorship polish — deferred")
   @Test
   public void rechf() throws Exception {
     assertName("Salix repens L. subsp. galeifolia Neumann ex Rech. f.", "Salix repens subsp. galeifolia")
@@ -394,9 +395,35 @@ public class NameParserImplTest {
   }
 
   /**
+   * The "f." / "fil." / "filius" suffix is the regulated botanical convention for the
+   * son of a same-named author, but it does also appear in older zoological literature
+   * to distinguish father and son authorities. Those zoological cases always carry a
+   * year, so the year-on-author-span signal correctly classifies them as ZOOLOGICAL.
+   */
+  @Test
+  public void filiusZoological() throws Exception {
+    assertName("Lacerta agilis Linnaeus f., 1789", "Lacerta agilis")
+            .species("Lacerta", "agilis")
+            .combAuthors("1789", "Linnaeus f.")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Testudo graeca Linnaeus f., 1789", "Testudo graeca")
+            .species("Testudo", "graeca")
+            .combAuthors("1789", "Linnaeus f.")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Raja batis Forster f., 1781", "Raja batis")
+            .species("Raja", "batis")
+            .combAuthors("1781", "Forster f.")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/name-parser/issues/49
    */
-  @Ignore("authorship polish — deferred")
   @Test
   public void wfoAuthors() throws Exception {
     assertName("Taraxacum vulgaris Backer ex K.Heyne", "Taraxacum vulgaris")
@@ -405,6 +432,7 @@ public class NameParserImplTest {
             .combExAuthors("Backer")
             .nothingElse();
 
+    // unpublished = manuscript name
     assertName("Taraxacum oosterveldii Petrasiak & Johansen, unpublished", "Taraxacum oosterveldii")
             .species("Taraxacum", "oosterveldii")
             .combAuthors(null, "Petrasiak", "Johansen")
@@ -416,14 +444,12 @@ public class NameParserImplTest {
   /**
    * https://github.com/gbif/portal-feedback/issues/3535
    */
-  @Ignore("authorship polish — deferred")
   @Test
   public void noHybrids() throws Exception {
     assertName("Lepidodens similis Zhang F & Pan Z-X in Zhang, F, Pan, Z-X, Wu, J, Ding, Y-H, Yu, D-Y & Wang, B-X, 2016", "Lepidodens similis")
             .species("Lepidodens", "similis")
             .combAuthors("2016", "Zhang F", "Pan Z-X")
             .publishedIn("Zhang, F, Pan, Z-X, Wu, J, Ding, Y-H, Yu, D-Y & Wang, B-X, 2016")
-            .code(ZOOLOGICAL)
             .nothingElse();
   }
 
@@ -466,7 +492,6 @@ public class NameParserImplTest {
   /**
    * https://github.com/gbif/checklistbank/issues/87
    */
-  @Ignore("not in tier-3 scope")
   @Test
   public void blacklisted() throws Exception {
     assertName("Abies null Hood", "Abies null")
@@ -476,18 +501,9 @@ public class NameParserImplTest {
             .warning(Warnings.NULL_EPITHET)
             .nothingElse();
 
-    assertName("Unidentified unidentified Hood", "Unidentified unidentified")
-            .species("Unidentified", "unidentified")
-            .combAuthors(null, "Hood")
-            .doubtful()
-            .warning(Warnings.BLACKLISTED_EPITHET)
-            .nothingElse();
+    assertUnparsable("Unidentified unidentified Hood", PLACEHOLDER);
 
-    assertName("Abies unidentified", "Abies unidentified")
-            .species("Abies", "unidentified")
-            .doubtful()
-            .warning(Warnings.BLACKLISTED_EPITHET)
-            .nothingElse();
+    assertUnparsable("Abies unidentified", PLACEHOLDER);
 
     assertName("Passiflora possible Müller", "Passiflora possible")
             .species("Passiflora", "possible")
@@ -495,16 +511,88 @@ public class NameParserImplTest {
             .doubtful()
             .warning(Warnings.BLACKLISTED_EPITHET)
             .nothingElse();
+  }
 
-    // undetected nom rel
-    // make sure we blacklist the shit epithet, as we have received such data in the past
-    assertName("Passiflora eglandulosa J.M. MacDougal. Lingua shit de Missouri Botanical Garden 75. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa shit")
-            .infraSpecies("Passiflora", "eglandulosa", INFRASPECIFIC_NAME, "shit")
-            .combAuthors(null, "de Missouri Botanical Garden")
-            .doubtful()
-            .partial("75.figs 1,2B,&3.1988.Figs 36-37")
-            .warning(Warnings.BLACKLISTED_EPITHET)
-            .nothingElse();
+  @Test
+  public void authorWithPublication() throws Exception {
+    // in publications often give the year the name was published. We propagate that to the authorship instance
+    // and for botanical names we simply don't show it in the NameFormatter
+
+    // these are difficult to find the cutoff between author and the publishedIn reference
+    assertName("Passiflora eglandulosa J.M. MacDougal. Annals of the Missouri Botanical Garden 75. figs 1, 2B, and 3. 1988. Figs 36-37", "Passiflora eglandulosa")
+        .species("Passiflora", "eglandulosa")
+        .combAuthors("1988", "J.M.MacDougal")
+        .publishedIn("Annals of the Missouri Botanical Garden 75. figs 1, 2B, and 3. 1988. Figs 36-37")
+        .nothingElse();
+
+    // IPNI botanical style, reference after a comma behind the (abbreviated?) author
+    assertName("Samyda arborea Rich., Actes Soc. Hist. Nat. Paris 1: 109 (1792).", "Samyda arborea")
+        .species("Samyda", "arborea")
+        .combAuthors("1792", "Rich.")
+        .publishedIn("Actes Soc. Hist. Nat. Paris 1: 109 (1792)")
+        .nothingElse();
+
+    assertName("Casearia arborea Urb., Symb. Antill. (Urban). 4(3): 421 (1910).", "Casearia arborea")
+        .species("Casearia", "arborea")
+        .combAuthors("1910", "Urb.")
+        .publishedIn("Symb. Antill. (Urban). 4(3): 421 (1910)")
+        .nothingElse();
+
+    assertName("Abuta candicans Rich. in DC., Syst. Nat. 1: 543 (1817).", "Abuta candicans")
+        .species("Abuta", "candicans")
+        .combAuthors("1817", "Rich.")
+        .publishedIn("DC., Syst. Nat. 1: 543 (1817)")
+        .nothingElse();
+
+    assertName("Antacanthus Rich. ex DC., Prodr. 4: 484 (1830), pro syn.", "Antacanthus")
+        .monomial("Antacanthus")
+        .combAuthors("1830", "DC.")
+        .combExAuthors("Rich.")
+        .publishedIn("Prodr. 4: 484 (1830)")
+        .nomNote("pro syn.")
+        .nothingElse();
+
+    assertName("Aegiphila pyramidata Rich. ex Moldenke, Phytologia 1: 204, in obs., pro syn. (1937).", "Aegiphila pyramidata")
+        .species("Aegiphila", "pyramidata")
+        .combAuthors("1937", "Moldenke")
+        .combExAuthors("Rich.")
+        .publishedIn("Phytologia 1: 204, (1937)")
+        .nomNote("in obs., pro syn.")
+        .nothingElse();
+
+    assertName("Amplexoididae Wang, Guang-Xu in Wang, He, Tang & Percival, 2018","Amplexoididae")
+        .monomial("Amplexoididae")
+        .combAuthors("2018", "Wang", "Guang-Xu")
+        .publishedIn("Wang, He, Tang & Percival, 2018")
+        .nothingElse();
+
+    assertName("Roelofinae St Laurent & Kawahara in St Laurent, Mielke, Herbin, Dexter & Kawahara 2020", "Roelofinae")
+        .monomial("Roelofinae")
+        .combAuthors("2020", "St Laurent", "Kawahara")
+        .publishedIn("St Laurent, Mielke, Herbin, Dexter & Kawahara 2020")
+        .nothingElse();
+
+    assertName("Charlottea Whalen & Carter in Carter, Whalen & Guex, 1998", "Charlottea")
+        .monomial("Charlottea")
+        .combAuthors("1998", "Whalen", "Carter")
+        .publishedIn("Carter, Whalen & Guex, 1998")
+        .nothingElse();
+  }
+
+
+  @Test
+  public void zoobank() throws Exception {
+    assertName("Euplexauridae McFadden, van Ofwegen & Quattrini, 2022", "Euplexauridae")
+        .monomial("Euplexauridae")
+        .combAuthors("2022", "McFadden", "van Ofwegen", "Quattrini")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    assertName("Culexlineatascinciina Hoser, 2015", "Culexlineatascinciina")
+        .monomial("Culexlineatascinciina")
+        .combAuthors("2015", "Hoser")
+        .code(ZOOLOGICAL)
+        .nothingElse();
   }
 
   @Test
@@ -583,9 +671,10 @@ public class NameParserImplTest {
             .monomial("Xenacoelomorpha")
             .nothingElse();
   }
-  @Ignore("authorship polish — deferred")
+
   @Test
   public void infraSpecies() throws Exception {
+    // bad rank given
     assertName("Poa pratensis subsp. anceps (Gaudin) Dumort., 1824", Rank.SPECIES, "Poa pratensis subsp. anceps")
             .infraSpecies("Poa", "pratensis", Rank.SUBSPECIES, "anceps")
             .basAuthors(null, "Gaudin")
@@ -627,7 +716,7 @@ public class NameParserImplTest {
 
     assertName("Achillea millefolium subsp. pallidotegula B. Boivin var. pallidotegula", "Achillea millefolium var. pallidotegula")
             .infraSpecies("Achillea", "millefolium", Rank.VARIETY, "pallidotegula")
-            .warning("Intermediate classification removed: subsp.pallidotegula B.Boivin ")
+            .warning(Warnings.QUADRINOMIAL, Warnings.REMOVED_PREFIX + "subsp. pallidotegula B.Boivin")
             .nothingElse();
 
     assertName("Achillea millefolium var. pallidotegula", Rank.INFRASPECIFIC_NAME, "Achillea millefolium var. pallidotegula")
@@ -639,7 +728,7 @@ public class NameParserImplTest {
             .code(ZOOLOGICAL)
             .nothingElse();
   }
-  @Ignore("authorship polish — deferred")
+
   @Test
   public void exAuthors() throws Exception {
     assertName("Acacia truncata (Burm. f.) hort. ex Hoffmanns.", "Acacia truncata")
@@ -671,6 +760,9 @@ public class NameParserImplTest {
             .nomNote("nom.nud.")
             .nothingElse();
 
+    // hort. = from hortulanorum (“of gardens”), the name was used in cultivation (nurseries, gardens, horticultural trade)
+    //         often without valid scientific publication sometimes applied loosely or incorrectly
+    // ex Dallim. = William Dallimore later validly published the name
     assertName("Abies brevifolia hort. ex Dallim.", "Abies brevifolia")
             .species("Abies", "brevifolia")
             .combExAuthors("hort.")
@@ -1027,6 +1119,13 @@ public class NameParserImplTest {
             .basAuthors(null, "Fr.")
             .code(BOTANICAL)
             .nothingElse();
+
+    assertName("Agaricus ericetorum Pers. : Fr.", "Agaricus ericetorum")
+        .species("Agaricus", "ericetorum")
+        .combAuthors(null, "Pers.")
+        .sanctAuthor("Fr.")
+        .code(BOTANICAL)
+        .nothingElse();
   }
 
   @Test
@@ -1263,8 +1362,18 @@ public class NameParserImplTest {
             .nothingElse();
   }
 
-  @Ignore("not in tier-3 scope")
 
+  /**
+   * cv. Abbreviation of cultivar
+   * A formal category under the cultivated plant code (ICNCP), not the botanical code
+   * Must follow strict formatting rules:
+   *  - not italicized
+   *  - capitalized
+   *  - usually in quotes
+   *
+   * Correct style: Abies brevifolia 'Short Needle'
+   * (or historically: Abies brevifolia cv. 'Short Needle')
+   */
   @Test
   public void cultivars() throws Exception {
     assertName("Abutilon 'Kentish Belle'", "Abutilon 'Kentish Belle'")
@@ -1841,7 +1950,6 @@ public class NameParserImplTest {
    * <p>
    * Exceptional cases should better be tested in a test on its own!
    */
-  @Ignore("not in tier-1 scope")
   @Test
   public void doubtfulFile() throws Exception {
     for (String name : iterResource("doubtful.txt")) {
@@ -1853,30 +1961,13 @@ public class NameParserImplTest {
   }
 
   /**
-   * Test all names in unparsable.txt and makes sure they are not parsable.
+   * Test all names in other.txt and makes sure they are not parsable.
    */
-  @Ignore("not in tier-4 scope")
   @Test
-  public void unparsableFile() throws Exception {
-    for (String name : iterResource("unparsable.txt")) {
+  public void otherFile() throws Exception {
+    for (String name : iterResource("other.txt")) {
       try {
         parser.parse(name);
-        fail("Expected " + name + " to be unparsable");
-      } catch (UnparsableNameException ex) {
-        assertEquals(name, ex.getName());
-      }
-    }
-  }
-
-  /**
-   * Test all names in nonames.txt and makes sure they are NO_NAMEs.
-   */
-  @Ignore("not in tier-4 scope")
-  @Test
-  public void nonamesFile() throws Exception {
-    for (String name : iterResource("nonames.txt")) {
-      try {
-        ParsedName pn = parser.parse(name);
         fail("Expected " + name + " to be unparsable");
       } catch (UnparsableNameException ex) {
         assertEquals("Bad name type for: "+name, NameType.OTHER, ex.getType());
@@ -1902,7 +1993,7 @@ public class NameParserImplTest {
   }
 
   /**
-   * Test all names in nonames.txt and makes sure they are NO_NAMEs.
+   * Test all names in other.txt and makes sure they are NO_NAMEs.
    */
   @Test
   public void placeholderFile() throws Exception {
@@ -1915,114 +2006,6 @@ public class NameParserImplTest {
         assertEquals(name, ex.getName());
       }
     }
-  }
-
-  /**
-   * Parse all verbatim GBIF checklist names to spot room for improvements
-   */
-  @Test
-  @Ignore
-  public void gbifFile() throws Exception {
-    parseFile("gbif-verbatim-names.txt");
-  }
-
-  /**
-   * Parse all names in col-names.tsv (scientificName + authorship columns) and log
-   * (un)parsed names with their NameType to target/col-names-parsed.log.
-   */
-  @Test
-  @Ignore
-  public void colFile() throws Exception {
-    try (var in = getClass().getResourceAsStream("/col-names.tsv")) {
-      parseInput(in, "target/col-names-parsed.log");
-    }
-  }
-
-  private void parseInput(InputStream stream, String logFN) throws Exception {
-    File logFile = new File(logFN);
-    logFile.getParentFile().mkdirs();
-    Map<NameType, Integer> parseTypes = new HashMap<>();
-    int counter = 0;
-    long start = System.currentTimeMillis();
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
-         BufferedWriter bw = new BufferedWriter(new FileWriter(logFile))) {
-      bw.write("# type\tname\n");
-      String line = br.readLine(); // skip header
-      while ((line = br.readLine()) != null) {
-        String[] cols = line.split("\t", -1);
-        if (cols.length < 1) continue;
-        String name = cols[0].trim();
-        if (name.isEmpty()) continue;
-        String authorship = cols.length > 1 ? cols[1].trim() : null;
-        if (authorship != null && authorship.isEmpty()) authorship = null;
-        counter++;
-        if (counter % 500000 == 0) {
-          long now = System.currentTimeMillis();
-          LOG.info("{} names tested. {} unparsable. {}ms elapsed", counter, parseTypes, now - start);
-        }
-        try {
-          var pn = parser.parse(name, authorship, null, null);
-          bw.write(pn.getType().name());
-          bw.write('\t');
-          bw.write(name);
-          bw.write('\t');
-          bw.write(pn.getRank().name());
-          bw.write('\t');
-          bw.write(StringUtils.trimToEmpty(pn.canonicalNameWithoutAuthorship()));
-          bw.write('\t');
-          bw.write(StringUtils.trimToEmpty(pn.authorshipComplete()));
-        } catch (UnparsableNameException ex) {
-          parseTypes.put(ex.getType(), parseTypes.getOrDefault(ex.getType(), 0) + 1);
-          bw.write(ex.getType().name());
-          bw.write('\t');
-          bw.write(name);
-          bw.write('\t');
-          bw.write('\t');
-          bw.write('\t');
-        }
-        bw.write('\n');
-      }
-    }
-    long end = System.currentTimeMillis();
-    String typeCount = parseTypes.entrySet()
-        .stream()
-        .sorted(Map.Entry.comparingByKey()) // or comparingByValue()
-        .map(entry -> entry.getKey() + "=>" + entry.getValue())
-        .collect(Collectors.joining(", "));
-    LOG.info("{} names tested, {} in {}ms", counter, typeCount, end - start);
-    LOG.info("Logs written to {}", logFile.getAbsolutePath());
-  }
-
-  /**
-   * @return number of failed names
-   */
-  private int parseFile(String resourceName) throws Exception {
-    int parseFails = 0;
-    int counter = 0;
-    long start = System.currentTimeMillis();
-    for (String name : iterResource(resourceName)) {
-      counter++;
-      if (counter % 100000 == 0) {
-        long end = System.currentTimeMillis();
-        LOG.info("{} names tested, {} failed", counter, parseFails);
-        LOG.info("Total time {}ms, average per name {}", (end - start), (((double) end - start) / counter));
-      }
-      try {
-        ParsedName pn = parser.parse(name);
-        if (pn.getState() != ParsedName.State.COMPLETE) {
-          LOG.debug("{} {}", pn.getState(), name);
-        }
-      } catch (UnparsableNameException ex) {
-        if (ex.getType().isParsable() || ex.getType() == NameType.OTHER) {
-          parseFails++;
-          LOG.warn("{}: {}", ex.getType(), name);
-        }
-      }
-    }
-    long end = System.currentTimeMillis();
-    LOG.info("{} names tested, {} failed", counter, parseFails);
-    LOG.info("Total time {}ms, average per name {}", (end - start), (((double) end - start) / counter));
-    return parseFails;
   }
 
   /**
@@ -2118,8 +2101,6 @@ public class NameParserImplTest {
     parser.parse("Ficus ernanii Carauta, Pederneir., P.P.Souza, A.F.P.Machado, M.D.M.Vianna & amp; Romaniuc", null);
   }
 
-  @Ignore("authorship polish — deferred")
-
   @Test
   public void nomNotes() throws Exception {
 
@@ -2137,9 +2118,8 @@ public class NameParserImplTest {
             .combAuthors("1758", "Loefl.")
             .nomNote("nom.cons.")
             .doubtful()
-            .partial(")(= Grislea L.1753).")
+            .partial("[= Grislea L. 1753].")
             .code(NomCode.ZOOLOGICAL)
-            .warning(Warnings.UNUSUAL_CHARACTERS)
             .nothingElse();
 
     assertName("Anthurium lanceum Engl. nom.illeg.", "Anthurium lanceum")
@@ -2283,8 +2263,6 @@ public class NameParserImplTest {
     assertSingleAuthor("zur Strassen");
   }
 
-  @Ignore("authorship polish — deferred")
-
   @Test
   public void flagBadAuthorship() throws Exception {
     assertName("Cynoglossus aurolineatus Not applicable", "Cynoglossus aurolineatus")
@@ -2303,8 +2281,6 @@ public class NameParserImplTest {
             .doubtful()
             .nothingElse();
   }
-
-  @Ignore("authorship polish — deferred")
 
   @Test
   public void taxonomicNotes() throws Exception {
@@ -2391,8 +2367,6 @@ public class NameParserImplTest {
             .nothingElse();
   }
 
-  @Ignore("not in tier-4 scope")
-
   @Test
   public void nonNames() throws Exception {
     // the entire name ends up as a taxonomic note, consider this as unparsed...
@@ -2455,8 +2429,6 @@ public class NameParserImplTest {
     assertEquals(sensu, parser.parse(raw, null).getTaxonomicNote());
   }
 
-  @Ignore("not in tier-4 scope")
-
   @Test
   public void viralNames() throws Exception {
     assertTrue(isViralName("Cactus virus 2"));
@@ -2515,8 +2487,6 @@ public class NameParserImplTest {
       assertTrue(isViralName(line));
     }
   }
-
-  @Ignore("authorship polish — deferred")
 
   @Test
   public void apostropheEpithets() throws Exception {
@@ -2594,7 +2564,6 @@ public class NameParserImplTest {
    * but the authorship can also be provided as part of the name - which happens a lot.
    * Make sure we can handle both cases.
    */
-  @Ignore("authorship polish — deferred")
   @Test
   public void redundantAuthorship() throws Exception {
     assertName("Euplectus cavicollis LeConte, J. L., 1878", "LeConte, J. L., 1878", "Euplectus cavicollis")
@@ -2602,54 +2571,74 @@ public class NameParserImplTest {
         .combAuthors("1878", "J.L.LeConte")
         .code(ZOOLOGICAL)
         .nothingElse();
+
+    assertName("Abies alba Mill.", (String)null, "Abies alba")
+        .species("Abies", "alba")
+        .combAuthors(null, "Mill.")
+        .nothingElse();
+
+    assertName("Abies alba", "Mill.", "Abies alba")
+        .species("Abies", "alba")
+        .combAuthors(null, "Mill.")
+        .nothingElse();
+
     assertName("Abies alba Mill.", "Mill.", "Abies alba")
         .species("Abies", "alba")
         .combAuthors(null, "Mill.")
         .nothingElse();
+
+    assertName("Abies alba  Mill", "Mill.", "Abies alba")
+        .species("Abies", "alba")
+        .combAuthors(null, "Mill.")
+        .nothingElse();
+
     assertName("Puma concolor (Linnaeus, 1771)", "(Linnaeus, 1771)", "Puma concolor")
         .species("Puma", "concolor")
         .basAuthors("1771", "Linnaeus")
+        .code(ZOOLOGICAL)
         .nothingElse();
+
     assertName("Puma concolor", "(Linnaeus, 1771)", "Puma concolor")
         .species("Puma", "concolor")
         .basAuthors("1771", "Linnaeus")
+        .code(ZOOLOGICAL)
         .nothingElse();
-    assertName("Puma concolor (Linnaeus, 1771)", "(Linnaeus 1771)", "Puma concolor")
+
+    assertName("Puma concolor ( Linnaeus, 1771 )", "(Linnaeus 1771)", "Puma concolor")
         .species("Puma", "concolor")
         .basAuthors("1771", "Linnaeus")
+        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
   /**
    * https://github.com/gbif/name-parser/issues/45
    */
-  @Ignore("not in tier-4 scope")
   @Test
   public void boldPlaceholder() throws Exception {
     assertName("OdontellidaeGEN", GENUS, "Odontellidae GEN")
             .monomial("Odontellidae", GENUS)
             .phrase("GEN")
-            .type(PLACEHOLDER)
+            .type(INFORMAL)
             .nothingElse();
 
     assertName("EusiridaeNZD", ZOOLOGICAL,"Eusiridae NZD")
             .monomial("Eusiridae", FAMILY)
             .phrase("NZD")
-            .type(PLACEHOLDER)
+            .type(INFORMAL)
             .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Blattellinae_SB","Blattellinae SB")
             .monomial("Blattellinae")
             .phrase("SB")
-            .type(PLACEHOLDER)
+            .type(INFORMAL)
             .nothingElse();
 
     assertName("GenusANIC_3","Genus ANIC_3")
             .monomial("Genus")
             .phrase("ANIC_3")
-            .type(PLACEHOLDER)
-            //.warning(Warnings.BLACKLISTED_EPITHET)
+            .type(INFORMAL)
             .nothingElse();
   }
 
@@ -2802,10 +2791,9 @@ public class NameParserImplTest {
             .nothingElse();
   }
 
-  @Ignore("not in tier-3 scope")
-
   @Test
   public void rankMismatch() throws Exception {
+    // interpret as indetermined names if rank is below genus
     assertName("Polygonum", Rank.CULTIVAR, "Polygonum cv.")
             .cultivar("Polygonum", null)
             .type(INFORMAL)
@@ -2817,6 +2805,7 @@ public class NameParserImplTest {
             .warning(Warnings.INDETERMINED)
             .nothingElse();
 
+    // conflict
     assertName("Polygonum alba", Rank.GENUS, "Polygonum alba")
             .binomial("Polygonum", null, "alba", Rank.GENUS)
             .type(INFORMAL)
@@ -2828,13 +2817,26 @@ public class NameParserImplTest {
   /**
    * https://github.com/gbif/name-parser/issues/5
    */
-  @Ignore("authorship polish — deferred")
   @Test
-  public void vulpes() throws Exception {
+  public void zooSubspecies() throws Exception {
+    // zoological trinomials are by default subspecies, not INFRASPECIFIC_NAME !!!
+    assertName("Vulpes vulpes silaceus Miller, 1907", ZOOLOGICAL, "Vulpes vulpes silaceus")
+        .infraSpecies("Vulpes", "vulpes", Rank.SUBSPECIES, "silaceus")
+        .combAuthors("1907", "Miller")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    // inferred code
+    assertName("Vulpes vulpes silaceus Miller, 1907", "Vulpes vulpes silaceus")
+        .infraSpecies("Vulpes", "vulpes", Rank.SUBSPECIES, "silaceus")
+        .combAuthors("1907", "Miller")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    // sp likely misspelled ssp for subspecies
     assertName("Vulpes vulpes sp. silaceus Miller, 1907", "Vulpes vulpes silaceus")
             .infraSpecies("Vulpes", "vulpes", Rank.SUBSPECIES, "silaceus")
             .combAuthors("1907", "Miller")
-            .warning(Warnings.SUBSPECIES_ASSIGNED)
             .code(ZOOLOGICAL)
             .nothingElse();
   }
@@ -3256,7 +3258,7 @@ public class NameParserImplTest {
   @Test
   public void yearVariations() throws Exception {
     assertName("Deudorix epijarbas turbo Fruhstorfer, [1912]", "Deudorix epijarbas turbo")
-            .infraSpecies("Deudorix", "epijarbas", Rank.INFRASPECIFIC_NAME, "turbo")
+            .infraSpecies("Deudorix", "epijarbas", Rank.SUBSPECIES, "turbo")
             .combAuthors("1912", "Fruhstorfer")
             .code(NomCode.ZOOLOGICAL)
             .nothingElse();
@@ -3428,13 +3430,13 @@ public class NameParserImplTest {
   @Test
   public void phraseNames() throws Exception {
     assertName("Prostanthera sp. Somersbey (B.J.Conn 4024)", "Prostanthera sp. Somersbey (B.J.Conn 4024)")
-            .phraseName("Prostanthera", "Somersbey (B.J.Conn 4024)", SPECIES)
+            .phraseIndetName("Prostanthera", "Somersbey (B.J.Conn 4024)", SPECIES)
             .nothingElse();
     assertName("Pultenaea sp. 'Olinda' (Coveny 6616)", "Pultenaea sp. 'Olinda' (Coveny 6616)")
-            .phraseName("Pultenaea", "'Olinda' (Coveny 6616)", SPECIES)
+            .phraseIndetName("Pultenaea", "'Olinda' (Coveny 6616)", SPECIES)
             .nothingElse();
     assertName("Pterostylis sp. Sandheath (D.Murfet 3190) R.J.Bates", "Pterostylis sp. Sandheath (D.Murfet 3190)")
-            .phraseName("Pterostylis", "Sandheath (D.Murfet 3190) R.J.Bates", SPECIES)
+            .phraseIndetName("Pterostylis", "Sandheath (D.Murfet 3190) R.J.Bates", SPECIES)
             .nothingElse();
     // Check to make sure base name is parsed before haring off into the wilderness
     assertName("Acacia mutabilis Maslin", "Acacia mutabilis")
@@ -3442,21 +3444,21 @@ public class NameParserImplTest {
             .combAuthors(null, "Maslin")
             .nothingElse();
     assertName("Acacia mutabilis Maslin subsp. Young River (G.F. Craig 2052)", "Acacia mutabilis ssp. Young River (G.F. Craig 2052)")
-            .phraseName("Acacia", "Young River (G.F. Craig 2052)", SUBSPECIES)
+            .phraseIndetName("Acacia", "Young River (G.F. Craig 2052)", SUBSPECIES)
             .species("Acacia", "mutabilis")
             .combAuthors(null, "Maslin")
             .nothingElse();
     assertName("Dampiera sp. Central Wheatbelt (L.W.Sage, F.Hort, C.A.Hollister LWS2321)", "Dampiera sp. Central Wheatbelt (L.W.Sage, F.Hort, C.A.Hollister LWS2321)")
-            .phraseName("Dampiera", "Central Wheatbelt (L.W.Sage, F.Hort, C.A.Hollister LWS2321)", SPECIES)
+            .phraseIndetName("Dampiera", "Central Wheatbelt (L.W.Sage, F.Hort, C.A.Hollister LWS2321)", SPECIES)
             .nothingElse();
     assertName("Dampiera     sp    Central  Wheatbelt (L.W.Sage,   F.Hort,   C.A.Hollister   LWS2321)", "Dampiera sp. Central Wheatbelt (L.W.Sage, F.Hort, C.A.Hollister LWS2321)")
-        .phraseName("Dampiera", "Central Wheatbelt (L.W.Sage, F.Hort, C.A.Hollister LWS2321)", SPECIES)
+        .phraseIndetName("Dampiera", "Central Wheatbelt (L.W.Sage, F.Hort, C.A.Hollister LWS2321)", SPECIES)
             .nothingElse();
     assertName("Toechima sp. East Alligator (J.Russell-Smith 8418) NT Herbarium", "Toechima sp. East Alligator (J.Russell-Smith 8418) NT Herbarium")
-            .phraseName("Toechima", "East Alligator (J.Russell-Smith 8418) NT Herbarium", SPECIES)
+            .phraseIndetName("Toechima", "East Alligator (J.Russell-Smith 8418) NT Herbarium", SPECIES)
             .nothingElse();
     assertName("Acacia sp. Mount Hilditch (M.E. Trudgen 19134)", "Acacia sp. Mount Hilditch (M.E. Trudgen 19134)")
-            .phraseName("Acacia", "Mount Hilditch (M.E. Trudgen 19134)", SPECIES)
+            .phraseIndetName("Acacia", "Mount Hilditch (M.E. Trudgen 19134)", SPECIES)
             .nothingElse();
   }
 
@@ -3607,16 +3609,18 @@ public class NameParserImplTest {
   }
   NameAssertion assertExAuthorship(String rawAuthorship, String exAuthor, String... expectedAuthors) throws UnparsableNameException {
     var pn = parser.parse("Abies alba", rawAuthorship, null, null);
+    var na = new NameAssertion(pn);
     Authorship auth = pn.getCombinationAuthorship();
-
+    na.species("Abies", "alba");
     if (exAuthor == null) {
       assertFalse(auth.hasExAuthors());
     } else {
+      na.combExAuthors(exAuthor);
       assertEquals(exAuthor, auth.getExAuthors().get(0));
       assertEquals(1, auth.getExAuthors().size());
     }
     assertEquals(Lists.newArrayList(expectedAuthors), auth.getAuthors());
-    return new NameAssertion(pn);
+    return na;
   }
 
   NameAssertion assertName(String rawName, String expectedCanonicalWithoutAuthors) throws UnparsableNameException {

@@ -101,6 +101,16 @@ public final class AuthorshipSplit {
           if (AuthorParticles.isParticle(t.text)) {
             return i;
           }
+          // "d'X" / "l'X" — lowercase letter + apostrophe + uppercase letter is an
+          // abbreviated author particle (d'Orb., l'Hér.), not an epithet.
+          if (looksLikeApostropheParticle(t.text)) {
+            return i;
+          }
+          // "hort." — horticultural marker, used as an ex-author placeholder
+          // ("Acacia hort. ex Dallim."). Treat as authorship boundary.
+          if (w.equalsIgnoreCase("hort")) {
+            return i;
+          }
           nameWords++;
           haveEpithet = true;
           afterSubgenus = false;
@@ -139,6 +149,17 @@ public final class AuthorshipSplit {
               afterSubgenus = true;
               continue;
             }
+          }
+        }
+        // After the species epithet, an "(BasAuth) CombAuth var. infraspecific" pattern
+        // means the parenthesised basionym + combination author span sits between the
+        // species and the infraspecific portion. Skip it so the rank marker + epithet
+        // can be consumed as part of the name span.
+        if (haveEpithet && !afterSubgenus) {
+          int afterSpan = skipParenAuthorBlock(tokens, i, n);
+          if (afterSpan > i) {
+            i = afterSpan;
+            continue;
           }
         }
         return i;
@@ -219,6 +240,55 @@ public final class AuthorshipSplit {
         || t.text.equalsIgnoreCase("et") || t.text.equals("y")) return false;
     if (AuthorParticles.isParticle(t.text)) return false;
     return true;
+  }
+
+  /**
+   * If a "(...) Author. ranklabel." span sits between the species and an infraspecific
+   * epithet, returns the index of the rank-marker word. Otherwise returns -1.
+   */
+  private static int skipParenAuthorBlock(List<Token> tokens, int openIdx, int n) {
+    // Match the closing paren.
+    int depth = 1;
+    int j = openIdx + 1;
+    while (j < n && depth > 0) {
+      TokenKind k = tokens.get(j).kind;
+      if (k == TokenKind.OPEN_PAREN) depth++;
+      else if (k == TokenKind.CLOSE_PAREN) depth--;
+      if (depth == 0) break;
+      j++;
+    }
+    if (j >= n || depth != 0) return -1;
+    j++; // skip past the close paren
+    // Walk over an author span (uppercase words, dots, particles) until a rank marker.
+    while (j < n) {
+      Token t = tokens.get(j);
+      if (t.kind == TokenKind.WORD) {
+        if (t.startsUpper()) { j++; continue; }
+        if (AuthorParticles.isParticle(t.text)) { j++; continue; }
+        String w = stripDot(t.text);
+        boolean[] notho = new boolean[1];
+        boolean isInfraMarker = RankMarkers.matchInfraspecificAllowNotho(w, notho) != null;
+        if (isInfraMarker && hasEpithetAfterMarker(tokens, j, n, false)) {
+          return j;
+        }
+        return -1;
+      }
+      if (t.kind == TokenKind.DOT
+          || t.kind == TokenKind.AMPERSAND
+          || t.kind == TokenKind.COMMA) {
+        j++;
+        continue;
+      }
+      return -1;
+    }
+    return -1;
+  }
+
+  private static boolean looksLikeApostropheParticle(String s) {
+    int apo = s.indexOf('\'');
+    if (apo < 1 || apo + 1 >= s.length()) return false;
+    int next = s.codePointAt(apo + 1);
+    return Character.isUpperCase(next);
   }
 
   private static boolean isAllUpper(String s) {

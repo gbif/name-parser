@@ -92,9 +92,10 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   private boolean candidatus;
   
   /**
-   * The part of the named hybrid which is considered a hybrid
+   * The name parts that carry a hybrid marker (×). More than one part can be
+   * marked when the formula spans genus and species, for example.
    */
-  private NamePart notho;
+  private EnumSet<NamePart> notho;
 
   /**
    * If true indicates that the parsed name is the original spelling of the name.
@@ -133,7 +134,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     cultivarEpithet = pn.cultivarEpithet;
     phrase = pn.phrase;
     candidatus = pn.candidatus;
-    notho = pn.notho;
+    notho = pn.notho != null ? EnumSet.copyOf(pn.notho) : null;
     originalSpelling = pn.originalSpelling;
     epithetQualifier = pn.epithetQualifier;
     type = pn.type;
@@ -168,7 +169,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   public void setUninomial(String uni) {
     if (uni != null && !uni.isEmpty() && uni.charAt(0) == HYBRID_MARKER) {
       this.uninomial = uni.substring(1);
-      notho = NamePart.GENERIC;
+      addNotho(NamePart.GENERIC);
     } else {
       this.uninomial = uni;
     }
@@ -183,7 +184,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   public void setGenus(String genus) {
     if (genus != null && !genus.isEmpty() && genus.charAt(0) == HYBRID_MARKER) {
       this.genus = genus.substring(1);
-      notho = NamePart.GENERIC;
+      addNotho(NamePart.GENERIC);
     } else {
       this.genus = genus;
     }
@@ -198,7 +199,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   public void setInfragenericEpithet(String infraGeneric) {
     if (infraGeneric != null && !infraGeneric.isEmpty() && infraGeneric.charAt(0) == HYBRID_MARKER) {
       this.infragenericEpithet = infraGeneric.substring(1);
-      notho = NamePart.INFRAGENERIC;
+      addNotho(NamePart.INFRAGENERIC);
     } else {
       this.infragenericEpithet = infraGeneric;
     }
@@ -213,7 +214,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   public void setSpecificEpithet(String species) {
     if (species != null && !species.isEmpty() && species.charAt(0) == HYBRID_MARKER) {
       specificEpithet = species.substring(1);
-      notho = NamePart.SPECIFIC;
+      addNotho(NamePart.SPECIFIC);
     } else {
       specificEpithet = species;
     }
@@ -228,7 +229,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   public void setInfraspecificEpithet(String infraSpecies) {
     if (infraSpecies != null && !infraSpecies.isEmpty() && infraSpecies.charAt(0) == HYBRID_MARKER) {
       this.infraspecificEpithet = infraSpecies.substring(1);
-      this.notho = NamePart.INFRASPECIFIC;
+      addNotho(NamePart.INFRASPECIFIC);
     } else {
       this.infraspecificEpithet = infraSpecies;
     }
@@ -259,13 +260,24 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   }
   
   @Override
-  public NamePart getNotho() {
+  public Set<NamePart> getNotho() {
     return notho;
   }
-  
+
   @Override
-  public void setNotho(NamePart notho) {
-    this.notho = notho;
+  public void setNotho(NamePart part) {
+    this.notho = part == null ? null : EnumSet.of(part);
+  }
+
+  @Override
+  public void addNotho(NamePart part) {
+    if (part != null) {
+      if (this.notho == null) {
+        this.notho = EnumSet.of(part);
+      } else {
+        this.notho.add(part);
+      }
+    }
   }
 
   public Boolean isOriginalSpelling() {
@@ -345,7 +357,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   }
 
   public boolean isHybridName() {
-    return notho != null;
+    return notho != null && !notho.isEmpty();
   }
 
   public boolean isAutonym() {
@@ -456,7 +468,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
            && Objects.equals(infraspecificEpithet, that.infraspecificEpithet)
            && Objects.equals(cultivarEpithet, that.cultivarEpithet)
            && Objects.equals(phrase, that.phrase)
-           && notho == that.notho
+           && Objects.equals(notho, that.notho)
            && Objects.equals(epithetQualifier, that.epithetQualifier)
            && type == that.type;
   }

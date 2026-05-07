@@ -17,17 +17,27 @@ import java.util.Objects;
  * Note that the sanctioning author for fungi is part of the ParsedName class.
  */
 public class Authorship {
-  
+
   /**
    * list of authors.
    */
   private List<String> authors = new ArrayList<>();
   
   /**
-   * list of authors excluding ex- authors
+   * list of ex-authors excluding ex itself
+   * Author A ex Author B
+   *   A = proposed the name (not validly published) → the ex-author
+   *   B = validly published the name → the publishing/validating author
    */
   private List<String> exAuthors = new ArrayList<>();
-  
+
+  /**
+   * list of in-authors excluding in itself. Usually followed by a publication citation.
+   * Author A in Author B
+   * Author A is the actual author of the name, but it was published within a work written/edited by Author B.
+   */
+  private List<String> inAuthors = new ArrayList<>();
+
   /**
    * The year the combination or basionym was first published, usually the same as the publishedIn reference.
    * It is used for sorting names and ought to be populated even for botanical names which do not use it in the complete authorship string.

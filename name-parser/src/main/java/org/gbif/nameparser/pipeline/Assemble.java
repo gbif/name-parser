@@ -1,5 +1,6 @@
 package org.gbif.nameparser.pipeline;
 
+import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
@@ -32,24 +33,41 @@ public final class Assemble {
     if (n.getRank() == null) {
       n.setRank(Rank.UNRANKED);
     }
-    // Monomial + caller-supplied rank SPECIES → indeterminate species placeholder
-    // (e.g. "Lepidoptera Hooker" parsed as genus-only, but caller says it's a species)
-    if (requested == Rank.SPECIES
+    // Monomial + caller-supplied rank at species level or below → indeterminate
+    // placeholder (e.g. "Polygonum" + CULTIVAR → genus "Polygonum" with cv. marker;
+    // "Lepidoptera Hooker" + SPECIES → genus parsed as genus-only, but caller says
+    // it's a species).
+    if (requested != null && requested != Rank.UNRANKED
+        && (requested == Rank.SPECIES
+            || requested.isInfraspecific() || requested == Rank.CULTIVAR
+            || requested == Rank.CULTIVAR_GROUP || requested == Rank.GREX)
         && n.getUninomial() != null && n.getSpecificEpithet() == null
-        && n.getType() != org.gbif.nameparser.api.NameType.INFORMAL) {
+        && n.getType() != NameType.INFORMAL) {
       n.setGenus(n.getUninomial());
       n.setUninomial(null);
-      n.setRank(Rank.SPECIES);
-      n.setType(org.gbif.nameparser.api.NameType.INFORMAL);
+      n.setRank(requested);
+      n.setType(NameType.INFORMAL);
       n.addWarning(Warnings.INDETERMINED);
       n.setCombinationAuthorship(null);
       n.setBasionymAuthorship(null);
+    }
+    // Binomial (or richer) + caller-supplied higher-rank → keep the parsed structure
+    // but pin the rank to what the caller asked, flag the mismatch as informal +
+    // doubtful with a RANK_MISMATCH warning ("Polygonum alba" + GENUS).
+    if (requested != null && requested != Rank.UNRANKED
+        && n.getSpecificEpithet() != null
+        && requested.higherThan(Rank.SPECIES)
+        && requested != n.getRank()) {
+      n.setRank(requested);
+      n.setType(NameType.INFORMAL);
+      n.setDoubtful(true);
+      n.addWarning(Warnings.RANK_MISMATCH);
     }
     // A monomial with an underscore is either:
     //   - "Genus_species" (underscore as space): genus + specific epithet (when after-part starts lowercase)
     //   - GTDB-style phrase name (e.g. "Desulfobacterota_B"): uninomial + phrase (when after-part starts uppercase)
     if (n.getUninomial() != null && n.getUninomial().indexOf('_') >= 0
-        && n.getType() == org.gbif.nameparser.api.NameType.SCIENTIFIC) {
+        && n.getType() == NameType.SCIENTIFIC) {
       String uni = n.getUninomial();
       int idx = uni.indexOf('_');
       String before = uni.substring(0, idx);
@@ -64,7 +82,7 @@ public final class Assemble {
         // "Desulfobacterota_B" → GTDB-style phrase name
         n.setUninomial(before);
         n.setPhrase(after);
-        n.setType(org.gbif.nameparser.api.NameType.INFORMAL);
+        n.setType(NameType.INFORMAL);
         n.setRank(Rank.UNRANKED);
       }
     }
@@ -79,12 +97,16 @@ public final class Assemble {
 
     // Indeterminate infraspecific names (e.g. "Nitzschia sinuata var.") carry no
     // valid authorship — any trailing author-like tokens are artefacts of parsing.
-    if (n.getType() == org.gbif.nameparser.api.NameType.INFORMAL
+    // We still pin the code for rank-restricted ranks (CULTIVAR → CULTIVARS).
+    if (n.getType() == NameType.INFORMAL
         && n.getRank() != null && n.getRank().isInfraspecific()
         && n.getInfraspecificEpithet() == null) {
       n.setCombinationAuthorship(null);
       n.setBasionymAuthorship(null);
-      // Skip code inference for indet infraspecific names
+      if (n.getCode() == null) {
+        NomCode pinned = n.getRank().isRestrictedToCode();
+        if (pinned != null) n.setCode(pinned);
+      }
     } else if (n.getCode() == null) {
       // Code-restricted ranks pin the code regardless of authorship shape.
       Rank r = n.getRank();
@@ -94,21 +116,44 @@ public final class Assemble {
       } else if (r == Rank.INFRASUBSPECIFIC_NAME || r == Rank.NATIO) {
         n.setCode(NomCode.ZOOLOGICAL);
       } else if (authState != null) {
-        NomCode inferred = AuthorshipParser.inferCode(authState);
+        NomCode inferred = AuthorshipParser.inferCode(authState, n.getRank());
         if (inferred != null) {
           n.setCode(inferred);
         }
       }
-      // A nom-note plus a "non …" / "auct. non" tax-note (homonym citation) is a
-      // strong botanical signal.
-      if (n.getCode() == null && n.getNomenclaturalNote() != null && n.getTaxonomicNote() != null
+      // A "nom. …" nomenclatural note (nom.cons., nom.illeg., nom.nud., …) is the
+      // botanical convention; combined with comb authorship and no year on the author
+      // span, it tips the code to BOTANICAL. (Year on the authorship would already
+      // have fired the ZOOLOGICAL rule above.) When the name also has an explicit
+      // infraspecific marker or ex-authors, those richer signals take precedence and
+      // the nom-note is skipped here.
+      if (n.getCode() == null && n.getNomenclaturalNote() != null
+          && n.getNomenclaturalNote().toLowerCase().startsWith("nom")
           && n.hasCombinationAuthorship()
-          && (n.getCombinationAuthorship() == null || n.getCombinationAuthorship().getYear() == null)) {
-        String tn = n.getTaxonomicNote().toLowerCase();
-        if (tn.startsWith("non") || tn.startsWith("auct")) {
-          n.setCode(NomCode.BOTANICAL);
-        }
+          && n.getCombinationAuthorship().getYear() == null
+          && !ctx.explicitInfraMarker
+          && !n.getCombinationAuthorship().hasExAuthors()) {
+        n.setCode(NomCode.BOTANICAL);
       }
+      // An explicit "subsp." / "var." / "f." marker on a name with no authorship at
+      // all but with a parenthesised "(non … YYYY)" homonym citation is a botanical
+      // citation pattern (the homonym reference is the sole authorship surrogate).
+      if (n.getCode() == null && ctx.explicitInfraMarker
+          && hasBotanicalRankMarker(n.getRank())
+          && n.getTaxonomicNote() != null
+          && !n.hasCombinationAuthorship()
+          && (n.getBasionymAuthorship() == null || !n.getBasionymAuthorship().exists())) {
+        n.setCode(NomCode.BOTANICAL);
+      }
+    }
+
+    // Zoological trinomials default to SUBSPECIES, not the generic INFRASPECIFIC_NAME:
+    // ICZN doesn't use rank markers for subspecies, so a bare "Genus species infra"
+    // with the zoological code (caller-supplied or inferred) is by convention a
+    // subspecies.
+    if (n.getRank() == Rank.INFRASPECIFIC_NAME && n.getCode() == NomCode.ZOOLOGICAL
+        && n.getInfraspecificEpithet() != null) {
+      n.setRank(Rank.SUBSPECIES);
     }
 
     // Suffix-based rank inference for monomials: use the explicitly-requested code when
@@ -123,6 +168,38 @@ public final class Assemble {
       if (r != null) n.setRank(r);
     }
 
+    // Flag the literal "null" epithet and any blacklisted epithet as doubtful.
+    flagBlacklistedEpithets(n);
+
+    // A cultivar epithet pins the name as a valid scientific identification — clear the
+    // INFORMAL flag and INDETERMINED warning that an "sp." indet marker may have left
+    // behind ("Symphoricarpos sp. cv. 'mother of pearl'" is a complete cultivar name).
+    if (n.getCultivarEpithet() != null) {
+      if (n.getType() == NameType.INFORMAL) {
+        n.setType(NameType.SCIENTIFIC);
+      }
+      n.getWarnings().remove(Warnings.INDETERMINED);
+    }
+  }
+
+  private static void flagBlacklistedEpithets(ParsedName n) {
+    String[] epithets = {n.getSpecificEpithet(), n.getInfraspecificEpithet()};
+    for (String ep : epithets) {
+      if (ep == null) continue;
+      if ("null".equalsIgnoreCase(ep)) {
+        n.setDoubtful(true);
+        n.addWarning(Warnings.NULL_EPITHET);
+      } else if (BlacklistedEpithets.contains(ep)) {
+        n.setDoubtful(true);
+        n.addWarning(Warnings.BLACKLISTED_EPITHET);
+      }
+    }
+  }
+
+  /** Ranks whose canonical rendering uses a botanical-style marker (subsp./var./f.). */
+  private static boolean hasBotanicalRankMarker(Rank r) {
+    return r == Rank.SUBSPECIES || r == Rank.VARIETY || r == Rank.SUBVARIETY
+        || r == Rank.FORM || r == Rank.SUBFORM;
   }
 
   private static Rank rankFromSuffix(String name, NomCode code) {

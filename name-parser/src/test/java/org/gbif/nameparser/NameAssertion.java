@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gbif.nameparser.api.*;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 import static org.gbif.nameparser.api.NomCode.BACTERIAL;
@@ -51,6 +52,8 @@ public class NameAssertion {
   }
   
   void nothingElse() {
+    System.out.println(n.canonicalName());
+    System.out.println(n.canonicalNameComplete());
     for (NP p : NP.values()) {
       if (!tested.contains(p)) {
         switch (p) {
@@ -76,7 +79,7 @@ public class NameAssertion {
             assertFalse(n.isExtinct());
             break;
           case NOTHO:
-            assertNull(n.getNotho());
+            assertTrue(n.getNotho() == null || n.getNotho().isEmpty());
             break;
           case SIC:
             assertNull(n.isOriginalSpelling());
@@ -245,8 +248,11 @@ public class NameAssertion {
     return add(NP.TYPE);
   }
   
-  NameAssertion notho(NamePart notho) {
-    assertEquals(notho, n.getNotho());
+  NameAssertion notho(NamePart... notho) {
+    EnumSet<NamePart> expected = notho.length == 0
+        ? java.util.EnumSet.noneOf(NamePart.class)
+        : java.util.EnumSet.copyOf(java.util.Arrays.asList(notho));
+    assertEquals(expected, n.getNotho());
     return add(NP.NOTHO);
   }
 
@@ -295,26 +301,30 @@ public class NameAssertion {
     return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.CODE);
   }
 
-  NameAssertion phraseName(String genus, String phrase, Rank rank) {
+  NameAssertion phraseIndetName(String genus, String phrase, Rank rank) {
+    assertPhrase(phrase);
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());
-    assertNull(n.getCultivarEpithet());
-    assertEquals(phrase, n.getPhrase());
-    assertTrue(n.isPhraseName());
     assertEquals(rank, n.getRank());
-    assertEquals(NameType.INFORMAL, n.getType());
-    return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.TYPE, NP.PHRASE);
+    return add(NP.RANK);
   }
 
   NameAssertion phraseName(String monomial, String phrase) {
+    assertPhrase(phrase);
     assertEquals(monomial, n.getUninomial());
-    assertEquals(NameType.INFORMAL, n.getType());
-    assertEquals(phrase, n.getPhrase());
-    assertTrue(n.isPhraseName());
     assertNull(n.getGenus());
-    assertNull(n.getCultivarEpithet());
     assertEquals(Rank.UNRANKED, n.getRank());
-    return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.TYPE, NP.PHRASE);
+    return add(NP.RANK);
+  }
+
+  private NameAssertion assertPhrase(String phrase) {
+    assertEquals(NameType.INFORMAL, n.getType());
+    assertTrue(n.isPhraseName());
+    assertEquals(phrase, n.getPhrase());
+    assertNull(n.getSpecificEpithet());
+    assertNull(n.getInfraspecificEpithet());
+    assertNull(n.getCultivarEpithet());
+    return add(NP.EPITHETS, NP.CULTIVAR, NP.TYPE, NP.PHRASE);
   }
 
   NameAssertion code(NomCode code) {

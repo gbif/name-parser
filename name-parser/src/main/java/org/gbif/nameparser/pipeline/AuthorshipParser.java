@@ -2,6 +2,7 @@ package org.gbif.nameparser.pipeline;
 
 import org.gbif.nameparser.api.Authorship;
 import org.gbif.nameparser.api.NomCode;
+import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.token.AuthorParticles;
 import org.gbif.nameparser.token.Token;
 import org.gbif.nameparser.token.TokenKind;
@@ -33,6 +34,8 @@ public final class AuthorshipParser {
     Authorship basionym = new Authorship();
     boolean basionymPresent;
     boolean yearRange;
+    /** True when an "f."/"fil."/"filius" suffix appeared on any author — botanical signal. */
+    boolean hasFilius;
     String sanctioningAuthor;
     int unparsedFrom = -1;
     String unparsedText;
@@ -56,6 +59,7 @@ public final class AuthorshipParser {
           basEnd = basColon;
         }
         s.yearRange |= parseAuthors(tokens, basFrom, basEnd, s.basionym);
+        s.hasFilius |= containsFiliusSuffix(tokens, basFrom, basEnd);
         s.basionymPresent = true;
         i = close + 1;
       }
@@ -75,6 +79,7 @@ public final class AuthorshipParser {
         }
       }
       s.yearRange |= parseAuthors(tokens, combFrom, combEnd, s.combination);
+      s.hasFilius |= containsFiliusSuffix(tokens, combFrom, combEnd);
       // Whether or not a sanctioning author was extracted, the entire trailing span
       // belongs to combination + sanctioning; nothing is unparsed afterwards.
       i = n;
@@ -132,8 +137,14 @@ public final class AuthorshipParser {
       // year
       if (t.kind == TokenKind.NUMBER && t.text.length() >= 3 && t.text.length() <= 4) {
         flush(cur, authors);
-        into.setYear(t.text);
+        String year = t.text;
         i++;
+        // Uncertain year: a trailing "?" is part of the year ("198?" → year="198?").
+        if (i < to && tokens.get(i).kind == TokenKind.OTHER && tokens.get(i).text.equals("?")) {
+          year = year + "?";
+          i++;
+        }
+        into.setYear(year);
         // Detect year range: NUMBER + OTHER("-" or "/") + NUMBER → keep first year only
         if (i + 1 < to) {
           Token sep = tokens.get(i);
@@ -143,6 +154,14 @@ public final class AuthorshipParser {
               yearRange = true;
               i += 2; // skip separator and trailing year
             }
+          }
+        }
+        // Drop a single trailing lowercase-letter year disambiguator ("1935h" / "1935 h")
+        // so it isn't picked up as a phantom author.
+        if (i < to) {
+          Token nx = tokens.get(i);
+          if (nx.kind == TokenKind.WORD && nx.text.length() == 1 && nx.startsLower()) {
+            i++;
           }
         }
         continue;
@@ -199,6 +218,11 @@ public final class AuthorshipParser {
         appendSpace(cur);
         cur.append(t.text);
         i++;
+        // Pull through abbreviation dots that follow ("v." / "v.d." style particles).
+        while (i < to && tokens.get(i).kind == TokenKind.DOT) {
+          cur.append('.');
+          i++;
+        }
         continue;
       }
 
@@ -207,13 +231,26 @@ public final class AuthorshipParser {
         // No-comma "<Surname> <Initials>" inversion pattern: if cur already holds a Latin
         // surname AND the incoming token is a short all-caps word, treat it as the
         // initials trailing the surname and flush as a single inverted author.
+        // A trailing dot in cur means we are mid-abbreviation (e.g. "v.d." awaiting "L"),
+        // not after a complete surname — skip the inversion in that case.
         if (cur.length() > 0 && t.text.length() <= 3 && isAllUpper(t.text)
-            && containsLower(cur)) {
+            && containsLower(cur)
+            && cur.charAt(cur.length() - 1) != '.') {
           StringBuilder initials = new StringBuilder(t.text);
           int j = i + 1;
+          boolean hasDot = false;
           while (j < to && tokens.get(j).kind == TokenKind.DOT) {
             initials.append('.');
+            hasDot = true;
             j++;
+          }
+          // Without a trailing dot the all-caps part is a CJK-style surname-first
+          // initial ("Zhang F", "Pan Z-X"); keep it verbatim instead of inverting.
+          if (!hasDot) {
+            appendSpace(cur);
+            cur.append(t.text);
+            i = j;
+            continue;
           }
           String surname = cur.toString().trim();
           cur.setLength(0);
@@ -226,6 +263,12 @@ public final class AuthorshipParser {
         appendSpace(cur);
         cur.append(text);
         i++;
+        // A single capital letter without a trailing dot is an abbreviated initial —
+        // supply the dot so subsequent tokens chain ("A S. Xu" → "A.S.Xu").
+        if (text.length() == 1 && Character.isUpperCase(text.codePointAt(0))
+            && (i >= to || tokens.get(i).kind != TokenKind.DOT)) {
+          cur.append('.');
+        }
         // chain "<DOT> [WORD]" sequences for "Müll.Arg." style and "L. f" style.
         while (i < to) {
           Token nx = tokens.get(i);
@@ -304,6 +347,38 @@ public final class AuthorshipParser {
         continue;
       }
 
+      // Apostrophe between authors / inside an author span — preserve it so that
+      // names with internal apostrophes ("L.'t Mannetje", "M'Coy") render verbatim.
+      if (t.kind == TokenKind.OTHER && t.text.equals("'") && cur.length() > 0) {
+        cur.append('\'');
+        i++;
+        if (i < to && tokens.get(i).kind == TokenKind.WORD) {
+          cur.append(tokens.get(i).text);
+          i++;
+        }
+        continue;
+      }
+      // Hyphen between abbreviated initial parts ("C.-K.", "J.-J.") — keep the hyphen
+      // and uppercase a single-letter follow-up so compound initials render with the
+      // canonical "C.-K.Yang" / "J.-J.Brun" form regardless of input case.
+      if (t.kind == TokenKind.OTHER && t.text.equals("-")
+          && cur.length() > 0 && cur.charAt(cur.length() - 1) == '.'
+          && i + 1 < to && tokens.get(i + 1).kind == TokenKind.WORD) {
+        Token nx = tokens.get(i + 1);
+        cur.append('-');
+        if (nx.text.length() == 1) {
+          int cp = Character.toUpperCase(nx.text.codePointAt(0));
+          cur.appendCodePoint(cp);
+          i += 2;
+          if (i < to && tokens.get(i).kind == TokenKind.DOT) {
+            cur.append('.');
+            i++;
+          }
+          continue;
+        }
+        i++;
+        continue;
+      }
       // Unknown punctuation in an author run — skip silently
       i++;
     }
@@ -363,13 +438,16 @@ public final class AuthorshipParser {
         return formatInitials(initials) + surname;
       }
     }
-    // Pattern B: "Surname X" or "Surname XY" or "Surname X.Y." (trailing initials,
-    // no surrounding whitespace particles — particles like "Van", "de" must be kept).
+    // Pattern B: "Surname X.Y." (trailing dotted initials, no surrounding whitespace
+    // particles — particles like "Van", "de" must be kept). Without dots in the trailing
+    // tokens, the author is in CJK surname-first form ("Zhang F", "Pan Z-X") and must
+    // be preserved verbatim.
     int lastSpace = s.lastIndexOf(' ');
     if (lastSpace > 0) {
       String first = s.substring(0, lastSpace).trim();
       String last = s.substring(lastSpace + 1).trim();
-      if (looksLikeSurname(first) && looksLikeInitials(last) && !containsParticle(first)) {
+      if (last.indexOf('.') >= 0
+          && looksLikeSurname(first) && looksLikeInitials(last) && !containsParticle(first)) {
         return formatInitials(last) + first;
       }
     }
@@ -452,7 +530,7 @@ public final class AuthorshipParser {
   private static void appendSpace(StringBuilder cur) {
     if (cur.length() == 0) return;
     char last = cur.charAt(cur.length() - 1);
-    if (last == ' ' || last == '.') return;
+    if (last == ' ' || last == '.' || last == '-') return;
     cur.append(' ');
   }
 
@@ -518,18 +596,62 @@ public final class AuthorshipParser {
     return sb.toString();
   }
 
-  static NomCode inferCode(AuthState s) {
+  static NomCode inferCode(AuthState s, Rank rank) {
     if (s.sanctioningAuthor != null) return NomCode.BOTANICAL;
-    // Any year (basionym or combination) is a strong zoological signal: year citation is
-    // mandatory in zoological nomenclature but optional in botanical.
+    // "(BasAuthor) RecombAuthor, year" with an explicit infraspecific rank marker
+    // (subsp./var./f.) is the botanical recombination form — the year is the
+    // publication year of the recombination, not a zoological author-year citation.
+    // Run before the generic "year → zoological" rule.
+    if (s.basionymPresent && s.basionym.getYear() == null
+        && s.combination.hasAuthors() && s.combination.getYear() != null
+        && hasInfraSpecificMarker(rank)) {
+      return NomCode.BOTANICAL;
+    }
+    // Any year (basionym or combination) is a strong zoological signal: year citation
+    // is mandatory in zoological nomenclature but optional in botanical.
     if ((s.basionymPresent && s.basionym.getYear() != null) || s.combination.getYear() != null) {
       return NomCode.ZOOLOGICAL;
     }
-    // No years: two-part citation (original author in parens + recombination author) without
-    // years is the standard botanical pattern; one-part basionym-only is zoological.
+    // The "f."/"fil."/"filius" suffix is the standard botanical convention for the son
+    // of a same-named author. It does also occur in older zoological literature
+    // ("Lacerta agilis Linnaeus f., 1789") but those cases always carry a year and
+    // are caught by the year rule above. A filius without any year is therefore a
+    // strong botanical hint.
+    if (s.hasFilius) return NomCode.BOTANICAL;
+    // No years: two-part citation (original author in parens + recombination author)
+    // without years is the standard botanical pattern; one-part basionym-only is
+    // zoological.
     if (s.basionymPresent) {
       return s.combination.hasAuthors() ? NomCode.BOTANICAL : NomCode.ZOOLOGICAL;
     }
     return null;
+  }
+
+  /** True for rank values that carry an explicit infraspecific marker (subsp./var./f.). */
+  private static boolean hasInfraSpecificMarker(Rank r) {
+    return r == Rank.SUBSPECIES || r == Rank.VARIETY || r == Rank.SUBVARIETY
+        || r == Rank.FORM || r == Rank.SUBFORM;
+  }
+
+  /**
+   * Scans the token range for an "f"/"fil"/"filius" word — botanical filius marker.
+   * Pre-"ex" tokens are skipped: a filius on an ex-author isn't a code signal because
+   * the author itself was never the validating author.
+   */
+  private static boolean containsFiliusSuffix(List<Token> tokens, int from, int to) {
+    int start = from;
+    for (int j = from; j < to; j++) {
+      Token t = tokens.get(j);
+      if (t.kind == TokenKind.WORD && t.text.equals("ex")) {
+        start = j + 1;
+      }
+    }
+    for (int j = start; j < to; j++) {
+      Token t = tokens.get(j);
+      if (t.kind != TokenKind.WORD) continue;
+      String w = t.text;
+      if (w.equals("f") || w.equals("fil") || w.equals("filius")) return true;
+    }
+    return false;
   }
 }

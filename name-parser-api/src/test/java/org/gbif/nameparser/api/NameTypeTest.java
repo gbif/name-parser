@@ -12,8 +12,8 @@ public class NameTypeTest {
     assertTrue(NameType.SCIENTIFIC.isParsable());
     assertTrue(NameType.INFORMAL.isParsable());
     assertFalse(NameType.VIRUS.isParsable());
-    assertFalse(NameType.NO_NAME.isParsable());
-    assertFalse(NameType.HYBRID_FORMULA.isParsable());
+    assertFalse(NameType.OTHER.isParsable());
+    assertFalse(NameType.FORMULA.isParsable());
   }
   
 }

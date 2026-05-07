@@ -213,6 +213,9 @@ public class NameFormatterTest {
 
     pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill."));
     assertEquals("(Carl. 1999) Mill. 1887", NameFormatter.authorshipComplete(pn));
+
+    pn.setCode(NomCode.BOTANICAL);
+    assertEquals("(Carl.) Mill.", NameFormatter.authorshipComplete(pn));
   }
   
   @Test
@@ -236,7 +239,7 @@ public class NameFormatterTest {
     assertEquals("carrera subsp. vulgaris", NameFormatter.canonicalWithoutAuthorship(pn));
 
     pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill."));
-    assertEquals("carrera subsp. vulgaris Mill., 1887", NameFormatter.canonical(pn));
+    assertEquals("carrera subsp. vulgaris Mill.", NameFormatter.canonical(pn));
   }
   
   @Test
@@ -512,7 +515,7 @@ public class NameFormatterTest {
     assertName("Abax carinatus urinatus", "Abax carinatus urinatus (Duftschmid, 1812)");
     
     pn.setCode(NomCode.BOTANICAL);
-    assertName("Abax carinatus urinatus", "Abax carinatus subsp. urinatus (Duftschmid, 1812)");
+    assertName("Abax carinatus urinatus", "Abax carinatus subsp. urinatus (Duftschmid)");
     
     
     pn = new ParsedName();

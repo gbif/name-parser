@@ -6,19 +6,19 @@ package org.gbif.nameparser.api;
 public enum NameType {
   
   /**
-   * A scientific latin name that might contain authorship but is not any of the other name types below (virus, hybrid, cultivar, etc).
+   * A parsable scientific latin name that might contain authorship but is not any of the other name types below (virus, hybrid, cultivar, etc).
    */
   SCIENTIFIC,
   
   /**
-   * A virus name.
+   * An unparsable virus name.
    */
   VIRUS,
   
   /**
-   * A hybrid <b>formula</b> (not a hybrid name).
+   * An unparsable hybrid or graft-chimera <b>formula</b> (not a hybrid name).
    */
-  HYBRID_FORMULA,
+  FORMULA,
 
   /**
    * A variation of a scientific name that either adds additional notes or has some shortcomings to be classified as
@@ -37,19 +37,22 @@ public enum NameType {
    *   vouching for the specimen and the unique collector number assigned to the voucher.
    *   The WA Herbarium is the nominating party, the party that wants to have a placeholder name for this specimen
    *   https://florabase.dpaw.wa.gov.au/help/names#phrase
+   *
+   *   Informal names are semi parsable and start at least with a genus or uninomial.
+   *   The remainder is parsed into the ParsedName.phrase field.
    */
   INFORMAL,
 
   /**
-   * A placeholder name like "incertae sedis" or "unknown genus".
+   * An unparsable placeholder name like "incertae sedis" or "unknown genus".
    */
   PLACEHOLDER,
   
   /**
-   * Surely not a scientific name of any kind.
-   * This is were former OTU names like BOLD:AAB5053, SH0864666.10FU or UBA3054 fall into these days.
+   * Any other unparsable name including identifiers, numerical values, abbreviations or text extracts.
+   * This is where former OTU names like BOLD:AAB5053, SH0864666.10FU or UBA3054 fall into these days.
    */
-  NO_NAME;
+  OTHER;
   
   /**
    * @return true if the GBIF name parser can parse such a name into a ParsedName instance
