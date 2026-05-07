@@ -24,8 +24,9 @@
     </scm>
 
     <modules>
-        <module>name-parser</module>
         <module>name-parser-api</module>
+        <module>name-parser</module>
+        <module>name-parser-cli</module>
     </modules>
 
     <properties>
@@ -36,6 +37,7 @@
         <main.basedir>${project.basedir}</main.basedir>
 
         <!-- Dependency versions -->
+        <coldp.version>1.1.0</coldp.version>
         <commons-io.version>2.22.0</commons-io.version>
         <commons-lang.version>3.20.0</commons-lang.version>
         <fastutil.version>8.5.18</fastutil.version>
@@ -75,6 +77,11 @@
                 <version>${gson.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.catalogueoflife</groupId>
+                <artifactId>coldp</artifactId>
+                <version>${coldp.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
@@ -92,6 +99,11 @@
             <dependency>
                 <groupId>org.gbif</groupId>
                 <artifactId>name-parser-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.gbif</groupId>
+                <artifactId>name-parser-cli</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
