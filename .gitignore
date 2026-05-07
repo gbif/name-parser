@@ -16,4 +16,5 @@ target/
 
 # large CLI sample corpora kept in the working tree but not in git
 name-parser-cli/data/col-names.tsv
+name-parser-cli/data/col-names.txt
 *.jsonl
