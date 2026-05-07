@@ -24,9 +24,10 @@
     </scm>
 
     <modules>
-        <module>name-parser</module>
         <module>name-parser-api</module>
+        <module>name-parser</module>
         <module>name-parser-v1</module>
+        <module>name-parser-cli</module>
     </modules>
 
     <properties>
@@ -92,6 +93,11 @@
             <dependency>
                 <groupId>org.gbif</groupId>
                 <artifactId>name-parser-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.gbif</groupId>
+                <artifactId>name-parser-cli</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
