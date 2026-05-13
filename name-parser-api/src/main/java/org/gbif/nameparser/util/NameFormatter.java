@@ -324,9 +324,21 @@ public class NameFormatter {
       }
     }
 
-    // Add phrase name
+    // Add phrase name. Phrase values may include a trailing author span after the
+    // collector parenthesised reference ("Sandheath (D.Murfet 3190) R.J.Bates"); for
+    // canonical rendering we drop that author-shaped tail so the output stays clean
+    // while the stored phrase keeps the full annotation. A non-author suffix (e.g.
+    // "NT Herbarium") is kept intact.
     if (showPhrase && n.isPhraseName()) {
       String phrase = n.getPhrase();
+      int lastClose = phrase.lastIndexOf(')');
+      if (lastClose >= 0 && lastClose < phrase.length() - 1) {
+        String tail = phrase.substring(lastClose + 1).trim();
+        // Author-shaped tail: initials with dots (e.g. "R.J.Bates", "C.E.M.Bicudo").
+        if (tail.matches("(?U)[\\p{Lu}](?:\\.[\\p{Lu}])*\\..+")) {
+          phrase = phrase.substring(0, lastClose + 1);
+        }
+      }
       appendIfNotEmpty(sb, " ").append(phrase);
     }
     

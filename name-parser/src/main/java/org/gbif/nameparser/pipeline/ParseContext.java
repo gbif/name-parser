@@ -42,6 +42,13 @@ public final class ParseContext {
    * botanical, or bacteriological names alike.)
    */
   public boolean pendingYearFromPublication;
+  /**
+   * True when an {@code in <Author>} or {@code apud <Author>} tail was stripped. A name
+   * with both that citation form AND a year (the typical "Author in Editor, YYYY"
+   * pattern) is the zoological convention; we use this as a code hint when nothing
+   * else has settled the code.
+   */
+  public boolean inAuthorCitation;
 
   public ParseContext(String scientificName, String authorship, Rank rank, NomCode code) {
     this.original = scientificName;

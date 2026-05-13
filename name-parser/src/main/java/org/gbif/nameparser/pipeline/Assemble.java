@@ -95,12 +95,14 @@ public final class Assemble {
       n.addWarning(Warnings.YEAR_INTERPRETED);
     }
 
-    // Indeterminate infraspecific names (e.g. "Nitzschia sinuata var.") carry no
-    // valid authorship — any trailing author-like tokens are artefacts of parsing.
-    // We still pin the code for rank-restricted ranks (CULTIVAR → CULTIVARS).
+    // Indeterminate infraspecific names without a phrase ("Nitzschia sinuata var.")
+    // carry no valid authorship — any trailing author-like tokens are artefacts of
+    // parsing. When there IS a phrase ("Acacia mutabilis Maslin subsp. <phrase>")
+    // the species author is meaningful and stays.
     if (n.getType() == NameType.INFORMAL
         && n.getRank() != null && n.getRank().isInfraspecific()
-        && n.getInfraspecificEpithet() == null) {
+        && n.getInfraspecificEpithet() == null
+        && (n.getPhrase() == null || n.getPhrase().isEmpty())) {
       n.setCombinationAuthorship(null);
       n.setBasionymAuthorship(null);
       if (n.getCode() == null) {
@@ -113,12 +115,21 @@ public final class Assemble {
       NomCode pinned = r == null ? null : r.isRestrictedToCode();
       if (pinned != null) {
         n.setCode(pinned);
-      } else if (r == Rank.INFRASUBSPECIFIC_NAME || r == Rank.NATIO) {
-        n.setCode(NomCode.ZOOLOGICAL);
       } else if (authState != null) {
-        NomCode inferred = AuthorshipParser.inferCode(authState, n.getRank());
-        if (inferred != null) {
-          n.setCode(inferred);
+        // For manuscript names with only a basionym citation and no year, the
+        // basionym-only-zoological rule doesn't apply — manuscripts are by definition
+        // unpublished and the code follows from the eventual publication, not the
+        // cited authors. Skip inference in that narrow case.
+        boolean skipInference = n.isManuscript()
+            && authState.basionymPresent
+            && authState.basionym.getYear() == null
+            && !authState.combination.hasAuthors()
+            && authState.combination.getYear() == null;
+        if (!skipInference) {
+          NomCode inferred = AuthorshipParser.inferCode(authState, n.getRank());
+          if (inferred != null) {
+            n.setCode(inferred);
+          }
         }
       }
       // A "nom. …" nomenclatural note (nom.cons., nom.illeg., nom.nud., …) is the
@@ -144,6 +155,47 @@ public final class Assemble {
           && !n.hasCombinationAuthorship()
           && (n.getBasionymAuthorship() == null || !n.getBasionymAuthorship().exists())) {
         n.setCode(NomCode.BOTANICAL);
+      }
+      // Manuscript name with an explicit subsp./var./f. marker is the botanical
+      // pattern — manuscripts in zoology don't use rank markers. Force BOTANICAL even
+      // when there's some parenthesised pseudo-basionym left over by the parser.
+      if (ctx.explicitInfraMarker
+          && hasBotanicalRankMarker(n.getRank())
+          && n.isManuscript()
+          && (n.getCode() == null || n.getCode() == NomCode.ZOOLOGICAL)) {
+        n.setCode(NomCode.BOTANICAL);
+      }
+      // Autonym + explicit rank marker is the botanical convention. Zoological
+      // trinomials don't use rank markers and don't repeat the species epithet.
+      if (n.getCode() == null && n.isAutonym()
+          && ctx.explicitInfraMarker
+          && hasBotanicalRankMarker(n.getRank())) {
+        n.setCode(NomCode.BOTANICAL);
+      }
+      // "Author(s) in Editor, YYYY" with a real publication year and no other code
+      // signal — the year-bearing in-citation form is the zoological convention.
+      // Skip for manuscript names ("ms.", "ined.") and IPNI-style references that
+      // end in a year in parens (those are botanical citation form).
+      if (n.getCode() == null && ctx.inAuthorCitation
+          && ctx.pendingYear != null
+          && n.hasCombinationAuthorship()
+          && !n.isManuscript()
+          && !publishedInLooksBotanical(n.getPublishedIn())) {
+        n.setCode(NomCode.ZOOLOGICAL);
+      }
+    }
+
+    // Rank-restricted code mismatch with the caller-supplied code → override the
+    // code to what the rank requires and warn about it. E.g. supersect. is only
+    // valid in botany; if the caller asked for ZOOLOGICAL, surface a CODE_MISMATCH
+    // and pin BOTANICAL.
+    {
+      Rank rmm = n.getRank();
+      NomCode pinnedRank = rmm == null ? null : rmm.isRestrictedToCode();
+      if (pinnedRank != null && n.getCode() != null && n.getCode() != pinnedRank
+          && ctx.requestedCode != null && ctx.requestedCode != pinnedRank) {
+        n.setCode(pinnedRank);
+        n.addWarning(Warnings.CODE_MISMATCH);
       }
     }
 
@@ -180,6 +232,22 @@ public final class Assemble {
       }
       n.getWarnings().remove(Warnings.INDETERMINED);
     }
+
+    // A phrase epithet without a cultivar always denotes an INFORMAL name — promote a
+    // monomial uninomial to a genus so callers see "Baeckea ssp. <phrase>" as a phrase
+    // name on a genus, not a uninomial scientific name. Skip promotion for suprageneric
+    // phrase forms (e.g. GTDB "Desulfobacterota_B") where the uninomial really is at
+    // family/order level.
+    if (n.getPhrase() != null && !n.getPhrase().isEmpty() && n.getCultivarEpithet() == null) {
+      Rank r = n.getRank();
+      boolean belowGenus = r != null && (r.isInfrageneric()
+          || r == Rank.SPECIES || r.isInfraspecific());
+      if (belowGenus && n.getUninomial() != null && n.getGenus() == null) {
+        n.setGenus(n.getUninomial());
+        n.setUninomial(null);
+      }
+      n.setType(NameType.INFORMAL);
+    }
   }
 
   private static void flagBlacklistedEpithets(ParsedName n) {
@@ -194,6 +262,16 @@ public final class Assemble {
         n.addWarning(Warnings.BLACKLISTED_EPITHET);
       }
     }
+  }
+
+  /**
+   * Heuristic for "this publishedIn looks like a botanical citation". IPNI-style refs
+   * end in a parenthesised year ("(1817)") and the in-citation form for them is the
+   * botanical convention ("Author in Editor, Title (Year)").
+   */
+  private static boolean publishedInLooksBotanical(String pub) {
+    if (pub == null) return false;
+    return pub.matches(".*\\(\\d{4}\\)\\s*\\.?\\s*$");
   }
 
   /** Ranks whose canonical rendering uses a botanical-style marker (subsp./var./f.). */

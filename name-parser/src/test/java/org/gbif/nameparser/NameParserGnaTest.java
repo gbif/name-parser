@@ -494,6 +494,7 @@ public class NameParserGnaTest {
           .species("Psoronaias", "semigranosa")
           .combAuthors("1845", "von dem Busch")
           .publishedIn("Philippi, 1845")
+          .code(NomCode.ZOOLOGICAL)
           .nothingElse();
 
       assertName("Phora sororcula v d Wulp 1871", "Phora sororcula")
@@ -524,6 +525,7 @@ public class NameParserGnaTest {
           .species("Nereidavus", "kulkovi")
           .combAuthors("1973", "Kul'kov")
           .publishedIn("Kul'kov & Obut, 1973")
+          .code(NomCode.ZOOLOGICAL)
           .nothingElse();
 
       assertName("Xylaria potentillae A S. Xu", "Xylaria potentillae")
@@ -628,7 +630,7 @@ public class NameParserGnaTest {
 
       assertName("Doxander vittatus entropi (Man in 't Veld & Visser, 1993)", "Doxander vittatus entropi")
           .infraSpecies("Doxander", "vittatus", SUBSPECIES, "entropi")
-          .basAuthors("1993", "Man in't Veld", "Visser")
+          .basAuthors("1993", "Man in 't Veld", "Visser")
           .code(NomCode.ZOOLOGICAL)
           .nothingElse();
 
@@ -2761,7 +2763,7 @@ public class NameParserGnaTest {
       assertName("Naviculadicta witkowskii LB & Metzeltin nov spec", "Naviculadicta witkowskii")
           .species("Naviculadicta", "witkowskii")
           .combAuthors(null, "LB", "Metzeltin")
-          .nomNote("nov spec")
+          .nomNote("nov spec.")
           .nothingElse();
   }
 

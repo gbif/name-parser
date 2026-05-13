@@ -33,6 +33,13 @@ public final class AuthorshipSplit {
         continue;
       }
 
+      // Missing-genus placeholder: "?" as the genus stand-in.
+      if (nameWords == 0 && t.kind == TokenKind.OTHER && t.text.equals("?")) {
+        nameWords++;
+        afterGenus = true;
+        i++;
+        continue;
+      }
       if (t.kind == TokenKind.WORD) {
         if (nameWords == 0) {
           if (t.startsUpper()) {
@@ -61,10 +68,22 @@ public final class AuthorshipSplit {
           if (w.equalsIgnoreCase("cf") || w.equalsIgnoreCase("aff")
               || w.equalsIgnoreCase("sp") || w.equalsIgnoreCase("spec")
               || w.equalsIgnoreCase("species") || w.equalsIgnoreCase("indet")) {
+            boolean isSp = w.equalsIgnoreCase("sp") || w.equalsIgnoreCase("spec");
             i++;
             if (i < n && tokens.get(i).kind == TokenKind.DOT) i++;
             // A number immediately after an indet marker is the informal phrase, not authorship
             if (i < n && tokens.get(i).kind == TokenKind.NUMBER) i++;
+            // Strain-code-shaped trailing token(s) ("Lepidoptera sp. JGP0404") OR a
+            // single uppercase letter ("Bryozoan sp. E") form the species epithet
+            // payload / phrase, not authorship — include them in the name span.
+            else if (isSp && i < n && tokens.get(i).kind == TokenKind.WORD
+                && (tokens.get(i).text.length() >= 2
+                    || (tokens.get(i).text.length() == 1 && tokens.get(i).startsUpper()))
+                && (i + 1 == n
+                    || (i + 1 < n && tokens.get(i + 1).kind == TokenKind.NUMBER && i + 2 == n))) {
+              i++;
+              if (i < n && tokens.get(i).kind == TokenKind.NUMBER) i++;
+            }
             continue;
           }
           // Aggregate suffix words within the name section
@@ -85,25 +104,41 @@ public final class AuthorshipSplit {
               i++;
               if (i < n && tokens.get(i).kind == TokenKind.DOT) i++;
             }
-            continue;
-          }
-          // Infrageneric rank marker, e.g. "subg." — consume marker, dot, and the following capitalised epithet.
-          if (afterGenus && !haveEpithet && !afterSubgenus
-              && RankMarkers.matchInfrageneric(w) != null) {
-            i++;
-            if (i < n && tokens.get(i).kind == TokenKind.DOT) i++;
-            if (i < n && tokens.get(i).kind == TokenKind.WORD && tokens.get(i).startsUpper()) {
+            // Single uppercase letter immediately after a rank marker is an informal
+            // infra epithet ("form A", "f. B"), not the start of authorship.
+            if (i < n && tokens.get(i).kind == TokenKind.WORD
+                && tokens.get(i).text.length() == 1
+                && tokens.get(i).startsUpper()) {
               i++;
-              afterSubgenus = true;
+              haveEpithet = true;
             }
             continue;
           }
-          if (AuthorParticles.isParticle(t.text)) {
-            return i;
+          // Infrageneric rank marker, e.g. "subg." / "nothosect." — consume marker,
+          // dot, and the following capitalised epithet.
+          {
+            boolean[] gnotho = new boolean[1];
+            if (afterGenus && !haveEpithet && !afterSubgenus
+                && RankMarkers.matchInfragenericAllowNotho(w, gnotho) != null) {
+              i++;
+              if (i < n && tokens.get(i).kind == TokenKind.DOT) i++;
+              if (i < n && tokens.get(i).kind == TokenKind.WORD && tokens.get(i).startsUpper()) {
+                i++;
+                afterSubgenus = true;
+              }
+              continue;
+            }
           }
-          // "d'X" / "l'X" — lowercase letter + apostrophe + uppercase letter is an
-          // abbreviated author particle (d'Orb., l'Hér.), not an epithet.
-          if (looksLikeApostropheParticle(t.text)) {
+          if (AuthorParticles.isParticle(t.text)
+              || looksLikeApostropheParticle(t.text)) {
+            // Particle authors may be followed by a structural rank marker — try to
+            // skip past the author span as a mid-name author so the marker still gets
+            // consumed by the name section.
+            int afterAuthor = consumeMidNameAuthor(tokens, i, n);
+            if (afterAuthor > i) {
+              i = afterAuthor;
+              continue;
+            }
             return i;
           }
           // "hort." — horticultural marker, used as an ex-author placeholder
@@ -127,13 +162,24 @@ public final class AuthorshipSplit {
           continue;
         }
         // All-caps multi-letter word in epithet position only counts as an upper-cased
-        // epithet when the genus itself was all-caps (so the whole input is shouted).
+        // epithet when the genus itself was all-caps (so the whole input is shouted),
+        // AND the word contains no non-ASCII letter (ELEVÄTA → author surname) and
+        // isn't followed by an abbreviation dot (ELEV. → author).
         if (genusAllCaps && afterGenus && t.text.length() > 1 && isAllUpper(t.text)) {
-          nameWords++;
-          haveEpithet = true;
-          afterSubgenus = false;
-          i++;
-          continue;
+          boolean hasNonAscii = false;
+          for (int j = 0; j < t.text.length(); ) {
+            int cp = t.text.codePointAt(j);
+            if (cp > 0x7F) { hasNonAscii = true; break; }
+            j += Character.charCount(cp);
+          }
+          boolean isAbbrev = i + 1 < n && tokens.get(i + 1).kind == TokenKind.DOT;
+          if (!hasNonAscii && !isAbbrev) {
+            nameWords++;
+            haveEpithet = true;
+            afterSubgenus = false;
+            i++;
+            continue;
+          }
         }
         // Upper-case word in non-first position → authorship.
         return i;
@@ -188,13 +234,21 @@ public final class AuthorshipSplit {
   private static int consumeMidNameAuthor(List<Token> tokens, int from, int n) {
     if (from >= n) return -1;
     Token first = tokens.get(from);
-    if (first.kind != TokenKind.WORD || !first.startsUpper()) return -1;
+    if (first.kind != TokenKind.WORD) return -1;
+    // Author span starts with an uppercase word OR a particle ("d'", "de", "van", …).
+    if (!first.startsUpper()
+        && !AuthorParticles.isParticle(first.text)
+        && !looksLikeApostropheParticle(first.text)) {
+      return -1;
+    }
     int j = from;
     while (j < n) {
       Token t = tokens.get(j);
       if (t.kind == TokenKind.WORD) {
         if (t.startsUpper()) { j++; continue; }
         if (AuthorParticles.isParticle(t.text)) { j++; continue; }
+        // Apostrophe-particle word ("d'Urv", "L'Hér") — keep walking.
+        if (looksLikeApostropheParticle(t.text)) { j++; continue; }
         String w = stripDot(t.text);
         boolean[] notho = new boolean[1];
         boolean isInfraMarker = RankMarkers.matchInfraspecific(w) != null
@@ -208,6 +262,11 @@ public final class AuthorshipSplit {
       if (t.kind == TokenKind.DOT
           || t.kind == TokenKind.AMPERSAND
           || t.kind == TokenKind.COMMA) {
+        j++;
+        continue;
+      }
+      // Apostrophe inside an author (M'Coy, d'Urv., L'Hér.) — keep walking.
+      if (t.kind == TokenKind.OTHER && t.text.equals("'")) {
         j++;
         continue;
       }
@@ -282,6 +341,20 @@ public final class AuthorshipSplit {
       return -1;
     }
     return -1;
+  }
+
+  /** Strain-code-shaped token (mixed letters and digits, no spaces, length ≥ 3). */
+  private static boolean looksStrainCode(String s) {
+    if (s.length() < 3) return false;
+    boolean hasLetter = false;
+    boolean hasDigit = false;
+    for (int i = 0; i < s.length(); ) {
+      int cp = s.codePointAt(i);
+      if (Character.isLetter(cp)) hasLetter = true;
+      else if (Character.isDigit(cp)) hasDigit = true;
+      i += Character.charCount(cp);
+    }
+    return hasLetter && hasDigit;
   }
 
   private static boolean looksLikeApostropheParticle(String s) {

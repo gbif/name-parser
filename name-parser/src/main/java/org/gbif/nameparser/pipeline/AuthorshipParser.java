@@ -39,6 +39,8 @@ public final class AuthorshipParser {
     String sanctioningAuthor;
     int unparsedFrom = -1;
     String unparsedText;
+    /** Secondary 4-digit year encountered after the publication year — imprint year. */
+    String imprintYear;
   }
 
   static AuthState parse(List<Token> tokens, int from) {
@@ -58,9 +60,19 @@ public final class AuthorshipParser {
         if (basColon > basFrom) {
           basEnd = basColon;
         }
-        s.yearRange |= parseAuthors(tokens, basFrom, basEnd, s.basionym);
-        s.hasFilius |= containsFiliusSuffix(tokens, basFrom, basEnd);
-        s.basionymPresent = true;
+        // Reject a basionym made up of only lowercase tokens (no real surname).
+        // "(ilic)" is malformed — capture it as unparsed instead.
+        if (hasUpperWord(tokens, basFrom, basEnd)) {
+          s.yearRange |= parseAuthors(tokens, basFrom, basEnd, s.basionym, s);
+          s.hasFilius |= containsFiliusSuffix(tokens, basFrom, basEnd);
+          s.basionymPresent = true;
+        } else {
+          // Park the whole "(...)" span as unparsed and skip past it.
+          Token openTok = tokens.get(i);
+          Token closeTok = tokens.get(close);
+          s.unparsedFrom = i;
+          s.unparsedText = sliceText(tokens, openTok.start, closeTok.end);
+        }
         i = close + 1;
       }
     }
@@ -78,7 +90,7 @@ public final class AuthorshipParser {
           combEnd = colon;
         }
       }
-      s.yearRange |= parseAuthors(tokens, combFrom, combEnd, s.combination);
+      s.yearRange |= parseAuthors(tokens, combFrom, combEnd, s.combination, s);
       s.hasFilius |= containsFiliusSuffix(tokens, combFrom, combEnd);
       // Whether or not a sanctioning author was extracted, the entire trailing span
       // belongs to combination + sanctioning; nothing is unparsed afterwards.
@@ -121,10 +133,12 @@ public final class AuthorshipParser {
 
   /**
    * Parses author list within [from, to), populating {@code into}. Handles "ex"
-   * splitting (ex authors come before main authors).
+   * splitting (ex authors come before main authors). When a second 4-digit year is
+   * encountered after the first, it's recorded into {@code state.imprintYear} (if
+   * non-null) so callers can surface it on the parsed name.
    * @return true if a year range was detected (e.g. "1845-1847", "1987-92")
    */
-  private static boolean parseAuthors(List<Token> tokens, int from, int to, Authorship into) {
+  private static boolean parseAuthors(List<Token> tokens, int from, int to, Authorship into, AuthState state) {
     List<String> authors = new ArrayList<>();
     List<String> exAuthors = null;
     StringBuilder cur = new StringBuilder();
@@ -144,7 +158,14 @@ public final class AuthorshipParser {
           year = year + "?";
           i++;
         }
-        into.setYear(year);
+        // First year wins — imprint dates ("Linnaeus, 1898, 1897") keep the first
+        // (the actual publication year); the second is recorded into state.imprintYear
+        // so the caller can surface it on the parsed name.
+        if (into.getYear() == null) {
+          into.setYear(year);
+        } else if (state != null && state.imprintYear == null) {
+          state.imprintYear = year;
+        }
         // Detect year range: NUMBER + OTHER("-" or "/") + NUMBER → keep first year only
         if (i + 1 < to) {
           Token sep = tokens.get(i);
@@ -181,6 +202,13 @@ public final class AuthorshipParser {
       if (t.kind == TokenKind.AMPERSAND
           || (t.kind == TokenKind.WORD && (t.text.equalsIgnoreCase("and") || t.text.equalsIgnoreCase("et")))
           || (t.kind == TokenKind.WORD && t.text.equals("y"))) {
+        flush(cur, authors);
+        i++;
+        continue;
+      }
+
+      if (t.kind == TokenKind.SEMICOLON) {
+        // Semicolons separate authors in citation lists ("Choi,J.H.; Im,W.T.; …")
         flush(cur, authors);
         i++;
         continue;
@@ -235,7 +263,8 @@ public final class AuthorshipParser {
         // not after a complete surname — skip the inversion in that case.
         if (cur.length() > 0 && t.text.length() <= 3 && isAllUpper(t.text)
             && containsLower(cur)
-            && cur.charAt(cur.length() - 1) != '.') {
+            && cur.charAt(cur.length() - 1) != '.'
+            && !endsWithParticleOnly(cur)) {
           StringBuilder initials = new StringBuilder(t.text);
           int j = i + 1;
           boolean hasDot = false;
@@ -244,18 +273,34 @@ public final class AuthorshipParser {
             hasDot = true;
             j++;
           }
-          // Without a trailing dot the all-caps part is a CJK-style surname-first
-          // initial ("Zhang F", "Pan Z-X"); keep it verbatim instead of inverting.
-          if (!hasDot) {
-            appendSpace(cur);
-            cur.append(t.text);
-            i = j;
-            continue;
+          // Decide whether to flip "<Surname> <ALLCAPS>" → "<initials>.<Surname>" or to
+          // keep the CJK surname-first form ("Zhang F", "Pan Z-X") verbatim.
+          //   - Dotted trailing initials always flip ("Foo X." → "X.Foo").
+          //   - Without a trailing dot, only flip when the next token is yet another
+          //     capitalised surname-shaped word — that means we are inside a run-on author
+          //     list ("Balsamo M Fregni E Tongiorgi MA") and the all-caps token marks the
+          //     end of the current author. An isolated "Zhang F" (end of segment or
+          //     followed by separator) keeps its CJK surname-first form.
+          // Pick up an optional "-X" continuation so "Pan Z-X" is treated as one author
+          // pair (initials "Z-X") rather than two.
+          int k = j;
+          if (k < to) {
+            Token peek = tokens.get(k);
+            if (peek.kind == TokenKind.OTHER && peek.text.equals("-")
+                && k + 1 < to && tokens.get(k + 1).kind == TokenKind.WORD
+                && tokens.get(k + 1).text.length() == 1) {
+              initials.append('-').append(tokens.get(k + 1).text);
+              k += 2;
+              while (k < to && tokens.get(k).kind == TokenKind.DOT) {
+                initials.append('.');
+                k++;
+              }
+            }
           }
           String surname = cur.toString().trim();
           cur.setLength(0);
           authors.add(formatInitials(initials.toString()) + surname);
-          i = j;
+          i = k;
           continue;
         }
         // If full ALL-CAPS author name (e.g. FISCHER) length > 1, normalise to title case
@@ -348,8 +393,12 @@ public final class AuthorshipParser {
       }
 
       // Apostrophe between authors / inside an author span — preserve it so that
-      // names with internal apostrophes ("L.'t Mannetje", "M'Coy") render verbatim.
-      if (t.kind == TokenKind.OTHER && t.text.equals("'") && cur.length() > 0) {
+      // names with internal apostrophes ("L.'t Mannetje", "M'Coy", "d'Urv.", "'t Hart")
+      // render verbatim. Glue to the preceding character when there's no whitespace
+      // gap in the input ("d'Urv"); otherwise insert a space ("Henk 't").
+      if (t.kind == TokenKind.OTHER && t.text.equals("'")) {
+        boolean hasGap = cur.length() > 0 && i > 0 && tokens.get(i - 1).end < t.start;
+        if (hasGap) appendSpace(cur);
         cur.append('\'');
         i++;
         if (i < to && tokens.get(i).kind == TokenKind.WORD) {
@@ -358,17 +407,26 @@ public final class AuthorshipParser {
         }
         continue;
       }
-      // Hyphen between abbreviated initial parts ("C.-K.", "J.-J.") — keep the hyphen
-      // and uppercase a single-letter follow-up so compound initials render with the
-      // canonical "C.-K.Yang" / "J.-J.Brun" form regardless of input case.
+      // "?" inside an author span (typically a transcription artefact for a missing
+      // letter, "Istv?nffi") — silently glue the next word onto cur without a space.
+      if (t.kind == TokenKind.OTHER && t.text.equals("?") && cur.length() > 0) {
+        i++;
+        if (i < to && tokens.get(i).kind == TokenKind.WORD) {
+          cur.append(tokens.get(i).text);
+          i++;
+        }
+        continue;
+      }
+      // Hyphen between abbreviated initial parts ("C.-K.", "J.-j.") — keep the hyphen
+      // and preserve the input case of the single-letter follow-up so compound initials
+      // round-trip cleanly ("Y.-j." stays "Y.-j.", "C.-K." stays "C.-K.").
       if (t.kind == TokenKind.OTHER && t.text.equals("-")
           && cur.length() > 0 && cur.charAt(cur.length() - 1) == '.'
           && i + 1 < to && tokens.get(i + 1).kind == TokenKind.WORD) {
         Token nx = tokens.get(i + 1);
         cur.append('-');
         if (nx.text.length() == 1) {
-          int cp = Character.toUpperCase(nx.text.codePointAt(0));
-          cur.appendCodePoint(cp);
+          cur.append(nx.text);
           i += 2;
           if (i < to && tokens.get(i).kind == TokenKind.DOT) {
             cur.append('.');
@@ -438,10 +496,10 @@ public final class AuthorshipParser {
         return formatInitials(initials) + surname;
       }
     }
-    // Pattern B: "Surname X.Y." (trailing dotted initials, no surrounding whitespace
-    // particles — particles like "Van", "de" must be kept). Without dots in the trailing
-    // tokens, the author is in CJK surname-first form ("Zhang F", "Pan Z-X") and must
-    // be preserved verbatim.
+    // Pattern B: "Surname X.Y." (trailing dotted initials). Without a dot the
+    // trailing all-caps part is a CJK-style surname-first author ("Zhang F",
+    // "Pan Z-X") and must be preserved verbatim. Particles like "Van", "de"
+    // must be kept on the surname side.
     int lastSpace = s.lastIndexOf(' ');
     if (lastSpace > 0) {
       String first = s.substring(0, lastSpace).trim();
@@ -481,10 +539,26 @@ public final class AuthorshipParser {
   }
 
   private static String formatInitials(String s) {
-    String stripped = s.replace(".", "").replace("-", "").replace(" ", "");
+    String cleaned = s.replace(".", "").replace(" ", "");
+    // Hyphenated CJK-style initials ("Z-X", "Y-H") keep the hyphen and get a single
+    // trailing dot: "Z-X" → "Z-X.". Non-hyphenated initials emit one dot per letter.
+    if (cleaned.contains("-")) {
+      StringBuilder b = new StringBuilder();
+      for (int i = 0; i < cleaned.length(); ) {
+        int cp = cleaned.codePointAt(i);
+        if (cp == '-') {
+          b.append('-');
+        } else {
+          b.appendCodePoint(Character.toUpperCase(cp));
+        }
+        i += Character.charCount(cp);
+      }
+      b.append('.');
+      return b.toString();
+    }
     StringBuilder b = new StringBuilder();
-    for (int i = 0; i < stripped.length(); ) {
-      int cp = stripped.codePointAt(i);
+    for (int i = 0; i < cleaned.length(); ) {
+      int cp = cleaned.codePointAt(i);
       b.appendCodePoint(Character.toUpperCase(cp)).append('.');
       i += Character.charCount(cp);
     }
@@ -502,6 +576,21 @@ public final class AuthorshipParser {
       i += Character.charCount(cp);
     }
     return any;
+  }
+
+  /**
+   * True when the accumulated buffer ends with a particle word (or is just particles).
+   * In that case the next all-caps token is the next author's initial, not a trailing
+   * surname-inversion signal — there's no real surname accumulated yet.
+   */
+  private static boolean endsWithParticleOnly(StringBuilder cur) {
+    String s = cur.toString().trim();
+    if (s.isEmpty()) return true;
+    // Particle attached to a preceding dot ("H.da") is still considered a particle
+    // tail — split on whitespace and dots to find the last word-ish token.
+    String[] parts = s.split("[\\s.]+");
+    String last = parts.length > 0 ? parts[parts.length - 1] : "";
+    return AuthorParticles.isParticle(last);
   }
 
   private static boolean containsLower(StringBuilder cur) {
@@ -607,9 +696,13 @@ public final class AuthorshipParser {
         && hasInfraSpecificMarker(rank)) {
       return NomCode.BOTANICAL;
     }
-    // Any year (basionym or combination) is a strong zoological signal: year citation
-    // is mandatory in zoological nomenclature but optional in botanical.
-    if ((s.basionymPresent && s.basionym.getYear() != null) || s.combination.getYear() != null) {
+    // Any year (basionym or combination) paired with an actual author is a strong
+    // zoological signal: year citation is mandatory in zoological nomenclature but
+    // optional in botanical. A bare year with no authors at all is not enough to
+    // pick a code.
+    boolean basYear = s.basionymPresent && s.basionym.getYear() != null && s.basionym.hasAuthors();
+    boolean combYear = s.combination.getYear() != null && s.combination.hasAuthors();
+    if (basYear || combYear) {
       return NomCode.ZOOLOGICAL;
     }
     // The "f."/"fil."/"filius" suffix is the standard botanical convention for the son
@@ -633,10 +726,21 @@ public final class AuthorshipParser {
         || r == Rank.FORM || r == Rank.SUBFORM;
   }
 
+  /** True if any token in [from, to) is a WORD that starts with an upper-case letter. */
+  private static boolean hasUpperWord(List<Token> tokens, int from, int to) {
+    for (int j = from; j < to; j++) {
+      Token t = tokens.get(j);
+      if (t.kind == TokenKind.WORD && t.startsUpper()) return true;
+    }
+    return false;
+  }
+
   /**
    * Scans the token range for an "f"/"fil"/"filius" word — botanical filius marker.
    * Pre-"ex" tokens are skipped: a filius on an ex-author isn't a code signal because
-   * the author itself was never the validating author.
+   * the author itself was never the validating author. The "f"/"fil" token must be
+   * preceded by whitespace in the input to count as a filius marker; an adjacent "L.f"
+   * (no space) is just another initial.
    */
   private static boolean containsFiliusSuffix(List<Token> tokens, int from, int to) {
     int start = from;
@@ -650,7 +754,15 @@ public final class AuthorshipParser {
       Token t = tokens.get(j);
       if (t.kind != TokenKind.WORD) continue;
       String w = t.text;
-      if (w.equals("f") || w.equals("fil") || w.equals("filius")) return true;
+      if (!(w.equals("f") || w.equals("fil") || w.equals("filius"))) continue;
+      // Require a whitespace gap between the previous token and this "f" — otherwise
+      // it's a glued initial like "L.f", not the filius marker.
+      if (j > 0 && tokens.get(j - 1).end < t.start) {
+        return true;
+      }
+      // No previous token (first token in segment): treat as filius if it's at the
+      // very start (rare — usually filius follows a surname).
+      if (j == 0) return true;
     }
     return false;
   }

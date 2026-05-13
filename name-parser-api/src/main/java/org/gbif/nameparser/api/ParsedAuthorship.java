@@ -51,6 +51,17 @@ public class ParsedAuthorship {
   private String publishedIn;
 
   /**
+   * The exact page of the in reference stripped from the authorship
+   */
+  private String publishedInPage;
+
+  /**
+   * The imprint or printing date — a secondary year cited alongside the actual
+   * publication year (e.g. "Storr, 1970 [\"1969\"]" → year=1970, imprintYear="1969").
+   */
+  private String imprintYear;
+
+  /**
    * Any additional unparsed string found at the end of the name.
    * Only ever set when state=PARTIAL
    */
@@ -141,6 +152,22 @@ public class ParsedAuthorship {
 
   public void setPublishedIn(String publishedIn) {
     this.publishedIn = publishedIn;
+  }
+
+  public String getPublishedInPage() {
+    return publishedInPage;
+  }
+
+  public void setPublishedInPage(String publishedInPage) {
+    this.publishedInPage = publishedInPage;
+  }
+
+  public String getImprintYear() {
+    return imprintYear;
+  }
+
+  public void setImprintYear(String imprintYear) {
+    this.imprintYear = imprintYear;
   }
 
   public String getTaxonomicNote() {
@@ -235,6 +262,8 @@ public class ParsedAuthorship {
         Objects.equals(taxonomicNote, that.taxonomicNote) &&
         Objects.equals(nomenclaturalNote, that.nomenclaturalNote) &&
         Objects.equals(publishedIn, that.publishedIn) &&
+        Objects.equals(publishedInPage, that.publishedInPage) &&
+        Objects.equals(imprintYear, that.imprintYear) &&
         Objects.equals(unparsed, that.unparsed) &&
         state == that.state &&
         Objects.equals(warnings, that.warnings);
@@ -242,7 +271,7 @@ public class ParsedAuthorship {
 
   @Override
   public int hashCode() {
-    return Objects.hash(extinct, combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, publishedIn, unparsed, doubtful, manuscript, state, warnings);
+    return Objects.hash(extinct, combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, publishedIn, publishedInPage, imprintYear, unparsed, doubtful, manuscript, state, warnings);
   }
 
   @Override

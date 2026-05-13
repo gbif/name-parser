@@ -91,6 +91,12 @@ public final class Preflight {
   private static final Pattern CLADE_KEYWORD = Pattern.compile(
       "\\bclade\\b", Pattern.CASE_INSENSITIVE);
 
+  // Monomial aggregate forms: "Iteaphila-group" / "Bartonella group" — informal
+  // taxonomic group labels that can refer to any rank, so we reject them as INFORMAL.
+  private static final Pattern MONOMIAL_AGGREGATE = Pattern.compile(
+      "^[\\p{Lu}][\\p{L}]+(?:-group|\\s+group|-complex|\\s+complex)$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+
   private Preflight() {}
 
   /**
@@ -118,15 +124,21 @@ public final class Preflight {
       throw new UnparsableNameException(NameType.OTHER, original);
     }
 
-    // NO_NAME markers (text deletion / discard tags).
+    // NO_NAME markers (text deletion / discard tags). A leading "non " followed by a
+    // proper Latin name is a homonym citation, not a deletion marker — leave those to
+    // the regular parser path. Only reject "non" when it precedes a single short word
+    // or punctuation (the typical checklist-cleanup leftover).
     String lower = s.toLowerCase();
     if (lower.contains("tobedeleted")
         || lower.contains("(delete)")
         || s.startsWith("@")
         || lower.matches("(?:.*\\s)?delete(?:\\s.*|,.*|\\s*)")
         || lower.contains("[delete]")
-        || lower.contains("[none]")
-        || lower.startsWith("non ")) {
+        || lower.contains("[none]")) {
+      throw new UnparsableNameException(NameType.OTHER, original);
+    }
+    if (lower.startsWith("non ")
+        && (!s.matches("(?i)non\\s+\\p{Lu}\\p{L}+(?:\\s.*)?") || s.contains("="))) {
       throw new UnparsableNameException(NameType.OTHER, original);
     }
 
@@ -147,9 +159,19 @@ public final class Preflight {
       throw new UnparsableNameException(NameType.VIRUS, original);
     }
 
-    // Leading "? <epithet>" with no virus marker — treat as placeholder.
+    // Monomial-aggregate forms ("Iteaphila-group", "Bartonella group", "Foo-complex"):
+    // a single uninomial followed by an aggregate marker is an informal taxonomic
+    // grouping label that the parser model can't represent.
+    if (MONOMIAL_AGGREGATE.matcher(s).matches()) {
+      throw new UnparsableNameException(NameType.INFORMAL, original);
+    }
+
+    // Leading "? <epithet>" — placeholder for missing genus. Only fully unparsable
+    // when there's nothing else on the line; with authorship/year following, the
+    // missing-genus form is reconstructed downstream (see StripAndStash).
     if (QUESTION_PREFIX.matcher(s).find()
-        && !INDET_SPECIES.matcher(s).matches()) {
+        && !INDET_SPECIES.matcher(s).matches()
+        && s.matches("^\\?\\s+\\p{Ll}+\\s*$")) {
       throw new UnparsableNameException(NameType.PLACEHOLDER, original);
     }
 

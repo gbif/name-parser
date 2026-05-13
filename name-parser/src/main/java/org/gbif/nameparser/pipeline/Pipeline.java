@@ -54,6 +54,9 @@ public final class Pipeline {
         ctx.name.setState(ParsedName.State.PARTIAL);
         ctx.name.setUnparsed(authState.unparsedText);
       }
+      if (authState.imprintYear != null && ctx.name.getImprintYear() == null) {
+        ctx.name.setImprintYear(authState.imprintYear);
+      }
     }
     AuthorshipParser.AuthState extraState = null;
     if (authorship != null && !authorship.isBlank()) {
@@ -72,17 +75,23 @@ public final class Pipeline {
       if (extraState.sanctioningAuthor != null) {
         ctx.name.setSanctioningAuthor(extraState.sanctioningAuthor);
       }
+      if (extraState.imprintYear != null && ctx.name.getImprintYear() == null) {
+        ctx.name.setImprintYear(extraState.imprintYear);
+      }
     }
     if (authState != null && authState.sanctioningAuthor != null) {
       ctx.name.setSanctioningAuthor(authState.sanctioningAuthor);
     }
 
-    // For code inference, prefer the authState that actually has authorship content. When
-    // authorship was supplied separately, the main scientific name typically had none, so
-    // its authState is empty and unsuitable for inferring the nomenclatural code.
+    // Code inference uses the main scientific name's authState by default. When the
+    // main name had no authorship of its own, fall back to the auxiliary authorship
+    // state only when it has a basionym citation (parens) with a year — that's the
+    // "(Author, YYYY)" zoological pattern. Year-only or plain "Author, year" supplied
+    // as separate authorship is parsed for authors but doesn't tip the code on its own.
     AuthorshipParser.AuthState codeState = authState;
     if ((codeState == null || (!codeState.combination.exists() && !codeState.basionymPresent))
-        && extraState != null) {
+        && extraState != null
+        && extraState.basionymPresent && extraState.basionym.getYear() != null) {
       codeState = extraState;
     }
 

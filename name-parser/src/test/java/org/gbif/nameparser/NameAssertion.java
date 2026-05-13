@@ -38,6 +38,8 @@ public class NameAssertion {
     TAXNOTE,
     NOMNOTE,
     PUBLISHEDIN,
+    PUBLISHEDINPAGE,
+    IMPRINTYEAR,
     DOUBTFUL,
     STATE,
     CODE,
@@ -120,6 +122,12 @@ public class NameAssertion {
             break;
           case PUBLISHEDIN:
             assertNull(n.getPublishedIn());
+            break;
+          case PUBLISHEDINPAGE:
+            assertNull(n.getPublishedInPage());
+            break;
+          case IMPRINTYEAR:
+            assertNull(n.getImprintYear());
             break;
           case DOUBTFUL:
             assertFalse(n.isDoubtful());
@@ -321,7 +329,14 @@ public class NameAssertion {
     assertEquals(NameType.INFORMAL, n.getType());
     assertTrue(n.isPhraseName());
     assertEquals(phrase, n.getPhrase());
-    assertNull(n.getSpecificEpithet());
+    // For SUBSPECIES-level phrase names ("Acacia mutabilis Maslin subsp. Young River …")
+    // the species epithet remains set. For SPECIES-level phrase names the species
+    // epithet must be null. The caller's phraseName / phraseIndetName helper asserts
+    // genus or uninomial separately, so we don't enforce either here.
+    if (n.getRank() != Rank.SUBSPECIES && n.getRank() != Rank.VARIETY
+        && n.getRank() != Rank.FORM) {
+      assertNull(n.getSpecificEpithet());
+    }
     assertNull(n.getInfraspecificEpithet());
     assertNull(n.getCultivarEpithet());
     return add(NP.EPITHETS, NP.CULTIVAR, NP.TYPE, NP.PHRASE);
@@ -357,6 +372,16 @@ public class NameAssertion {
   NameAssertion publishedIn(String publishedIn) {
     assertEquals(publishedIn, n.getPublishedIn());
     return add(NP.PUBLISHEDIN);
+  }
+
+  NameAssertion publishedInPage(String publishedInPage) {
+    assertEquals(publishedInPage, n.getPublishedInPage());
+    return add(NP.PUBLISHEDINPAGE);
+  }
+
+  NameAssertion imprintYear(String imprintYear) {
+    assertEquals(imprintYear, n.getImprintYear());
+    return add(NP.IMPRINTYEAR);
   }
 
   NameAssertion nomNote(String nomNote) {

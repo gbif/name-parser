@@ -24,6 +24,7 @@ public final class RankMarkers {
     INFRASPECIFIC.put("subv", Rank.SUBVARIETY);
     INFRASPECIFIC.put("f", Rank.FORM);
     INFRASPECIFIC.put("forma", Rank.FORM);
+    INFRASPECIFIC.put("form", Rank.FORM);
     INFRASPECIFIC.put("fo", Rank.FORM);
     INFRASPECIFIC.put("subf", Rank.SUBFORM);
     INFRASPECIFIC.put("subforma", Rank.SUBFORM);
@@ -52,8 +53,24 @@ public final class RankMarkers {
     INFRAGENERIC.put("sect", Rank.SECTION_BOTANY);
     INFRAGENERIC.put("subsect", Rank.SUBSECTION_BOTANY);
     INFRAGENERIC.put("supersect", Rank.SUPERSECTION_BOTANY);
+    // IPNI also writes "supersect." as "suprasect." — same rank.
+    INFRAGENERIC.put("suprasect", Rank.SUPERSECTION_BOTANY);
     INFRAGENERIC.put("ser", Rank.SERIES_BOTANY);
     INFRAGENERIC.put("subser", Rank.SUBSERIES_BOTANY);
+  }
+
+  /** Returns the matched rank, recognising "notho-" prefix variants for infrageneric ranks. */
+  public static Rank matchInfragenericAllowNotho(String word, boolean[] notho) {
+    String w = word.toLowerCase();
+    if (w.startsWith("notho")) {
+      Rank r = INFRAGENERIC.get(w.substring(5));
+      if (r != null) {
+        notho[0] = true;
+        return r;
+      }
+    }
+    notho[0] = false;
+    return INFRAGENERIC.get(w);
   }
 
   /** Returns the matched rank, recognising "notho-" prefix variants for infraspecific ranks. */

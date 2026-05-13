@@ -91,11 +91,20 @@ public final class NameTokens {
         i += 2;
         continue;
       }
+      // Missing-genus placeholder: "?" as the genus stand-in. Only at the very start.
+      if (genus == null && t.kind == TokenKind.OTHER && t.text.equals("?")) {
+        genus = "?";
+        i++;
+        continue;
+      }
       if (t.kind == TokenKind.WORD) {
         // Mid-name author span (uppercase Author abbreviations followed by a rank
-        // marker) — silently skipped so that downstream classification operates only
-        // on the structural tokens.
-        if (genus != null && t.startsUpper()) {
+        // marker, or particle-starting authors like "d'Urv. subsp.") — silently
+        // skipped so that downstream classification operates only on the structural
+        // tokens.
+        boolean canStartAuthor = t.startsUpper()
+            || (t.startsLower() && AuthorParticles.isParticle(t.text));
+        if (genus != null && canStartAuthor) {
           int after = AuthorshipSplit.midNameAuthorEnd(ts, i, boundary);
           if (after > i) {
             pendingMidNameAuthor = renderAuthorSpan(ts, i, after);
@@ -118,17 +127,47 @@ public final class NameTokens {
           }
           continue;
         }
-        // upper-case epithets (e.g. all-caps "ELEVATA") — treat as lower-case epithets after recovery
+        // upper-case epithets (e.g. all-caps "ELEVATA") — treat as lower-case epithets after recovery.
+        // Don't synthesise an epithet from an all-caps token that contains a non-ASCII
+        // letter ("ELEVÄTA") or that's followed by an abbreviation dot ("ELEV." → "ELEV"
+        // + "."): those look like all-caps author surnames, not epithets.
         if (t.startsUpper() && genus != null && t.text.length() > 1
             && isAllUpperLetters(t.text)) {
-          // synthesise a lower-case version into lowerEpithets
-          String w = t.text.toLowerCase();
-          lowerEpithets.add(w);
-          i++;
-          continue;
+          boolean hasNonAscii = false;
+          for (int j = 0; j < t.text.length(); ) {
+            int cp = t.text.codePointAt(j);
+            if (cp > 0x7F) { hasNonAscii = true; break; }
+            j += Character.charCount(cp);
+          }
+          boolean isAbbrev = i + 1 < boundary && ts.get(i + 1).kind == TokenKind.DOT;
+          if (!hasNonAscii && !isAbbrev) {
+            String w = t.text.toLowerCase();
+            lowerEpithets.add(w);
+            i++;
+            continue;
+          }
+          // Otherwise fall through to author-recovery handling below.
         }
         if (t.startsLower()) {
           String w = stripDot(t.text);
+          // 0. Single Greek letter or short ASCII letter between two lowercase epithets
+          // ("Agaricus collinitus β mucosus", "Cyphelium disseminatum c subsessile") is
+          // an informal infra-rank marker, not an epithet. Skip silently when there's
+          // already a species epithet AND another lower-case epithet follows — otherwise
+          // the letter IS the epithet (e.g. "var. β").
+          if (w.length() == 1 && !lowerEpithets.isEmpty()) {
+            int cp = w.codePointAt(0);
+            boolean isGreek = cp >= 0x03B1 && cp <= 0x03C9;
+            boolean isFungiAscii = cp == '⍺' || (cp >= 'a' && cp <= 'g');
+            if (isGreek || isFungiAscii) {
+              int peek = i + 1;
+              if (peek < boundary && ts.get(peek).kind == TokenKind.WORD
+                  && ts.get(peek).startsLower()) {
+                i++;
+                continue;
+              }
+            }
+          }
           // 1. cf./aff. qualifier
           if ((w.equalsIgnoreCase("cf") || w.equalsIgnoreCase("aff"))
               && lowerEpithets.size() < 2) {
@@ -149,6 +188,31 @@ public final class NameTokens {
             if (i < boundary && ts.get(i).kind == TokenKind.NUMBER) {
               ctx.name.setPhrase(ts.get(i).text);
               i++;
+            } else if (i < boundary && ts.get(i).kind == TokenKind.WORD
+                && ts.get(i).text.length() == 1 && ts.get(i).startsUpper()
+                && i + 1 == boundary) {
+              // Single uppercase letter following sp. — informal phrase identifier
+              // ("Bryozoan sp. E"). Stored as phrase, leaves indet=true.
+              ctx.name.setPhrase(ts.get(i).text);
+              i++;
+            } else if (i < boundary && ts.get(i).kind == TokenKind.WORD
+                && ts.get(i).text.length() >= 2
+                && (i + 1 == boundary
+                    || (i + 1 < boundary && ts.get(i + 1).kind == TokenKind.NUMBER
+                        && i + 2 == boundary))) {
+              // "Genus sp. JYr4" / "Genus sp. JGP0404" — strain code immediately after
+              // the marker with nothing else following. Capture as informal phrase
+              // (species stays indet). Allow WORD or WORD+NUMBER (when the tokenizer
+              // splits a mixed letters-and-digits code like "JGP" + "0404").
+              StringBuilder code = new StringBuilder(ts.get(i).text);
+              i++;
+              if (i < boundary && ts.get(i).kind == TokenKind.NUMBER) {
+                code.append(ts.get(i).text);
+                i++;
+              }
+              if (isStrainCode(code.toString())) {
+                ctx.name.setPhrase(code.toString());
+              }
             }
             continue;
           }
@@ -199,6 +263,15 @@ public final class NameTokens {
                 i++;
                 if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
               }
+              // Informal infra epithet: a single uppercase letter / digit immediately
+              // following the rank marker ("form A", "f. B") — consume it here so the
+              // normal lowercase-epithet path doesn't drop it as an "upper word".
+              if (i < boundary && ts.get(i).kind == TokenKind.WORD
+                  && ts.get(i).text.length() == 1 && ts.get(i).startsUpper()) {
+                lowerEpithets.add(ts.get(i).text);
+                indet = true; // INFORMAL informal infra epithet
+                i++;
+              }
             } else if (!lowerEpithets.isEmpty()) {
               // Trailing rank marker with no following epithet = indetermined infraspecific
               indet = true;
@@ -217,14 +290,18 @@ public final class NameTokens {
             }
             continue;
           }
-          // 4. infrageneric marker
-          Rank rmInfragen = RankMarkers.matchInfrageneric(w);
+          // 4. infrageneric marker (with optional "notho-" prefix)
+          boolean[] gnotho = new boolean[1];
+          Rank rmInfragen = RankMarkers.matchInfragenericAllowNotho(w, gnotho);
           if (rmInfragen != null && lowerEpithets.isEmpty() && subgenus == null && infragenEpithet == null) {
             i++;
             if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
             if (i < boundary && ts.get(i).kind == TokenKind.WORD && ts.get(i).startsUpper()) {
               infragenEpithet = ts.get(i).text;
               infrageneric = rmInfragen;
+              if (gnotho[0]) {
+                ctx.name.addNotho(NamePart.INFRAGENERIC);
+              }
               i++;
             }
             continue;
@@ -330,6 +407,12 @@ public final class NameTokens {
       ctx.name.setRank(rank);
     } else if (infrageneric != null && !cultivarSet) {
       ctx.name.setRank(infrageneric);
+    } else if (subgenus != null && !cultivarSet
+        && specific == null && infraspecific == null
+        && (ctx.name.getRank() == null || ctx.name.getRank() == Rank.UNRANKED)) {
+      // Paren-based subgenus ("Calathus (Lindrothius)") without an explicit rank
+      // marker — default to the generic infrageneric rank.
+      ctx.name.setRank(Rank.INFRAGENERIC_NAME);
     }
 
     if (inlineRankNotho) {
@@ -488,7 +571,11 @@ public final class NameTokens {
     return isAllLetterCase(s, true);
   }
 
-  /** True if the marker at {@code markerIdx} is followed by a lowercase epithet word. */
+  /**
+   * True if the marker at {@code markerIdx} is followed by a recognisable infraspecific
+   * epithet — either a lowercase word, or a single uppercase letter / digit (informal
+   * collector tag like "f. A" / "form A").
+   */
   private static boolean hasInfraspecificEpithetAfter(List<Token> ts, int markerIdx, int boundary) {
     int k = markerIdx + 1;
     if (k < boundary && ts.get(k).kind == TokenKind.DOT) k++;
@@ -496,7 +583,27 @@ public final class NameTokens {
     if (k < boundary && ts.get(k).kind == TokenKind.HYBRID_MARK) k++;
     if (k >= boundary) return false;
     Token nx = ts.get(k);
-    return nx.kind == TokenKind.WORD && nx.startsLower();
+    if (nx.kind == TokenKind.WORD && nx.startsLower()) return true;
+    if (nx.kind == TokenKind.WORD && nx.text.length() == 1 && nx.startsUpper()) return true;
+    return false;
+  }
+
+  /**
+   * True for strain-code-shaped tokens — mixed letters and digits, no spaces, length
+   * ≥ 3 (e.g. "JGP0404", "ANIC_3", "Sb1"). Used to glue the code onto an "sp." indet
+   * marker so the species epithet rendering keeps the strain identifier.
+   */
+  private static boolean isStrainCode(String s) {
+    if (s.length() < 3) return false;
+    boolean hasLetter = false;
+    boolean hasDigit = false;
+    for (int i = 0; i < s.length(); ) {
+      int cp = s.codePointAt(i);
+      if (Character.isLetter(cp)) hasLetter = true;
+      else if (Character.isDigit(cp)) hasDigit = true;
+      i += Character.charCount(cp);
+    }
+    return hasLetter && hasDigit;
   }
 
   private static boolean isAllLetterCase(String s, boolean upper) {
