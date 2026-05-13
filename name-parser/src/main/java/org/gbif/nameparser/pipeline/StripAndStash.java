@@ -5,6 +5,7 @@ import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.api.Warnings;
+import org.gbif.nameparser.util.RankUtils;
 import org.gbif.nameparser.util.UnicodeUtils;
 
 import java.util.regex.Matcher;
@@ -848,6 +849,28 @@ public final class StripAndStash {
       }
     }
 
+    // Leading infrageneric rank marker without a genus prefix ("subgen. Trematostoma Sacc.",
+    // "sect. Taeda"). Strip the marker and pin the rank on the parsed name. Caller-supplied
+    // ZOOLOGICAL code switches botanical-flavoured section/series ranks to the zoological
+    // variant ("sect." → SECTION_ZOOLOGY).
+    {
+      Matcher pm = LEADING_INFRAGEN_MARKER.matcher(s);
+      if (pm.find()) {
+        Rank r = RankUtils.RANK_MARKER_MAP_INFRAGENERIC.get(pm.group(1).toLowerCase());
+        if (r != null) {
+          if (ctx.requestedCode == NomCode.ZOOLOGICAL) {
+            Rank zool = BOT_TO_ZOOL.get(r);
+            if (zool != null) r = zool;
+          }
+          ctx.name.setRank(r);
+          if (r.getCode() != null && ctx.name.getCode() == null) {
+            ctx.name.setCode(r.getCode());
+          }
+          s = s.substring(pm.end()).trim();
+        }
+      }
+    }
+
     // Phrase-name forms like "Prostanthera sp. Somersbey (B.J.Conn 4024)" — when the
     // string has the shape "<Genus[ species]>[ author]? <rank-marker> <Phrase>" where
     // the phrase contains parens, a quoted token, or mixed letters+digits, set the
@@ -882,7 +905,18 @@ public final class StripAndStash {
             s = prefix;
           } else if (prefixIsGenusPlusSubgenus) {
             ctx.name.setRank(rank);
-            s = prefix;
+            // Extract subgenus directly from the prefix; drop the parens so the simpler
+            // "Genus" working string is left for AuthorshipSplit (which now defaults a
+            // no-trailing "(Subgenus)" to basionym authorship).
+            Matcher gm = Pattern.compile(
+                "^([\\p{Lu}][\\p{Ll}]+)\\s+\\(([\\p{Lu}][\\p{Ll}]+)\\)$",
+                Pattern.UNICODE_CHARACTER_CLASS).matcher(prefix.trim());
+            if (gm.matches()) {
+              ctx.name.setInfragenericEpithet(gm.group(2));
+              s = gm.group(1);
+            } else {
+              s = prefix;
+            }
           } else {
             s = prefix + " " + marker + ".";
           }
@@ -948,6 +982,24 @@ public final class StripAndStash {
       java.util.Map.entry("subtribe", Rank.SUBTRIBE),
       java.util.Map.entry("supertrib", Rank.SUPERTRIBE),
       java.util.Map.entry("infratrib", Rank.INFRATRIBE));
+
+  /** Botanical-flavoured infrageneric ranks that have a zoological counterpart at the
+   * same nominal level. Used when a leading rank marker is parsed with a caller-supplied
+   * ZOOLOGICAL code. */
+  private static final java.util.Map<Rank, Rank> BOT_TO_ZOOL = java.util.Map.of(
+      Rank.SECTION_BOTANY, Rank.SECTION_ZOOLOGY,
+      Rank.SUBSECTION_BOTANY, Rank.SUBSECTION_ZOOLOGY,
+      Rank.SUPERSECTION_BOTANY, Rank.SUPERSECTION_ZOOLOGY,
+      Rank.SERIES_BOTANY, Rank.SERIES_ZOOLOGY,
+      Rank.SUBSERIES_BOTANY, Rank.SUBSERIES_ZOOLOGY,
+      Rank.SUPERSERIES_BOTANY, Rank.SUPERSERIES_ZOOLOGY);
+
+  /** Leading infrageneric rank marker at the very start of the input ("subgen. X" /
+   * "sect. X"). Captures the marker word (no trailing dot). */
+  private static final Pattern LEADING_INFRAGEN_MARKER = Pattern.compile(
+      "^(subg|subgen|subgenus|sect|section|subsect|subsection|supersect|suprasect"
+          + "|ser|series|subser|subseries)\\.?\\s+(?=[\\p{Lu}])",
+      Pattern.UNICODE_CHARACTER_CLASS | Pattern.CASE_INSENSITIVE);
 
   // Match a family-shaped prefix (capitalised word ending in -aceae / -idae / -inae /
   // -oideae, or any capitalised word ≥4 chars), optional space, then a recognised

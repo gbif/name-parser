@@ -900,7 +900,6 @@ public class NameParserImplTest {
             .nothingElse();
   }
 
-  @Ignore("complex botanical infrageneric handling — defer to next round")
   @Test
   public void infraGeneric() throws Exception {
     // default to botanical ranks for sections

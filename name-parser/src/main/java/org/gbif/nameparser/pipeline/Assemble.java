@@ -51,6 +51,20 @@ public final class Assemble {
       n.setCombinationAuthorship(null);
       n.setBasionymAuthorship(null);
     }
+    // Monomial whose rank is strictly infrageneric (SUBGENUS, SECTION_BOTANY, …) →
+    // move the uninomial into infragenericEpithet. Triggers both for caller-supplied
+    // ranks ("Polygonum" + SUBGENUS) and for a leading rank marker stripped by
+    // StripAndStash ("subgen. Trematostoma" → rank=SUBGENUS, uninomial=Trematostoma).
+    {
+      Rank r = requested != null && requested.isInfragenericStrictly() ? requested : n.getRank();
+      if (r != null && r.isInfragenericStrictly()
+          && n.getUninomial() != null && n.getGenus() == null
+          && n.getInfragenericEpithet() == null) {
+        n.setInfragenericEpithet(n.getUninomial());
+        n.setUninomial(null);
+        n.setRank(r);
+      }
+    }
     // Binomial (or richer) + caller-supplied higher-rank → keep the parsed structure
     // but pin the rank to what the caller asked, flag the mismatch as informal +
     // doubtful with a RANK_MISMATCH warning ("Polygonum alba" + GENUS).

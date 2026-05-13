@@ -15,6 +15,10 @@ public final class AuthorshipSplit {
   private AuthorshipSplit() {}
 
   public static int findBoundary(List<Token> tokens) {
+    return findBoundary(tokens, null);
+  }
+
+  public static int findBoundary(List<Token> tokens, ParseContext ctx) {
     final int n = tokens.size();
     if (n == 0) return 0;
 
@@ -24,6 +28,7 @@ public final class AuthorshipSplit {
     boolean afterSubgenus = false;
     boolean haveEpithet = false;
     boolean genusAllCaps = false;
+    boolean genusFamilyShape = false;
 
     while (i < n) {
       Token t = tokens.get(i);
@@ -46,6 +51,7 @@ public final class AuthorshipSplit {
             nameWords++;
             afterGenus = true;
             genusAllCaps = t.text.length() > 1 && isAllUpper(t.text);
+            genusFamilyShape = isFamilyShape(t.text);
             i++;
             // abbreviated genus: single capital letter + dot
             if (t.text.length() == 1 && i < n && tokens.get(i).kind == TokenKind.DOT) {
@@ -186,14 +192,25 @@ public final class AuthorshipSplit {
       }
 
       if (t.kind == TokenKind.OPEN_PAREN) {
-        if (afterGenus && !haveEpithet && !afterSubgenus) {
+        if (afterGenus && !haveEpithet && !afterSubgenus && !genusFamilyShape) {
           int j = i + 1;
           if (j < n && tokens.get(j).kind == TokenKind.WORD && tokens.get(j).startsUpper()) {
             int k = j + 1;
             if (k < n && tokens.get(k).kind == TokenKind.CLOSE_PAREN) {
-              i = k + 1;
-              afterSubgenus = true;
-              continue;
+              // Paren-subgenus interpretation only when more name/author material
+              // follows the close paren, OR the caller explicitly requested an
+              // infrageneric rank. Otherwise "Genus (Word)" alone is a monomial +
+              // basionym citation ("Arrhoges (Antarctohoges)").
+              boolean trailingMaterial = k + 1 < n && tokens.get(k + 1).kind == TokenKind.WORD;
+              boolean rankRequestsInfragen = ctx != null
+                  && ctx.requestedRank != null
+                  && ctx.requestedRank.isInfragenericStrictly();
+              if (trailingMaterial || rankRequestsInfragen) {
+                i = k + 1;
+                afterSubgenus = true;
+                continue;
+              }
+              return i;
             }
           }
         }
@@ -341,6 +358,13 @@ public final class AuthorshipSplit {
       return -1;
     }
     return -1;
+  }
+
+  /** Globally-unambiguous family-shape suffix: a leading word ending in -aceae or
+   * -oideae is always a botanical family-group name (per RankUtils.GLOBAL_SUFFICES). */
+  private static boolean isFamilyShape(String s) {
+    String lower = s.toLowerCase();
+    return lower.endsWith("aceae") || lower.endsWith("oideae");
   }
 
   /** Strain-code-shaped token (mixed letters and digits, no spaces, length ≥ 3). */

@@ -38,7 +38,7 @@ public final class Pipeline {
     }
     ctx.tokens = Tokenizer.tokenize(ctx.working);
 
-    int boundary = AuthorshipSplit.findBoundary(ctx.tokens);
+    int boundary = AuthorshipSplit.findBoundary(ctx.tokens, ctx);
     NameTokens.classify(ctx, boundary);
 
     AuthorshipParser.AuthState authState = null;
