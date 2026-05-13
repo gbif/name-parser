@@ -32,14 +32,14 @@ public class NameFormatter {
     // TODO: show authorship for zoological autonyms?
     // TODO: how can we best remove subsp from zoological names?
     // https://github.com/gbif/portal-feedback/issues/640
-    return buildName(n, true, true, true, true, false, true, false, true, true, false,  false, true, true, true, true, true, false);
+    return buildName(n, true, true, true, true, false, false, false, true, true, false,  false, true, true, true, true, true, false);
   }
-  
+
   /**
    * A full scientific name just as canonicalName, but without any authorship.
    */
   public static String canonicalWithoutAuthorship(ParsedName n) {
-    return buildName(n, true, true, false, true, false, true, false, true, true, false,  false, true, true, true, false, true, false);
+    return buildName(n, true, true, false, true, false, false, false, true, true, false,  false, true, true, true, false, true, false);
   }
   
   /**

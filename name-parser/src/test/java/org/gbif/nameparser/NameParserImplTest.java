@@ -1272,7 +1272,7 @@ public class NameParserImplTest {
   }
 
   @Test
-  @Ignore
+  @Ignore("very odd names - rare and no priority")
   public void oddFungiRanksUnsupported() throws Exception {
     assertName("Capitularia fimbriata ⍺ vulgaris 3 tubaeformis *** carpophora", "Capitularia fimbriata carpophora")
             .infraSpecies("Capitularia", "fimbriata", INFRASPECIFIC_NAME, "carpophora")
