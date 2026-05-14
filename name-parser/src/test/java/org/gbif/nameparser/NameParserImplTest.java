@@ -3351,6 +3351,49 @@ public class NameParserImplTest {
             .nothingElse();
   }
 
+  /**
+   * The four equivalent imprint-year forms from the ICZN Article 22 example:
+   * <a href="https://code.iczn.org/date-of-publication/article-22-citation-of-date/">code.iczn.org/date-of-publication/article-22-citation-of-date</a>.
+   * Anomalopus truncatus carries an imprint year inside the basionym brackets.
+   */
+  @Test
+  public void icznImprint() throws Exception {
+    assertName("Ctenotus alacer Storr, 1970 (\"1969\")", "Ctenotus alacer")
+            .species("Ctenotus", "alacer")
+            .combAuthors("1970", "Storr")
+            .imprintYear("1969")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Ctenotus alacer Storr, 1970 [\"1969\"]", "Ctenotus alacer")
+            .species("Ctenotus", "alacer")
+            .combAuthors("1970", "Storr")
+            .imprintYear("1969")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Ctenotus alacer Storr, 1970 (imprint 1969)", "Ctenotus alacer")
+            .species("Ctenotus", "alacer")
+            .combAuthors("1970", "Storr")
+            .imprintYear("1969")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Ctenotus alacer Storr, 1970 (not 1969)", "Ctenotus alacer")
+            .species("Ctenotus", "alacer")
+            .combAuthors("1970", "Storr")
+            .imprintYear("1969")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Anomalopus truncatus (Peters, 1876 [\"1877\"])", "Anomalopus truncatus")
+            .species("Anomalopus", "truncatus")
+            .basAuthors("1876", "Peters")
+            .imprintYear("1877")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+  }
+
   @Test
   public void lowerCaseNames() throws Exception {
     assertName("abies alba Mill.", "Abies alba")

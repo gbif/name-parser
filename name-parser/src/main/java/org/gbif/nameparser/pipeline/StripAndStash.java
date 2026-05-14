@@ -321,9 +321,10 @@ public final class StripAndStash {
       }
     }
     {
-      // "(imprint YYYY)" — keyword form, always strips.
-      Matcher m1 = Pattern.compile("\\s*\\(\\s*imprint\\s+(\\d{4}(?:[-\\u2013]\\d{4})?)\\s*\\)\\s*\\.?\\s*$",
-              Pattern.CASE_INSENSITIVE).matcher(s);
+      // "(imprint YYYY)" / "(not YYYY)" — explicit ICZN forms (Article 22), always strip.
+      Matcher m1 = Pattern.compile(
+          "\\s*\\(\\s*(?:imprint|not)\\s+(\\d{4}(?:[-\\u2013]\\d{4})?)\\s*\\)\\s*\\.?\\s*$",
+          Pattern.CASE_INSENSITIVE).matcher(s);
       if (m1.find()) {
         ctx.name.setImprintYear(m1.group(1));
         s = s.substring(0, m1.start()).trim();
