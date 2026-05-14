@@ -2103,21 +2103,20 @@ public class NameParserGnaTest {
           .warning(Warnings.YEAR_INTERPRETED);
   }
 
-  @Ignore("not yet passing")
   @Test
   public void yearWithPageNumber() throws Exception {
-      // group: Year with page number
+      // group: Year with page number — ":NN" trailing the year is captured into the
+      // dedicated publishedInPage field (no PARTIAL state).
       assertName("Recilia truncatus Dash & Viraktamath, 1998: 29", "Recilia truncatus")
           .species("Recilia", "truncatus")
           .combAuthors("1998", "Dash", "Viraktamath")
-          .partial(":29");
+          .publishedInPage("29");
       assertName("Recilia truncatus Dash & Viraktamath, 1998:29", "Recilia truncatus")
           .species("Recilia", "truncatus")
           .combAuthors("1998", "Dash", "Viraktamath")
-          .partial(":29");
+          .publishedInPage("29");
   }
 
-  @Ignore("not yet passing")
   @Test
   public void yearInSquareBrackets() throws Exception {
       // group: Year in square brackets - the imprint year is not parsed as a year
