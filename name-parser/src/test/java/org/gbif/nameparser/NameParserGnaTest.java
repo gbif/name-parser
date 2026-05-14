@@ -2119,31 +2119,41 @@ public class NameParserGnaTest {
 
   @Test
   public void yearInSquareBrackets() throws Exception {
-      // group: Year in square brackets - the imprint year is not parsed as a year
+      // group: Year in square brackets — bracketed years are imprint years (the year
+      // printed on the work) and never become the nominal publication year, even when
+      // they are the only year in the input.
       assertName("Anthoscopus Cabanis [1851]", "Anthoscopus")
           .monomial("Anthoscopus")
-          .combAuthors("1851", "Cabanis");
+          .combAuthors(null, "Cabanis")
+          .imprintYear("1851")
+          .nothingElse();
       assertName("Anthoscopus Cabanis [185?]", "Anthoscopus")
           .monomial("Anthoscopus")
-          .combAuthors("185?", "Cabanis");
+          .combAuthors(null, "Cabanis")
+          .imprintYear("185?")
+          .nothingElse();
       assertName("Anthoscopus Cabanis [1851?]", "Anthoscopus")
           .monomial("Anthoscopus")
-          .combAuthors("1851?", "Cabanis");
-      assertName("Anthoscopus Cabanis [1851]", "Anthoscopus")
-          .monomial("Anthoscopus")
-          .combAuthors("1851", "Cabanis");
-      assertName("Anthoscopus Cabanis [1851?]", "Anthoscopus")
-          .monomial("Anthoscopus")
-          .combAuthors("1851?", "Cabanis");
+          .combAuthors(null, "Cabanis")
+          .imprintYear("1851?")
+          .nothingElse();
       assertName("Trismegistia monodii Ando, 1973 [1974]", "Trismegistia monodii")
           .species("Trismegistia", "monodii")
-          .combAuthors("1973", "Ando");
+          .combAuthors("1973", "Ando")
+          .imprintYear("1974")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
       assertName("Zygaena witti Wiegel [1973]", "Zygaena witti")
           .species("Zygaena", "witti")
-          .combAuthors("1973", "Wiegel");
+          .combAuthors(null, "Wiegel")
+          .imprintYear("1973")
+          .nothingElse();
       assertName("Deyeuxia coarctata Kunth, 1815 [1816]", "Deyeuxia coarctata")
           .species("Deyeuxia", "coarctata")
-          .combAuthors("1815", "Kunth");
+          .combAuthors("1815", "Kunth")
+          .imprintYear("1816")
+          .code(NomCode.ZOOLOGICAL)
+          .nothingElse();
   }
 
   @Test

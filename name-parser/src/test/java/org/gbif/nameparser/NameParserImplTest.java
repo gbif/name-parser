@@ -3243,10 +3243,13 @@ public class NameParserImplTest {
 
   @Test
   public void yearVariations() throws Exception {
+    // The bracketed [1912] is the imprint year; the author span has no nominal
+    // publication year, so code can't be inferred from authorship and the trinomial
+    // stays INFRASPECIFIC_NAME.
     assertName("Deudorix epijarbas turbo Fruhstorfer, [1912]", "Deudorix epijarbas turbo")
-            .infraSpecies("Deudorix", "epijarbas", Rank.SUBSPECIES, "turbo")
-            .combAuthors("1912", "Fruhstorfer")
-            .code(NomCode.ZOOLOGICAL)
+            .infraSpecies("Deudorix", "epijarbas", Rank.INFRASPECIFIC_NAME, "turbo")
+            .combAuthors(null, "Fruhstorfer")
+            .imprintYear("1912")
             .nothingElse();
   }
 

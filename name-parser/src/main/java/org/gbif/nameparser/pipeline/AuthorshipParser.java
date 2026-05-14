@@ -152,11 +152,30 @@ public final class AuthorshipParser {
       if (t.kind == TokenKind.NUMBER && t.text.length() >= 3 && t.text.length() <= 4) {
         flush(cur, authors);
         String year = t.text;
+        // Detect a bracketed year: "[YYYY]" / "[YYYY?]". A year inside square brackets
+        // is by convention the imprint year (the year actually printed on the work),
+        // not the nominal publication year — even when it is the only year given.
+        boolean inBrackets = i > from
+            && tokens.get(i - 1).kind == TokenKind.OPEN_BRACKET;
         i++;
         // Uncertain year: a trailing "?" is part of the year ("198?" → year="198?").
         if (i < to && tokens.get(i).kind == TokenKind.OTHER && tokens.get(i).text.equals("?")) {
           year = year + "?";
           i++;
+        }
+        // Confirm we're still inside the brackets (close-bracket follows the year).
+        if (inBrackets) {
+          if (!(i < to && tokens.get(i).kind == TokenKind.CLOSE_BRACKET)) {
+            inBrackets = false;
+          }
+        }
+        if (inBrackets) {
+          // Imprint year always goes to state.imprintYear; never overrides into.year.
+          if (state != null && state.imprintYear == null) {
+            state.imprintYear = year;
+          }
+          i++; // skip CLOSE_BRACKET
+          continue;
         }
         // First year wins — imprint dates ("Linnaeus, 1898, 1897") keep the first
         // (the actual publication year); the second is recorded into state.imprintYear
