@@ -2,9 +2,47 @@
 
 results from a macbook pro M4 Pro with Liberica JDK17 and the shaded jar
 
-## V4
+## V4 (2026-05-14)
 > benchmark --warmup --input=data/benchmark-data.txt
-> Warming up the JIT — parsing the first 100 names without timing…
+
+```
+Parsed names: 8017 (3368 unparsable)
+Total:   265.32 ms
+Average: 33.09 µs
+Min:     917 ns
+p50:     32.21 µs
+p95:     81.63 µs
+Max:     3.16 ms
+
+Breakdown by name type:
+  SCIENTIFIC           4515
+  VIRUS                3233
+  INFORMAL             137
+  OTHER                48
+  FORMULA              42
+  PLACEHOLDER          42
+```
+
+> benchmark --warmup --input=data/col-names.txt
+
+```
+Parsed names: 6259108 (24501 unparsable)
+Total:   180369.95 ms
+Average: 28.82 µs
+Min:     1.42 µs
+p50:     27.50 µs
+p95:     40.25 µs
+Max:     3.29 ms
+
+Breakdown by name type:
+  SCIENTIFIC           6234203
+  VIRUS                21166
+  FORMULA              3327
+  PLACEHOLDER          8
+```
+
+## V4 (earlier — for reference)
+> benchmark --warmup --input=data/benchmark-data.txt
 
 ```
 Parsed names: 8017 (3367 unparsable)
