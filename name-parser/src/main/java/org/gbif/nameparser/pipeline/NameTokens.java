@@ -68,6 +68,21 @@ public final class NameTokens {
         i += 3;
         continue;
       }
+      // Abbreviated subgenus: "(Tin.)" / "(G.)" — Title-cased word + DOT inside parens.
+      // Only fires before any species epithet, otherwise "(Aubl.)" after a species is
+      // a basionym author span and the next block (skipParenAuthorBlock) handles it.
+      if (t.kind == TokenKind.OPEN_PAREN
+          && lowerEpithets.isEmpty() && subgenus == null
+          && i + 3 < boundary
+          && ts.get(i + 1).kind == TokenKind.WORD
+          && ts.get(i + 1).startsUpper()
+          && ts.get(i + 2).kind == TokenKind.DOT
+          && ts.get(i + 3).kind == TokenKind.CLOSE_PAREN) {
+        subgenus = ts.get(i + 1).text + ".";
+        ctx.name.addWarning(Warnings.ABBREVIATED_SUBGENUS);
+        i += 4;
+        continue;
+      }
       // After the species epithet, "(BasionymAuth) CombAuth …" sits between species and
       // an infraspecific rank marker. Skip the parens + comb-author span so the rank
       // marker that follows can be classified normally.
@@ -79,17 +94,27 @@ public final class NameTokens {
           continue;
         }
       }
-      // abbreviated genus: single capital letter then DOT, only when no genus yet
+      // Abbreviated genus: Title-cased word of 1-4 chars then DOT, only when no genus
+      // yet. The single-letter form ("M. alpium") is unambiguous; 2-4 letter forms
+      // ("Mo. alpium", "Phl. guttella", "Pseud. dendrobii") are recognised when the
+      // next non-DOT token is a lowercase epithet (so an authorship-sequence like
+      // "Mo.J.Wong, 1990" doesn't trip).
       if (genus == null
           && t.kind == TokenKind.WORD
-          && t.text.length() == 1
+          && t.text.length() >= 1 && t.text.length() <= 4
           && t.startsUpper()
           && i + 1 < boundary
           && ts.get(i + 1).kind == TokenKind.DOT) {
-        genus = t.text + ".";
-        ctx.name.setType(NameType.INFORMAL);
-        i += 2;
-        continue;
+        boolean nextIsLowerEpithet = i + 2 < boundary
+            && ts.get(i + 2).kind == TokenKind.WORD
+            && ts.get(i + 2).startsLower();
+        if (t.text.length() == 1 || nextIsLowerEpithet) {
+          genus = t.text + ".";
+          ctx.name.setType(NameType.INFORMAL);
+          ctx.name.addWarning(Warnings.ABBREVIATED_GENUS);
+          i += 2;
+          continue;
+        }
       }
       // Missing-genus placeholder: "?" as the genus stand-in. Only at the very start.
       if (genus == null && t.kind == TokenKind.OTHER && t.text.equals("?")) {

@@ -53,9 +53,18 @@ public final class AuthorshipSplit {
             genusAllCaps = t.text.length() > 1 && isAllUpper(t.text);
             genusFamilyShape = isFamilyShape(t.text);
             i++;
-            // abbreviated genus: single capital letter + dot
-            if (t.text.length() == 1 && i < n && tokens.get(i).kind == TokenKind.DOT) {
-              i++;
+            // Abbreviated genus: 1-letter ("M.") always; 2-4 letters ("Mo.", "Phl.")
+            // only when the next non-dot token is a lowercase epithet — so we don't
+            // fold a real binomial like "Mo Bing 1980" into "Mo." + "Bing".
+            if (t.text.length() >= 1 && t.text.length() <= 4
+                && i < n && tokens.get(i).kind == TokenKind.DOT) {
+              boolean shortEnoughForAbbrev = t.text.length() == 1
+                  || (i + 1 < n
+                      && tokens.get(i + 1).kind == TokenKind.WORD
+                      && tokens.get(i + 1).startsLower());
+              if (shortEnoughForAbbrev) {
+                i++;
+              }
             }
             continue;
           }
@@ -196,6 +205,14 @@ public final class AuthorshipSplit {
           int j = i + 1;
           if (j < n && tokens.get(j).kind == TokenKind.WORD && tokens.get(j).startsUpper()) {
             int k = j + 1;
+            // Abbreviated subgenus "(Tin.)" — Title-cased word + DOT + close paren.
+            if (k + 1 < n
+                && tokens.get(k).kind == TokenKind.DOT
+                && tokens.get(k + 1).kind == TokenKind.CLOSE_PAREN) {
+              i = k + 2;
+              afterSubgenus = true;
+              continue;
+            }
             if (k < n && tokens.get(k).kind == TokenKind.CLOSE_PAREN) {
               // Paren-subgenus interpretation only when more name/author material
               // follows the close paren, OR the caller explicitly requested an

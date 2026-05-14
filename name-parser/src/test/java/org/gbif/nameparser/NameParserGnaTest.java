@@ -710,31 +710,41 @@ public class NameParserGnaTest {
           .nothingElse();
   }
 
-  @Ignore("not yet passing")
   @Test
   public void binomialsWithAnAbbreviatedGenus() throws Exception {
-      // group: Binomials with an abbreviated genus
+      // group: Binomials with an abbreviated genus — INFORMAL with ABBREVIATED_GENUS
+      // warning. Year-bearing trinomials → SUBSPECIES via the zoological-trinomial rule.
       assertName("M. alpium", "M. alpium")
-          .species("M.", "alpium");
+          .species("M.", "alpium")
+          .type(NameType.INFORMAL)
+          .warning(Warnings.ABBREVIATED_GENUS);
       assertName("Mo. alpium (Osbeck, 1778)", "Mo. alpium")
           .species("Mo.", "alpium")
-          .basAuthors("1778", "Osbeck");
+          .basAuthors("1778", "Osbeck")
+          .type(NameType.INFORMAL)
+          .code(NomCode.ZOOLOGICAL)
+          .warning(Warnings.ABBREVIATED_GENUS);
   }
 
-  @Ignore("not yet passing")
   @Test
   public void binomialsWithAbbreviatedSubgenus() throws Exception {
-      // group: Binomials with abbreviated subgenus
+      // group: Binomials with abbreviated subgenus — kept as SCIENTIFIC with the
+      // ABBREVIATED_SUBGENUS warning so callers can see the infrageneric epithet is
+      // incomplete.
       assertName("Phalaena (Tin.) guttella Fab.", "Phalaena guttella")
-          .species("Phalaena", "guttella")
-          .combAuthors(null, "Fab.");
+          .species("Phalaena", "Tin.", "guttella")
+          .combAuthors(null, "Fab.")
+          .warning(Warnings.ABBREVIATED_SUBGENUS);
       assertName("Gahrliepia (G.) tessellata Traub & Morrow 1955", "Gahrliepia tessellata")
-          .species("Gahrliepia", "tessellata")
-          .combAuthors("1955", "Traub", "Morrow");
-      // skipped: Bosmina (Eubosmina) coregoni x B. (E.) longispina
+          .species("Gahrliepia", "G.", "tessellata")
+          .combAuthors("1955", "Traub", "Morrow")
+          .code(NomCode.ZOOLOGICAL)
+          .warning(Warnings.ABBREVIATED_SUBGENUS);
       assertName("Simia (Cercop.) nasuus Kerr 1792", "Simia nasuus")
-          .species("Simia", "nasuus")
-          .combAuthors("1792", "Kerr");
+          .species("Simia", "Cercop.", "nasuus")
+          .combAuthors("1792", "Kerr")
+          .code(NomCode.ZOOLOGICAL)
+          .warning(Warnings.ABBREVIATED_SUBGENUS);
   }
 
   @Ignore("not yet passing")

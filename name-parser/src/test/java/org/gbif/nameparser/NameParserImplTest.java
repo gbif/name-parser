@@ -2074,11 +2074,13 @@ public class NameParserImplTest {
     assertName("N. giraldo", "N. giraldo")
             .species("N.", "giraldo")
             .type(INFORMAL)
+            .warning(Warnings.ABBREVIATED_GENUS)
             .nothingElse();
 
     assertName("B.", "B.")
             .monomial("B.")
             .type(INFORMAL)
+            .warning(Warnings.ABBREVIATED_GENUS)
             .nothingElse();
   }
 
