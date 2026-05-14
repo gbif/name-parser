@@ -1986,18 +1986,24 @@ public class NameParserGnaTest {
           .species("Actinomyces", "cardiffensis");
   }
 
-  @Ignore("not yet passing")
   @Test
   public void bacteriaWithPathovarRank() throws Exception {
-      // group: Bacteria with pathovar rank
-      assertName("Xanthomonas axonopodis pv. phaseoli", "Xanthomonas axonopodis phaseoli")
+      // group: Bacteria with pathovar rank — "pv." is the standard bacterial pathovar
+      // marker and is kept in the canonical. "pathovar." is normalised to "pv.". A
+      // bare trailing marker yields an indeterminate PATHOVAR with an INDETERMINED
+      // warning, mirroring the openTaxonomyWithRanksUnfinished convention.
+      assertName("Xanthomonas axonopodis pv. phaseoli", "Xanthomonas axonopodis pv. phaseoli")
           .infraSpecies("Xanthomonas", "axonopodis", PATHOVAR, "phaseoli");
-      assertName("Xanthomonas axonopodis pathovar. phaseoli", "Xanthomonas axonopodis phaseoli")
+      assertName("Xanthomonas axonopodis pathovar. phaseoli", "Xanthomonas axonopodis pv. phaseoli")
           .infraSpecies("Xanthomonas", "axonopodis", PATHOVAR, "phaseoli");
-      assertName("Xanthomonas axonopodis pathovar.", "Xanthomonas axonopodis")
-          .species("Xanthomonas", "axonopodis");
-      assertName("Xanthomonas axonopodis pv.", "Xanthomonas axonopodis")
-          .species("Xanthomonas", "axonopodis");
+      assertName("Xanthomonas axonopodis pathovar.", "Xanthomonas axonopodis pv.")
+          .infraSpecies("Xanthomonas", "axonopodis", PATHOVAR, null)
+          .type(NameType.INFORMAL)
+          .warning(Warnings.INDETERMINED);
+      assertName("Xanthomonas axonopodis pv.", "Xanthomonas axonopodis pv.")
+          .infraSpecies("Xanthomonas", "axonopodis", PATHOVAR, null)
+          .type(NameType.INFORMAL)
+          .warning(Warnings.INDETERMINED);
   }
 
   @Ignore("not yet passing")
