@@ -32,16 +32,16 @@ public class NameFormatter {
     // TODO: show authorship for zoological autonyms?
     // TODO: how can we best remove subsp from zoological names?
     // https://github.com/gbif/portal-feedback/issues/640
-    return buildName(n, true, true, true, true, false, false, false, true, true, false,  false, true, true, true, true, true, false);
+    return buildName(n, true, true, true, true, false, false, false, true, true, false,  false, true, true, true, true, true, true, false);
   }
 
   /**
    * A full scientific name just as canonicalName, but without any authorship.
    */
   public static String canonicalWithoutAuthorship(ParsedName n) {
-    return buildName(n, true, true, false, true, false, false, false, true, true, false,  false, true, true, true, false, true, false);
+    return buildName(n, true, true, false, true, false, false, false, true, true, false,  false, true, true, true, false, true, true, false);
   }
-  
+
   /**
    * A minimal canonical name with nothing else but the 3 main name parts (genus, species, infraspecific).
    * No rank or hybrid markers and no authorship, cultivar or strain information is rendered.
@@ -54,21 +54,21 @@ public class NameFormatter {
    * Bracteata
    */
   public static String canonicalMinimal(ParsedName n) {
-    return buildName(n, false, false, false, false, false, true, true, false, false, false,  false, false, false, false, false, false, false);
+    return buildName(n, false, false, false, false, false, true, true, false, false, false,  false, false, false, false, false, false, false, false);
   }
-  
+
   /**
    * Assembles a full name with all details including non code compliant, informal remarks.
    */
   public static String canonicalComplete(ParsedName n) {
-    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, false);
+    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, true, false);
   }
-  
+
   /**
    * Assembles a full name with all details including non code compliant, informal remarks and html markup.
    */
   public static String canonicalCompleteHtml(ParsedName n) {
-    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, true);
+    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, true, true);
   }
   
   /**
@@ -134,6 +134,9 @@ public class NameFormatter {
    * @param showPhrase           Show phrase
    * @param showVoucher          Show vouching party
    * @param showNominatingParty  Show nominating party
+   * @param showImprintYear      include the imprint year in ICZN bracketed form
+   *                             (e.g. {@code Storr, 1970 [1969]} or, when only the
+   *                             imprint year is known, {@code Cabanis [1851]})
    * @param html                 add html markup
    */
   public static String buildName(ParsedName n,
@@ -153,6 +156,7 @@ public class NameFormatter {
                                  boolean showVoucher,
                                  boolean showNominatingParty,
                                  boolean showStrain,
+                                 boolean showImprintYear,
                                  boolean html
   ) {
     StringBuilder sb = new StringBuilder();
@@ -296,7 +300,11 @@ public class NameFormatter {
     // uninomial, genus, infragen, species or infraspecies authorship
     if (authorship && n.hasAuthorship()) {
       sb.append(" ");
-      appendAuthorship(n, sb, n.getCode());
+      appendAuthorship(n, sb, n.getCode(), showImprintYear);
+    } else if (showImprintYear && n.getImprintYear() != null && !n.hasAuthorship()) {
+      // No authorship but an imprint year exists ("Cabanis [1851]" parsed as
+      // uninomial without comb-author year) — render the bare bracket form.
+      sb.append(" [").append(n.getImprintYear()).append(']');
     }
     
     // add strain name (phrase names get special treatment)
@@ -506,10 +514,22 @@ public class NameFormatter {
   }
   
   private static void appendAuthorship(ParsedAuthorship a, StringBuilder sb, NomCode code) {
+    appendAuthorship(a, sb, code, true);
+  }
+
+  /** Append the authorship, optionally rendering the imprint year (ICZN Article 22). */
+  private static void appendAuthorship(ParsedAuthorship a, StringBuilder sb, NomCode code,
+                                       boolean showImprintYear) {
     final int origLength = sb.length();
+    boolean hasImprint = showImprintYear && a.getImprintYear() != null;
     if (a.hasBasionymAuthorship()) {
       sb.append("(");
       appendAuthorship(sb, a.getBasionymAuthorship(), true, code);
+      // Imprint year belongs to the original publication — when a basionym is present,
+      // render it inside the basionym brackets ("(Peters, 1876 [1877])").
+      if (hasImprint) {
+        sb.append(" [").append(a.getImprintYear()).append(']');
+      }
       sb.append(")");
     }
     if (a.hasCombinationAuthorship()) {
@@ -517,6 +537,11 @@ public class NameFormatter {
         sb.append(" ");
       }
       appendAuthorship(sb, a.getCombinationAuthorship(), true, code);
+      // No basionym → imprint year sits after the combination authorship
+      // ("Storr, 1970 [1969]" or, when there is no nominal year, "Cabanis [1851]").
+      if (hasImprint && !a.hasBasionymAuthorship()) {
+        sb.append(" [").append(a.getImprintYear()).append(']');
+      }
       // Render sanctioning author via colon:
       // http://www.iapt-taxon.org/nomen/main.php?page=r50E
       //TODO: remove rendering of sanctioning author according to Paul Kirk!
