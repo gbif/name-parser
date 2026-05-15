@@ -627,6 +627,25 @@ public final class StripAndStash {
       }
     }
 
+    // "mihi" / "Mihi" — Latin "by me", a self-attribution placeholder used by some
+    // authors. It is not a real authorship and is stripped wherever it appears with
+    // an AUTHORSHIP_REMOVED warning. Common patterns:
+    //   "Genus species mihi"             → strip trailing
+    //   "Genus species mihi. Author …"   → strip middle (between species and author)
+    //   "Genus species mihi var. epithet mihi" → strip both occurrences
+    if (s.matches("(?i).*\\bmihi\\b.*")) {
+      String before = s;
+      s = s.replaceAll("(?i)\\s+mihi\\.?(?=\\s|$)", "").trim();
+      if (!s.equals(before)) {
+        ctx.name.addWarning(Warnings.AUTHORSHIP_REMOVED);
+      }
+    }
+
+    // "Anon."/"Anon"/"anon" — anonymous-author placeholder. Normalise to lowercase
+    // "anon." so the downstream parser captures it as a real (anonymous) authorship.
+    s = s.replaceAll("(?<=\\s)Anon\\b\\.?", "anon.");
+    s = s.replaceAll("(?<=\\s)anon\\b(?!\\.)", "anon.");
+
     // ": <Author>, YYYY" trailing concept reference — botanical taxonomic-concept
     // citation form ("Vespa emarginata Linnaeus, 1758: Fabricius, 1793"). The
     // Linnaeus year is the original publication; Fabricius is the sensu author. The

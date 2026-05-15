@@ -45,6 +45,12 @@ public final class AuthorshipSplit {
         i++;
         continue;
       }
+      // Open-nomenclature doubtful-identification "?" between epithets — like cf./aff.
+      // Skip the marker so the next epithet is included in the name section.
+      if (afterGenus && t.kind == TokenKind.OTHER && t.text.equals("?")) {
+        i++;
+        continue;
+      }
       if (t.kind == TokenKind.WORD) {
         if (nameWords == 0) {
           if (t.startsUpper()) {
@@ -79,6 +85,11 @@ public final class AuthorshipSplit {
         }
         if (t.startsLower()) {
           String w = stripDot(t.text);
+          // "anon" / "anon." — anonymous-author placeholder. Treated as the start of
+          // authorship even though it's lowercase.
+          if (w.equalsIgnoreCase("anon")) {
+            return i;
+          }
           // cf./aff. qualifiers and indet markers — keep walking
           if (w.equalsIgnoreCase("cf") || w.equalsIgnoreCase("aff")
               || w.equalsIgnoreCase("sp") || w.equalsIgnoreCase("spec")

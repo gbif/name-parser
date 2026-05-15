@@ -122,6 +122,21 @@ public final class NameTokens {
         i++;
         continue;
       }
+      // Open-nomenclature doubtful-identification marker: "?" between epithets, like
+      // "Ferganoconcha? oblonga" or "Buteo borealis ? ventralis". Treat exactly like
+      // cf./aff.: skip the token, attach the qualifier to the next epithet (specific
+      // when no species yet, infraspecific when one exists), set type=INFORMAL,
+      // doubtful, and emit QUESTION_MARKS_REMOVED.
+      if (genus != null && cfAffQualifier == null
+          && t.kind == TokenKind.OTHER && t.text.equals("?")
+          && lowerEpithets.size() < 2) {
+        cfAffQualifier = "?";
+        ctx.name.setType(NameType.INFORMAL);
+        ctx.name.setDoubtful(true);
+        ctx.name.addWarning(Warnings.QUESTION_MARKS_REMOVED);
+        i++;
+        continue;
+      }
       if (t.kind == TokenKind.WORD) {
         // Mid-name author span (uppercase Author abbreviations followed by a rank
         // marker, or particle-starting authors like "d'Urv. subsp.") — silently
