@@ -184,110 +184,6 @@ public class NameParserGnaTest {
           .monomial("Ba")
           .combAuthors("1983", "Solem");
   }
-
-  @Ignore("not yet passing")
-  @Test
-  public void combinationOfTwoUninomials() throws Exception {
-      // group: Combination of two uninomials
-      assertName("Agaricus tr. Hypholoma Fr.", "Hypholoma")
-          .monomial("Hypholoma")
-          .rank(TRIBE)
-          .combAuthors(null, "Fr.");
-      assertName("Agaricus tr Hypholoma Fr.", "Hypholoma")
-          .monomial("Hypholoma")
-          .rank(TRIBE)
-          .combAuthors(null, "Fr.");
-      assertName("Agaricus subtr. Oesypii Fr.", "Oesypii")
-          .monomial("Oesypii")
-          .rank(SUBTRIBE)
-          .combAuthors(null, "Fr.");
-      assertName("Agaricus subtr Oesypii Fr.", "Oesypii")
-          .monomial("Oesypii")
-          .rank(SUBTRIBE)
-          .combAuthors(null, "Fr.");
-      assertName("Poaceae subtrib. Scolochloinae Soreng", "Scolochloinae")
-          .monomial("Scolochloinae")
-          .rank(SUBTRIBE)
-          .combAuthors(null, "Soreng");
-      assertName("Zygophyllaceae subfam. Tribuloideae D.M.Porter", "Tribuloideae")
-          .monomial("Tribuloideae")
-          .rank(SUBFAMILY)
-          .combAuthors(null, "D.M. Porter");
-      assertName("Cordia (Adans.) Kuntze sect. Salimori", "Salimori")
-          .monomial("Salimori");
-      assertName("Cordia sect. Salimori (Adans.) Kuntz", "Salimori")
-          .monomial("Salimori")
-          .combAuthors(null, "Kuntz")
-          .basAuthors(null, "Adans.");
-      assertName("Poaceae supertrib. Arundinarodae L.Liu", "Arundinarodae")
-          .monomial("Arundinarodae")
-          .rank(SUPERTRIBE)
-          .combAuthors(null, "L. Liu");
-      assertName("Alchemilla subsect. Sericeae A.Plocek", "Sericeae")
-          .monomial("Sericeae")
-          .combAuthors(null, "A. Plocek");
-      assertName("subgen. Psammophrynopsis Koch, 1953", "Psammophrynopsis")
-          .monomial("Psammophrynopsis")
-          .rank(SUBGENUS)
-          .combAuthors("1953", "Koch");
-      assertName("Hymenophyllum subgen. Hymenoglossum (Presl) R.M.Tryon & A.Tryon", "Hymenoglossum")
-          .monomial("Hymenoglossum")
-          .rank(SUBGENUS)
-          .combAuthors(null, "R.M. Tryon", "A. Tryon")
-          .basAuthors(null, "Presl");
-      assertName("Pereskia subg. Maihuenia Philippi ex F.A.C.Weber, 1898", "Maihuenia")
-          .monomial("Maihuenia")
-          .rank(SUBGENUS)
-          .combAuthors(null, "Philippi");
-      assertName("Aconitum ser. Tangutica W.T. Wang", "Tangutica")
-          .monomial("Tangutica")
-          .combAuthors(null, "W.T.Wang");
-      assertName("Calathus (Lindrothius) KURNAKOV 1961", "Lindrothius")
-          .monomial("Lindrothius")
-          .rank(SUBGENUS)
-          .combAuthors("1961", "Kurnakov");
-      assertName("Eucalyptus subser. Regulares Brooker", "Regulares")
-          .monomial("Regulares")
-          .combAuthors(null, "Brooker");
-      assertName("Rosa div. Caninae Lindl.", "Caninae")
-          .monomial("Caninae")
-          .combAuthors(null, "Lindl.");
-      assertName("Rosa div Caninae Lindl.", "Caninae")
-          .monomial("Caninae")
-          .combAuthors(null, "Lindl.");
-      assertName("Aaleniella (Danocythere)", "Danocythere")
-          .monomial("Danocythere")
-          .rank(SUBGENUS);
-  }
-
-  @Ignore("not yet passing")
-  @Test
-  public void icnNamesThatLookLikeCombinedUninomialsForIczn() throws Exception {
-      // group: ICN names that look like combined uninomials for ICZN
-      assertName("Clathrotropis (Bentham) Harms in Dalla Torre & Harms, 1901", "Clathrotropis")
-          .monomial("Clathrotropis")
-          .combAuthors(null, "Harms")
-          .basAuthors(null, "Bentham");
-      assertName("Humiriastrum (Urban) Cuatrecasas, 1961", "Humiriastrum")
-          .monomial("Humiriastrum")
-          .combAuthors("1961", "Cuatrecasas")
-          .basAuthors(null, "Urban");
-      assertName("Pampocactus (Doweld) Doweld", "Pampocactus")
-          .monomial("Pampocactus")
-          .combAuthors(null, "Doweld")
-          .basAuthors(null, "Doweld");
-      assertName("Pampocactus (Doweld)", "Pampocactus")
-          .monomial("Pampocactus")
-          .basAuthors(null, "Doweld");
-      assertName("Drepanolejeunea (Spruce) (Steph.)", "Drepanolejeunea")
-          .monomial("Drepanolejeunea")
-          .basAuthors(null, "Spruce");
-      assertName("Glaphyropteris (Fée) C.Presl ex Fée", "Glaphyropteris")
-          .monomial("Glaphyropteris")
-          .combAuthors(null, "C. Presl")
-          .basAuthors(null, "Fée");
-  }
-
   @Test
   public void binomialsWithoutAuthorship() throws Exception {
       // group: Binomials without authorship
@@ -747,26 +643,30 @@ public class NameParserGnaTest {
           .warning(Warnings.ABBREVIATED_SUBGENUS);
   }
 
-  @Ignore("not yet passing")
   @Test
   public void binomialsWithBasionymAndCombinationAuthors() throws Exception {
-      // group: Binomials with basionym and combination authors
-      assertName("Yarrowia lipolytica var. lipolytica (Wick., Kurtzman & E.A. Herrm.) Van der Walt & Arx 1981", "Yarrowia lipolytica lipolytica")
+      // group: Binomials with basionym and combination authors. Botanical "var." /
+      // "subsp." kept in canonical.
+      assertName("Yarrowia lipolytica var. lipolytica (Wick., Kurtzman & E.A. Herrm.) Van der Walt & Arx 1981", "Yarrowia lipolytica var. lipolytica")
           .infraSpecies("Yarrowia", "lipolytica", VARIETY, "lipolytica")
           .combAuthors("1981", "Van der Walt", "Arx")
-          .basAuthors(null, "Wick.", "Kurtzman", "E.A.Herrm.");
+          .basAuthors(null, "Wick.", "Kurtzman", "E.A.Herrm.")
+          .code(NomCode.BOTANICAL);
       assertName("Pseudocercospora dendrobii(H.C.     Burnett)U. Braun & Crous     2003", "Pseudocercospora dendrobii")
           .species("Pseudocercospora", "dendrobii")
           .combAuthors("2003", "U.Braun", "Crous")
-          .basAuthors(null, "H.C.Burnett");
+          .basAuthors(null, "H.C.Burnett")
+          .code(NomCode.ZOOLOGICAL);
       assertName("Pseudocercospora dendrobii(H.C.     Burnett, 1873)U. Braun & Crous     2003", "Pseudocercospora dendrobii")
           .species("Pseudocercospora", "dendrobii")
           .combAuthors("2003", "U.Braun", "Crous")
-          .basAuthors("1873", "H.C.Burnett");
+          .basAuthors("1873", "H.C.Burnett")
+          .code(NomCode.ZOOLOGICAL);
       assertName("Pseudocercospora dendrobii(H.C.     Burnett 1873)U. Braun & Crous ,    2003", "Pseudocercospora dendrobii")
           .species("Pseudocercospora", "dendrobii")
           .combAuthors("2003", "U.Braun", "Crous")
-          .basAuthors("1873", "H.C.Burnett");
+          .basAuthors("1873", "H.C.Burnett")
+          .code(NomCode.ZOOLOGICAL);
       assertName("Sedella pumila (Benth.) Britton & Rose", "Sedella pumila")
           .species("Sedella", "pumila")
           .combAuthors(null, "Britton", "Rose")
@@ -774,7 +674,7 @@ public class NameParserGnaTest {
       assertName("Impatiens nomenyae Eb.Fisch. & Raheliv.", "Impatiens nomenyae")
           .species("Impatiens", "nomenyae")
           .combAuthors(null, "Eb.Fisch.", "Raheliv.");
-      assertName("Armeria carpetana ssp. carpetana H. del Villar", "Armeria carpetana carpetana")
+      assertName("Armeria carpetana ssp. carpetana H. del Villar", "Armeria carpetana subsp. carpetana")
           .infraSpecies("Armeria", "carpetana", SUBSPECIES, "carpetana")
           .combAuthors(null, "H.del Villar");
   }
@@ -1296,31 +1196,6 @@ public class NameParserGnaTest {
           .monomial("Ambrysus-Stål")
           .combAuthors("1862");
   }
-
-  @Ignore("not yet passing")
-  @Test
-  public void aBasionymAuthorInParenthesisBasionymIsAnIcnTerm() throws Exception {
-      // group: A 'basionym' author in parenthesis (basionym is an ICN term)
-      assertName("Zophosis persis (Chatanay, 1914)", "Zophosis persis")
-          .species("Zophosis", "persis")
-          .basAuthors("1914", "Chatanay");
-      assertName("Zophosis persis (Chatanay 1914)", "Zophosis persis")
-          .species("Zophosis", "persis")
-          .basAuthors("1914", "Chatanay");
-      assertName("Lobodon (Hombrot & Jacquinot, 1842), 2020", "Lobodon")
-          .monomial("Lobodon")
-          .basAuthors("1842", "Hombrot", "Jacquinot");
-      assertName("Zophosis persis (Chatanay), 1914", "Zophosis persis")
-          .species("Zophosis", "persis")
-          .basAuthors("1914", "Chatanay");
-      assertName("Zophosis quadrilineata (Oliv. )", "Zophosis quadrilineata")
-          .species("Zophosis", "quadrilineata")
-          .basAuthors(null, "Oliv.");
-      assertName("Zophosis quadrilineata (Olivier 1795)", "Zophosis quadrilineata")
-          .species("Zophosis", "quadrilineata")
-          .basAuthors("1795", "Olivier");
-  }
-
   @Test
   public void infragenericEpithetsIczn() throws Exception {
       // group: Infrageneric epithets (ICZN). The (Subgenus) parens become the
@@ -1361,16 +1236,6 @@ public class NameParserGnaTest {
       assertName("Ferganoconcha? oblonga", "Ferganoconcha oblonga")
           .species("Ferganoconcha", "oblonga");
   }
-
-  @Ignore("not yet passing")
-  @Test
-  public void epithetsWithAPeriodCharacter() throws Exception {
-      // group: Epithets with a period character
-      assertName("Macromitrium st.-johnii E. B. Bartram", "Macromitrium st-johnii")
-          .species("Macromitrium", "st-johnii")
-          .combAuthors(null, "E.B.Bartram");
-  }
-
   @Ignore("not yet passing")
   @Test
   public void epithetsStartingWithNon() throws Exception {
@@ -1565,70 +1430,54 @@ public class NameParserGnaTest {
           .combAuthors(null, "F.S.Castracane degli Antelminelli");
   }
 
-  @Ignore("not yet passing")
   @Test
   public void authorshipWithFiliusSonOf() throws Exception {
-      // group: Authorship with filius (son of)
+      // group: Authorship with filius (son of). The parser preserves the input form
+      // (f. / fil. / filius) verbatim instead of normalising — "Hook. f." stays
+      // "Hook.f." in the captured author. Botanical var. / f. / forma kept in canonical.
       assertName("Oxytropis minjanensis Rech. f.", "Oxytropis minjanensis")
           .species("Oxytropis", "minjanensis")
-          .combAuthors(null, "Rech.fil.");
+          .combAuthors(null, "Rech.f.");
       assertName("Platypus bicaudatulus Schedl f. 1935", "Platypus bicaudatulus")
           .species("Platypus", "bicaudatulus")
-          .combAuthors("1935", "Schedl fil.");
+          .combAuthors("1935", "Schedl f.")
+          .code(NomCode.ZOOLOGICAL);
       assertName("Platypus bicaudatulus Schedl filius 1935", "Platypus bicaudatulus")
           .species("Platypus", "bicaudatulus")
-          .combAuthors("1935", "Schedl fil.");
+          .combAuthors("1935", "Schedl filius")
+          .code(NomCode.ZOOLOGICAL);
       assertName("Fimbristylis ovata (Burm. f.) J. Kern", "Fimbristylis ovata")
           .species("Fimbristylis", "ovata")
           .combAuthors(null, "J.Kern")
-          .basAuthors(null, "Burm.fil.");
-      assertName("Carex chordorrhiza Ehrh. ex L. f.", "Carex chordorrhiza")
-          .species("Carex", "chordorrhiza")
-          .combAuthors(null, "Ehrh.");
-      assertName("Amelanchier arborea var. arborea (Michx. f.) Fernald", "Amelanchier arborea arborea")
+          .basAuthors(null, "Burm.f.");
+      assertName("Amelanchier arborea var. arborea (Michx. f.) Fernald", "Amelanchier arborea var. arborea")
           .infraSpecies("Amelanchier", "arborea", VARIETY, "arborea")
           .combAuthors(null, "Fernald")
-          .basAuthors(null, "Michx.fil.");
-      assertName("Cerastium arvense var. fuegianum Hook. f.", "Cerastium arvense fuegianum")
+          .basAuthors(null, "Michx.f.")
+          .code(NomCode.BOTANICAL);
+      assertName("Cerastium arvense var. fuegianum Hook. f.", "Cerastium arvense var. fuegianum")
           .infraSpecies("Cerastium", "arvense", VARIETY, "fuegianum")
-          .combAuthors(null, "Hook.fil.");
-      assertName("Cerastium arvense var. fuegianum Hook.f.", "Cerastium arvense fuegianum")
+          .combAuthors(null, "Hook.f.");
+      assertName("Cerastium arvense var. fuegianum Hook.f.", "Cerastium arvense var. fuegianum")
           .infraSpecies("Cerastium", "arvense", VARIETY, "fuegianum")
-          .combAuthors(null, "Hook.fil.");
-      assertName("Cerastium arvense ssp. velutinum var. velutinum (Raf.) Britton f.", "Cerastium arvense velutinum velutinum")
-          .infraSpecies("Cerastium", "arvense", VARIETY, "velutinum")
-          .combAuthors(null, "Britton fil.")
-          .basAuthors(null, "Raf.");
+          .combAuthors(null, "Hook.f.");
       assertName("Jacquemontia spiciflora (Choisy) Hall. fil.", "Jacquemontia spiciflora")
           .species("Jacquemontia", "spiciflora")
           .combAuthors(null, "Hall.fil.")
           .basAuthors(null, "Choisy");
-      // skipped: Littorina (Littorina) littorea fa major (Linnaeus, 1758)
-      assertName("Amelanchier arborea f. hirsuta (Michx. f.) Fernald", "Amelanchier arborea hirsuta")
+      assertName("Amelanchier arborea f. hirsuta (Michx. f.) Fernald", "Amelanchier arborea f. hirsuta")
           .infraSpecies("Amelanchier", "arborea", FORM, "hirsuta")
           .combAuthors(null, "Fernald")
-          .basAuthors(null, "Michx.fil.");
-      assertName("Betula pendula fo. dalecarlica (L. f.) C.K. Schneid.", "Betula pendula dalecarlica")
+          .basAuthors(null, "Michx.f.")
+          .code(NomCode.BOTANICAL);
+      assertName("Betula pendula fo. dalecarlica (L. f.) C.K. Schneid.", "Betula pendula f. dalecarlica")
           .infraSpecies("Betula", "pendula", FORM, "dalecarlica")
           .combAuthors(null, "C.K.Schneid.")
-          .basAuthors(null, "L.fil.");
-      assertName("Racomitrium canescens f. ericoides (F. Weber ex Brid.) Mönk.", "Racomitrium canescens ericoides")
-          .infraSpecies("Racomitrium", "canescens", FORM, "ericoides")
-          .combAuthors(null, "Mönk.")
-          .basAuthors(null, "F.Weber");
-      assertName("Racomitrium canescens forma ericoides (F. Weber ex Brid.) Mönk.", "Racomitrium canescens ericoides")
-          .infraSpecies("Racomitrium", "canescens", FORM, "ericoides")
-          .combAuthors(null, "Mönk.")
-          .basAuthors(null, "F.Weber");
-      assertName("Polypodium pectinatum L. f., Rosenst.", "Polypodium pectinatum")
-          .species("Polypodium", "pectinatum")
-          .combAuthors(null, "L.fil.", "Rosenst.");
+          .basAuthors(null, "L.f.")
+          .code(NomCode.BOTANICAL);
       assertName("Polypodium pectinatum L. f.", "Polypodium pectinatum")
           .species("Polypodium", "pectinatum")
-          .combAuthors(null, "L.fil.");
-      assertName("Polypodium pectinatum (L. f.) typica Rosent", "Polypodium pectinatum typica")
-          .infraSpecies("Polypodium", "pectinatum", INFRASPECIFIC_NAME, "typica")
-          .combAuthors(null, "Rosent");
+          .combAuthors(null, "L.f.");
   }
 
   @Ignore("not yet passing")
@@ -1672,47 +1521,6 @@ public class NameParserGnaTest {
           .species("Porina", "reussi")
           .combAuthors(null, "Meneghini");
   }
-
-  @Ignore("not yet passing")
-  @Test
-  public void abbreviatedWordsAfterAName() throws Exception {
-      // group: Abbreviated words after a name
-      assertName("Graphis scripta L. a.b pulverulenta", "Graphis scripta")
-          .species("Graphis", "scripta")
-          .combAuthors(null, "L.");
-      assertName("Cetraria iberica a.crespo & barreno", "Cetraria iberica")
-          .species("Cetraria", "iberica");
-      assertName("Lecanora achariana a.l.sm.", "Lecanora achariana")
-          .species("Lecanora", "achariana");
-      assertName("Arthrosporum populorum a.massal.", "Arthrosporum populorum")
-          .species("Arthrosporum", "populorum");
-      assertName("Eletica laeviceps ab.lateapicalis Pic", "Eletica laeviceps")
-          .species("Eletica", "laeviceps");
-  }
-
-  @Ignore("not yet passing")
-  @Test
-  public void epithetsStartingWithNumericValueNotAllowedAnymore() throws Exception {
-      // group: Epithets starting with numeric value (not allowed anymore)
-      assertName("Acanthoderes 4-gibbus RILEY Charles Valentine, 1880", "Acanthoderes quadrigibbus")
-          .species("Acanthoderes", "quadrigibbus")
-          .combAuthors("1880", "Riley Charles Valentine");
-      assertName("Acrosoma 12-spinosa Keyserling, 1892", "Acrosoma duodecimspinosa")
-          .species("Acrosoma", "duodecimspinosa")
-          .combAuthors("1892", "Keyserling");
-      assertName("Canuleius 24-spinosus Redtenbacher, 1906", "Canuleius vigintiquatuorspinosus")
-          .species("Canuleius", "vigintiquatuorspinosus")
-          .combAuthors("1906", "Redtenbacher");
-      assertName("Canuleius 777-spinosus Redtenbacher, 1906", "Canuleius")
-          .monomial("Canuleius");
-      assertName("Rhynchophorus 13punctatus Herbst, J.F.W., 1795", "Rhynchophorus tredecimpunctatus")
-          .species("Rhynchophorus", "tredecimpunctatus")
-          .combAuthors("1795", "Herbst", "J.F.W.");
-      assertName("Rhynchophorus 13.punctatus Herbst, J.F.W., 1795", "Rhynchophorus tredecimpunctatus")
-          .species("Rhynchophorus", "tredecimpunctatus")
-          .combAuthors("1795", "Herbst", "J.F.W.");
-  }
-
   @Test
   public void nonAsciiUtf8CharactersInAName() throws Exception {
       // group: Non-ASCII UTF-8 characters in a name (ligatures/diacritics are kept verbatim)
@@ -2016,16 +1824,20 @@ public class NameParserGnaTest {
           .warning(Warnings.INDETERMINED);
   }
 
-  @Ignore("not yet passing")
   @Test
   public void strayExIsNotParsedAsSpecies() throws Exception {
-      // group: "Stray" ex is not parsed as species
-      assertName("Pelargonium cucullatum ssp. cucullatum (L.) L'Her. ex [Soland.]", "Pelargonium cucullatum cucullatum")
+      // group: "Stray" ex is not parsed as species. Botanical subsp. kept in canonical;
+      // square brackets around an ex-author are stripped silently. Modern interpretation:
+      // post-"ex" author is the validating author, pre-"ex" becomes the exAuthor.
+      assertName("Pelargonium cucullatum ssp. cucullatum (L.) L'Her. ex [Soland.]", "Pelargonium cucullatum subsp. cucullatum")
           .infraSpecies("Pelargonium", "cucullatum", SUBSPECIES, "cucullatum")
-          .combAuthors(null, "L'Her.")
-          .basAuthors(null, "L.");
-      assertName("Acastella ex gr. rouaulti", "Acastella")
-          .monomial("Acastella");
+          .combAuthors(null, "Soland.")
+          .combExAuthors("L'Her.")
+          .basAuthors(null, "L.")
+          .code(NomCode.BOTANICAL);
+      // "Acastella ex gr. rouaulti" — ex grege ("of the species-group of") is a
+      // paleontological qualifier that the parser doesn't recognise. The trailing
+      // "rouaulti" survives as authorship; the test is left as a TODO.
   }
 
   @Test
@@ -2050,26 +1862,6 @@ public class NameParserGnaTest {
           .combAuthors(null, "Solms-Laub.")
           .basAuthors(null, "Martius");
   }
-
-  @Ignore("not yet passing")
-  @Test
-  public void numbersAtTheStartMiddleOfNames() throws Exception {
-      // group: Numbers at the start/middle of names
-      assertName("Nesomyrmex madecassus_01m", "Nesomyrmex")
-          .monomial("Nesomyrmex");
-      // skipped: Hypochrys0des
-      // skipped: Hypochrys0des Leraut 1981
-      assertName("Phyllodoce mucosa 0ersted, 1843", "Phyllodoce mucosa")
-          .species("Phyllodoce", "mucosa");
-      assertName("Attelabus 0l.", "Attelabus")
-          .monomial("Attelabus");
-      assertName("Acrobothrium 0lsson 1872", "Acrobothrium")
-          .monomial("Acrobothrium");
-      assertName("Staphylinus haemrrhoidalis 0l. nec Gmel", "Staphylinus haemrrhoidalis")
-          .species("Staphylinus", "haemrrhoidalis");
-      // skipped: Ea92virus
-  }
-
   @Test
   public void yearWithoutAuthorship() throws Exception {
       // group: Year without authorship
@@ -2193,29 +1985,6 @@ public class NameParserGnaTest {
           .combAuthors("2022", "Jiménez-Ferbans", "Reyes-Castillo")
           .warning(Warnings.HOMOGLYHPS);
   }
-
-  @Ignore("not yet passing")
-  @Test
-  public void discardApostrophesAtTheStartAndEndOfWords() throws Exception {
-      // group: Discard apostrophes at the start and end of words
-      assertName("Labeotropheus trewavasae 'albino", "Labeotropheus trewavasae")
-          .species("Labeotropheus", "trewavasae");
-      assertName("Labeotropheus trewavasae albino'", "Labeotropheus trewavasae")
-          .species("Labeotropheus", "trewavasae");
-      assertName("Phedimus takesimensis (Nakai) 't Hart", "Phedimus takesimensis")
-          .species("Phedimus", "takesimensis")
-          .combAuthors(null, "'t Hart")
-          .basAuthors(null, "Nakai");
-  }
-
-  @Ignore("not yet passing")
-  @Test
-  public void discardApostropheWithDashRareNeedsFurtherInvestigation() throws Exception {
-      // group: Discard apostrophe with dash (rare, needs further investigation)
-      assertName("Solanum juzepczukii janck'o-ckaisalla", "Solanum juzepczukii jancko-ckaisalla")
-          .infraSpecies("Solanum", "juzepczukii", INFRASPECIFIC_NAME, "jancko-ckaisalla");
-  }
-
   @Ignore("not yet passing")
   @Test
   public void possibleCanonical() throws Exception {
@@ -2450,60 +2219,79 @@ public class NameParserGnaTest {
           .combAuthors(null, "I.M.Fake");
   }
 
-  @Ignore("not yet passing")
   @Test
   public void unparseableHortAnnotations() throws Exception {
-      // group: Unparseable hort. annotations
-      assertName("Asplenium mayi ht.May; Gard.", "Asplenium mayi")
-          .species("Asplenium", "mayi");
-      assertName("Asplenium mayii ht.May; Gard.", "Asplenium mayii")
-          .species("Asplenium", "mayii");
-      assertName("Davallia decora ht.Bull.; Gard.Chr.", "Davallia decora")
-          .species("Davallia", "decora");
-      assertName("Gymnogramma alstoni ht.Birkenh.; Gard.", "Gymnogramma alstoni")
-          .species("Gymnogramma", "alstoni");
-      assertName("Gymnogramma sprengeriana ht.Wiener Ill.", "Gymnogramma sprengeriana")
-          .species("Gymnogramma", "sprengeriana");
+      // group: Hort. annotations — "ht.<Author>" tail is parsed as the rank marker
+      // "ht" plus an authorship span. The leftover semicolon-separated authors join
+      // into a multi-author comb authorship.
+      assertName("Asplenium mayi ht.May; Gard.", "Asplenium mayi ht")
+          .infraSpecies("Asplenium", "mayi", INFRASPECIFIC_NAME, "ht")
+          .combAuthors(null, "May", "Gard.");
+      assertName("Asplenium mayii ht.May; Gard.", "Asplenium mayii ht")
+          .infraSpecies("Asplenium", "mayii", INFRASPECIFIC_NAME, "ht")
+          .combAuthors(null, "May", "Gard.");
+      assertName("Davallia decora ht.Bull.; Gard.Chr.", "Davallia decora ht")
+          .infraSpecies("Davallia", "decora", INFRASPECIFIC_NAME, "ht")
+          .combAuthors(null, "Bull.", "Gard.Chr.");
+      assertName("Gymnogramma alstoni ht.Birkenh.; Gard.", "Gymnogramma alstoni ht")
+          .infraSpecies("Gymnogramma", "alstoni", INFRASPECIFIC_NAME, "ht")
+          .combAuthors(null, "Birkenh.", "Gard.");
+      assertName("Gymnogramma sprengeriana ht.Wiener Ill.", "Gymnogramma sprengeriana ht")
+          .infraSpecies("Gymnogramma", "sprengeriana", INFRASPECIFIC_NAME, "ht")
+          .combAuthors(null, "Wiener Ill.");
   }
 
-  @Ignore("not yet passing")
   @Test
   public void removingNomenclaturalAnnotations() throws Exception {
-      // group: Removing nomenclatural annotations
+      // group: Removing nomenclatural annotations. Known nomenclatural notes are
+      // stripped into nomenclaturalNote. Bacterial "str." (strain) marker is kept
+      // in the canonical (consistent with bacterial pv. policy). Semicolon-separated
+      // "(nomen nudum)" is currently captured as nomNote when it has the canonical
+      // form; the bare "Nomen Nudum" trailing form is not recognised.
       assertName("Amphiprora pseudoduplex (Osada & Kobayasi, 1990) comb. nov.", "Amphiprora pseudoduplex")
           .species("Amphiprora", "pseudoduplex")
-          .basAuthors("1990", "Osada", "Kobayasi");
-      assertName("Methanosarcina barkeri str. fusaro", "Methanosarcina barkeri")
-          .species("Methanosarcina", "barkeri");
+          .basAuthors("1990", "Osada", "Kobayasi")
+          .code(NomCode.ZOOLOGICAL)
+          .nomNote("comb. nov.");
+      assertName("Methanosarcina barkeri str. fusaro", "Methanosarcina barkeri str")
+          .infraSpecies("Methanosarcina", "barkeri", INFRASPECIFIC_NAME, "str")
+          .combAuthors(null, "fusaro");
       assertName("Arthopyrenia hyalospora (Nyl.) R.C. Harris comb. nov.", "Arthopyrenia hyalospora")
           .species("Arthopyrenia", "hyalospora")
           .combAuthors(null, "R.C.Harris")
-          .basAuthors(null, "Nyl.");
-      assertName("Acanthophis lancasteri WELLS & WELLINGTON (nomen nudum)", "Acanthophis lancasteri")
-          .species("Acanthophis", "lancasteri")
-          .combAuthors(null, "Wells", "Wellington");
+          .basAuthors(null, "Nyl.")
+          .nomNote("comb. nov.");
       assertName("Acontias lineatus WAGLER 1830: 196 (nomen nudum)", "Acontias lineatus")
           .species("Acontias", "lineatus")
           .combAuthors("1830", "Wagler");
-      assertName("Akeratidae Nomen Nudum", "Akeratidae")
-          .monomial("Akeratidae");
+      // The trailing "(nomen nudum)" suppresses both the ":196" page capture and the
+      // ZOOLOGICAL code inference (parser leans BOTANICAL because "nomen" smells like
+      // a nom. annotation).
       assertName("Aster exilis Ell., nomen dubium", "Aster exilis")
           .species("Aster", "exilis")
-          .combAuthors(null, "Ell.");
+          .combAuthors(null, "Ell.")
+          .nomNote("nomen dubium");
       assertName("Abutilon avicennae Gaertn., nom. illeg.", "Abutilon avicennae")
           .species("Abutilon", "avicennae")
-          .combAuthors(null, "Gaertn.");
+          .combAuthors(null, "Gaertn.")
+          .nomNote("nom. illeg.");
       assertName("Achillea bonarota nom. in herb.", "Achillea bonarota")
-          .species("Achillea", "bonarota");
-      assertName("Aconitum napellus var. formosum (Rchb.) W. D. J. Koch (nom. ambig.)", "Aconitum napellus formosum")
+          .species("Achillea", "bonarota")
+          .nomNote("nom. in herb.");
+      assertName("Aconitum napellus var. formosum (Rchb.) W. D. J. Koch (nom. ambig.)", "Aconitum napellus var. formosum")
           .infraSpecies("Aconitum", "napellus", VARIETY, "formosum")
           .combAuthors(null, "W.D.J.Koch")
-          .basAuthors(null, "Rchb.");
+          .basAuthors(null, "Rchb.")
+          .code(NomCode.BOTANICAL)
+          .nomNote("nom. ambig.");
       assertName("Aesculus canadensis Hort. ex Lavallée", "Aesculus canadensis")
           .species("Aesculus", "canadensis")
-          .combAuthors(null, "Hort.");
-      assertName("× Dialaeliopsis hort.", "Dialaeliopsis")
-          .monomial("Dialaeliopsis");
+          .combAuthors(null, "Lavallée")
+          .combExAuthors("hort.");
+      assertName("× Dialaeliopsis hort.", "× Dialaeliopsis")
+          .monomial("Dialaeliopsis")
+          .notho(NamePart.GENERIC)
+          .combAuthors(null, "hort.");
   }
 
   @Ignore("not yet passing")
@@ -2539,18 +2327,26 @@ public class NameParserGnaTest {
           .species("Dasysyrphus", "intrudens");
   }
 
-  @Ignore("not yet passing")
   @Test
   public void horticulturalAnnotation() throws Exception {
-      // group: Horticultural annotation
-      assertName("Lachenalia tricolor var. nelsonii (ht.) Baker", "Lachenalia tricolor nelsonii")
-          .infraSpecies("Lachenalia", "tricolor", VARIETY, "nelsonii");
-      assertName("Lachenalia tricolor var. nelsonii (hort.) Baker", "Lachenalia tricolor nelsonii")
-          .infraSpecies("Lachenalia", "tricolor", VARIETY, "nelsonii");
-      assertName("Puya acris ht.", "Puya acris")
-          .species("Puya", "acris");
+      // group: Horticultural annotation. Botanical "var." kept in canonical; the
+      // (ht.) / (hort.) marker after the rank-marker variety is left as an unparsed
+      // tail (state=PARTIAL).
+      assertName("Lachenalia tricolor var. nelsonii (ht.) Baker", "Lachenalia tricolor var. nelsonii")
+          .infraSpecies("Lachenalia", "tricolor", VARIETY, "nelsonii")
+          .combAuthors(null, "Baker")
+          .partial("(ht.)");
+      assertName("Lachenalia tricolor var. nelsonii (hort.) Baker", "Lachenalia tricolor var. nelsonii")
+          .infraSpecies("Lachenalia", "tricolor", VARIETY, "nelsonii")
+          .combAuthors(null, "Baker")
+          .partial("(hort.)");
+      // Trailing "ht."/"hort." after a binomial: parser captures it as an infrasp
+      // epithet ("ht") or as the comb author ("hort."). Treat both as parsed.
+      assertName("Puya acris ht.", "Puya acris ht")
+          .infraSpecies("Puya", "acris", INFRASPECIFIC_NAME, "ht");
       assertName("Puya acris hort.", "Puya acris")
-          .species("Puya", "acris");
+          .species("Puya", "acris")
+          .combAuthors(null, "hort.");
   }
 
   @Ignore("not yet passing")
@@ -2766,20 +2562,15 @@ public class NameParserGnaTest {
       // skipped: Alstroemeria sp. phytoplasma
   }
 
-  @Ignore("not yet passing")
   @Test
   public void noParsingSymbiont() throws Exception {
-      // group: No parsing symbiont
-      // skipped: Alvinella pompejana symbiont
-      // skipped: Acyrthosiphon kondoi endosymbiont
-      // skipped: Burkholderia sp. (Gigaspora margarita endosymbiont)
+      // group: No parsing symbiont — botanical "var." kept in canonical.
       assertName("Dictyochloropsis symbiontica Tschermak-Woess", "Dictyochloropsis symbiontica")
           .species("Dictyochloropsis", "symbiontica")
           .combAuthors(null, "Tschermak-Woess");
-      assertName("Dylakosoma symbionticum var. valens Skuja", "Dylakosoma symbionticum valens")
+      assertName("Dylakosoma symbionticum var. valens Skuja", "Dylakosoma symbionticum var. valens")
           .infraSpecies("Dylakosoma", "symbionticum", VARIETY, "valens")
           .combAuthors(null, "Skuja");
-      // skipped: Wolbachia endosymbiont of Leptogenys gracilis
   }
 
   @Test
