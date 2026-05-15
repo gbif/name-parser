@@ -44,8 +44,25 @@ public final class RankMarkers {
     INFRASPECIFIC.put("mut", Rank.MUTATIO);
     INFRASPECIFIC.put("mutatio", Rank.MUTATIO);
     INFRASPECIFIC.put("agamosp", Rank.SPECIES);
+    INFRASPECIFIC.put("agamossp", Rank.SUBSPECIES);
+    INFRASPECIFIC.put("agamovar", Rank.VARIETY);
     INFRASPECIFIC.put("conv", Rank.CONVARIETY);
     INFRASPECIFIC.put("convar", Rank.CONVARIETY);
+    INFRASPECIFIC.put("subspec", Rank.SUBSPECIES);
+    INFRASPECIFIC.put("variety", Rank.VARIETY);
+    INFRASPECIFIC.put("fm", Rank.FORM);
+    INFRASPECIFIC.put("fma", Rank.FORM);
+    INFRASPECIFIC.put("prol", Rank.PROLES);
+    INFRASPECIFIC.put("proles", Rank.PROLES);
+    INFRASPECIFIC.put("ab", Rank.ABERRATION);
+    INFRASPECIFIC.put("aberration", Rank.ABERRATION);
+    INFRASPECIFIC.put("strain", Rank.STRAIN);
+    INFRASPECIFIC.put("str", Rank.STRAIN);
+    // "st." used in some old fungal works as a generic infraspecific marker; map to
+    // INFRASPECIFIC_NAME.
+    INFRASPECIFIC.put("st", Rank.INFRASPECIFIC_NAME);
+    // "*" between two lowercase epithets is an old infraspecific separator.
+    INFRASPECIFIC.put("*", Rank.INFRASPECIFIC_NAME);
 
     // infrageneric
     INFRAGENERIC.put("subg", Rank.SUBGENUS);
