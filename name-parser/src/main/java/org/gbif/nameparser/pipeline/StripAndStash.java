@@ -627,6 +627,18 @@ public final class StripAndStash {
       }
     }
 
+    // ", pro parte" / ", p.p." — botanical/zoological "in part" qualifier on a
+    // taxonomic-concept author. Stripped silently with the doubtful flag.
+    {
+      Matcher pm = Pattern.compile(
+          "\\s*,\\s*(?:pro\\s+parte|p\\.\\s*p\\.[A-Z]?)\\s*$",
+          Pattern.CASE_INSENSITIVE).matcher(s);
+      if (pm.find()) {
+        ctx.name.setDoubtful(true);
+        s = s.substring(0, pm.start()).trim();
+      }
+    }
+
     // "mihi" / "Mihi" — Latin "by me", a self-attribution placeholder used by some
     // authors. It is not a real authorship and is stripped wherever it appears with
     // an AUTHORSHIP_REMOVED warning. Common patterns:
