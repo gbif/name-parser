@@ -90,11 +90,20 @@ public final class RankMarkers {
     return INFRAGENERIC.get(w);
   }
 
-  /** Returns the matched rank, recognising "notho-" prefix variants for infraspecific ranks. */
+  /** Returns the matched rank, recognising "notho-" and short "n"-prefix variants
+   * (e.g. "nvar" == "nothovar") for infraspecific ranks. */
   public static Rank matchInfraspecificAllowNotho(String word, boolean[] notho) {
     String w = word.toLowerCase();
     if (w.startsWith("notho")) {
       Rank r = INFRASPECIFIC.get(w.substring(5));
+      if (r != null) {
+        notho[0] = true;
+        return r;
+      }
+    }
+    // Short "n" prefix used in some literature ("nvar.", "nf.", "nsubsp.").
+    if (w.length() > 1 && w.charAt(0) == 'n') {
+      Rank r = INFRASPECIFIC.get(w.substring(1));
       if (r != null) {
         notho[0] = true;
         return r;

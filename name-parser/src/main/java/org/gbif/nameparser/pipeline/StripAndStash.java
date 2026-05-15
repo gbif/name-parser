@@ -265,10 +265,13 @@ public final class StripAndStash {
     // Strip Greek-like single-letter rank markers (⍺, β, …) and informal "***"
     // markers sitting between two lowercase epithets — these are fungal rank
     // markers and must not be converted to ASCII letters / taken as authorship
-    // by downstream passes.
-    if (s.indexOf('⍺') >= 0 || s.matches(".*\\p{Ll}\\s+[\\u03B1-\\u03C9]\\s+\\p{Ll}.*")
+    // by downstream passes. The greek letter must be followed by a separator (space
+    // or dot) so we don't strip an inline glyph in epithets like "βrigida".
+    // Forms covered: " δ ", " δ. ", ".δ.", ".δ ".
+    if (s.indexOf('⍺') >= 0
+        || s.matches(".*[\\p{Ll}.]\\s*[\\u03B1-\\u03C9\\u237A](?:\\s+|\\.\\s*)\\p{Ll}.*")
         || s.matches(".*\\p{Ll}\\s+\\*+\\s+\\p{Ll}.*")) {
-      s = s.replaceAll("(?<=\\p{Ll})\\s+[\\u03B1-\\u03C9\\u237A]\\s+(?=\\p{Ll})", " ");
+      s = s.replaceAll("([\\p{Ll}.])\\s*[\\u03B1-\\u03C9\\u237A](?:\\s+|\\.\\s*)(?=[\\p{Ll}])", "$1 ");
       s = s.replaceAll("(?<=\\p{Ll})\\s+\\*+\\s+(?=\\p{Ll})", " ");
     }
     // "?" inside a word — transcription artefact for a missing letter ("Istv?nffi").
