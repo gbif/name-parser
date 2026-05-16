@@ -3,16 +3,19 @@
 results from a macbook pro M4 Pro with Liberica JDK17 and the shaded jar
 
 ## V4 (2026-05-16)
+All classic and GNA tests pass now
+More features than dev, still 3-4x faster and no additional threads!
+
 > benchmark --warmup --input=data/benchmark-data.txt
 
 ```
 Parsed names: 8017 (3362 unparsable)
-Total:   300.17 ms
-Average: 37.44 µs
-Min:     1.13 µs
-p50:     39.42 µs
-p95:     92.42 µs
-Max:     3.24 ms
+Total:   298.18 ms
+Average: 37.19 µs
+Min:     917 ns
+p50:     38.50 µs
+p95:     91.33 µs
+Max:     3.13 ms
 
 Breakdown by name type:
   SCIENTIFIC           4515
@@ -27,12 +30,12 @@ Breakdown by name type:
 
 ```
 Parsed names: 6259108 (24402 unparsable)
-Total:   209927.31 ms
-Average: 33.54 µs
-Min:     1.63 µs
-p50:     32.08 µs
-p95:     46.38 µs
-Max:     4.89 ms
+Total:   212829.80 ms
+Average: 34.00 µs
+Min:     1.42 µs
+p50:     32.50 µs
+p95:     47.21 µs
+Max:     5.81 ms
 
 Breakdown by name type:
   SCIENTIFIC           6234255
@@ -42,46 +45,11 @@ Breakdown by name type:
   PLACEHOLDER          8
 ```
 
-## V4 (2026-05-14 — for reference)
-> benchmark --warmup --input=data/benchmark-data.txt
-
-```
-Parsed names: 8017 (3368 unparsable)
-Total:   265.32 ms
-Average: 33.09 µs
-Min:     917 ns
-p50:     32.21 µs
-p95:     81.63 µs
-Max:     3.16 ms
-
-Breakdown by name type:
-  SCIENTIFIC           4515
-  VIRUS                3233
-  INFORMAL             137
-  OTHER                48
-  FORMULA              42
-  PLACEHOLDER          42
-```
-
-> benchmark --warmup --input=data/col-names.txt
-
-```
-Parsed names: 6259108 (24501 unparsable)
-Total:   180369.95 ms
-Average: 28.82 µs
-Min:     1.42 µs
-p50:     27.50 µs
-p95:     40.25 µs
-Max:     3.29 ms
-
-Breakdown by name type:
-  SCIENTIFIC           6234203
-  VIRUS                21166
-  FORMULA              3327
-  PLACEHOLDER          8
-```
 
 ## V4 (earlier — for reference)
+most of classic name parser tests pass. GNA tests largely unsupported still.
++/- on par with dev version.
+
 > benchmark --warmup --input=data/benchmark-data.txt
 
 ```
