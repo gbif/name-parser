@@ -82,7 +82,7 @@ public final class StripAndStash {
 
   // ---- Aggregate markers (suffix forms) ----
   private static final Pattern AGGREGATE = Pattern.compile(
-      "(?:\\s+(?:agg\\.?|aggregate|species\\s+group|group|complex)" +
+      "(?:\\s+(?:agg\\.?|aggregate|species\\s+group|species\\s+complex|group|complex)" +
           "|\\s*-\\s*group|\\s*-\\s*aggregate)\\s*$",
       Pattern.CASE_INSENSITIVE);
 
@@ -365,8 +365,12 @@ public final class StripAndStash {
       ctx.name.addWarning(Warnings.HOMOGLYHPS);
     }
     // Curly apostrophes are normalised silently (no HOMOGLYHPS warning) — they're
-    // common in copy-pasted authorship and don't affect interpretation.
-    s = s.replace('‘', '\'').replace('’', '\'');
+    // common in copy-pasted authorship and don't affect interpretation. Also
+    // normalise acute accent (´) and back-tick (`) when they appear inside an
+    // author surname — frequently typed as substitutes for the apostrophe in
+    // "L'Hèr.", "O'Flannagan" etc.
+    s = s.replace('‘', '\'').replace('’', '\'')
+         .replace('´', '\'').replace('`', '\'');
     // Replace known homoglyphs (Latin look-alikes from other scripts) with their
     // canonical Latin counterpart. Emit a HOMOGLYHPS warning when anything actually
     // changed. Hyphen homoglyphs are intentionally excluded — those are normalised
@@ -408,6 +412,30 @@ public final class StripAndStash {
       if (otuM.find()) {
         ctx.pendingUnparsed = otuM.group(1);
         s = s.substring(0, otuM.start()).trim();
+      }
+    }
+
+    // Bacterial serovar/serotype/strain annotations on a binomial — these are
+    // sub-species level epidemiological designators, not formal taxonomic ranks.
+    // Strip silently so the underlying binomial parses cleanly.
+    //   "Aggregatibacter actinomycetemcomitans serotype d str. SA508"
+    //   "Streptococcus pyogenes (serotype M18)"
+    //   "Actinobacillus pleuropneumoniae serovar 2 strain S1536"
+    //   "Leptospira interrogans serovar Fugis"
+    if (s.matches("(?i).*\\b(?:serotype|serovar)\\b.*")) {
+      // Parenthesised "(serotype X)" / "(serovar X)" suffix
+      Matcher pm = Pattern.compile(
+          "\\s*\\(\\s*(?:serotype|serovar)\\s+[^)]+\\)\\s*\\.?\\s*$",
+          Pattern.CASE_INSENSITIVE).matcher(s);
+      if (pm.find()) {
+        s = s.substring(0, pm.start()).trim();
+      }
+      // Bare " serovar/serotype X [strain/str. Y]" suffix
+      Matcher pm2 = Pattern.compile(
+          "\\s+(?:serotype|serovar)\\s+\\S+(?:\\s+(?:str\\.?|strain)\\s+\\S+)?\\s*\\.?\\s*$",
+          Pattern.CASE_INSENSITIVE).matcher(s);
+      if (pm2.find()) {
+        s = s.substring(0, pm2.start()).trim();
       }
     }
 
@@ -622,12 +650,19 @@ public final class StripAndStash {
     // Stripped silently with an AUTHORSHIP_REMOVED warning so the bare name still parses.
     {
       Matcher pm = Pattern.compile(
-          "\\s+(?:Not\\s+(?:applicable|given|known|recorded)|<[^>]+>)\\s*$",
+          "\\s+(?:Not\\s+(?:applicable|given|known|recorded|found)|<[^>]+>)\\s*$",
           Pattern.CASE_INSENSITIVE).matcher(s);
       if (pm.find()) {
         ctx.name.addWarning(Warnings.AUTHORSHIP_REMOVED);
         s = s.substring(0, pm.start()).trim();
       }
+    }
+
+    // Trailing " species" on a bare uninomial — drop the word and produce a monomial
+    // (no rank, no INFORMAL marker). Only fires when the rest is a single Title-cased
+    // word so we don't mangle real binomials like "Genus species" + author.
+    if (s.matches("^[\\p{Lu}][\\p{Ll}]+\\s+species\\s*\\.?$")) {
+      s = s.replaceFirst("\\s+species\\s*\\.?$", "").trim();
     }
 
     // ", pro parte" / ", p.p." — botanical/zoological "in part" qualifier on a

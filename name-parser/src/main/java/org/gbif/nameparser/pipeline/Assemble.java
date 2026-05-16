@@ -19,7 +19,7 @@ public final class Assemble {
 
   static void finish(ParseContext ctx, AuthorshipParser.AuthState authState) {
     ParsedName n = ctx.name;
-    if (ctx.aggregate && n.getSpecificEpithet() != null) {
+    if (ctx.aggregate && n.getSpecificEpithet() != null && n.getInfraspecificEpithet() == null) {
       n.setRank(Rank.SPECIES_AGGREGATE);
     }
     // Caller-supplied rank wins when explicit (and not just UNRANKED) and the parsed
