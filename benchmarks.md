@@ -2,7 +2,47 @@
 
 results from a macbook pro M4 Pro with Liberica JDK17 and the shaded jar
 
-## V4 (2026-05-14)
+## V4 (2026-05-16)
+> benchmark --warmup --input=data/benchmark-data.txt
+
+```
+Parsed names: 8017 (3362 unparsable)
+Total:   300.17 ms
+Average: 37.44 µs
+Min:     1.13 µs
+p50:     39.42 µs
+p95:     92.42 µs
+Max:     3.24 ms
+
+Breakdown by name type:
+  SCIENTIFIC           4515
+  VIRUS                3227
+  INFORMAL             143
+  OTHER                48
+  FORMULA              42
+  PLACEHOLDER          42
+```
+
+> benchmark --warmup --input=data/col-names.txt
+
+```
+Parsed names: 6259108 (24402 unparsable)
+Total:   209927.31 ms
+Average: 33.54 µs
+Min:     1.63 µs
+p50:     32.08 µs
+p95:     46.38 µs
+Max:     4.89 ms
+
+Breakdown by name type:
+  SCIENTIFIC           6234255
+  VIRUS                21067
+  FORMULA              3327
+  INFORMAL             451
+  PLACEHOLDER          8
+```
+
+## V4 (2026-05-14 — for reference)
 > benchmark --warmup --input=data/benchmark-data.txt
 
 ```
