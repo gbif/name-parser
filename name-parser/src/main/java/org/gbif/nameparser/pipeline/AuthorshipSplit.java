@@ -294,6 +294,9 @@ public final class AuthorshipSplit {
         if (AuthorParticles.isParticle(t.text)) { j++; continue; }
         // Apostrophe-particle word ("d'Urv", "L'Hér") — keep walking.
         if (looksLikeApostropheParticle(t.text)) { j++; continue; }
+        // "al" / "al." inside an author span ("Boiss. & al. var. paryadrica") —
+        // the "et al." abbreviation. Keep walking.
+        if (t.text.equalsIgnoreCase("al")) { j++; continue; }
         String w = stripDot(t.text);
         boolean[] notho = new boolean[1];
         boolean isInfraMarker = RankMarkers.matchInfraspecific(w) != null

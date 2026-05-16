@@ -677,6 +677,28 @@ public final class StripAndStash {
       }
     }
 
+    // " (pro sp.)" — botanical "given as a species" annotation following a hybrid
+    // name. Strip silently so the inner name parses cleanly.
+    {
+      Matcher pm = Pattern.compile(
+          "\\s+\\(\\s*pro\\s+(?:sp|spec|syn|hyb)\\b\\.?\\s*\\)\\s*\\.?\\s*$",
+          Pattern.CASE_INSENSITIVE).matcher(s);
+      if (pm.find()) {
+        s = s.substring(0, pm.start()).trim();
+      }
+    }
+
+    // " (Approved Lists YYYY)" — bacterial code annotation marking the name's
+    // inclusion in the Approved Lists of Bacterial Names. Strip silently.
+    {
+      Matcher pm = Pattern.compile(
+          "\\s*\\(\\s*Approved\\s+Lists\\s+\\d{4}\\s*\\)\\s*\\.?\\s*$",
+          Pattern.CASE_INSENSITIVE).matcher(s);
+      if (pm.find()) {
+        s = s.substring(0, pm.start()).trim();
+      }
+    }
+
     // "mihi" / "Mihi" — Latin "by me", a self-attribution placeholder used by some
     // authors. It is not a real authorship and is stripped wherever it appears with
     // an AUTHORSHIP_REMOVED warning. Common patterns:
