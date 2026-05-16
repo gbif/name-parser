@@ -34,6 +34,22 @@ public final class Preflight {
           "|\\bRNA\\b)",
       Pattern.CASE_INSENSITIVE);
 
+  // "Genus species [(Subgenus)] [Author], YYYY" — zoological author-year pattern.
+  // Allows VIRUS-matching epithets (vector, virus, phage) to be parsed as real
+  // species when an explicit Title-cased author + 4-digit year follows. The author
+  // must start with an uppercase letter and look like a Latin surname (≥3 chars,
+  // with optional initials / particle / hyphen / dot prefix) — strain-code-like
+  // trailing tokens ("WM-, 2008") don't qualify.
+  private static final Pattern ZOOLOGICAL_BINOMIAL = Pattern.compile(
+      "^\\p{Lu}\\p{Ll}+"                                  // Genus
+      + "\\s+(?:\\(\\p{Lu}\\p{Ll}+\\)\\s+)?"              // optional (Subgenus)
+      + "\\p{Ll}[\\p{Ll}\\-]*\\s+"                        // species (lowercase, ≥1 char)
+      + "(?:\\([^)]*\\)\\s*)?"                            // optional (basionym) span
+      + "(?:[\\p{Lu}](?:[\\p{L}.\\-']*\\p{Ll}{2,}|\\.?)"  // first author token (Title-cased surname)
+        + "(?:[\\s,&.\\-][\\p{L}.\\-']+)*)"                // additional author tokens
+      + "\\s*,?\\s*\\b(1[6-9]\\d\\d|20\\d\\d)\\b",        // comma + 4-digit year (16xx–20xx)
+      Pattern.UNICODE_CHARACTER_CLASS);
+
   // ---------- HYBRID FORMULA ----------
   // "Genus epithet ... × Genus epithet ..." — at least one × OR a lone " x " between two name-like spans.
   // To avoid false positives on single-genus hybrids ("× Foo bar" / "Foo × bar"), we require something
@@ -155,7 +171,11 @@ public final class Preflight {
 
     // Virus — check before the leading-question-mark placeholder so that "? circular
     // satellites" reads as a virus rather than an unstructured placeholder.
-    if (VIRUS.matcher(s).find()) {
+    // Exception: a "Genus species[ (Subgenus)]?[ Author], YYYY" / "… Author YYYY"
+    // pattern is a real zoological species citation (e.g. "Ceylonesmus vector
+    // Chamberlin, 1941") — the trailing author + 4-digit year overrides a stray
+    // "virus" / "vector" / "phage" token in the epithet position.
+    if (VIRUS.matcher(s).find() && !ZOOLOGICAL_BINOMIAL.matcher(s).find()) {
       throw new UnparsableNameException(NameType.VIRUS, original);
     }
 

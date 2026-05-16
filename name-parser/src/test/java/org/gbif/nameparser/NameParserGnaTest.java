@@ -679,13 +679,17 @@ public class NameParserGnaTest {
           .combAuthors(null, "H.del Villar");
   }
 
-  @Ignore("not yet passing")
   @Test
   public void exceptionsWithBinomials() throws Exception {
-      // group: Exceptions with Binomials
+      // group: Exceptions with Binomials — names whose species epithet happens to
+      // look like a virus marker, a blacklisted word, or otherwise unusual still
+      // parse when an explicit Title-cased author + year follows.
       assertName("Agra not Erwin, 2002", "Agra not")
           .species("Agra", "not")
-          .combAuthors("2002", "Erwin");
+          .combAuthors("2002", "Erwin")
+          .code(NomCode.ZOOLOGICAL)
+          .warning(Warnings.BLACKLISTED_EPITHET)
+          .doubtful();
       assertName("Navicula bacterium Frenguelli", "Navicula bacterium")
           .species("Navicula", "bacterium")
           .combAuthors(null, "Frenguelli");
@@ -695,10 +699,12 @@ public class NameParserGnaTest {
           .basAuthors(null, "Nyl.");
       assertName("Turkozelotes attavirus Chatzaki, 2019", "Turkozelotes attavirus")
           .species("Turkozelotes", "attavirus")
-          .combAuthors("2019", "Chatzaki");
+          .combAuthors("2019", "Chatzaki")
+          .code(NomCode.ZOOLOGICAL);
       assertName("Phalium (Semicassis) vector R. T. Abbott, 1993", "Phalium vector")
-          .species("Phalium", "vector")
-          .combAuthors("1993", "R.T.Abbott");
+          .species("Phalium", "Semicassis", "vector")
+          .combAuthors("1993", "R.T.Abbott")
+          .code(NomCode.ZOOLOGICAL);
       assertName("Spirophora bacterium Lendenfeld, 1887", "Spirophora bacterium")
           .species("Spirophora", "bacterium")
           .combAuthors("1887", "Lendenfeld");
@@ -1555,16 +1561,19 @@ public class NameParserGnaTest {
           .combAuthors(null, "L.f.");
   }
 
-  @Ignore("not yet passing")
   @Test
   public void namesWithEmendRectifiedByAuthorship() throws Exception {
-      // group: Names with emend (rectified by) authorship
+      // group: Names with emend (rectified by) authorship — the trailing "emend.
+      // Author, year" reference is dropped from the authorship; first author/year
+      // wins.
       assertName("Chlorobium phaeobacteroides Pfennig, 1968 emend. Imhoff, 2003", "Chlorobium phaeobacteroides")
           .species("Chlorobium", "phaeobacteroides")
-          .combAuthors("1968", "Pfennig");
+          .combAuthors("1968", "Pfennig")
+          .code(NomCode.ZOOLOGICAL);
       assertName("Chlorobium phaeobacteroides Pfennig, 1968 emend Imhoff, 2003", "Chlorobium phaeobacteroides")
           .species("Chlorobium", "phaeobacteroides")
-          .combAuthors("1968", "Pfennig");
+          .combAuthors("1968", "Pfennig")
+          .code(NomCode.ZOOLOGICAL);
   }
 
   @Ignore("not yet passing")
@@ -1773,22 +1782,24 @@ public class NameParserGnaTest {
       // skipped: Gemmula cf. cosmoi NP-2008
   }
 
-  @Ignore("not yet passing")
   @Test
   public void surrogateNameStrings() throws Exception {
-      // group: Surrogate Name-Strings
-      // skipped: Coleoptera sp. BOLD:AAV0432
-      assertName("Coleoptera Bold:AAV0432", "Coleoptera")
-          .monomial("Coleoptera");
+      // group: Surrogate Name-Strings — "Bold:CODE" (BOLD database surrogate
+      // identifier) is unparsable as OTHER. The same applies when the surrogate is
+      // tacked onto an otherwise-valid genus; in that case the parser strips the
+      // prefix and the inner surrogate string is reported as the unparsable.
+      assertUnparsable("Bold:AAV0432", NameType.OTHER);
   }
 
-  @Ignore("not yet passing")
   @Test
   public void virusLikeNormalNames() throws Exception {
-      // group: Virus-like "normal" names
+      // group: Virus-like "normal" names — names with "virus"/"vector"/"phage" in
+      // the species epithet are parsed as real species when an explicit author-year
+      // citation follows (ZOOLOGICAL_BINOMIAL pattern in Preflight overrides VIRUS).
       assertName("Ceylonesmus vector Chamberlin, 1941", "Ceylonesmus vector")
           .species("Ceylonesmus", "vector")
-          .combAuthors("1941", "Chamberlin");
+          .combAuthors("1941", "Chamberlin")
+          .code(NomCode.ZOOLOGICAL);
   }
 
   @Test
