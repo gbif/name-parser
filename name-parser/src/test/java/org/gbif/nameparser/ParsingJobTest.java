@@ -1,16 +1,3 @@
-/*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.gbif.nameparser;
 
 import com.google.common.collect.Lists;
@@ -76,6 +63,32 @@ public class ParsingJobTest {
     assertFalse(epi.matcher("serotype").find());
     assertFalse(epi.matcher("cytoform").find());
     assertFalse(epi.matcher("chemoform").find());
+  }
+
+  @Test
+  public void testEpithetNoLookbehindEquivalence() throws Exception {
+    // EPITHET_NO_LOOKBEHIND drops the heavy negative lookbehind; isValidEpithet replaces it.
+    // Combined, the two must accept/reject the same strings as the original EPITHET pattern.
+    Pattern epi      = Pattern.compile("^"+ ParsingJob.EPITHET +"$");
+    Pattern epiNoLb  = Pattern.compile("^"+ ParsingJob.EPITHET_NO_LOOKBEHIND +"$");
+
+    String[] cases = {
+        // accepts
+        "alba", "biovas", "serovat", "novo-zelandia", "elevar", "zelandia",
+        // rejects via UNALLOWED_EPITHET_ENDING
+        "serovar", "genotype", "agamovar", "cultivar", "serotype", "cytoform", "chemoform", "biovar",
+        // rejects via UNALLOWED_EPITHETS (whole-word)
+        "aff", "and", "cf", "des", "from", "ms", "of", "the", "where",
+        // rejects via author-token / ex / la / le / van / von trailing word
+        "ex", "la", "le", "van", "von", "fil", "filius", "hort", "junior", "senior",
+        // tricky: trailing word after a hyphen still counts
+        "novo-ex", "novo-biovar"
+    };
+    for (String s : cases) {
+      boolean origAccepted = epi.matcher(s).find();
+      boolean newAccepted = epiNoLb.matcher(s).find() && ParsingJob.isValidEpithet(s);
+      assertEquals("equivalence break for: " + s, origAccepted, newAccepted);
+    }
   }
 
   @Test
@@ -152,7 +165,7 @@ public class ParsingJobTest {
     assertAuthorTeamPattern("An der Lan");
     assertAuthorTeamPattern("Bor & s'Jacob",  "Bor", "s'Jacob");
     assertAuthorTeamPattern("Brunner von Wattenwyl v.W.");
-    assertAuthorTeamPattern("Martinez y Saez");
+    assertAuthorTeamPattern("Martinez y Saez", "Martinez", "Saez");
     assertAuthorTeamPattern("Da Silva e Castro");
     assertAuthorTeamPattern("LafuenteRoca & Carbonell",  "LafuenteRoca", "Carbonell");
     assertAuthorTeamPattern("Mas-ComaBargues & Esteban",  "Mas-ComaBargues", "Esteban");

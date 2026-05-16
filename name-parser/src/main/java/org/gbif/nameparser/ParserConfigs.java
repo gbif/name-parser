@@ -1,16 +1,3 @@
-/*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.gbif.nameparser;
 
 import com.google.gson.Gson;
@@ -19,16 +6,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.ParsedAuthorship;
 import org.gbif.nameparser.api.ParsedName;
+import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.util.UnicodeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +29,7 @@ import java.util.regex.Pattern;
 public class ParserConfigs {
   private static final Logger LOG = LoggerFactory.getLogger(ParserConfigs.class);
   private final static URI CONFIG_DEFAULT_URL = URI.create("https://api.checklistbank.org/parser/name/config?limit=1000");
+  private final static String INTERNAL_DEFAULTS_RESOURCE = "/nameparser/prefix-epithet-binomials.tsv";
   private final static Pattern MORE_WS = Pattern.compile("[\\s,.+'\"&_—|-]+");
   private final static Pattern MORE_WS2 = Pattern.compile("\\s*([(){}\\[\\]]+)\\s*");
 
@@ -45,6 +38,42 @@ public class ParserConfigs {
 
   public ParsedName forName(String name) {
     return names.get(norm(name));
+  }
+
+  /**
+   * Looks up a binomial override that matches the leading "Genus epithet" of the input
+   * and returns both the override and the trailing slice (typically authorship) so the
+   * caller can parse that separately. Returns null if no binomial override matches the
+   * first two whitespace-separated tokens.
+   */
+  public PrefixMatch forPrefix(String name) {
+    if (name == null) return null;
+    String trimmed = name.trim();
+    int firstSpace = trimmed.indexOf(' ');
+    if (firstSpace < 0) return null;
+    int secondSpace = trimmed.indexOf(' ', firstSpace + 1);
+    String binomial;
+    String remainder;
+    if (secondSpace < 0) {
+      binomial = trimmed;
+      remainder = null;
+    } else {
+      binomial = trimmed.substring(0, secondSpace);
+      remainder = trimmed.substring(secondSpace + 1).trim();
+      if (remainder.isEmpty()) remainder = null;
+    }
+    ParsedName pn = names.get(norm(binomial));
+    if (pn == null) return null;
+    return new PrefixMatch(pn, remainder);
+  }
+
+  public static final class PrefixMatch {
+    public final ParsedName parsedName;
+    public final String remainder;
+    PrefixMatch(ParsedName parsedName, String remainder) {
+      this.parsedName = parsedName;
+      this.remainder = remainder;
+    }
   }
 
   public ParsedAuthorship forAuthorship(String authorship) {
@@ -110,6 +139,45 @@ public class ParserConfigs {
       pnNoAuthor.setSanctioningAuthor(null);
       setName(scientificName, pnNoAuthor);
     }
+  }
+
+  /**
+   * Registers a curated list of binomials whose specific epithet looks like an author
+   * particle (la, van, von, zu, da, du, ...) — see prefix-epithet-binomials.tsv.
+   * These are matched by {@link #forPrefix(String)} so the parser can recover the
+   * binomial from inputs that the regex would otherwise interpret as a monomial with
+   * a multi-token author surname.
+   *
+   * @return number of binomials registered
+   */
+  public int loadInternalDefaults() {
+    int loaded = 0;
+    try (InputStream in = ParserConfigs.class.getResourceAsStream(INTERNAL_DEFAULTS_RESOURCE);
+         BufferedReader r = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+      String line;
+      while ((line = r.readLine()) != null) {
+        if (line.isBlank() || line.startsWith("#")) continue;
+        String[] parts = line.split("\t", 2);
+        if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+          LOG.warn("Skipping malformed line in {}: {}", INTERNAL_DEFAULTS_RESOURCE, line);
+          continue;
+        }
+        String genus = parts[0].trim();
+        String epithet = parts[1].trim();
+        ParsedName pn = new ParsedName();
+        pn.setGenus(genus);
+        pn.setSpecificEpithet(epithet);
+        pn.setRank(Rank.SPECIES);
+        pn.setType(NameType.SCIENTIFIC);
+        pn.setState(ParsedName.State.COMPLETE);
+        add(genus + " " + epithet, null, pn);
+        loaded++;
+      }
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to read " + INTERNAL_DEFAULTS_RESOURCE + " from classpath", e);
+    }
+    LOG.debug("Loaded {} internal default parser configs", loaded);
+    return loaded;
   }
 
 /**

@@ -1,0 +1,32 @@
+# Curated binomials whose specific epithet looks like an author particle
+# (la, van, von, zu, da, du, den, des, dos, dela, ...) and would otherwise
+# be absorbed into the authorship by the regex parser.
+#
+# Format: genus<TAB>epithet — one per line. Lines starting with '#' are
+# comments. Loaded by ParserConfigs.loadInternalDefaults() and applied
+# automatically by every NameParserGBIF instance.
+#
+# Seeded from the gnparser test_data.md groups
+# "Exceptions from author prefixes (prefix-like epithets)" and
+# "Exceptions from author suffixes (suffix-like epithets)".
+Campylosphaera	dela
+Antaplaga	dela
+Baeolidia	dela
+Dicentria	dela
+Eulaira	dela
+Paralvinella	dela
+Scoparia	dela
+Tortolena	dela
+Semiothisa	da
+Gnathopleustes	den
+Agnetina	den
+Desmoxytes	des
+Meteorus	dos
+Stenoecia	dos
+Sympycnus	du
+Bolitoglossa	la
+Leptonetela	la
+Nocaracris	van
+Zodarion	van
+Malamatidia	zu
+Ruteloryctes	bis
