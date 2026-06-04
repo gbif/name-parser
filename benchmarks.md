@@ -1,81 +1,132 @@
 # Benchmarks
 
-results from a macbook pro M4 Pro via IntelliJ:
+results from a macbook pro M4 Pro with Liberica JDK17 and the shaded jar
 
-## Current DEV
+## V4 (2026-05-16)
+All classic and GNA tests pass now
+More features than dev, still 3-4x faster and no additional threads!
+
+> benchmark --warmup --input=data/benchmark-data.txt
+
 ```
-Parsed names: 4763 (3307 failed)
-Total:   482.02 ms
-Average: 101.20 µs
-Min:     17.92 µs
-p50:     55.17 µs
-p95:     224.38 µs
-Max:     16.59 ms
+Parsed names: 8017 (3362 unparsable)
+Total:   298.18 ms
+Average: 37.19 µs
+Min:     917 ns
+p50:     38.50 µs
+p95:     91.33 µs
+Max:     3.13 ms
+
+Breakdown by name type:
+  SCIENTIFIC           4515
+  VIRUS                3227
+  INFORMAL             143
+  OTHER                48
+  FORMULA              42
+  PLACEHOLDER          42
 ```
 
-## Step 1 — pre-filters, possessive quantifiers, dedup
+> benchmark --warmup --input=data/col-names.txt
 
-8017-name benchmark-data.txt on JDK 17 / M-series mac, median of 3 runs:
-
-| metric  | baseline | step 1  | delta  |
-|---------|----------|---------|--------|
-| Total   | 809 ms   | 793 ms  | -2.0 % |
-| Average | 101.2 µs | 99.0 µs | -2.2 % |
-| p50     | 85.3 µs  | 84.5 µs | -1.0 % |
-| p95     | 184.7 µs | 180.1 µs| -2.5 % |
-
-Changes: removed duplicate IS_CANDIDATUS_QUOTE_PATTERN call, dropped no-op REPL_ENCLOSING_QUOTE,
-added cheap String-contains pre-filters before EXTRACT_SENSU/EXTRACT_NOMSTATUS/REPL_IN_REF/BAD_AUTHORSHIP,
-made NORM_WHITESPACE / NORM_BRACKETS_*_STRONG / NO_Q_MARKS quantifiers possessive,
-trivial PLACEHOLDER_NAME alternation cleanup.
-
-## Step 1+2 — Step 1 plus outer-EPITHET migration
-
-Median of 5 runs:
-
-| metric  | baseline | step 1+2 | delta  |
-|---------|----------|----------|--------|
-| Total   | 809 ms   | 804 ms   | -0.6 % |
-| Average | 101.2 µs | 100.3 µs | -0.9 % |
-| p50     | 85.3 µs  | 85.0 µs  | -0.4 % |
-| p95     | 184.7 µs | 180.6 µs | -2.2 % |
-
-Step 2 introduces EPITHET_NO_LOOKBEHIND + the isValidEpithet() Java post-validator at three outer
-call sites (STARTING_EPITHET, NORM_LOWERCASE_BINOMIAL, NORM_SUBGENUS). Throughput is roughly flat
-vs Step 1 alone — these sites are anchored (^) or rarely matched, so the regex saving and the
-post-validation cost cancel. The win is maintainability: three more patterns are now lookbehind-free.
-
-## DEV with smaller patterns
 ```
-Parsed names: 4763 (3308 failed)
-Total:   410.24 ms
-Average: 86.13 µs
-Min:     19.33 µs
-p50:     46.96 µs
-p95:     199.04 µs
-Max:     15.64 ms
+Parsed names: 6259108 (24402 unparsable)
+Total:   212829.80 ms
+Average: 34.00 µs
+Min:     1.42 µs
+p50:     32.50 µs
+p95:     47.21 µs
+Max:     5.81 ms
+
+Breakdown by name type:
+  SCIENTIFIC           6234255
+  VIRUS                21067
+  FORMULA              3327
+  INFORMAL             451
+  PLACEHOLDER          8
 ```
 
 
-## Joni
+## V4 (earlier — for reference)
+most of classic name parser tests pass. GNA tests largely unsupported still.
++/- on par with dev version.
+
+> benchmark --warmup --input=data/benchmark-data.txt
+
 ```
-Parsed names: 4763 (3308 failed)
-Total:   791.99 ms
-Average: 166.28 µs
-Min:     24.38 µs
+Parsed names: 8017 (3367 unparsable)
+Total:   191.70 ms
+Average: 23.91 µs
+Min:     875 ns
+p50:     19.08 µs
+p95:     69.25 µs
+Max:     1.72 ms
+
+Breakdown by name type:
+  SCIENTIFIC           4534
+  VIRUS                3233
+  INFORMAL             122
+  OTHER                49
+  FORMULA              42
+  PLACEHOLDER          37
+```
+
+> benchmark --warmup --input=data/col-names.txt
+
+```
+Parsed names: 6259108 (24501 unparsable)
+Total:   123868.11 ms
+Average: 19.79 µs
+Min:     1.46 µs
+p50:     18.54 µs
+p95:     29.46 µs
+Max:     2.62 ms
+
+Breakdown by name type:
+  SCIENTIFIC           6234205
+  VIRUS                21166
+  FORMULA              3327
+  INFORMAL             402
+  PLACEHOLDER          8
+```
+
+
+## DEV
+> benchmark --warmup --input=data/benchmark-data.txt
+> Warming up the JIT — parsing the first 100 names without timing…
+```
+Parsed names: 8017 (3352 unparsable)
+Total:   807.70 ms
+Average: 100.75 µs
+Min:     10.58 µs
 p50:     86.29 µs
-p95:     372.46 µs
-Max:     71.51 ms
+p95:     182.88 µs
+Max:     14.42 ms
+
+Breakdown by name type:
+  SCIENTIFIC           4490
+  VIRUS                3227
+  INFORMAL             152
+  PLACEHOLDER          45
+  HYBRID_FORMULA       40
+  NO_NAME              35
+  OTU                  28
 ```
 
-
-## ANTLR
+> benchmark --warmup --input=data/col-names.txt
 ```
-Parsed names: 4763 (3316 failed)
-Total:   494.68 ms
-Average: 103.86 µs
-Min:     19.04 µs
-p50:     49.83 µs
-p95:     301.71 µs
-Max:     9.76 ms
+Parsed names: 6259108 (24408 unparsable)
+Total:   787905.96 ms
+Average: 125.88 µs
+Min:     12.63 µs
+p50:     97.83 µs
+p95:     150.13 µs
+Max:     1010.29 ms
+
+Breakdown by name type:
+  SCIENTIFIC           6232252
+  VIRUS                20954
+  HYBRID_FORMULA       3335
+  INFORMAL             2506
+  NO_NAME              48
+  PLACEHOLDER          13
 ```

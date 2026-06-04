@@ -51,6 +51,25 @@ public class ParsedAuthorship {
   private String publishedIn;
 
   /**
+   * The exact page of the in reference stripped from the authorship
+   */
+  private String publishedInPage;
+
+  /**
+   * The imprint or printing date — the year actually printed on the work, which
+   * may differ from the nominal publication year. By convention a year wrapped in
+   * square brackets is always an imprint year, even when it is the only year cited
+   * (e.g. {@code "Cabanis [1851]"} → year=null, imprintYear="1851"). When both the
+   * nominal year and the imprint year are given, the nominal year stays on the
+   * authorship and the imprint year is captured here
+   * (e.g. {@code "Storr, 1970 [\"1969\"]"} → year=1970, imprintYear="1969").
+   *
+   * <p>See ICZN Article 22 for the citation conventions:
+   * <a href="https://code.iczn.org/date-of-publication/article-22-citation-of-date/">code.iczn.org/date-of-publication/article-22-citation-of-date</a>.
+   */
+  private String imprintYear;
+
+  /**
    * Any additional unparsed string found at the end of the name.
    * Only ever set when state=PARTIAL
    */
@@ -141,6 +160,22 @@ public class ParsedAuthorship {
 
   public void setPublishedIn(String publishedIn) {
     this.publishedIn = publishedIn;
+  }
+
+  public String getPublishedInPage() {
+    return publishedInPage;
+  }
+
+  public void setPublishedInPage(String publishedInPage) {
+    this.publishedInPage = publishedInPage;
+  }
+
+  public String getImprintYear() {
+    return imprintYear;
+  }
+
+  public void setImprintYear(String imprintYear) {
+    this.imprintYear = imprintYear;
   }
 
   public String getTaxonomicNote() {
@@ -235,6 +270,8 @@ public class ParsedAuthorship {
         Objects.equals(taxonomicNote, that.taxonomicNote) &&
         Objects.equals(nomenclaturalNote, that.nomenclaturalNote) &&
         Objects.equals(publishedIn, that.publishedIn) &&
+        Objects.equals(publishedInPage, that.publishedInPage) &&
+        Objects.equals(imprintYear, that.imprintYear) &&
         Objects.equals(unparsed, that.unparsed) &&
         state == that.state &&
         Objects.equals(warnings, that.warnings);
@@ -242,7 +279,7 @@ public class ParsedAuthorship {
 
   @Override
   public int hashCode() {
-    return Objects.hash(extinct, combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, publishedIn, unparsed, doubtful, manuscript, state, warnings);
+    return Objects.hash(extinct, combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, publishedIn, publishedInPage, imprintYear, unparsed, doubtful, manuscript, state, warnings);
   }
 
   @Override

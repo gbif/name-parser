@@ -6,19 +6,19 @@ package org.gbif.nameparser.api;
 public enum NameType {
   
   /**
-   * A scientific latin name that might contain authorship but is not any of the other name types below (virus, hybrid, cultivar, etc).
+   * A parsable scientific latin name that might contain authorship but is not any of the other name types below (virus, hybrid, cultivar, etc).
    */
   SCIENTIFIC,
   
   /**
-   * A virus name.
+   * An unparsable virus name.
    */
   VIRUS,
   
   /**
-   * A hybrid <b>formula</b> (not a hybrid name).
+   * An unparsable hybrid or graft-chimera <b>formula</b> (not a hybrid name).
    */
-  HYBRID_FORMULA,
+  FORMULA,
 
   /**
    * A variation of a scientific name that either adds additional notes or has some shortcomings to be classified as
@@ -27,8 +27,9 @@ public enum NameType {
    * - indetermined like "Abies spec."
    * - abbreviated genus "A. alba Mill"
    * - manuscript names lacking latin species names, e.g. Verticordia sp.1
-   * - phrase name, Phrase names are a structured semi-informal name with the form
+   * - phrase name, structured semi-scientific name which at start with a uni- or binonmial followed by a phrase, e.g.
    *   <em>Dryandra sp. 1 (A.S.George 16647) WA Herbarium</em>,
+   *   <em>Desulfobacterota_B</em>
    *   <em>Pultenaea sp. 'Olinda' (Coveny 6616)</em> or
    *   <em>Acacia mutabilis Maslin subsp. Young River (G.F. Craig 2052)</em>
    *   The 1, Olinda or Young River is the phrase, similar to a cultivar name, that identifies the taxon.
@@ -36,32 +37,22 @@ public enum NameType {
    *   vouching for the specimen and the unique collector number assigned to the voucher.
    *   The WA Herbarium is the nominating party, the party that wants to have a placeholder name for this specimen
    *   https://florabase.dpaw.wa.gov.au/help/names#phrase
+   *
+   *   Informal names are semi parsable and start at least with a genus or uninomial.
+   *   The remainder is parsed into the ParsedName.phrase field.
    */
   INFORMAL,
-  
-  /**
-   * Operational Taxonomic Unit.
-   * An OTU is a pragmatic definition to group individuals by similarity, equivalent to but not necessarily in line
-   * with classical Linnaean taxonomy or modern Evolutionary taxonomy.
-   * <p>
-   * A OTU usually refers to clusters of organisms, grouped by DNA sequence similarity of a specific taxonomic marker gene.
-   * In other words, OTUs are pragmatic proxies for "species" at different taxonomic levels.
-   * <p>
-   * Sequences can be clustered according to their similarity to one another,
-   * and operational taxonomic units are defined based on the similarity threshold (usually 97% similarity) set by the researcher.
-   * Typically, OTU's are based on similar 16S rRNA sequences.
-   */
-  OTU,
 
   /**
-   * A placeholder name like "incertae sedis" or "unknown genus".
+   * An unparsable placeholder name like "incertae sedis" or "unknown genus".
    */
   PLACEHOLDER,
   
   /**
-   * Surely not a scientific name of any kind.
+   * Any other unparsable name including identifiers, numerical values, abbreviations or text extracts.
+   * This is where former OTU names like BOLD:AAB5053, SH0864666.10FU or UBA3054 fall into these days.
    */
-  NO_NAME;
+  OTHER;
   
   /**
    * @return true if the GBIF name parser can parse such a name into a ParsedName instance

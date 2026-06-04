@@ -1,36 +1,38 @@
 package org.gbif.nameparser.cli.io;
 
+import life.catalogue.coldp.ColdpTerm;
 import org.gbif.nameparser.api.Authorship;
 import org.gbif.nameparser.api.NameType;
+import org.gbif.nameparser.api.NamePart;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.cli.ParseResult;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
  * Streams ParsedName rows into a flat ColDP Name file (TSV or CSV) with a fixed
- * column order. Column names match the
- * <a href="https://github.com/CatalogueOfLife/coldp/blob/master/README.md#name">ColDP
- * Name</a> spec; they're hard-coded as string literals here to avoid pulling in
- * the {@code org.catalogueoflife:coldp} jar (which is compiled to Java 21
- * bytecode and would block the build on JDK 17 — the parser's preferred toolchain
- * because of a JDK 21 regex regression on dev).
+ * column order. Mapping rules:
  *
- * <p>Mapping rules:
  * <ul>
- *   <li>Standard ColDP columns carry every structural ParsedName field that has
- *       a direct counterpart.</li>
+ *   <li>Standard ColDP columns (recognised by {@link ColdpTerm}) carry every
+ *       structural ParsedName field that has a direct counterpart.</li>
  *   <li>Where the ColDP {@code Name} entity lacks a column but the {@code NameUsage}
  *       entity defines one, that NameUsage term is used —
- *       {@code nameStatus}, {@code namePhrase}, {@code namePublishedInPage},
- *       {@code provisional}, {@code extinct}.</li>
+ *       {@link ColdpTerm#nameStatus}, {@link ColdpTerm#namePhrase},
+ *       {@link ColdpTerm#namePublishedInPage}, {@link ColdpTerm#provisional},
+ *       {@link ColdpTerm#extinct}.</li>
  *   <li>ParsedName fields without a ColDP counterpart are written into custom
  *       columns prefixed with {@code np:} (the parser's namespace). Conformant
  *       ColDP readers ignore unknown columns, so the file remains valid ColDP.</li>
  * </ul>
+ *
+ * <p>{@link ColdpTerm#notho} is a comma-joined list of every flagged hybrid part
+ * (e.g. {@code "generic,specific"}) — the parser model permits multiple parts
+ * simultaneously even if that is rare in practice.
  *
  * <p>Unparsable rows are still written: {@code ID}, {@code scientificName} (the
  * verbatim input) and the parser-namespace columns ({@code np:type},
@@ -41,40 +43,44 @@ final class ColdpWriter implements NameOutputWriter {
   /** A single output column with its header and value-extracting function. */
   private record Column(String header, Function<ParseResult, String> extractor) {}
 
-  private static final Column[] COLUMNS = {
-      new Column("ID",                            ColdpWriter::idValue),
-      new Column("scientificName",                ColdpWriter::scientificName),
-      new Column("authorship",                    pn(p -> blankToNull(p.authorshipComplete()))),
-      new Column("rank",                          pn(p -> p.getRank() == null ? null : p.getRank().name().toLowerCase())),
-      new Column("code",                          pn(p -> p.getCode() == null ? null : p.getCode().name().toLowerCase())),
-      new Column("nameStatus",                    pn(ColdpWriter::derivedNameStatus)),
-      new Column("uninomial",                     pn(ParsedName::getUninomial)),
-      new Column("genus",                         pn(ParsedName::getGenus)),
-      new Column("infragenericEpithet",           pn(ParsedName::getInfragenericEpithet)),
-      new Column("specificEpithet",               pn(ParsedName::getSpecificEpithet)),
-      new Column("infraspecificEpithet",          pn(ParsedName::getInfraspecificEpithet)),
-      new Column("cultivarEpithet",               pn(ParsedName::getCultivarEpithet)),
-      new Column("notho",                         pn(p -> p.getNotho() == null ? null : p.getNotho().name().toLowerCase())),
-      new Column("originalSpelling",              pn(p -> p.isOriginalSpelling() == null ? null : p.isOriginalSpelling().toString())),
-      new Column("combinationAuthorship",         pn(p -> joinAuthors(authorsOf(p.getCombinationAuthorship())))),
-      new Column("combinationExAuthorship",       pn(p -> joinAuthors(exAuthorsOf(p.getCombinationAuthorship())))),
-      new Column("combinationAuthorshipYear",     pn(p -> yearOf(p.getCombinationAuthorship()))),
-      new Column("basionymAuthorship",            pn(p -> joinAuthors(authorsOf(p.getBasionymAuthorship())))),
-      new Column("basionymExAuthorship",          pn(p -> joinAuthors(exAuthorsOf(p.getBasionymAuthorship())))),
-      new Column("basionymAuthorshipYear",        pn(p -> yearOf(p.getBasionymAuthorship()))),
-      new Column("namePublishedInPage",           pn(ParsedName::getPublishedIn)),
-      new Column("extinct",                       pn(p -> p.isExtinct() ? "true" : null)),
-      new Column("namePhrase",                    pn(ParsedName::getPhrase)),
-      new Column("provisional",                   pn(p -> p.isDoubtful() ? "true" : null)),
-      // np: namespace — fields without a ColDP equivalent
-      new Column("np:type",                       ColdpWriter::npType),
-      new Column("np:sanctioningAuthor",          pn(ParsedName::getSanctioningAuthor)),
-      new Column("np:taxonomicNote",              pn(ParsedName::getTaxonomicNote)),
-      new Column("np:unparsed",                   pn(ParsedName::getUnparsed)),
-      new Column("np:warnings",                   pn(p -> p.getWarnings() == null || p.getWarnings().isEmpty()
-          ? null : String.join("|", p.getWarnings()))),
-      new Column("np:error",                      row -> row.error == null ? null : row.error.message)
-  };
+  private static final Column[] COLUMNS = buildColumns();
+
+  private static Column[] buildColumns() {
+    return new Column[]{
+        col(ColdpTerm.ID,                          ColdpWriter::idValue),
+        col(ColdpTerm.scientificName,              ColdpWriter::scientificName),
+        col(ColdpTerm.authorship,                  pn(p -> blankToNull(p.authorshipComplete()))),
+        col(ColdpTerm.rank,                        pn(p -> p.getRank() == null ? null : p.getRank().name().toLowerCase())),
+        col(ColdpTerm.code,                        pn(p -> p.getCode() == null ? null : p.getCode().name().toLowerCase())),
+        col(ColdpTerm.nameStatus,                  pn(ColdpWriter::derivedNameStatus)),
+        col(ColdpTerm.uninomial,                   pn(ParsedName::getUninomial)),
+        col(ColdpTerm.genus,                       pn(ParsedName::getGenus)),
+        col(ColdpTerm.infragenericEpithet,         pn(ParsedName::getInfragenericEpithet)),
+        col(ColdpTerm.specificEpithet,             pn(ParsedName::getSpecificEpithet)),
+        col(ColdpTerm.infraspecificEpithet,        pn(ParsedName::getInfraspecificEpithet)),
+        col(ColdpTerm.cultivarEpithet,             pn(ParsedName::getCultivarEpithet)),
+        col(ColdpTerm.notho,                       pn(p -> joinNotho(p.getNotho()))),
+        col(ColdpTerm.originalSpelling,            pn(p -> p.isOriginalSpelling() == null ? null : p.isOriginalSpelling().toString())),
+        col(ColdpTerm.combinationAuthorship,       pn(p -> joinAuthors(authorsOf(p.getCombinationAuthorship())))),
+        col(ColdpTerm.combinationExAuthorship,     pn(p -> joinAuthors(exAuthorsOf(p.getCombinationAuthorship())))),
+        col(ColdpTerm.combinationAuthorshipYear,   pn(p -> yearOf(p.getCombinationAuthorship()))),
+        col(ColdpTerm.basionymAuthorship,          pn(p -> joinAuthors(authorsOf(p.getBasionymAuthorship())))),
+        col(ColdpTerm.basionymExAuthorship,        pn(p -> joinAuthors(exAuthorsOf(p.getBasionymAuthorship())))),
+        col(ColdpTerm.basionymAuthorshipYear,      pn(p -> yearOf(p.getBasionymAuthorship()))),
+        col(ColdpTerm.namePublishedInPage,         pn(ParsedName::getPublishedIn)),
+        col(ColdpTerm.extinct,                     pn(p -> p.isExtinct() ? "true" : null)),
+        col(ColdpTerm.namePhrase,                  pn(ParsedName::getPhrase)),
+        col(ColdpTerm.provisional,                 pn(p -> p.isDoubtful() ? "true" : null)),
+        // np: namespace — fields without a ColDP equivalent
+        new Column("np:type",                row -> npType(row)),
+        new Column("np:sanctioningAuthor",   pn(ParsedName::getSanctioningAuthor)),
+        new Column("np:taxonomicNote",       pn(ParsedName::getTaxonomicNote)),
+        new Column("np:unparsed",            pn(ParsedName::getUnparsed)),
+        new Column("np:warnings",            pn(p -> p.getWarnings() == null || p.getWarnings().isEmpty()
+            ? null : String.join("|", p.getWarnings()))),
+        new Column("np:error",               row -> row.error == null ? null : row.error.message)
+    };
+  }
 
   private final PrintWriter out;
   private final char delimiter;
@@ -122,6 +128,10 @@ final class ColdpWriter implements NameOutputWriter {
     return row -> row.parsed == null ? null : f.apply(row.parsed);
   }
 
+  private static Column col(ColdpTerm term, Function<ParseResult, String> extractor) {
+    return new Column(term.simpleName(), extractor);
+  }
+
   private static String idValue(ParseResult row) {
     if (row.id != null && !row.id.isBlank()) return row.id;
     return row.input != null && !row.input.isBlank() ? row.input : null;
@@ -150,6 +160,18 @@ final class ColdpWriter implements NameOutputWriter {
       return t == null || t == NameType.SCIENTIFIC ? null : t.name();
     }
     return row.error == null || row.error.type == null ? null : row.error.type.name();
+  }
+
+  private static String joinNotho(Set<NamePart> notho) {
+    if (notho == null || notho.isEmpty()) return null;
+    StringBuilder b = new StringBuilder();
+    for (NamePart p : NamePart.values()) {
+      if (notho.contains(p)) {
+        if (b.length() > 0) b.append(',');
+        b.append(p.name().toLowerCase());
+      }
+    }
+    return b.length() == 0 ? null : b.toString();
   }
 
   private static List<String> authorsOf(Authorship a) {

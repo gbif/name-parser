@@ -1,17 +1,4 @@
-# GBIF Name Parser(s)
-
-The project contains various implementations of parsers for scientific names.
-
-At the core there is an independent parser mainly based on regular expression with minimal dependencies.
-The modules provided by this project are:
-
- - __name-parser__: The main GBIF Name Parser implementing the API natively
- - __name-parser-api__: The minimal API to represent parsed names.
- - __name-parser-v1__: The GBIF Name Parser wrapped to implement the [GBIF API](https://github.com/gbif/gbif-api/blob/master/src/main/java/org/gbif/api/service/checklistbank/NameParser.java)
-
-The GBIF name parser has been tested with millions of GBIF names over many years.
-An extensive body of [unit tests](name-parser/src/test/java/org/gbif/nameparser/NameParserGBIFTest.java) has been created over the years that guarantee high parsing qualities.
-
+# GBIF Name Parser
 
 A library and command-line tool that parses scientific names — including the
 authorship, rank, hybrid markers and nomenclatural notes — into a structured
@@ -106,10 +93,18 @@ xz -dc col-names.tsv.xz | name-parser-cli parse --input=- --output=- --format=js
 
 #### Input
 
-Plain text only — one name per line. Lines starting with `#` and blank lines
-are skipped. If a line contains a tab, only the substring before the first
-tab is treated as the name, so a bare TSV like `col-names.tsv` can be fed in
-verbatim and the extra columns are silently ignored.
+The input format is auto-detected from the first non-blank, non-comment line:
+
+* **ColDP Name file** (TSV or CSV) — recognised when the header row contains
+  any [`ColdpTerm`](https://github.com/CatalogueOfLife/coldp/blob/master/README.md#name)
+  property names (looked up via `ColdpTerm.find`). Only the columns the parser
+  interface accepts are honoured: `ID`, `scientificName`, `authorship`, `rank`,
+  `code`. Other columns are read but ignored.
+* **Plain text** — one name per line. If a line contains a tab, only the
+  substring before the first tab is treated as the name (so `col-names.tsv` is
+  usable both as ColDP-style TSV and as bare plain text).
+
+Lines starting with `#` and blank lines are skipped.
 
 #### Output formats
 
@@ -122,9 +117,12 @@ verbatim and the extra columns are silently ignored.
 JSON / JSONL rows look like:
 
 ```json
-{"line":42,"input":"Felis catus","parsed":{ ...full ParsedName... }}
-{"line":99,"input":"Iridoviridae","error":{"type":"VIRUS","message":"..."}}
+{"line":42,"id":"42","input":"Felis catus","parsed":{ ...full ParsedName... }}
+{"line":99,"id":"99","input":"Iridoviridae","error":{"type":"VIRUS","message":"..."}}
 ```
+
+The `id` field is populated from the ColDP `ID` column when present; otherwise
+it is omitted.
 
 #### ColDP CSV/TSV column mapping
 
@@ -135,7 +133,8 @@ NameUsage term is used (`nameStatus`, `namePhrase`, `namePublishedInPage`,
 written into custom columns prefixed with `np:` — strict ColDP readers ignore
 unknown columns, so the file stays valid ColDP.
 
-Multi-value rules: author lists join with `|` (the ColDP convention).
+Multi-value rules: author lists join with `|` (the ColDP convention); `notho`
+parts join with `,`.
 
 | `ParsedName` field | ColDP column |
 |---|---|
@@ -145,7 +144,7 @@ Multi-value rules: author lists join with `|` (the ColDP convention).
 | `rank`, `code` | `rank`, `code` (lower-cased) |
 | `nomenclaturalNote` (or `manuscript` flag) | `nameStatus` |
 | `uninomial`, `genus`, `infragenericEpithet`, `specificEpithet`, `infraspecificEpithet`, `cultivarEpithet` | same column names |
-| `notho` (single hybrid-marker part, lower-cased) | `notho` |
+| `notho` (every flagged part, comma-joined) | `notho` |
 | `originalSpelling` | `originalSpelling` |
 | `combinationAuthorship.{authors,exAuthors,year}` | `combinationAuthorship`, `combinationExAuthorship`, `combinationAuthorshipYear` (authors joined with `\|`) |
 | `basionymAuthorship.{authors,exAuthors,year}` | `basionymAuthorship`, `basionymExAuthorship`, `basionymAuthorshipYear` (authors joined with `\|`) |

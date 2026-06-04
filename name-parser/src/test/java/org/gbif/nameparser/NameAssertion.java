@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gbif.nameparser.api.*;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 import static org.gbif.nameparser.api.NomCode.BACTERIAL;
@@ -37,13 +38,14 @@ public class NameAssertion {
     TAXNOTE,
     NOMNOTE,
     PUBLISHEDIN,
+    PUBLISHEDINPAGE,
+    IMPRINTYEAR,
     DOUBTFUL,
     STATE,
     CODE,
     REMAINS,
     WARNING,
     MANUSCRIPT,
-    VOUCHER,
     QUALIFIERS
   }
   
@@ -52,6 +54,8 @@ public class NameAssertion {
   }
   
   void nothingElse() {
+    System.out.println(n.canonicalName());
+    System.out.println(n.canonicalNameComplete());
     for (NP p : NP.values()) {
       if (!tested.contains(p)) {
         switch (p) {
@@ -77,7 +81,7 @@ public class NameAssertion {
             assertFalse(n.isExtinct());
             break;
           case NOTHO:
-            assertNull(n.getNotho());
+            assertTrue(n.getNotho() == null || n.getNotho().isEmpty());
             break;
           case SIC:
             assertNull(n.isOriginalSpelling());
@@ -119,6 +123,12 @@ public class NameAssertion {
           case PUBLISHEDIN:
             assertNull(n.getPublishedIn());
             break;
+          case PUBLISHEDINPAGE:
+            assertNull(n.getPublishedInPage());
+            break;
+          case IMPRINTYEAR:
+            assertNull(n.getImprintYear());
+            break;
           case DOUBTFUL:
             assertFalse(n.isDoubtful());
             break;
@@ -140,11 +150,6 @@ public class NameAssertion {
             break;
           case MANUSCRIPT:
             assertFalse(n.isManuscript());
-            break;
-          case VOUCHER:
-            assertFalse(n.isPhraseName());
-            assertNull(n.getVoucher());
-            assertNull(n.getNominatingParty());
             break;
           case QUALIFIERS:
             assertTrue(n.getEpithetQualifier() == null || n.getEpithetQualifier().isEmpty());
@@ -251,8 +256,11 @@ public class NameAssertion {
     return add(NP.TYPE);
   }
   
-  NameAssertion notho(NamePart notho) {
-    assertEquals(notho, n.getNotho());
+  NameAssertion notho(NamePart... notho) {
+    EnumSet<NamePart> expected = notho.length == 0
+        ? java.util.EnumSet.noneOf(NamePart.class)
+        : java.util.EnumSet.copyOf(java.util.Arrays.asList(notho));
+    assertEquals(expected, n.getNotho());
     return add(NP.NOTHO);
   }
 
@@ -301,17 +309,37 @@ public class NameAssertion {
     return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.CODE);
   }
 
-  NameAssertion phraseName(String genus, String phrase, Rank rank, String voucher, String nominatingParty) {
+  NameAssertion phraseIndetName(String genus, String phrase, Rank rank) {
+    assertPhrase(phrase);
     assertNull(n.getUninomial());
     assertEquals(genus, n.getGenus());
-    assertNull(n.getCultivarEpithet());
-    assertEquals(phrase, n.getPhrase());
-    assertEquals(voucher, n.getVoucher());
-    assertEquals(nominatingParty, n.getNominatingParty());
-    assertTrue(n.isPhraseName());
     assertEquals(rank, n.getRank());
+    return add(NP.RANK);
+  }
+
+  NameAssertion phraseName(String monomial, String phrase) {
+    assertPhrase(phrase);
+    assertEquals(monomial, n.getUninomial());
+    assertNull(n.getGenus());
+    assertEquals(Rank.UNRANKED, n.getRank());
+    return add(NP.RANK);
+  }
+
+  private NameAssertion assertPhrase(String phrase) {
     assertEquals(NameType.INFORMAL, n.getType());
-    return add(NP.EPITHETS, NP.RANK, NP.CULTIVAR, NP.TYPE, NP.PHRASE, NP.VOUCHER);
+    assertTrue(n.isPhraseName());
+    assertEquals(phrase, n.getPhrase());
+    // For SUBSPECIES-level phrase names ("Acacia mutabilis Maslin subsp. Young River …")
+    // the species epithet remains set. For SPECIES-level phrase names the species
+    // epithet must be null. The caller's phraseName / phraseIndetName helper asserts
+    // genus or uninomial separately, so we don't enforce either here.
+    if (n.getRank() != Rank.SUBSPECIES && n.getRank() != Rank.VARIETY
+        && n.getRank() != Rank.FORM) {
+      assertNull(n.getSpecificEpithet());
+    }
+    assertNull(n.getInfraspecificEpithet());
+    assertNull(n.getCultivarEpithet());
+    return add(NP.EPITHETS, NP.CULTIVAR, NP.TYPE, NP.PHRASE);
   }
 
   NameAssertion code(NomCode code) {
@@ -344,6 +372,16 @@ public class NameAssertion {
   NameAssertion publishedIn(String publishedIn) {
     assertEquals(publishedIn, n.getPublishedIn());
     return add(NP.PUBLISHEDIN);
+  }
+
+  NameAssertion publishedInPage(String publishedInPage) {
+    assertEquals(publishedInPage, n.getPublishedInPage());
+    return add(NP.PUBLISHEDINPAGE);
+  }
+
+  NameAssertion imprintYear(String imprintYear) {
+    assertEquals(imprintYear, n.getImprintYear());
+    return add(NP.IMPRINTYEAR);
   }
 
   NameAssertion nomNote(String nomNote) {

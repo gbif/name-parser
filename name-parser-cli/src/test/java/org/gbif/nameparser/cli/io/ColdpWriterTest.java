@@ -1,6 +1,6 @@
 package org.gbif.nameparser.cli.io;
 
-import org.gbif.nameparser.NameParserGBIF;
+import org.gbif.nameparser.NameParserImpl;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.UnparsableNameException;
@@ -19,6 +19,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ColdpWriterTest {
@@ -39,7 +40,7 @@ public class ColdpWriterTest {
 
   @Test
   public void mapsKnownAndCustomColumns() throws IOException {
-    NameParser parser = new NameParserGBIF();
+    NameParser parser = new NameParserImpl();
     Path out = tmp.newFile("names.tsv").toPath();
 
     try (NameOutputWriter w = NameOutputWriter.open(out, OutputFormat.TSV)) {
@@ -48,8 +49,8 @@ public class ColdpWriterTest {
       ok.id = "felcat";
       ok.input = "Felis catus";
       try {
-        ok.parsed = parser.parse("Felis catus Linnaeus, 1758", null, null);
-      } catch (UnparsableNameException | InterruptedException e) {
+        ok.parsed = parser.parse("Felis catus Linnaeus, 1758", null, null, null);
+      } catch (UnparsableNameException e) {
         throw new AssertionError(e);
       }
       w.write(ok);
@@ -105,8 +106,8 @@ public class ColdpWriterTest {
   }
 
   @Test
-  public void nothoIsLowerCase() throws IOException {
-    NameParser parser = new NameParserGBIF();
+  public void nothoIsCommaJoined() throws IOException {
+    NameParser parser = new NameParserImpl();
     Path out = tmp.newFile("notho.tsv").toPath();
 
     try (NameOutputWriter w = NameOutputWriter.open(out, OutputFormat.TSV)) {
@@ -115,8 +116,8 @@ public class ColdpWriterTest {
       row.id = "h1";
       row.input = "× Aegilotriticum × requienii";
       try {
-        row.parsed = parser.parse(row.input, null, null);
-      } catch (UnparsableNameException | InterruptedException e) {
+        row.parsed = parser.parse(row.input, null, null, null);
+      } catch (UnparsableNameException e) {
         throw new AssertionError(e);
       }
       assertNotNull(row.parsed);
@@ -126,13 +127,12 @@ public class ColdpWriterTest {
     List<String> lines = Files.readAllLines(out, StandardCharsets.UTF_8);
     Map<String, String> r = rowAsMap(lines.get(0), lines.get(1));
     String notho = r.get("notho");
-    // dev's ParsedName.notho holds a single NamePart; the parser may flag any of
-    // generic/infrageneric/specific/infraspecific depending on which × it picks
-    // first. We only assert the value is set and lower-cased per ColDP convention.
+    // The parser should mark at least the generic part; if it also marks the
+    // specific part the joined value is "generic,specific".
     assertNotNull(notho);
-    assertEquals(notho, notho.toLowerCase());
-    assertTrue("expected one of generic/infrageneric/specific/infraspecific, was: " + notho,
-        notho.equals("generic") || notho.equals("infrageneric")
-            || notho.equals("specific") || notho.equals("infraspecific"));
+    assertTrue("expected at least 'generic' in notho, was: " + notho,
+        notho.contains("generic"));
+    assertNull("notho should not contain spaces around comma: " + notho,
+        notho.contains(", ") ? notho : null);
   }
 }

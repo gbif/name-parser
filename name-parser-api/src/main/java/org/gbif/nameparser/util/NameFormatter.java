@@ -32,16 +32,16 @@ public class NameFormatter {
     // TODO: show authorship for zoological autonyms?
     // TODO: how can we best remove subsp from zoological names?
     // https://github.com/gbif/portal-feedback/issues/640
-    return buildName(n, true, true, true, true, false, true, false, true, true, false,  false, true, true, true, true, true, false);
+    return buildName(n, true, true, true, true, false, false, false, true, true, false,  false, true, true, true, true, true, true, false);
   }
-  
+
   /**
    * A full scientific name just as canonicalName, but without any authorship.
    */
   public static String canonicalWithoutAuthorship(ParsedName n) {
-    return buildName(n, true, true, false, true, false, true, false, true, true, false,  false, true, true, true, false, true, false);
+    return buildName(n, true, true, false, true, false, false, false, true, true, false,  false, true, true, true, false, true, true, false);
   }
-  
+
   /**
    * A minimal canonical name with nothing else but the 3 main name parts (genus, species, infraspecific).
    * No rank or hybrid markers and no authorship, cultivar or strain information is rendered.
@@ -54,21 +54,21 @@ public class NameFormatter {
    * Bracteata
    */
   public static String canonicalMinimal(ParsedName n) {
-    return buildName(n, false, false, false, false, false, true, true, false, false, false,  false, false, false, false, false, false, false);
+    return buildName(n, false, false, false, false, false, true, true, false, false, false,  false, false, false, false, false, false, false, false);
   }
-  
+
   /**
    * Assembles a full name with all details including non code compliant, informal remarks.
    */
   public static String canonicalComplete(ParsedName n) {
-    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, false);
+    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, true, false);
   }
-  
+
   /**
    * Assembles a full name with all details including non code compliant, informal remarks and html markup.
    */
   public static String canonicalCompleteHtml(ParsedName n) {
-    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, true);
+    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, true, true);
   }
   
   /**
@@ -92,6 +92,10 @@ public class NameFormatter {
     return sb.length() == 0 ? null : sb.toString();
   }
   
+  private static boolean hasNotho(ParsedName n, NamePart part) {
+    return n.getNotho() != null && n.getNotho().contains(part);
+  }
+
   private static void openItalics(StringBuilder sb) {
     sb.append(ITALICS_OPEN);
   }
@@ -130,6 +134,9 @@ public class NameFormatter {
    * @param showPhrase           Show phrase
    * @param showVoucher          Show vouching party
    * @param showNominatingParty  Show nominating party
+   * @param showImprintYear      include the imprint year in ICZN bracketed form
+   *                             (e.g. {@code Storr, 1970 [1969]} or, when only the
+   *                             imprint year is known, {@code Cabanis [1851]})
    * @param html                 add html markup
    */
   public static String buildName(ParsedName n,
@@ -149,6 +156,7 @@ public class NameFormatter {
                                  boolean showVoucher,
                                  boolean showNominatingParty,
                                  boolean showStrain,
+                                 boolean showImprintYear,
                                  boolean html
   ) {
     StringBuilder sb = new StringBuilder();
@@ -167,7 +175,7 @@ public class NameFormatter {
     
     if (n.getUninomial() != null) {
       // higher rank names being just a uninomial!
-      if (hybridMarker && NamePart.GENERIC == n.getNotho()) {
+      if (hybridMarker && hasNotho(n, NamePart.GENERIC)) {
         sb.append(HYBRID_MARKER)
             .append(" ");
       }
@@ -186,7 +194,7 @@ public class NameFormatter {
             // but use rank markers for botanical names (unless its no defined rank)
             if (NomCode.ZOOLOGICAL == n.getCode()) {
               sb.append("(");
-              if (hybridMarker && NamePart.INFRAGENERIC == n.getNotho()) {
+              if (hybridMarker && hasNotho(n, NamePart.INFRAGENERIC)) {
                 sb.append(HYBRID_MARKER)
                     .append(' ');
               }
@@ -199,7 +207,7 @@ public class NameFormatter {
             if (rankMarker) {
               // If we know the rank we use explicit rank markers
               // this is how botanical infrageneric names are formed, see http://www.iapt-taxon.org/nomen/main.php?page=art21
-              if (appendRankMarker(sb, n.getRank(), hybridMarker && NamePart.INFRAGENERIC == n.getNotho())) {
+              if (appendRankMarker(sb, n.getRank(), hybridMarker && hasNotho(n, NamePart.INFRAGENERIC))) {
                 sb.append(' ');
               }
             }
@@ -246,7 +254,7 @@ public class NameFormatter {
           sb.append(n.getEpithetQualifier().get(NamePart.SPECIFIC))
               .append(" ");
         }
-        if (hybridMarker && NamePart.SPECIFIC == n.getNotho()) {
+        if (hybridMarker && hasNotho(n, NamePart.SPECIFIC)) {
           sb.append(HYBRID_MARKER)
               .append(" ");
         }
@@ -292,7 +300,11 @@ public class NameFormatter {
     // uninomial, genus, infragen, species or infraspecies authorship
     if (authorship && n.hasAuthorship()) {
       sb.append(" ");
-      appendAuthorship(n, sb, n.getCode());
+      appendAuthorship(n, sb, n.getCode(), showImprintYear);
+    } else if (showImprintYear && n.getImprintYear() != null && !n.hasAuthorship()) {
+      // No authorship but an imprint year exists ("Cabanis [1851]" parsed as
+      // uninomial without comb-author year) — render the bare bracket form.
+      sb.append(" [").append(n.getImprintYear()).append(']');
     }
     
     // add strain name (phrase names get special treatment)
@@ -320,16 +332,22 @@ public class NameFormatter {
       }
     }
 
-    // Add phrase name
+    // Add phrase name. Phrase values may include a trailing author span after the
+    // collector parenthesised reference ("Sandheath (D.Murfet 3190) R.J.Bates"); for
+    // canonical rendering we drop that author-shaped tail so the output stays clean
+    // while the stored phrase keeps the full annotation. A non-author suffix (e.g.
+    // "NT Herbarium") is kept intact.
     if (showPhrase && n.isPhraseName()) {
       String phrase = n.getPhrase();
-      String voucher = n.getVoucher();
-      String nominatingParty = n.getNominatingParty();
+      int lastClose = phrase.lastIndexOf(')');
+      if (lastClose >= 0 && lastClose < phrase.length() - 1) {
+        String tail = phrase.substring(lastClose + 1).trim();
+        // Author-shaped tail: initials with dots (e.g. "R.J.Bates", "C.E.M.Bicudo").
+        if (tail.matches("(?U)[\\p{Lu}](?:\\.[\\p{Lu}])*\\..+")) {
+          phrase = phrase.substring(0, lastClose + 1);
+        }
+      }
       appendIfNotEmpty(sb, " ").append(phrase);
-      if (voucher != null && showVoucher)
-        sb.append(" (").append(voucher).append(")");
-      if (nominatingParty != null && showNominatingParty)
-        sb.append(" ").append(nominatingParty);
     }
     
     // add sensu/sec reference
@@ -362,7 +380,7 @@ public class NameFormatter {
       sb.append(n.getEpithetQualifier().get(NamePart.INFRASPECIFIC))
           .append(" ");
     }
-    if (hybridMarker && NamePart.INFRASPECIFIC == n.getNotho()) {
+    if (hybridMarker && hasNotho(n, NamePart.INFRASPECIFIC)) {
       if (rankMarker && n.getRank() != null && isInfraspecificMarker(n.getRank())) {
         sb.append("notho");
       } else {
@@ -434,7 +452,7 @@ public class NameFormatter {
       sb.append(n.getEpithetQualifier().get(NamePart.GENERIC ))
         .append(" ");
     }
-    if (hybridMarker && NamePart.GENERIC == n.getNotho()) {
+    if (hybridMarker && hasNotho(n, NamePart.GENERIC)) {
       sb.append(HYBRID_MARKER)
           .append(" ");
     }
@@ -472,6 +490,8 @@ public class NameFormatter {
   public static void appendAuthorship(StringBuilder sb, Authorship auth, boolean includeYear, NomCode code) {
     if (auth != null && auth.exists()) {
       boolean authorsAppended = false;
+      // we don't want to include the year for botanical names
+      includeYear = includeYear && code != NomCode.BOTANICAL;
       if (auth.hasExAuthors()) {
         sb.append(joinAuthors(auth.getExAuthors(), NomCode.BACTERIAL == code ? 2 : null));
         sb.append(" ex ");
@@ -494,10 +514,22 @@ public class NameFormatter {
   }
   
   private static void appendAuthorship(ParsedAuthorship a, StringBuilder sb, NomCode code) {
+    appendAuthorship(a, sb, code, true);
+  }
+
+  /** Append the authorship, optionally rendering the imprint year (ICZN Article 22). */
+  private static void appendAuthorship(ParsedAuthorship a, StringBuilder sb, NomCode code,
+                                       boolean showImprintYear) {
     final int origLength = sb.length();
+    boolean hasImprint = showImprintYear && a.getImprintYear() != null;
     if (a.hasBasionymAuthorship()) {
       sb.append("(");
       appendAuthorship(sb, a.getBasionymAuthorship(), true, code);
+      // Imprint year belongs to the original publication — when a basionym is present,
+      // render it inside the basionym brackets ("(Peters, 1876 [1877])").
+      if (hasImprint) {
+        sb.append(" [").append(a.getImprintYear()).append(']');
+      }
       sb.append(")");
     }
     if (a.hasCombinationAuthorship()) {
@@ -505,6 +537,11 @@ public class NameFormatter {
         sb.append(" ");
       }
       appendAuthorship(sb, a.getCombinationAuthorship(), true, code);
+      // No basionym → imprint year sits after the combination authorship
+      // ("Storr, 1970 [1969]" or, when there is no nominal year, "Cabanis [1851]").
+      if (hasImprint && !a.hasBasionymAuthorship()) {
+        sb.append(" [").append(a.getImprintYear()).append(']');
+      }
       // Render sanctioning author via colon:
       // http://www.iapt-taxon.org/nomen/main.php?page=r50E
       //TODO: remove rendering of sanctioning author according to Paul Kirk!

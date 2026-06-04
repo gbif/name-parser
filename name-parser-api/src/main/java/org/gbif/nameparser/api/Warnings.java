@@ -22,6 +22,11 @@ public class Warnings {
   public static final String BLACKLISTED_EPITHET = "blacklisted epithet used";
   public static final String NOMENCLATURAL_REFERENCE = "nomenclatural reference removed";
   public static final String AUTHORSHIP_REMOVED = "authorship placeholder removed";
+  public static final String YEAR_INTERPRETED = "authorship year was extract but originally was a year range or other form of year";
+  public static final String QUADRINOMIAL = "name was quadrinomial";
+  public static final String ABBREVIATED_GENUS = "abbreviated genus name";
+  public static final String ABBREVIATED_SUBGENUS = "abbreviated subgenus name";
+  public static final String REMOVED_PREFIX = "Removed: ";
 
   private Warnings() {
   }

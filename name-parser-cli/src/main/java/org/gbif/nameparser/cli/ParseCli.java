@@ -1,6 +1,6 @@
 package org.gbif.nameparser.cli;
 
-import org.gbif.nameparser.NameParserGBIF;
+import org.gbif.nameparser.NameParserImpl;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.nameparser.cli.io.NameInput;
@@ -16,24 +16,26 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * {@code parse} subcommand — streams a plain-text input file (one name per line)
- * through {@link NameParserGBIF} and writes one row per result. Both reading and
- * writing stream end-to-end, so the command scales to multi-million-row inputs
- * without growing memory.
+ * {@code parse} subcommand — streams an input file through the parser and writes
+ * one row per result. Both reading and writing stream end-to-end, so the command
+ * scales to multi-million-row inputs without growing memory.
  *
- * <p>Input is plain text only on this branch — if a row contains tabs, only the
- * substring before the first tab is used as the name (so a bare TSV like
- * {@code col-names.tsv} can be fed in directly with the extra columns ignored).
- *
- * <p>Output format is selectable with {@code --format} (default {@code jsonl}):
+ * <p>Two input shapes are auto-detected by inspecting the first non-blank,
+ * non-comment line:
  * <ul>
- *   <li>{@code jsonl} — one JSON object per line (consumed by {@code compare}).</li>
- *   <li>{@code json}  — single document with a JSON array of all rows.</li>
- *   <li>{@code csv} / {@code tsv} — flat ColDP Name file with header row.</li>
+ *   <li><b>ColDP Name file</b> (TSV or CSV) — header columns matched against
+ *       {@link life.catalogue.coldp.ColdpTerm}. Recognised columns:
+ *       {@code ID}, {@code scientificName}, {@code authorship}, {@code rank},
+ *       {@code code}. Other columns are ignored.</li>
+ *   <li><b>Plain text</b> — one name per line; everything before the first tab is
+ *       taken as the name.</li>
  * </ul>
  *
- * <p>Use {@code -} as the input or output path to stream from stdin / to stdout —
- * convenient for unix pipes:
+ * <p>Output format is selectable with {@code --format} (default {@code jsonl}):
+ * {@code jsonl}, {@code json}, {@code csv} (ColDP), {@code tsv} (ColDP).
+ *
+ * <p>Use {@code -} as the input or output path to stream from stdin / to stdout
+ * — convenient for unix pipes:
  * <pre>
  *   cat names.txt | name-parser-cli parse --input=- --output=- --format=tsv | …
  * </pre>
@@ -43,7 +45,7 @@ import java.nio.file.Paths;
  *   <li>{@code --input=PATH}  source file (default: {@code data/col-names.tsv}; {@code -} = stdin)</li>
  *   <li>{@code --output=PATH} target file (default: {@code &lt;input&gt;.&lt;format-ext&gt;}; {@code -} = stdout)</li>
  *   <li>{@code --format=FMT}  output format ({@code jsonl}, {@code json}, {@code csv}, {@code tsv})</li>
- *   <li>{@code --quiet}       suppress progress output</li>
+ *   <li>{@code --quiet}       suppress progress output (status info still goes to stderr)</li>
  *   <li>{@code -h --help}     print usage and exit</li>
  * </ul>
  *
@@ -71,16 +73,18 @@ public final class ParseCli {
             : Paths.get(inputArg).getFileName().toString() + "." + format.extension());
     boolean quiet = a.flag("quiet");
 
+    NameParser parser = new NameParserImpl();
     long start = System.nanoTime();
-    Stats s;
-    try (NameParser parser = new NameParserGBIF()) {
-      s = run(parser, inputArg, outputArg, format, quiet ? null : System.err);
-    }
+    Stats s = run(parser, inputArg, outputArg, format, quiet ? null : System.err);
     long elapsedMs = (System.nanoTime() - start) / 1_000_000L;
 
-    System.err.printf("Parsed %,d names (%,d ok, %,d unparsable) in %.1fs → %s%n",
+    PrintStream summary = System.err;
+    summary.printf("Parsed %,d names (%,d ok, %,d unparsable) in %.1fs → %s%n",
         s.total, s.ok, s.unparsable, elapsedMs / 1000.0,
         STDIO.equals(outputArg) ? "stdout" : Paths.get(outputArg).toAbsolutePath());
+    if (!quiet) {
+      summary.println("Input format detected: " + s.inputFormat);
+    }
   }
 
   /** Convenience overload kept for embedding callers. */
@@ -99,23 +103,18 @@ public final class ParseCli {
     Stats stats = new Stats();
     try (NameInputReader reader = openReader(inputArg);
          NameOutputWriter writer = openWriter(outputArg, format)) {
+      stats.inputFormat = reader.format().toString();
       NameInput row;
       while ((row = reader.next()) != null) {
         ParseResult result = new ParseResult();
         result.line = row.line();
+        result.id = row.id();
         result.input = row.name();
         try {
-          // dev's NameParser.parse takes (name, rank, code) — no separate authorship arg.
-          result.parsed = parser.parse(row.name(), row.rank(), row.code());
+          result.parsed = parser.parse(row.name(), row.authorship(), row.rank(), row.code());
           stats.ok++;
         } catch (UnparsableNameException e) {
           result.error = new ParseResult.Err(e.getType(), e.getMessage());
-          stats.unparsable++;
-        } catch (InterruptedException e) {
-          // The parser uses a thread-pool with a per-call timeout; an
-          // InterruptedException surfaces individual parse timeouts rather than
-          // a request to abort. Mark the row, then continue with the next name.
-          result.error = new ParseResult.Err(null, "parse timeout");
           stats.unparsable++;
         } catch (RuntimeException e) {
           result.error = new ParseResult.Err(null,
@@ -161,10 +160,11 @@ public final class ParseCli {
   private static void printUsage() {
     System.out.println("Usage: name-parser-cli parse [options]");
     System.out.println();
-    System.out.println("Stream a plain-text list of names through the parser and write the results.");
-    System.out.println("If a row contains tabs only the first column (before the tab) is used as");
-    System.out.println("the name — the bundled col-names.tsv is usable verbatim, additional ColDP");
-    System.out.println("columns are silently ignored.");
+    System.out.println("Stream a list of names through the parser and write the results.");
+    System.out.println("Input format is auto-detected:");
+    System.out.println("  - ColDP Name file (TSV or CSV) — recognised by header columns");
+    System.out.println("    matching ColdpTerm names (ID, scientificName, authorship, rank, code).");
+    System.out.println("  - Plain text — one name per line.");
     System.out.println();
     System.out.println("Use '-' as the input or output path to stream from stdin / to stdout:");
     System.out.println("  cat names.txt | name-parser-cli parse --input=- --output=- --format=tsv");
@@ -185,5 +185,6 @@ public final class ParseCli {
     public long total;
     public long ok;
     public long unparsable;
+    public String inputFormat;
   }
 }

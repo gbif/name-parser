@@ -1,6 +1,6 @@
 package org.gbif.nameparser.cli;
 
-import org.gbif.nameparser.NameParserGBIF;
+import org.gbif.nameparser.NameParserImpl;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.UnparsableNameException;
@@ -16,14 +16,14 @@ import java.util.EnumMap;
 import java.util.Map;
 
 /**
- * {@code benchmark} subcommand — measures parser throughput against a name-per-line
- * input file. Reports count, total / average / min / p50 / p95 / max parsing times
- * to stdout, plus a breakdown by {@link NameType}.
+ * {@code benchmark} subcommand — measures the parser's throughput against an input
+ * file containing one name per line. Reports count, total / average / min / p50 / p95
+ * / max parsing times to stdout, plus a breakdown by {@link NameType}.
  *
  * <p>Lines starting with {@code #} and blank names are skipped. By default <b>every</b>
  * input row is timed — JIT warmup is opt-in via {@code --warmup}, in which case the
- * benchmark first parses 100 names from the input untimed to let HotSpot warm up,
- * then a timed pass that parses and reports on every name.
+ * benchmark first parses 100 names from the input untimed to let HotSpot warm up, then a
+ * timed pass that parses and reports on every name.
  *
  * <p>Timings are accumulated in primitive {@code long} arrays so the run stays cheap
  * and never keeps name strings in memory — this CLI is purely about measuring
@@ -32,8 +32,8 @@ import java.util.Map;
  * <p>Options:
  * <ul>
  *   <li>{@code --input=PATH}  source file (default: {@code data/benchmark-data.txt})</li>
- *   <li>{@code --warmup}      parse the first 100 names untimed first to warm up
- *       the JIT before the timed pass</li>
+ *   <li>{@code --warmup}      parse the first 100 names untimed first to warm
+ *       up the JIT before the timed pass</li>
  *   <li>{@code -h --help}     print usage and exit</li>
  * </ul>
  */
@@ -61,22 +61,20 @@ public final class BenchmarkCli {
       System.exit(2);
     }
 
-    try (NameParser parser = new NameParserGBIF()) {
-      BenchmarkCli bench = new BenchmarkCli(parser);
-      if (warmup) {
-        System.err.println("Warming up the JIT — parsing the first " + WARMUP_NAMES + " names without timing…");
-        bench.warmup(input);
-      }
-      Result r = bench.run(input);
-      r.report(System.out);
+    BenchmarkCli bench = new BenchmarkCli(new NameParserImpl());
+    if (warmup) {
+      System.err.println("Warming up the JIT — parsing the first " + WARMUP_NAMES + " names without timing…");
+      bench.warmup(input);
     }
+    Result r = bench.run(input);
+    r.report(System.out);
   }
 
   /**
-   * Untimed parse pass used to warm up the JIT before timing. Output and
-   * exceptions are discarded — this is purely about touching the parser code
-   * paths. Stops after {@link #WARMUP_NAMES} names so the warmup cost stays
-   * bounded regardless of input size.
+   * Untimed parse pass over the entire input, used to warm up the JIT before
+   * timing. Output and exceptions are discarded — this is purely about touching
+   * the parser code paths. Stops after {@link #WARMUP_NAMES} names so the warmup
+   * cost stays bounded regardless of input size.
    */
   public void warmup(Path tsv) throws IOException {
     int n = 0;
@@ -87,8 +85,8 @@ public final class BenchmarkCli {
         String name = line.trim();
         if (name.isEmpty()) continue;
         try {
-          parser.parse(name, null, null);
-        } catch (UnparsableNameException | InterruptedException ignored) {
+          parser.parse(name, null, null, null);
+        } catch (UnparsableNameException ignored) {
           // counted in the timed pass
         }
         n++;
@@ -117,15 +115,10 @@ public final class BenchmarkCli {
         boolean ok = true;
         NameType type;
         try {
-          type = parser.parse(name, null, null).getType();
+          type = parser.parse(name, null, null, null).getType();
         } catch (UnparsableNameException e) {
           ok = false;
           type = e.getType();
-        } catch (InterruptedException e) {
-          // Per-call timeout from the parser's thread pool — treat the row as
-          // unparsable and continue with the next name.
-          ok = false;
-          type = null;
         }
         long elapsed = System.nanoTime() - t0;
 
@@ -136,7 +129,7 @@ public final class BenchmarkCli {
         }
         timings[n++] = elapsed;
         if (!ok) parseFailures++;
-        NameType key = type != null ? type : NameType.NO_NAME;
+        NameType key = type != null ? type : NameType.OTHER;
         byType.computeIfAbsent(key, k -> new long[1])[0]++;
       }
     }

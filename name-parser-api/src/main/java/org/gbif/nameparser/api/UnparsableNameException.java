@@ -32,7 +32,7 @@ public class UnparsableNameException extends Exception {
   public static class UnparsableAuthorshipException extends UnparsableNameException {
 
     public UnparsableAuthorshipException(String authorship) {
-      super(NameType.NO_NAME, authorship, "Unparsable authorship: " + authorship);
+      super(NameType.OTHER, authorship, "Unparsable authorship: " + authorship);
     }
   }
 }
