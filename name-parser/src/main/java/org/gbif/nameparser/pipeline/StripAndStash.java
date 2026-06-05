@@ -76,6 +76,17 @@ public final class StripAndStash {
       "\\s*\\(\\s*((?:nec|non|not)\\s+[^)]+)\\)\\s*\\.?\\s*$",
       Pattern.CASE_INSENSITIVE);
 
+  // Parenthesised taxonomic note inside an authorship: "(auct.)", "(sensu Author, year)",
+  // "(sec ...)". The parentheses here mark a note, not a basionym, so the inner text is
+  // captured as the taxonomic note and the parens dropped, leaving any real author beside it.
+  private static final Pattern PAREN_NOTE = Pattern.compile(
+      "\\(\\s*((?:auctt?|sensu|sec)\\b[^)]*)\\)\\s*", Pattern.CASE_INSENSITIVE);
+
+  // Leading parenthesised homonym citation "(non/nec/not ...)" — the whole authorship is a
+  // misapplied/taxonomic note, never a basionym.
+  private static final Pattern LEADING_HOMONYM_PAREN = Pattern.compile(
+      "^\\(\\s*(?:non|nec|not)\\b", Pattern.CASE_INSENSITIVE);
+
   // Trailing synonymy reference in square brackets: "[= Grislea L. 1753]".
   private static final Pattern SYNONYM_BRACKET = Pattern.compile(
       "\\s*\\[\\s*=\\s*[^\\]]+\\]\\s*\\.?\\s*$");
@@ -188,19 +199,25 @@ public final class StripAndStash {
     // lower-case "hort.".
     s = s.replaceAll("\\bHort\\.(?=\\s+ex\\s+)", "hort.");
     s = s.replaceAll("\\bhortus[a]?\\b(?=\\s+ex\\s+)", "hort.");
-    // Auctorum-style markers anywhere in the auxiliary authorship — the whole spec is
-    // a sensu reference, not a parseable author list. Capture it into the taxonomicNote
-    // and return an empty authorship. Use the same light normalisation as run()/the generic
-    // TAX_NOTE branch (collapse whitespace, glue single-letter author initials to the
-    // following word, lower-case a leading "Auct."/"Auctt.") so the note reads identically
-    // whether the auctorum reference arrives as a full name or as a standalone authorship.
-    if (s.matches("(?is).*\\bauctt?\\b.*")) {
+    // A leading parenthesised homonym citation "(non/nec/not ...)" makes the whole authorship a
+    // misapplied/taxonomic note rather than a basionym — capture it verbatim, no author left.
+    if (LEADING_HOMONYM_PAREN.matcher(s).find()) {
       String norm = s.replaceAll("\\s+", " ").trim();
-      norm = norm.replaceAll("\\b(\\p{Lu})\\.\\s+([\\p{Ll}][\\p{Ll}]{3,})", "$1.$2");
-      norm = norm.replaceAll("^(Auct)", "auct").replaceAll("^(Auctt)", "auctt");
       String existing = name.getTaxonomicNote();
       name.setTaxonomicNote(existing == null ? norm : existing + " " + norm);
       return "";
+    }
+    // Parenthesised taxonomic note "(auct.)" / "(sensu ...)" / "(sec ...)" — the parens mark a
+    // note, not a basionym. Capture the inner text as the taxonomic note, drop the parens, and
+    // keep any real author beside them: "(auct.) Rolfe" → author Rolfe + note "auct.";
+    // "(sensu X, 1878) Y, 1992" → author Y, 1992 + note "sensu X, 1878".
+    m = PAREN_NOTE.matcher(s);
+    if (m.find()) {
+      String norm = m.group(1).trim().replaceAll("\\s+", " ");
+      norm = norm.replaceAll("^(Auct)", "auct").replaceAll("^(Auctt)", "auctt");
+      String existing = name.getTaxonomicNote();
+      name.setTaxonomicNote(existing == null ? norm : existing + " " + norm);
+      s = (s.substring(0, m.start()) + s.substring(m.end())).trim();
     }
     // Bracketed nom-notes "(nom. nud.)" / "[nom. cons.]" in the auxiliary authorship —
     // extract into nomenclaturalNote and drop from the string before tokenisation.
@@ -248,7 +265,8 @@ public final class StripAndStash {
         String norm = raw.replaceAll("\\b(\\p{Lu})\\.\\s+([\\p{Ll}][\\p{Ll}]{3,})", "$1.$2");
         norm = norm.replaceAll("^(Auct)", "auct").replaceAll("^(Auctt)", "auctt");
         String existing = name.getTaxonomicNote();
-        name.setTaxonomicNote(existing == null ? norm : existing + " " + norm);
+        name.setTaxonomicNote(existing == null ? norm
+            : existing.equals(norm) ? existing : existing + " " + norm);
         s = s.substring(0, s.length() - m.group(1).length()).trim();
         while (s.endsWith(",")) s = s.substring(0, s.length() - 1).trim();
       }
@@ -258,6 +276,18 @@ public final class StripAndStash {
 
   static void run(ParseContext ctx) {
     String s = ctx.working;
+    // A leading monomial wrapped in quotes ("'Prosthète' Hesse, 1861" / "\"Foo\" Bar, 2000")
+    // marks a word that is not an available scientific name. Strip the quotes for parsing,
+    // remember the quote char so Assemble can re-wrap the parsed uninomial, and flag doubtful.
+    {
+      Matcher qm = Pattern.compile("^(['\"])\\s*([\\p{Lu}][\\p{L}-]+)\\s*\\1(\\s+.+)?$",
+              Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+      if (qm.find()) {
+        ctx.quotedMonomial = qm.group(1);
+        ctx.name.setDoubtful(true);
+        s = (qm.group(2) + (qm.group(3) == null ? "" : qm.group(3))).trim();
+      }
+    }
     // Missing-genus placeholder forms — the user-facing genus is replaced by "?":
     //   "denheyeri Eghbalian, …, 2017"            → "? denheyeri Eghbalian, …, 2017"
     //   "Missing penchinati Bourguignat, 1870"    → "? penchinati Bourguignat, 1870"

@@ -2720,21 +2720,6 @@ public class NameParserImplTest {
             .sensu("sensu Turcz., p.p.");
   }
 
-  /**
-   * sensu.txt cases that are not yet handled correctly. Each assertion encodes the desired
-   * parse; the comment describes the current bug. @Ignore'd so the build stays green — drop
-   * the annotation and move the case into {@link #taxonomicNotes()} once fixed.
-   */
-  @Ignore("desired parse for still-unsupported sensu.txt authorship cases — not yet implemented")
-  @Test
-  public void taxonomicNotesUnsupported() throws Exception {
-    // "sensu …" inside the basionym parentheses currently becomes the basionym authorship
-    // ("sensu Mereschkowsky, 1878") instead of the taxonomic note.
-    assertAuthorship("(sensu Mereschkowsky, 1878) Jankowski, 1992", "Jankowski")
-            .combAuthors("1992", "Jankowski")
-            .sensu("sensu Mereschkowsky, 1878");
-  }
-
   @Test
   public void nonNames() throws Exception {
     // the entire name ends up as a taxonomic note, consider this as unparsed...
@@ -2820,11 +2805,41 @@ public class NameParserImplTest {
     assertAuthorship("OʼBrien", "O'Brien");   // U+02BC modifier letter apostrophe
     assertAuthorship("L´Hér.", "L'Hér.");     // U+00B4 acute accent used as apostrophe
 
+    // In zoological nomenclature, names written like:
+    //
+    //'Prosthète' Hesse, 1861
+    //
+    //often indicate that the word is not available as a scientific name.
+    // The quotation marks signal that it was published but is not recognized as a valid nomenclatural act.
+    //
+     // 'Prosthète' Hesse, 1861 is not a valid scientific genus name.
+    //
+    // It was a French vernacular (common-language) name introduced by the French zoologist Eugène Hesse in 1861 for an isopod crustacean.
+    // The name was later ruled to be a vernacular term rather than an available zoological name under the ICZN.
+    // The Official Index of Zoological Names explicitly lists 'Prosthète' Hesse, 1861 as "a vernacular name."
+    assertName("'Prosthète' Hesse 1861", "'Prosthète'")
+        .monomial("'Prosthète'")
+        .doubtful() // because the quotes indicate it is not a valid scientific name
+        .combAuthors("1861", "Hesse")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
     // the curly-quoted input parses identically to the ASCII-quoted one (‘Prosthète’ Hesse 1861)
     assertEquals(parser.parse("'Prosthète' Hesse 1861", null, null, null),
                  parser.parse("‘Prosthète’ Hesse 1861", null, null, null));
     assertEquals(parser.parse("\"Prosthète\" Hesse 1861", null, null, null),
                  parser.parse("“Prosthète” Hesse 1861", null, null, null));
+  }
+
+  @Test
+  public void strayCharInEpithet() throws Exception {
+    // a stray "!" inside an epithet (OCR/typo artefact for "pulchra") is kept as part of the
+    // epithet, not split off into the authorship
+    assertName("Lamprostiba pu!chra Pace, 2014", "Lamprostiba pu!chra")
+            .species("Lamprostiba", "pu!chra")
+            .combAuthors("2014", "Pace")
+            .code(ZOOLOGICAL)
+            .nothingElse();
   }
 
   private void assertSensu(String raw, String sensu) throws UnparsableNameException, InterruptedException {
@@ -3284,12 +3299,31 @@ public class NameParserImplTest {
 
   @Test
   public void authorshipOnlyNotes() throws Exception {
+    // "(auct.) Author": the parens mark a note, not a basionym → author + taxonomic note
     assertAuthorship("(auct.) Rolfe")
-            .sensu("(auct.) Rolfe")
+            .combAuthors(null, "Rolfe")
+            .sensu("auct.")
             .nothingElse();
 
+    assertAuthorship("(auct.) auct.")
+            .sensu("auct.")
+            .nothingElse();
+
+    // taxonomic note + nomenclatural note are split into their own fields
     assertAuthorship("auct., nom. subnud.")
-            .sensu("auct., nom. subnud.")
+            .sensu("auct.")
+            .nomNote("nom. subnud.")
+            .nothingElse();
+
+    // a parenthesised "(sensu …)" is the taxonomic note; the trailing name is the author
+    assertAuthorship("(sensu Mereschkowsky, 1878) Jankowski, 1992")
+            .combAuthors("1992", "Jankowski")
+            .sensu("sensu Mereschkowsky, 1878")
+            .nothingElse();
+
+    // a leading parenthesised homonym citation makes the whole string a taxonomic note
+    assertAuthorship("(non Scacchi, 1836) sensu Zibrowius, 1968")
+            .sensu("(non Scacchi, 1836) sensu Zibrowius, 1968")
             .nothingElse();
 
     assertAuthorship("Fischer-Le Saux et al., 1999 emend. Akhurst et al., 2004")
@@ -3692,7 +3726,7 @@ public class NameParserImplTest {
             .combAuthors(null, "Bidaud")
             .nothingElse();
 
-    assertName("Asarum sieboldii f. non-maculatum (Y.N.Lee) M.Kim", "Asarum sieboldii f. non-maculatum")
+    assertName("Asarum sieboldii f. non-maculatum (Y.N.Lee) M. Kim", "Asarum sieboldii f. non-maculatum")
             .infraSpecies("Asarum", "sieboldii", FORM, "non-maculatum")
             .combAuthors(null, "M.Kim")
             .basAuthors(null, "Y.N.Lee")

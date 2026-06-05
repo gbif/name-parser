@@ -262,6 +262,17 @@ public final class Assemble {
       }
       n.setType(NameType.INFORMAL);
     }
+
+    // Re-wrap a quoted leading monomial ("'Prosthète'") so the output keeps the quotes that
+    // mark it as an unavailable name; the quotes were stripped for parsing in StripAndStash.
+    if (ctx.quotedMonomial != null) {
+      String q = ctx.quotedMonomial;
+      if (n.getUninomial() != null) {
+        n.setUninomial(q + n.getUninomial() + q);
+      } else if (n.getGenus() != null) {
+        n.setGenus(q + n.getGenus() + q);
+      }
+    }
   }
 
   private static void flagBlacklistedEpithets(ParsedName n) {

@@ -49,6 +49,13 @@ public final class ParseContext {
    * else has settled the code.
    */
   public boolean inAuthorCitation;
+  /**
+   * Quote char ("'" or '"') a leading monomial was wrapped in (e.g. "'Prosthète' Hesse, 1861").
+   * Such quotes mark a name that is not an available scientific name; the quotes are stripped
+   * for parsing and re-wrapped around the parsed uninomial in {@link Assemble} so the output
+   * keeps them, and the name is flagged doubtful.
+   */
+  public String quotedMonomial;
 
   public ParseContext(String scientificName, String authorship, Rank rank, NomCode code) {
     this.original = scientificName;
