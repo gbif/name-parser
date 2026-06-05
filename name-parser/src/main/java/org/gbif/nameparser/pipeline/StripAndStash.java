@@ -189,15 +189,15 @@ public final class StripAndStash {
     s = s.replaceAll("\\bHort\\.(?=\\s+ex\\s+)", "hort.");
     s = s.replaceAll("\\bhortus[a]?\\b(?=\\s+ex\\s+)", "hort.");
     // Auctorum-style markers anywhere in the auxiliary authorship — the whole spec is
-    // a sensu reference, not a parseable author list. Capture the text verbatim into
-    // the taxonomicNote (with whitespace tidied up) and return an empty authorship.
+    // a sensu reference, not a parseable author list. Capture it into the taxonomicNote
+    // and return an empty authorship. Use the same light normalisation as run()/the generic
+    // TAX_NOTE branch (collapse whitespace, glue single-letter author initials to the
+    // following word, lower-case a leading "Auct."/"Auctt.") so the note reads identically
+    // whether the auctorum reference arrives as a full name or as a standalone authorship.
     if (s.matches("(?is).*\\bauctt?\\b.*")) {
-      // Normalise spacing: collapse whitespace, ensure a space after every period and
-      // around every comma. "(auct.)" → "(auct. )", "auct.," → "auct. ,".
       String norm = s.replaceAll("\\s+", " ").trim();
-      norm = norm.replaceAll("\\.(?=[^\\s])", ". ");
-      norm = norm.replaceAll("\\s*,\\s*", " , ");
-      norm = norm.replaceAll("\\s{2,}", " ").trim();
+      norm = norm.replaceAll("\\b(\\p{Lu})\\.\\s+([\\p{Ll}][\\p{Ll}]{3,})", "$1.$2");
+      norm = norm.replaceAll("^(Auct)", "auct").replaceAll("^(Auctt)", "auctt");
       String existing = name.getTaxonomicNote();
       name.setTaxonomicNote(existing == null ? norm : existing + " " + norm);
       return "";
@@ -215,7 +215,11 @@ public final class StripAndStash {
     // string. The same patterns are applied to the main working string in run(); apply them
     // here too so a separately-supplied "Author, year emend. Other, year" doesn't leak the
     // second year into the parsed authorship.
-    m = TAX_NOTE.matcher(s);
+    // Match against a space-padded copy so a note anchored at the very START of the string
+    // ("sensu Turcz., p.p.") is caught too — TAX_NOTE requires a leading whitespace. The note
+    // always runs to end of string, so group(1) is a suffix of s and the author part is
+    // whatever precedes it (empty when the whole string is the note).
+    m = TAX_NOTE.matcher(" " + s);
     if (m.find()) {
       String raw = m.group(1).trim();
       if (!raw.isEmpty()) {
@@ -223,7 +227,7 @@ public final class StripAndStash {
         norm = norm.replaceAll("^(Auct)", "auct").replaceAll("^(Auctt)", "auctt");
         String existing = name.getTaxonomicNote();
         name.setTaxonomicNote(existing == null ? norm : existing + " " + norm);
-        s = s.substring(0, m.start()).trim();
+        s = s.substring(0, s.length() - m.group(1).length()).trim();
         while (s.endsWith(",")) s = s.substring(0, s.length() - 1).trim();
       }
     }

@@ -2700,6 +2700,11 @@ public class NameParserImplTest {
             .species("Latrodectus", "marikitates")
             .sensu("sensu Whittaker")
             .nothingElse();
+
+    // pure taxonomic note supplied as the authorship, no author preceding it (sensu.txt)
+    assertAuthorship("sensu Turcz., p.p.")
+            .combAuthors(null)
+            .sensu("sensu Turcz., p.p.");
   }
 
   /**
@@ -2715,11 +2720,6 @@ public class NameParserImplTest {
     assertAuthorship("(sensu Mereschkowsky, 1878) Jankowski, 1992", "Jankowski")
             .combAuthors("1992", "Jankowski")
             .sensu("sensu Mereschkowsky, 1878");
-
-    // pure taxonomic note with no authorship: "sensu Turcz." and "p.p." are currently turned
-    // into authors, and the ", p.p." part is dropped from the note.
-    assertAuthorship("sensu Turcz., p.p.")
-            .sensu("sensu Turcz., p.p.");
   }
 
   @Test
@@ -2782,6 +2782,9 @@ public class NameParserImplTest {
         .species("Mentha", "rotundifolia")
         .sensu("auct. nec Zeller, 1877")
         .nothingElse();
+
+    assertAuthorship("auct. nec Zeller, 1877")
+        .sensu("auct. nec Zeller, 1877");
 
     assertName("Latrodectus marikitates auct. nec Whittaker", "Latrodectus marikitates")
         .species("Latrodectus", "marikitates")
@@ -3247,11 +3250,11 @@ public class NameParserImplTest {
   @Test
   public void authorshipOnlyNotes() throws Exception {
     assertAuthorship("(auct.) Rolfe")
-            .sensu("(auct. ) Rolfe")
+            .sensu("(auct.) Rolfe")
             .nothingElse();
 
     assertAuthorship("auct., nom. subnud.")
-            .sensu("auct. , nom. subnud.")
+            .sensu("auct., nom. subnud.")
             .nothingElse();
 
     assertAuthorship("Fischer-Le Saux et al., 1999 emend. Akhurst et al., 2004")
