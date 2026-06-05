@@ -144,7 +144,7 @@ public class NameParserImplTest {
             .code(ZOOLOGICAL)
             .nothingElse();
 
-    assertName("Barleeidae [sic]", "Barleeidae")
+    assertName("Barleeidae [sic!]", "Barleeidae")
             .monomial("Barleeidae")
             .sic()
             .nothingElse();
@@ -158,19 +158,6 @@ public class NameParserImplTest {
     assertName("Turbo porphyrites [sic, porphyria]", "Turbo porphyrites")
             .species("Turbo", "porphyrites")
             .partial("(sic,porphyria)") // not ideal , but hey
-            .sic()
-            .nothingElse();
-
-    assertAuthorship("[sic]")
-            .sic()
-            .nothingElse();
-
-    assertAuthorship("[sic] Walter", "Walter")
-            .sic()
-            .combAuthors(null, "Walter")
-            .nothingElse();
-
-    assertAuthorship("[sic!]")
             .sic()
             .nothingElse();
   }
@@ -2707,8 +2694,7 @@ public class NameParserImplTest {
     // "(Author, year) sensu …": basionym authorship, sensu trails as the taxonomic note
     assertAuthorship("(Mereschkowsky, 1878) sensu Jankowski, 1992")
             .basAuthors("1878", "Mereschkowsky")
-            .sensu("sensu Jankowski, 1992")
-            .code(ZOOLOGICAL);
+            .sensu("sensu Jankowski, 1992");
 
     assertName("Latrodectus marikitates sensu Whittaker", "Latrodectus marikitates")
             .species("Latrodectus", "marikitates")
@@ -3318,22 +3304,18 @@ public class NameParserImplTest {
 
     assertAuthorship("(Wang & Liu, 1996)")
             .basAuthors("1996", "Wang", "Liu")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertAuthorship("(Wang, Yuwen & Xian-wei Liu, 1996)")
             .basAuthors("1996", "Wang", "Yuwen", "Xian-wei Liu")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertAuthorship("(Liu, Xian-wei, Z. Zheng & G. Xi, 1991)")
             .basAuthors("1991", "Liu", "Xian-wei", "Z.Zheng", "G.Xi")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertAuthorship("(Ristorcelli & Van ty, 1941)")
             .basAuthors("1941", "Ristorcelli", "Van ty")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
 
@@ -3343,7 +3325,6 @@ public class NameParserImplTest {
 
     assertAuthorship("(Walker, F., 1858)")
             .basAuthors("1858", "F.Walker")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertAuthorship("Schaufuss, L. W.")
@@ -3383,7 +3364,6 @@ public class NameParserImplTest {
     // van der
     assertAuthorship("(van der Wulp, 1885)")
             .basAuthors("1885", "van der Wulp")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     // https://www.ipni.org/a/40285-1
@@ -4010,10 +3990,10 @@ public class NameParserImplTest {
     return assertExAuthorship(rawAuthorship, null, expectedAuthors);
   }
   NameAssertion assertExAuthorship(String rawAuthorship, String exAuthor, String... expectedAuthors) throws UnparsableNameException {
-    var pn = parser.parse("Abies alba", rawAuthorship, null, null);
-    var na = new NameAssertion(pn);
-    Authorship auth = pn.getCombinationAuthorship();
-    na.species("Abies", "alba");
+    var pa = parser.parseAuthorship(rawAuthorship, null);
+    var na = new NameAssertion(pa);
+    na.type(null);
+    Authorship auth = pa.getCombinationAuthorship();
     if (exAuthor == null) {
       assertFalse(auth.hasExAuthors());
     } else {

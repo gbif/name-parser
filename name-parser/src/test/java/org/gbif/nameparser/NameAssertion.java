@@ -52,7 +52,11 @@ public class NameAssertion {
   public NameAssertion(ParsedName n) {
     this.n = n;
   }
-  
+  public NameAssertion(ParsedAuthorship pa) {
+    this.n = new ParsedName();
+    this.n.copy(pa);
+  }
+
   void nothingElse() {
     System.out.println(n.canonicalName());
     System.out.println(n.canonicalNameComplete());
