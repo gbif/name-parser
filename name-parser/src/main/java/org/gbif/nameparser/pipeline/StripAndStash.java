@@ -211,6 +211,28 @@ public final class StripAndStash {
       name.setNomenclaturalNote(existing == null ? normaliseNomNote(raw) : existing + " " + normaliseNomNote(raw));
       s = s.substring(0, m.start()).trim();
     }
+    // Bare nomenclatural notes ("nom. illeg.", "comb. nov.", "sp. nov.", …) in the auxiliary
+    // authorship — same extraction as run(), so a separately supplied authorship behaves like
+    // the equivalent tail on a full name. Match against a space-padded copy so a note anchored
+    // at the very START of the string ("nom. illeg.") is caught too — NOM_NOTE requires a
+    // leading whitespace. The leading padding space ends up in "before" and is removed by trim.
+    String paddedNom = " " + s;
+    m = NOM_NOTE.matcher(paddedNom);
+    if (m.find()) {
+      String raw = m.group(1).trim();
+      if (!raw.isEmpty()) {
+        String norm = normaliseNomNote(raw);
+        String existing = name.getNomenclaturalNote();
+        name.setNomenclaturalNote(existing == null ? norm : existing + " " + norm);
+        String before = paddedNom.substring(0, m.start());
+        String after = paddedNom.substring(m.end());
+        s = (before + (after.isEmpty() ? "" : " " + after)).trim();
+        while (s.endsWith(",")) s = s.substring(0, s.length() - 1).trim();
+        if (raw.matches("(?i).*\\b(?:ined|ms|msc|unpublished)\\b.*")) {
+          name.setManuscript(true);
+        }
+      }
+    }
     // Strip taxonomic-note tails (sensu, emend., auct., etc.) from the auxiliary authorship
     // string. The same patterns are applied to the main working string in run(); apply them
     // here too so a separately-supplied "Author, year emend. Other, year" doesn't leak the

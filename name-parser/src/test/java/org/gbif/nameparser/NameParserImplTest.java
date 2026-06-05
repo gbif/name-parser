@@ -3572,6 +3572,13 @@ public class NameParserImplTest {
 
   @Test
   public void testNomenclaturalNotesPattern() throws Exception {
+    // author only
+    var pa = parser.parseAuthorship("nom. illeg.", null);
+    var na =  new NameAssertion(pa);
+    na.type(null);
+    na.nomNote("nom. illeg.");
+    na.nothingElse();
+
     assertNomNote("nom. illeg.",  "Vaucheria longicaulis var. bengalensis Islam, nom. illeg.");
     assertNomNote("nom. correct",  "Dorataspidae nom. correct");
     assertNomNote("nom. transf.",  "Ethmosphaeridae nom. transf.");
