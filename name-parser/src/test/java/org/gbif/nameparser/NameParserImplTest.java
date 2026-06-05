@@ -488,6 +488,19 @@ public class NameParserImplTest {
             .warning(Warnings.NULL_EPITHET)
             .nothingElse();
 
+    // a literal "Null" genus is a data artefact too — flag doubtful like a null epithet
+    assertName("Null bactus", "Null bactus")
+            .species("Null", "bactus")
+            .doubtful()
+            .warning(Warnings.NULL_EPITHET)
+            .nothingElse();
+
+    assertName("Null", "Null")
+            .monomial("Null")
+            .doubtful()
+            .warning(Warnings.NULL_EPITHET)
+            .nothingElse();
+
     assertUnparsable("Unidentified unidentified Hood", PLACEHOLDER);
 
     assertUnparsable("Abies unidentified", PLACEHOLDER);
@@ -2790,6 +2803,28 @@ public class NameParserImplTest {
         .species("Latrodectus", "marikitates")
         .sensu("auct. nec Whittaker")
         .nothingElse();
+  }
+
+  /**
+   * Unicode apostrophe / quote variants are normalised to ASCII (' and ") in the parsed output,
+   * on both the scientific name and the separately supplied authorship.
+   */
+  @Test
+  public void quoteNormalisation() throws Exception {
+    assertName("Abies alba O’Brien", "Abies alba")
+            .species("Abies", "alba")
+            .combAuthors(null, "O'Brien")
+            .nothingElse();
+
+    assertAuthorship("O’Brien", "O'Brien");   // U+2019 right single quotation mark
+    assertAuthorship("OʼBrien", "O'Brien");   // U+02BC modifier letter apostrophe
+    assertAuthorship("L´Hér.", "L'Hér.");     // U+00B4 acute accent used as apostrophe
+
+    // the curly-quoted input parses identically to the ASCII-quoted one (‘Prosthète’ Hesse 1861)
+    assertEquals(parser.parse("'Prosthète' Hesse 1861", null, null, null),
+                 parser.parse("‘Prosthète’ Hesse 1861", null, null, null));
+    assertEquals(parser.parse("\"Prosthète\" Hesse 1861", null, null, null),
+                 parser.parse("“Prosthète” Hesse 1861", null, null, null));
   }
 
   private void assertSensu(String raw, String sensu) throws UnparsableNameException, InterruptedException {

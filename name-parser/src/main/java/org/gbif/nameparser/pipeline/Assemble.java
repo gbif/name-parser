@@ -265,13 +265,19 @@ public final class Assemble {
   }
 
   private static void flagBlacklistedEpithets(ParsedName n) {
+    // A literal "null" is a data artefact in any name part — uninomial or genus just as much
+    // as an epithet ("Null bactus", "Abies null Hood"). Flag the name doubtful in all cases.
+    String[] nameParts = {n.getUninomial(), n.getGenus(), n.getSpecificEpithet(), n.getInfraspecificEpithet()};
+    for (String part : nameParts) {
+      if (part != null && "null".equalsIgnoreCase(part)) {
+        n.setDoubtful(true);
+        n.addWarning(Warnings.NULL_EPITHET);
+      }
+    }
     String[] epithets = {n.getSpecificEpithet(), n.getInfraspecificEpithet()};
     for (String ep : epithets) {
       if (ep == null) continue;
-      if ("null".equalsIgnoreCase(ep)) {
-        n.setDoubtful(true);
-        n.addWarning(Warnings.NULL_EPITHET);
-      } else if (BlacklistedEpithets.contains(ep)) {
+      if (BlacklistedEpithets.contains(ep)) {
         n.setDoubtful(true);
         n.addWarning(Warnings.BLACKLISTED_EPITHET);
       }

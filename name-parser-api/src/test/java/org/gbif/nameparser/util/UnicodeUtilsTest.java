@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
 
 import static org.gbif.nameparser.util.UnicodeUtils.foldToAscii;
+import static org.gbif.nameparser.util.UnicodeUtils.normalizeQuotes;
 import static org.junit.Assert.*;
 
 
@@ -139,6 +140,30 @@ public class UnicodeUtilsTest {
 
     String test = "ŠŒŽšœžŸ¥µÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ";
     assertEquals("SOEZsoezY¥µAAAAAAAECEEEEIIIIDNOOOOOOUUUUYssaaaaaaaeceeeeiiiidnoooooouuuuyy", foldToAscii(test));
+  }
+
+  @Test
+  public void testNormalizeQuotes() throws Exception {
+    assertEquals(null, normalizeQuotes(null));
+    assertEquals("", normalizeQuotes(""));
+    assertEquals("abc", normalizeQuotes("abc"));
+    assertEquals("'a' \"b\"", normalizeQuotes("'a' \"b\""));   // ASCII unchanged
+
+    // unicode single quotes / apostrophes -> ASCII '
+    assertEquals("'Prosthète'", normalizeQuotes("‘Prosthète’"));   // U+2018 / U+2019
+    assertEquals("O'Brien", normalizeQuotes("O’Brien"));            // U+2019
+    assertEquals("O'Brien", normalizeQuotes("OʼBrien"));            // U+02BC modifier letter apostrophe
+    assertEquals("O'Brien", normalizeQuotes("O\u0092Brien"));       // Windows-1252 right single quote
+    assertEquals("L'Hér.", normalizeQuotes("L´Hér."));              // U+00B4 acute accent
+    assertEquals("d'Urv.", normalizeQuotes("d`Urv."));              // U+0060 backtick
+    assertEquals("5'", normalizeQuotes("5′"));                      // U+2032 prime
+    assertEquals("'okina", normalizeQuotes("ʻokina"));             // U+02BB
+
+    // unicode double quotes / double primes -> ASCII "
+    assertEquals("\"Prosthète\"", normalizeQuotes("“Prosthète”"));  // U+201C / U+201D
+    assertEquals("\"x\"", normalizeQuotes("„x‟"));                  // U+201E / U+201F
+    assertEquals("\"x\"", normalizeQuotes("\u0093x\u0094"));        // Windows-1252 double quotes
+    assertEquals("12\"", normalizeQuotes("12″"));                   // U+2033 double prime
   }
 
   @Test

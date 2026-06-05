@@ -368,13 +368,8 @@ public final class StripAndStash {
     if (!s.equals(beforeHyphen)) {
       ctx.name.addWarning(Warnings.HOMOGLYHPS);
     }
-    // Curly apostrophes are normalised silently (no HOMOGLYHPS warning) — they're
-    // common in copy-pasted authorship and don't affect interpretation. Also
-    // normalise acute accent (´) and back-tick (`) when they appear inside an
-    // author surname — frequently typed as substitutes for the apostrophe in
-    // "L'Hèr.", "O'Flannagan" etc.
-    s = s.replace('‘', '\'').replace('’', '\'')
-         .replace('´', '\'').replace('`', '\'');
+    // Apostrophe / quote variants (curly, prime, modifier-letter, fullwidth, …) are already
+    // normalised to ASCII in Pipeline.run before tokenisation, so nothing to do here.
     // Replace known homoglyphs (Latin look-alikes from other scripts) with their
     // canonical Latin counterpart. Emit a HOMOGLYHPS warning when anything actually
     // changed. Hyphen homoglyphs are intentionally excluded — those are normalised

@@ -7,6 +7,7 @@ import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.nameparser.token.Token;
 import org.gbif.nameparser.token.Tokenizer;
+import org.gbif.nameparser.util.UnicodeUtils;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -29,6 +30,12 @@ public final class Pipeline {
     if (trimmed.isEmpty()) {
       throw new UnparsableNameException(NameType.OTHER, scientificName);
     }
+    // Normalise the many unicode apostrophe / quote variants to ASCII (' and ") up front so
+    // every parsed field (genus, epithets, authorship, unparsed) and both the name and the
+    // separately supplied authorship come out with consistent ASCII punctuation. The raw
+    // scientificName is kept for faithful echo in any UnparsableNameException thrown below.
+    trimmed = UnicodeUtils.normalizeQuotes(trimmed);
+    authorship = UnicodeUtils.normalizeQuotes(authorship);
     ParseContext ctx = new ParseContext(trimmed, authorship, rank, code);
     splitGluedPhraseName(ctx);
     Preflight.run(scientificName, ctx.working);
