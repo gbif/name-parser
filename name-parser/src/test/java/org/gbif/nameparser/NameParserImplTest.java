@@ -1172,6 +1172,348 @@ public class NameParserImplTest {
     assertUnparsable("Bartonella group", INFORMAL);
   }
 
+  /**
+   * "-lineage" labels are informal phylogenetic group names that, like the "-group" /
+   * "-complex" aggregates, can refer to any rank and so are treated as INFORMAL.
+   * Unlike those, the stem is often an OTU-/strain-like code with digits or a lowercase
+   * start (NC12A-lineage, he2-lineage).
+   */
+  @Test
+  public void lineageInformal() throws Exception {
+    assertUnparsable("Vermistella-lineage", INFORMAL);
+    assertUnparsable("Flamella-lineage", INFORMAL);
+    assertUnparsable("Pessonella-lineage", INFORMAL);
+    assertUnparsable("NC12A-lineage", INFORMAL);
+    assertUnparsable("he2-lineage", INFORMAL);
+  }
+
+  /**
+   * Regression tests graduated from TODO-names.txt: names that the parser now handles
+   * correctly. The still-unsupported entries from that file are documented (with their
+   * desired parse) in {@link #todoNamesUnsupported()} below.
+   */
+  @Test
+  public void todoNames() throws Exception {
+    assertName("Pseudoleptomesochrella incerta (Chap. and Delam. -deb., 1956)", "Pseudoleptomesochrella incerta")
+            .species("Pseudoleptomesochrella", "incerta")
+            .basAuthors("1956", "Chap.", "Delam.-deb.")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    // homoglyph "?" in the author abbreviation cannot be recovered, so it is stripped
+    assertName("Rosa intermedia Cr?p.", "Rosa intermedia")
+            .species("Rosa", "intermedia")
+            .combAuthors(null, "Crp.")
+            .doubtful()
+            .warning(Warnings.QUESTION_MARKS_REMOVED)
+            .nothingElse();
+
+    assertName("Rosa alpestris D?s?gl.", "Rosa alpestris")
+            .species("Rosa", "alpestris")
+            .combAuthors(null, "Dsgl")
+            .doubtful()
+            .warning(Warnings.QUESTION_MARKS_REMOVED)
+            .nothingElse();
+
+    assertName("Digitaria sanguinea Weber, orth. var.", "Digitaria sanguinea")
+            .species("Digitaria", "sanguinea")
+            .combAuthors(null, "Weber")
+            .nomNote("orth. var.")
+            .nothingElse();
+
+    assertName("Quercus aquifolia Kotschy ex A.DC., nom. subnud.", "Quercus aquifolia")
+            .species("Quercus", "aquifolia")
+            .combExAuthors("Kotschy")
+            .combAuthors(null, "A.DC.")
+            .nomNote("nom. subnud.")
+            .nothingElse();
+
+    assertName("Spermacoce lanceolata Frank ex C.Presl, pro syn.", "Spermacoce lanceolata")
+            .species("Spermacoce", "lanceolata")
+            .combExAuthors("Frank")
+            .combAuthors(null, "C.Presl")
+            .nomNote("pro syn.")
+            .nothingElse();
+
+    assertName("Cavendishia polyantha H?rold, pro syn.", "Cavendishia polyantha")
+            .species("Cavendishia", "polyantha")
+            .combAuthors(null, "Hrold")
+            .nomNote("pro syn.")
+            .doubtful()
+            .warning(Warnings.QUESTION_MARKS_REMOVED)
+            .nothingElse();
+
+    assertName("Leucopogon veillonii (Virot) comb. ined.", "Leucopogon veillonii")
+            .species("Leucopogon", "veillonii")
+            .basAuthors(null, "Virot")
+            .nomNote("comb. ined.")
+            .manuscript()
+            .nothingElse();
+
+    assertName("Vernoniastrum musofense var. miamensis (S. Moore) comb. ined.", "Vernoniastrum musofense var. miamensis")
+            .infraSpecies("Vernoniastrum", "musofense", VARIETY, "miamensis")
+            .basAuthors(null, "S.Moore")
+            .nomNote("comb. ined.")
+            .manuscript()
+            .code(BOTANICAL)
+            .nothingElse();
+
+    assertName("Spermacoce tenuis Sess? & Moc., orth. var.", "Spermacoce tenuis")
+            .species("Spermacoce", "tenuis")
+            .combAuthors(null, "Sess", "Moc.")
+            .nomNote("orth. var.")
+            .nothingElse();
+
+    assertName("Quercus serra Liebm., non Unger (1845), fossil name.", "Quercus serra")
+            .species("Quercus", "serra")
+            .combAuthors(null, "Liebm.")
+            .sensu("non Unger (1845), fossil name.")
+            .nothingElse();
+
+    assertName("Ceratellopsis acuminata sensu Bourdot & Galzin (1927); fide Checklist of Basidiomycota of Great Britain and Ireland (2005)", "Ceratellopsis acuminata")
+            .species("Ceratellopsis", "acuminata")
+            .sensu("sensu Bourdot & Galzin (1927); fide Checklist of Basidiomycota of Great Britain and Ireland (2005)")
+            .nothingElse();
+
+    assertName("Agaricus rosellus sensu Withering [Bot. Arr. Brit. Pl. 1: 237 (1787)]; fide Checklist of Basidiomycota of Great Britai", "Agaricus rosellus")
+            .species("Agaricus", "rosellus")
+            .sensu("sensu Withering [Bot. Arr. Brit. Pl. 1: 237 (1787)]; fide Checklist of Basidiomycota of Great Britai")
+            .nothingElse();
+
+    assertName("Roridomyces albororidus (Maas Geest. & de Meijer) anon., 2010", "Roridomyces albororidus")
+            .species("Roridomyces", "albororidus")
+            .basAuthors(null, "Maas Geest.", "de Meijer")
+            .combAuthors("2010", "anon.")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Collybia mephitica sensu Rea (1922); fide Checklist of Basidiomycota of Great Britain and Ireland (2005)", "Collybia mephitica")
+            .species("Collybia", "mephitica")
+            .sensu("sensu Rea (1922); fide Checklist of Basidiomycota of Great Britain and Ireland (2005)")
+            .nothingElse();
+
+    assertName("Russula amoena sensu A.A. Pearson [Naturalist (1948)]; fide Checklist of Basidiomycota of Great Britain and Ireland", "Russula amoena")
+            .species("Russula", "amoena")
+            .sensu("sensu A.A. Pearson [Naturalist (1948)]; fide Checklist of Basidiomycota of Great Britain and Ireland")
+            .nothingElse();
+
+    assertName("Puccinia veronicarum sensu Grove (1913) p.p.; fide Checklist of Basidiomycota of Great Britain and Ireland (2005)", "Puccinia veronicarum")
+            .species("Puccinia", "veronicarum")
+            .sensu("sensu Grove (1913) p.p.; fide Checklist of Basidiomycota of Great Britain and Ireland (2005)")
+            .nothingElse();
+
+    assertName("Uroleptopsis viridis (Perejaslawzewa, 1886) ?", "Uroleptopsis viridis")
+            .species("Uroleptopsis", "viridis")
+            .basAuthors("1886", "Perejaslawzewa")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Apatura iris junonina (Lambillion) & Cabeau, 1910", "Apatura iris junonina")
+            .infraSpecies("Apatura", "iris", SUBSPECIES, "junonina")
+            .basAuthors(null, "Lambillion")
+            .combAuthors("1910", "Cabeau")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Scleropogon kelloggi (Wilcox, 137)", "Scleropogon kelloggi")
+            .species("Scleropogon", "kelloggi")
+            .basAuthors("137", "Wilcox")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Ospriocerus arizonensis (Bromley, 193k7)", "Ospriocerus arizonensis")
+            .species("Ospriocerus", "arizonensis")
+            .basAuthors("193", "Bromley")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Lepidanthrax coquilletti Evenhuis and Hall, 0000", "Lepidanthrax coquilletti")
+            .species("Lepidanthrax", "coquilletti")
+            .combAuthors("0000", "Evenhuis", "Hall")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Scopula cajanderi (Herz, 1903), 1903-01-01", "Scopula cajanderi")
+            .species("Scopula", "cajanderi")
+            .basAuthors("1903", "Herz")
+            .combAuthors("1903")
+            .code(ZOOLOGICAL)
+            .warning(Warnings.YEAR_INTERPRETED)
+            .nothingElse();
+
+    assertName("Gnathamitermes tubiformans (Buckley, 1862), 1862-01-01", "Gnathamitermes tubiformans")
+            .species("Gnathamitermes", "tubiformans")
+            .basAuthors("1862", "Buckley")
+            .combAuthors("1862")
+            .code(ZOOLOGICAL)
+            .warning(Warnings.YEAR_INTERPRETED)
+            .nothingElse();
+
+    assertName("Cyclanthera explodens var. intermedia Cogn. in Kuntze ex Kuntze", "Cyclanthera explodens var. intermedia")
+            .infraSpecies("Cyclanthera", "explodens", VARIETY, "intermedia")
+            .combAuthors(null, "Cogn.")
+            .publishedIn("Kuntze ex Kuntze")
+            .nothingElse();
+
+    assertName("Pseudostenophylax clavatus Tian & Li in Tian, Li, Yang & Sun, in Chen, editor, 1993", "Pseudostenophylax clavatus")
+            .species("Pseudostenophylax", "clavatus")
+            .combAuthors("1993", "Tian", "Li")
+            .publishedIn("Tian, Li, Yang & Sun, in Chen, editor, 1993")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    assertName("Kanimia nitida (DC:) Baker", "Kanimia nitida")
+            .species("Kanimia", "nitida")
+            .basAuthors(null, "DC")
+            .combAuthors(null, "Baker")
+            .code(BOTANICAL)
+            .nothingElse();
+  }
+
+  /**
+   * Names from TODO-names.txt that the parser still gets wrong. Each assertion encodes the
+   * desired parse; the inline comment describes the current bug. The method is @Ignore'd so
+   * the build stays green — remove the annotation once these are fixed (and graduate the
+   * fixed cases into {@link #todoNames()}). nothingElse() is intentionally omitted: only the
+   * specific corrected fields are pinned, since the full target state of some fields (note
+   * disposition, publishedIn cleanup) is still open.
+   */
+  @Ignore("desired parse for still-unsupported TODO-names.txt entries — not yet implemented")
+  @Test
+  public void todoNamesUnsupported() throws Exception {
+    // "ex <Author>" with nothing before "ex": currently "ex" becomes an infraspecific epithet.
+    assertName("Pitcairnia cinnagarina ex D. Dietr.", "Pitcairnia cinnagarina")
+            .species("Pitcairnia", "cinnagarina")
+            .combAuthors(null, "D.Dietr.");
+
+    assertName("Grielum obtusifolium ex Harv.", "Grielum obtusifolium")
+            .species("Grielum", "obtusifolium")
+            .combAuthors(null, "Harv.");
+
+    // Latin nomenclatural notes are currently absorbed as a second author.
+    assertName("Quercus ovalis Gand., opus utique oppr.", "Quercus ovalis")
+            .species("Quercus", "ovalis")
+            .combAuthors(null, "Gand.")
+            .nomNote("opus utique oppr.");
+
+    assertName("Quercus meridionalis Gand., opus utique oppr.", "Quercus meridionalis")
+            .species("Quercus", "meridionalis")
+            .combAuthors(null, "Gand.")
+            .nomNote("opus utique oppr.");
+
+    assertName("Basanacantha spinosa var. typica K.Schum., not validly publ.", "Basanacantha spinosa var. typica")
+            .infraSpecies("Basanacantha", "spinosa", VARIETY, "typica")
+            .combAuthors(null, "K.Schum.")
+            .nomNote("not validly publ.");
+
+    assertName("Fraxinus humilior Garsault, opus utique oppr.", "Fraxinus humilior")
+            .species("Fraxinus", "humilior")
+            .combAuthors(null, "Garsault")
+            .nomNote("opus utique oppr.");
+
+    // "Later homonym of a fossil name." should be stripped, not appended as a comb author.
+    assertName("Diospyros oblongifolia (Thwaites) Kosterm., Later homonym of a fossil name.", "Diospyros oblongifolia")
+            .species("Diospyros", "oblongifolia")
+            .basAuthors(null, "Thwaites")
+            .combAuthors(null, "Kosterm.")
+            .code(BOTANICAL);
+
+    assertName("Euclea rufescens E.Mey., not validly publ.", "Euclea rufescens")
+            .species("Euclea", "rufescens")
+            .combAuthors(null, "E.Mey.")
+            .nomNote("not validly publ.");
+
+    assertName("Lecythis subbiflora Ruiz & Pav., no type indicated.", "Lecythis subbiflora")
+            .species("Lecythis", "subbiflora")
+            .combAuthors(null, "Ruiz", "Pav.")
+            .nomNote("no type indicated.");
+
+    // Trailing editorial remark should be stripped, not absorbed as an author.
+    assertName("Menestoria tocoyenae DC., provisionally listed as a synonym.", "Menestoria tocoyenae")
+            .species("Menestoria", "tocoyenae")
+            .combAuthors(null, "DC.");
+
+    assertName("Begonia hatacoa var. viridifolia Golding & Rekha Morris, without type.", "Begonia hatacoa var. viridifolia")
+            .infraSpecies("Begonia", "hatacoa", VARIETY, "viridifolia")
+            .combAuthors(null, "Golding", "Rekha Morris")
+            .nomNote("without type.");
+
+    // Unclosed "(" should still yield a basionym, not a plain combination author.
+    assertName("Spilogona acuticornis (Malloch, 1920", "Spilogona acuticornis")
+            .species("Spilogona", "acuticornis")
+            .basAuthors("1920", "Malloch")
+            .code(ZOOLOGICAL);
+
+    assertName("Cerodontha lonicerae (Robineau-desvoidy, 1851", "Cerodontha lonicerae")
+            .species("Cerodontha", "lonicerae")
+            .basAuthors("1851", "Robineau-desvoidy")
+            .code(ZOOLOGICAL);
+
+    // Trailing edition letter must not become a forename initial ("A.Monod" / "D.Nunomura").
+    assertName("Caecognathia regalis (Monod, 1926A)", "Caecognathia regalis")
+            .species("Caecognathia", "regalis")
+            .basAuthors("1926", "Monod")
+            .code(ZOOLOGICAL);
+
+    assertName("Caecognathia saikaiensis (Nunomura, 1992D)", "Caecognathia saikaiensis")
+            .species("Caecognathia", "saikaiensis")
+            .basAuthors("1992", "Nunomura")
+            .code(ZOOLOGICAL);
+
+    // "ap. Syr." (apud) is a publication pointer and must not be glued onto "Maxim.".
+    assertName("Geranium sanguineum var. majus Maxim. ap. Syr. & Petunn. in Syr.", "Geranium sanguineum var. majus")
+            .infraSpecies("Geranium", "sanguineum", VARIETY, "majus")
+            .combAuthors(null, "Maxim.", "Petunn.")
+            .publishedIn("Syr.");
+
+    // Should be a basionym with year 1902; the stray ")" and date suffix must be cleaned off.
+    assertName("Fidicina aldegondae (Kuhlgatz in Kuhlgatz and Melichar, 1902), 1902-01-01", "Fidicina aldegondae")
+            .species("Fidicina", "aldegondae")
+            .basAuthors("1902", "Kuhlgatz")
+            .code(ZOOLOGICAL);
+
+    // "ins Econ. Taxon. Bot. …" is the publication ref, not part of the "Anand Kumar" author.
+    assertName("Primula chamaejasme (Wulfen) K.K. Khanna & Anand Kumar ins Econ. Taxon. Bot., 22(1): 237 (1998), isonym", "Primula chamaejasme")
+            .species("Primula", "chamaejasme")
+            .basAuthors(null, "Wulfen")
+            .combAuthors(null, "K.K.Khanna", "Anand Kumar")
+            .nomNote("isonym")
+            .code(BOTANICAL);
+
+    // "Fl. Brit. W. I. 147. 1859" is the publication ref, not a second author with year 147.
+    assertName("Ilex montana var. lanceolata (Macfad.) Griseb., Fl. Brit. W. I. 147. 1859", "Ilex montana var. lanceolata")
+            .infraSpecies("Ilex", "montana", VARIETY, "lanceolata")
+            .basAuthors(null, "Macfad.")
+            .combAuthors(null, "Griseb.")
+            .code(BOTANICAL);
+
+    // basionym Grunow (publ. in Cleve & Müller), combination D.G. Mann (in Round et al., 1990).
+    assertName("Tryblionella marginulata (Grunow in Cleve & M?ller) D.G. Mann in Round et al., 1990", "Tryblionella marginulata")
+            .species("Tryblionella", "marginulata")
+            .basAuthors(null, "Grunow")
+            .combAuthors(null, "D.G.Mann");
+
+    // The trailing "?" must not survive inside the year ("1978?").
+    assertName("Psilopteryx psorosa subsp. retezatica Botosaneanu & ?Schneider, 1978?", "Psilopteryx psorosa retezatica")
+            .infraSpecies("Psilopteryx", "psorosa", SUBSPECIES, "retezatica")
+            .combAuthors("1978", "Botosaneanu", "Schneider")
+            .code(ZOOLOGICAL)
+            .doubtful();
+
+    // "(auct.)" should become the taxonomic note, not be left unparsed (state PARTIAL).
+    assertName("Osmanthus ilicifolius f. variegatus (auct.) Rehder", "Osmanthus ilicifolius f. variegatus")
+            .infraSpecies("Osmanthus", "ilicifolius", FORM, "variegatus")
+            .combAuthors(null, "Rehder")
+            .sensu("auct.");
+
+    // "?" is a homoglyph for the hybrid sign "×" → nothospecies, not an INFORMAL "?" placeholder.
+    assertName("Magnolia ?soulangeana Hamel (pro sp.)", "Magnolia × soulangeana")
+            .species("Magnolia", "soulangeana")
+            .notho(SPECIFIC)
+            .combAuthors(null, "Hamel")
+            .nomNote("pro sp.");
+  }
+
 
   @Test
   public void rankExplicit() throws Exception {
@@ -2357,6 +2699,41 @@ public class NameParserImplTest {
             .combAuthors(null, "Handmann")
             .sensu("fide Hustedt, 1922")
             .nothingElse();
+
+    // authorship-level sensu cases (sensu.txt)
+    assertAuthorship("Miller sensu Busch, 1930", "Miller")
+            .sensu("sensu Busch, 1930");
+
+    // "(Author, year) sensu …": basionym authorship, sensu trails as the taxonomic note
+    assertAuthorship("(Mereschkowsky, 1878) sensu Jankowski, 1992")
+            .basAuthors("1878", "Mereschkowsky")
+            .sensu("sensu Jankowski, 1992")
+            .code(ZOOLOGICAL);
+
+    assertName("Latrodectus marikitates sensu Whittaker", "Latrodectus marikitates")
+            .species("Latrodectus", "marikitates")
+            .sensu("sensu Whittaker")
+            .nothingElse();
+  }
+
+  /**
+   * sensu.txt cases that are not yet handled correctly. Each assertion encodes the desired
+   * parse; the comment describes the current bug. @Ignore'd so the build stays green — drop
+   * the annotation and move the case into {@link #taxonomicNotes()} once fixed.
+   */
+  @Ignore("desired parse for still-unsupported sensu.txt authorship cases — not yet implemented")
+  @Test
+  public void taxonomicNotesUnsupported() throws Exception {
+    // "sensu …" inside the basionym parentheses currently becomes the basionym authorship
+    // ("sensu Mereschkowsky, 1878") instead of the taxonomic note.
+    assertAuthorship("(sensu Mereschkowsky, 1878) Jankowski, 1992", "Jankowski")
+            .combAuthors("1992", "Jankowski")
+            .sensu("sensu Mereschkowsky, 1878");
+
+    // pure taxonomic note with no authorship: "sensu Turcz." and "p.p." are currently turned
+    // into authors, and the ", p.p." part is dropped from the note.
+    assertAuthorship("sensu Turcz., p.p.")
+            .sensu("sensu Turcz., p.p.");
   }
 
   @Test
@@ -2415,6 +2792,15 @@ public class NameParserImplTest {
             .sensu("auct. non (L.) Huds. 1762")
             .nothingElse();
 
+    assertName("Mentha rotundifolia auct. nec Zeller, 1877", "Mentha rotundifolia")
+        .species("Mentha", "rotundifolia")
+        .sensu("auct. nec Zeller, 1877")
+        .nothingElse();
+
+    assertName("Latrodectus marikitates auct. nec Whittaker", "Latrodectus marikitates")
+        .species("Latrodectus", "marikitates")
+        .sensu("auct. nec Whittaker")
+        .nothingElse();
   }
 
   private void assertSensu(String raw, String sensu) throws UnparsableNameException, InterruptedException {

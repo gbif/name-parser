@@ -40,4 +40,11 @@ public interface NameParser {
   */
   ParsedName parse(String scientificName, @Nullable String authorship, @Nullable Rank rank, @Nullable NomCode code) throws UnparsableNameException;
 
+  /**
+   * Parses only the authorship part of a scientific name.
+   */
+  default ParsedAuthorship parseAuthorship(String authorship, @Nullable NomCode code) throws UnparsableNameException {
+    var pn = parse("Abies alba", authorship, Rank.SPECIES, code);
+    return new ParsedAuthorship(pn);
+  }
 }

@@ -91,6 +91,13 @@ public class ParsedAuthorship {
   
   private Set<String> warnings = new HashSet<>();
 
+  public ParsedAuthorship() {
+  }
+
+  public ParsedAuthorship(ParsedAuthorship pa) {
+    copy(pa);
+  }
+
   /**
    * Copies all values from the given parsed authorship
    */

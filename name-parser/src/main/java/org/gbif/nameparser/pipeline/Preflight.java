@@ -113,6 +113,14 @@ public final class Preflight {
       "^[\\p{Lu}][\\p{L}]+(?:-group|\\s+group|-complex|\\s+complex)$",
       Pattern.UNICODE_CHARACTER_CLASS);
 
+  // "-lineage" / " lineage" labels ("Vermistella-lineage", "NC12A-lineage", "he2-lineage"):
+  // informal phylogenetic lineage names that, like the -group / -complex aggregates, can
+  // refer to any rank. Unlike those, the stem is often an OTU-/strain-like code with digits
+  // or a lowercase start, so the stem accepts any letter case and embedded digits.
+  private static final Pattern LINEAGE_LABEL = Pattern.compile(
+      "^[\\p{L}][\\p{L}\\d]*(?:-lineage|\\s+lineage)$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+
   private Preflight() {}
 
   /**
@@ -183,6 +191,13 @@ public final class Preflight {
     // a single uninomial followed by an aggregate marker is an informal taxonomic
     // grouping label that the parser model can't represent.
     if (MONOMIAL_AGGREGATE.matcher(s).matches()) {
+      throw new UnparsableNameException(NameType.INFORMAL, original);
+    }
+
+    // "-lineage" / " lineage" labels — informal phylogenetic lineage names (any rank).
+    // Checked before the OTU/code rejections below so digit/lowercase stems like
+    // "NC12A-lineage" and "he2-lineage" are flagged INFORMAL rather than OTHER.
+    if (LINEAGE_LABEL.matcher(s).matches()) {
       throw new UnparsableNameException(NameType.INFORMAL, original);
     }
 
