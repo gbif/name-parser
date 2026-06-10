@@ -4,45 +4,54 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Test
 
-Maven multi-module project, Java 11. From the repo root:
+Maven multi-module project, Java 17. From the repo root:
 
 - `mvn install` — build & test all three modules (default goal of `name-parser` is `install`)
-- `mvn -pl name-parser test` — run tests for a single module
-- `mvn -pl name-parser -Dtest=NameParserGBIFTest test` — run a single test class
-- `mvn -pl name-parser -Dtest=NameParserGBIFTest#parseSubgenera test` — run a single test method
-- `mvn -pl name-parser-v1 -am install` — build a downstream module and its dependencies
+- `mvn -pl name-parser test` — run tests for the parser module
+- `mvn -pl name-parser -Dtest=NameParserImplTest test` — run a single test class
+- `mvn -pl name-parser -Dtest=NameParserImplTest#squareGenera test` — run a single test method
+- `mvn -pl name-parser-cli -am install` — build the CLI module and its dependencies
 
-Artifacts publish to the GBIF Nexus (`repository.gbif.org`); releases are driven by `maven-release-plugin` against the `motherpom` parent.
+Artifacts publish to the GBIF Nexus (`repository.gbif.org`); releases are driven by `maven-release-plugin` against the `motherpom` parent (currently v61).
 
 ## Module layout
 
-The repo is a parent POM (`name-parser-motherpom`) over three modules. Dependencies flow strictly: `name-parser-api` ← `name-parser` ← `name-parser-v1`.
+The repo is a parent POM over three modules. The data model and the parser are a dependency chain (`name-parser-api` ← `name-parser`); the CLI is a separate consumer (`name-parser` ← `name-parser-cli`).
 
 - **`name-parser-api`** — pure model + interface module. Defines `ParsedName`, `ParsedAuthorship`, `Rank`, `NomCode`, `NameType`, `Authorship`, `Warnings`, and the `NameParser` interface. Also ships `NameFormatter`, `RankUtils`, and `UnicodeUtils` (loads `unicode/homoglyphs.txt`). No dependency on the parser implementation — downstream callers can depend on this alone for the data model.
-- **`name-parser`** — the regex-based GBIF implementation. Single public entry point: `NameParserGBIF`. Most parsing logic lives in `ParsingJob` (~1.9k lines of regex constants and methods) and `AuthorshipParsingJob`.
-- **`name-parser-v1`** — adapter that wraps `NameParserGBIF` and exposes the legacy `org.gbif.api.service.checklistbank.NameParser` interface (from `gbif-api`), translating between the new `org.gbif.nameparser.api.ParsedName` and the v1 `org.gbif.api.model.checklistbank.ParsedName`. Touch this when v1 callers need a behavior change that's already in the underlying parser.
+- **`name-parser`** — the GBIF implementation. Single public entry point: `NameParserImpl` (implements the api `NameParser`). It is a thin delegate to a staged `pipeline` (see "How parsing works"); the older monolithic `NameParserGBIF`/`ParsingJob` regex parser has been fully replaced.
+- **`name-parser-cli`** — a standalone command-line tool (`Main`, `ParseCli`, `CompareCli`, `BenchmarkCli`) that batch-parses names and reads/writes CoLDP and CSV via the `cli.io` package. A consumer of `name-parser`, not part of the parsing core.
 
 ## How parsing works
 
-`NameParserGBIF` is the only public parser class. Important behaviors that aren't obvious from any single file:
+`NameParserImpl` is the only public parser class; it delegates to `pipeline.Pipeline.run(...)`. Behaviours that aren't obvious from any single file:
 
-- **Timeout via thread pool, not regex flags.** Each parse runs as a `Callable` (`ParsingJob` / `AuthorshipParsingJob`) submitted to a shared `ThreadPoolExecutor`. The caller waits with `Future.get(timeout)`; on timeout the task is cancelled. The job uses `InterruptibleCharSequence` to make Java's regex engine respect `Thread.interrupt()` — without it long-running regex matches would not abort. **Reuse a `NameParserGBIF` instance** and call `close()` on shutdown; constructing one per parse spins up a new thread pool.
-- **Two-phase parsing.** `parseAuthorship(...)` actually invokes the full parser with a synthetic `"Abies alba <authorship>"` and pulls authorship out of the result.
-- **Manual overrides.** Before regex parsing, `NameParserGBIF` consults `ParserConfigs` for a pre-canned `ParsedName`/`ParsedAuthorship` keyed by a normalized form of the input (lowercased, unicode-decomposed, whitespace/punctuation collapsed — see `ParserConfigs.norm`). Overrides can be added programmatically via `parser.configs().add(...)` or bulk-loaded from the ChecklistBank API via `ParserConfigs.loadFromCLB()` / `load(URI)`.
+- **Synchronous and thread-safe; no built-in timeout.** Each parse runs on the calling thread — there is no thread pool, `Future`, or `InterruptibleCharSequence` (the old `NameParserGBIF` had these; the pipeline dropped them). `NameParserImpl` is stateless, so a single instance can be shared across threads. **Callers must impose their own timeout** if they parse untrusted input — see the catastrophic-backtracking note below.
+- **Staged pipeline over a shared `ParseContext`.** `Pipeline.run` normalises unicode quotes, splits glued phrase names, then runs ordered stages, each mutating the shared mutable `ParseContext`:
+  1. `Preflight` — regex gate that throws `UnparsableNameException` for viruses, hybrid formulas, OTU/specimen codes, and placeholders.
+  2. `StripAndStash` — removes annotations (nom/taxonomic notes, publishedIn refs, imprint years, homoglyphs, quoted monomials, missing-genus placeholders, …) and stashes them on the `ParsedName`. Its `run` is an explicit ordered list of named strip steps — the order is load-bearing.
+  3. `token.Tokenizer` — single-pass tokeniser producing a flat `Token` list (WORD/NUMBER/paren/comma/dot/hybrid-mark/… with offsets).
+  4. `AuthorshipSplit` — finds the boundary between the name section and the authorship section.
+  5. `NameTokens` — classifies the name tokens into uninomial/genus/subgenus/epithets + rank markers.
+  6. `AuthorshipParser` — parses author lists, ex authors, years, sanctioning author, basionym/combination, and author inversion.
+  7. `CodeInference` — infers the `NomCode` from authorship shape and notes (all code-setting logic lives here).
+  8. `Assemble` — final invariants: rank defaults, zoological-trinomial → SUBSPECIES, suffix-based rank, blacklisted-epithet flagging, quoted-monomial re-wrap.
+- **Two-phase authorship parsing.** `parseAuthorship(...)` (api default method) invokes the full parser with a synthetic `"Abies alba <authorship>"` and pulls authorship out of the result. A separately supplied `authorship` argument is tokenised and parsed independently, then merged onto the name (`Pipeline.applyAuthorship`).
 - **Result states.** A successful parse returns a `ParsedName` with `State.COMPLETE` or `State.PARTIAL`. Names that cannot be expressed by the model (viruses, hybrid formulas, blank input) throw `UnparsableNameException` carrying a `NameType` — callers must catch it.
 
-## Working with `ParsingJob`
+## Working with the pipeline
 
-`ParsingJob.java` is the heart of the parser and is intentionally a large pile of regex constants composed from sub-patterns (`NAME_LETTERS`, `AUTHOR_TOKEN`, `AUTHOR`, `AUTHOR_TEAM`, `AUTHORSHIP`, …). When changing or adding patterns:
+The parsing logic is split across small single-responsibility classes in `org.gbif.nameparser.pipeline` (plus the `token` package). When changing behaviour:
 
-- The composed regexes are case-sensitive about Unicode classes (`\p{Lu}`, `\p{Ll}`) and the explicit letter-set constants — be careful not to accidentally restrict the alphabet.
-- Behavior is verified almost entirely through `NameParserGBIFTest` (the canonical regression suite — see `README.md`) using the `NameAssertion` fluent helper. Add a test there for any parsing change before tweaking patterns.
-- Auxiliary test corpora live in `name-parser/src/test/resources/` (`doubtful.txt`, `hybrids.txt`, `nonames.txt`, `occurrence-names.txt`, `placeholder.txt`, `unparsable.txt`, `viruses.txt`, `names-with-authors.txt`). `TODO-names.txt` tracks known-failing inputs.
-- Resource files driving parser behavior are in `name-parser/src/main/resources/nameparser/`: `blacklist-epithets.txt` (flags doubtful names) and `latin-endings.txt` (common 4-char Latin suffixes — sorted by *reverse* of the ending; see the resource README before re-sorting).
+- Regex constants use Unicode classes (`\p{Lu}`, `\p{Ll}`) and explicit letter-set constants — be careful not to accidentally restrict the alphabet, and prefer linear-time patterns (the parser has no timeout guard).
+- **`StripAndStash.run` is the ordered list of strip steps.** Each step is its own named method that takes and returns the working string; add a new step by inserting it at the right position in `run` (order matters). **`CodeInference`** owns all `NomCode`-setting heuristics. **`Assemble.finish`** owns final rank/code invariants.
+- Behaviour is verified almost entirely through `NameParserImplTest` (the canonical regression suite) and `NameParserGnaTest`, using the `NameAssertion` fluent helper. Add a test there for any parsing change before tweaking code.
+- Auxiliary test corpora live in `name-parser/src/test/resources/` (`doubtful.txt`, `hybrids.txt`, `other.txt`, `otu.txt`, `placeholder.txt`, `viruses.txt`, `names-with-authors.txt`).
+- Resource files in `name-parser/src/main/resources/nameparser/`: `blacklist-epithets.txt` (loaded by `pipeline.BlacklistedEpithets` to flag doubtful epithets). `latin-endings.txt` and `prefix-epithet-binomials.tsv` are present but no longer loaded by the pipeline — treat them as vestigial until re-wired.
 
 ## Conventions
 
-- Java 11 source/target; no `var` is enforced but the codebase uses it freely in newer files.
+- Java 17 source/target; no `var` is enforced but the codebase uses it freely in newer files.
 - Logging is SLF4J; tests pull in `logback-classic`. Test logging config: `name-parser/src/test/resources/logback-test.xml`.
 - Apache 2.0 license header is on every source file.
 
@@ -50,7 +59,7 @@ The repo is a parent POM (`name-parser-motherpom`) over three modules. Dependenc
 
 - **Surname-first authors with all-caps trailing initials** are flipped to initial-prefixed form. `Walker F` → `F.Walker`, `Balsamo M Fregni E Tongiorgi MA` → `M.Balsamo, E.Fregni, M.A.Tongiorgi`. The flip only applies when the buffer ends with a real surname (not just particles): `H.da C.` followed by `Monteiro` keeps the initials-particle-initial chain intact and renders `H.da C.Monteiro …`. Isolated `Zhang F` inside a separator-bounded segment (e.g. `Zhang F & Pan Z-X`) also flips to `F.Zhang`.
 - **Hyphenated initials** (`Y.-j. Wang`, `C.-K. Yang`) preserve both the hyphen AND the input case of the single-letter follow-up: `Y.-j.Wang`, `C.-K.Yang`. Don't uppercase the post-hyphen letter.
-- **Code inference signals** (in priority order) — sanctioning author → `BOTANICAL`; `(BasAuthor) RecombAuthor, year` with an explicit infraspecific marker (subsp./var./f.) → `BOTANICAL` (botanical recombination, year is the publication year); any other year on the author span → `ZOOLOGICAL`; `f.`/`fil.`/`filius` suffix on a non-ex author *without any year* → `BOTANICAL` (zoological literature does use filius for father/son, e.g. *Lacerta agilis* Linnaeus f., 1789, but those cases always carry a year and are caught by the year rule first); basionym + combination authors without years → `BOTANICAL`; basionym-only without years → `ZOOLOGICAL`. Filius on an *ex* author (`Baker f. ex Rose`) is *not* a code signal — only the validating author counts.
+- **Code inference signals** (in priority order, in `CodeInference.fromAuthorship`; the note/marker fallbacks are in `CodeInference.infer`) — sanctioning author → `BOTANICAL`; `(BasAuthor) RecombAuthor, year` with an explicit infraspecific marker (subsp./var./f.) → `BOTANICAL` (botanical recombination, year is the publication year); any other year on the author span → `ZOOLOGICAL`; `f.`/`fil.`/`filius` suffix on a non-ex author *without any year* → `BOTANICAL` (zoological literature does use filius for father/son, e.g. *Lacerta agilis* Linnaeus f., 1789, but those cases always carry a year and are caught by the year rule first); basionym + combination authors without years → `BOTANICAL`; basionym-only without years → `ZOOLOGICAL`. Filius on an *ex* author (`Baker f. ex Rose`) is *not* a code signal — only the validating author counts.
 - **PublishedIn-derived years are code-neutral.** A year extracted from a stripped publishedIn reference (`Author in Source, 1845`, `Author., Title (1792)`, `Author. Annals of … 1988 …`) is the publication year of the work, not an author-year citation. It propagates onto the combination authorship for rendering but is *not* used as a code signal — the same year may attach to a zoological, botanical, or bacteriological name. `ParseContext.pendingYearFromPublication` carries the flag; `Pipeline.run` applies the year *after* code inference in that case so it never triggers a spurious `ZOOLOGICAL`. Only a year that came directly off the author span (no publishedIn extraction) is the zoological author-year and is applied *before* inference.
 - **Abbreviation is a hint, not a code signal.** Botanical citations *tend* to use abbreviated authors (`Rich.`, `Müll.Arg.`) and abbreviated journals (`Symb. Antill.`, `Prodr.`), while zoological citations *tend* to spell things out, but both forms appear in both codes. Don't infer the code from whether the author span or the publication ref is abbreviated.
 - **Zoological trinomials default to `SUBSPECIES`.** ICZN doesn't use rank markers for subspecies — `Vulpes vulpes silaceus Miller, 1907` is by convention a subspecies, not the generic `INFRASPECIFIC_NAME`. `Assemble.finish` upgrades a parsed `INFRASPECIFIC_NAME` to `SUBSPECIES` whenever the resolved code is `ZOOLOGICAL` (caller-supplied or inferred). For botanical names the absence of an explicit `subsp.`/`var.`/`f.` marker keeps the rank as `INFRASPECIFIC_NAME` because botany requires the marker.

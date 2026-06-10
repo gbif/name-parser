@@ -2616,6 +2616,68 @@ public class NameParserImplTest {
             .nothingElse();
   }
 
+  /**
+   * The longest known real, valid name (~860 chars): Homo naledi with its 47-author
+   * describing team plus an equally long {@code sec.} concept reference. It must parse
+   * cleanly — not get rejected by the 1000-char DoS cap — and, because it exceeds 250
+   * chars, carry the LONG_NAME warning. A genuinely over-long input is still rejected.
+   */
+  @Test
+  public void longName() throws Exception {
+    String authors = "Berger, Hawks, de Ruiter, Churchill, Schmid, Delezene, Kivell, "
+        + "Garvin, Williams, DeSilva, Skinner, Musiba, Cameron, Holliday, Harcourt-Smith, "
+        + "Ackermann, Bastir, Bogin, Bolter, Brophy, Cofran, Congdon, Deane, Dembo, Drapeau, "
+        + "Elliott, Feuerriegel, Garcia-Martinez, Green, Gurtov, Irish, Kruger, Laird, Marchi, "
+        + "Meyer, Nalla, Negash, Orr, Radovcic, Schroeder, Scott, Throckmorton, Tocheri, "
+        + "VanSickle, Walker, Wei & Zipfel";
+    String homoNaledi = "Homo naledi " + authors + ", 2015 sec. " + authors;
+    assertTrue(homoNaledi.length() > 250 && homoNaledi.length() < 1000);
+
+    assertName(homoNaledi, "Homo naledi")
+            .species("Homo", "naledi")
+            .combAuthors("2015",
+                "Berger", "Hawks", "de Ruiter", "Churchill", "Schmid", "Delezene", "Kivell",
+                "Garvin", "Williams", "DeSilva", "Skinner", "Musiba", "Cameron", "Holliday",
+                "Harcourt-Smith", "Ackermann", "Bastir", "Bogin", "Bolter", "Brophy", "Cofran",
+                "Congdon", "Deane", "Dembo", "Drapeau", "Elliott", "Feuerriegel", "Garcia-Martinez",
+                "Green", "Gurtov", "Irish", "Kruger", "Laird", "Marchi", "Meyer", "Nalla", "Negash",
+                "Orr", "Radovcic", "Schroeder", "Scott", "Throckmorton", "Tocheri", "VanSickle",
+                "Walker", "Wei", "Zipfel")
+            .sensu("sec. " + authors)
+            .warning(Warnings.LONG_NAME)
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    // A long-but-valid authorship (~420 chars) supplied on its own via parseAuthorship
+    // still parses fine — the cap only rejects beyond 1000 chars.
+    ParsedAuthorship pa = parser.parseAuthorship(authors + ", 2015", null);
+    assertEquals("2015", pa.getCombinationAuthorship().getYear());
+    assertEquals(47, pa.getCombinationAuthorship().getAuthors().size());
+    assertEquals("Berger", pa.getCombinationAuthorship().getAuthors().get(0));
+    assertEquals("Zipfel", pa.getCombinationAuthorship().getAuthors().get(46));
+
+    // Beyond the 1000-char cap the input is rejected rather than parsed (DoS guard).
+    StringBuilder tooLong = new StringBuilder("Homo naledi ");
+    while (tooLong.length() <= 1000) {
+      tooLong.append("Berger, ");
+    }
+    tooLong.append("2015");
+    assertUnparsable(tooLong.toString(), NameType.OTHER);
+
+    // The same cap guards the separately supplied authorship argument.
+    StringBuilder longAuthorship = new StringBuilder();
+    while (longAuthorship.length() <= 1000) {
+      longAuthorship.append("Berger, ");
+    }
+    longAuthorship.append("2015");
+    try {
+      parser.parseAuthorship(longAuthorship.toString(), null);
+      fail("expected over-long authorship to be rejected");
+    } catch (UnparsableNameException e) {
+      assertEquals(NameType.OTHER, e.getType());
+    }
+  }
+
   @Test
   public void taxonomicNotes() throws Exception {
     // bacteria

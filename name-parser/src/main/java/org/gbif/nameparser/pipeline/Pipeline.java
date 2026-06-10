@@ -5,6 +5,7 @@ import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.api.UnparsableNameException;
+import org.gbif.nameparser.api.Warnings;
 import org.gbif.nameparser.token.Token;
 import org.gbif.nameparser.token.Tokenizer;
 import org.gbif.nameparser.util.UnicodeUtils;
@@ -19,6 +20,21 @@ import java.util.regex.Pattern;
  */
 public final class Pipeline {
 
+  /**
+   * Hard upper bound on the input length. Beyond this the input is rejected as unparsable
+   * rather than parsed: real scientific names — even with very large authorships — stay
+   * well under this (the longest known valid name is ~860 chars), and the regex-heavy
+   * pipeline has no execution timeout, so an unbounded input is a denial-of-service risk
+   * (deep regex recursion can overflow the stack on the caller's thread).
+   */
+  static final int MAX_LENGTH = 1000;
+
+  /**
+   * Inputs longer than this still parse but carry a {@link Warnings#LONG_NAME} flag so
+   * callers can spot the unusual (but legitimate) very-long names.
+   */
+  static final int LONG_NAME_LENGTH = 250;
+
   private Pipeline() {}
 
   public static ParsedName run(String scientificName, String authorship, Rank rank, NomCode code)
@@ -30,6 +46,14 @@ public final class Pipeline {
     if (trimmed.isEmpty()) {
       throw new UnparsableNameException(NameType.OTHER, scientificName);
     }
+    if (trimmed.length() > MAX_LENGTH) {
+      throw new UnparsableNameException(NameType.OTHER, scientificName);
+    }
+    // The separately supplied authorship is tokenised and run through the same
+    // regex-heavy authorship parser, so it carries the same DoS exposure — cap it too.
+    if (authorship != null && authorship.trim().length() > MAX_LENGTH) {
+      throw new UnparsableNameException(NameType.OTHER, scientificName);
+    }
     // Normalise the many unicode apostrophe / quote variants to ASCII (' and ") up front so
     // every parsed field (genus, epithets, authorship, unparsed) and both the name and the
     // separately supplied authorship come out with consistent ASCII punctuation. The raw
@@ -37,6 +61,9 @@ public final class Pipeline {
     trimmed = UnicodeUtils.normalizeQuotes(trimmed);
     authorship = UnicodeUtils.normalizeQuotes(authorship);
     ParseContext ctx = new ParseContext(trimmed, authorship, rank, code);
+    if (trimmed.length() > LONG_NAME_LENGTH) {
+      ctx.name.addWarning(Warnings.LONG_NAME);
+    }
     splitGluedPhraseName(ctx);
     Preflight.run(scientificName, ctx.working);
     StripAndStash.run(ctx);
@@ -51,18 +78,12 @@ public final class Pipeline {
     AuthorshipParser.AuthState authState = null;
     if (boundary < ctx.tokens.size()) {
       authState = AuthorshipParser.parse(ctx.tokens, boundary);
-      if (authState.combination.exists()) {
-        ctx.name.setCombinationAuthorship(authState.combination);
-      }
-      if (authState.basionym.exists()) {
-        ctx.name.setBasionymAuthorship(authState.basionym);
-      }
+      applyAuthorship(ctx.name, authState);
+      // Unparsed remainder is specific to the embedded path (the separately supplied
+      // authorship string has no leftover name material to park).
       if (authState.unparsedFrom >= 0) {
         ctx.name.setState(ParsedName.State.PARTIAL);
         ctx.name.setUnparsed(authState.unparsedText);
-      }
-      if (authState.imprintYear != null && ctx.name.getImprintYear() == null) {
-        ctx.name.setImprintYear(authState.imprintYear);
       }
     }
     AuthorshipParser.AuthState extraState = null;
@@ -73,17 +94,11 @@ public final class Pipeline {
       // Authorship parsed separately by re-tokenising the auxiliary string.
       List<Token> aux = Tokenizer.tokenize(authClean);
       extraState = AuthorshipParser.parse(aux, 0);
-      if (extraState.combination.exists()) {
-        ctx.name.setCombinationAuthorship(extraState.combination);
-      }
-      if (extraState.basionym.exists()) {
-        ctx.name.setBasionymAuthorship(extraState.basionym);
-      }
+      applyAuthorship(ctx.name, extraState);
+      // A sanctioning author from the separately supplied authorship is applied here;
+      // the embedded path applies its own sanctioning author further below.
       if (extraState.sanctioningAuthor != null) {
         ctx.name.setSanctioningAuthor(extraState.sanctioningAuthor);
-      }
-      if (extraState.imprintYear != null && ctx.name.getImprintYear() == null) {
-        ctx.name.setImprintYear(extraState.imprintYear);
       }
     }
     if (authState != null && authState.sanctioningAuthor != null) {
@@ -147,6 +162,25 @@ public final class Pipeline {
     ctx.name.setPhrase(m.group(2));
     ctx.name.setType(NameType.INFORMAL);
     ctx.working = m.group(1);
+  }
+
+  /**
+   * Applies the combination + basionym authorship and any imprint year from a parsed
+   * {@link AuthorshipParser.AuthState} onto the name. Shared by the embedded-authorship
+   * and the separately-supplied-authorship paths. The sanctioning author and the
+   * unparsed remainder are applied by the callers, since those differ between the two
+   * paths.
+   */
+  private static void applyAuthorship(ParsedName name, AuthorshipParser.AuthState st) {
+    if (st.combination.exists()) {
+      name.setCombinationAuthorship(st.combination);
+    }
+    if (st.basionym.exists()) {
+      name.setBasionymAuthorship(st.basionym);
+    }
+    if (st.imprintYear != null && name.getImprintYear() == null) {
+      name.setImprintYear(st.imprintYear);
+    }
   }
 
   private static boolean hasLetter(String s) {
