@@ -499,12 +499,14 @@ public class NameFormatterTest {
     pn.setSpecificEpithet("carinatus");
     pn.setInfraspecificEpithet("carinatus");
     pn.setBasionymAuthorship(Authorship.yearAuthors("1812", "Duftschmid"));
+    // Autonym authorship is the species author and is no longer suppressed (ICN/ICZN).
+    // With no botanical code set this zoological-style autonym cites the author at the end.
     pn.setRank(Rank.UNRANKED);
-    assertName("Abax carinatus carinatus");
-    
+    assertName("Abax carinatus carinatus", "Abax carinatus carinatus (Duftschmid, 1812)");
+
     pn.setRank(null);
-    assertName("Abax carinatus carinatus");
-    
+    assertName("Abax carinatus carinatus", "Abax carinatus carinatus (Duftschmid, 1812)");
+
     pn.setInfraspecificEpithet("urinatus");
     assertName("Abax carinatus urinatus", "Abax carinatus urinatus (Duftschmid, 1812)");
     

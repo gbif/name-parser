@@ -86,6 +86,20 @@ public final class Pipeline {
         ctx.name.setUnparsed(authState.unparsedText);
       }
     }
+    // Autonym species author: a "(Bas) Comb" or plain author span recorded mid-name by
+    // NameTokens, sitting between the species epithet and the infraspecific marker. The
+    // autonym's final epithet carries no author of its own (ICN Art. 22.1/26.1), so this
+    // span IS the species author and becomes the name's authorship. Only applied when the
+    // name is an autonym and no trailing authorship was already parsed.
+    AuthorshipParser.AuthState autonymState = null;
+    if (ctx.midAuthorFrom >= 0
+        && ctx.name.isAutonym()
+        && !ctx.name.hasAuthorship()) {
+      List<Token> span = ctx.tokens.subList(ctx.midAuthorFrom, ctx.midAuthorTo);
+      autonymState = AuthorshipParser.parse(span, 0);
+      applyAuthorship(ctx.name, autonymState);
+    }
+
     AuthorshipParser.AuthState extraState = null;
     if (authorship != null && !authorship.isBlank()) {
       // Run the same annotation strippers (sic / corrig / extinct dagger / brackets etc.)
@@ -115,6 +129,13 @@ public final class Pipeline {
         && extraState != null
         && extraState.basionymPresent && extraState.basionym.getYear() != null) {
       codeState = extraState;
+    }
+    // An autonym's species author (captured mid-name) drives code inference when the name
+    // had no other authorship — e.g. "Trimezia spathata (Klatt) Baker subsp. spathata"
+    // infers BOTANICAL from its basionym+combination authors.
+    if ((codeState == null || (!codeState.combination.exists() && !codeState.basionymPresent))
+        && autonymState != null) {
+      codeState = autonymState;
     }
 
     // Year that came directly off the author span (e.g. "Linnaeus, 1771") is applied

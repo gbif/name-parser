@@ -394,6 +394,11 @@ public final class AuthorshipSplit {
     return lower.endsWith("aceae") || lower.endsWith("oideae");
   }
 
+  /** Bridge so NameTokens shares the same apostrophe-particle test ("d'Urv", "L'Hér"). */
+  public static boolean isApostropheParticle(String s) {
+    return looksLikeApostropheParticle(s);
+  }
+
   private static boolean looksLikeApostropheParticle(String s) {
     int apo = s.indexOf('\'');
     if (apo < 1 || apo + 1 >= s.length()) return false;

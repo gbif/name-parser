@@ -79,7 +79,7 @@ public final class Preflight {
   // ---------- PLACEHOLDER ----------
   private static final Pattern PLACEHOLDER_KEYWORDS = Pattern.compile(
       "(?:\\(delete\\)|\\b(?:" +
-          "incertae\\s*sedis|inc\\.\\s*sed\\.?|incertaesedis" +
+          "incertae[\\s_]*sedis|inc\\.\\s*sed\\.?|incertaesedis" +
           "|not\\s+assigned|unassigned" +
           "|unknown|unaccepted|unidentified|undetermined|undet|indet\\.?|indeterminate" +
           "|uncultured" +

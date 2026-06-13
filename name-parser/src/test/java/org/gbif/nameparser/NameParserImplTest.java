@@ -1032,6 +1032,48 @@ public class NameParserImplTest {
   /**
    * http://dev.gbif.org/issues/browse/POR-2459
    */
+  /**
+   * Autonym authorship is the species author and follows the nomenclatural codes:
+   * ICN Art. 22.1/26.1 (botany) cite it after the species epithet, ICZN (zoology) at the
+   * very end of the trinomen. The autonym's final epithet never carries an author itself.
+   * https://www.iapt-taxon.org/icbn/frameset/0026Ch3Sec3a022.htm (ICN Art. 26)
+   * https://code.iczn.org/types-in-the-species-group/article-72-general-provisions/ (ICZN Art. 72)
+   */
+  @Test
+  public void autonymAuthorship() throws Exception {
+    // botanical: species author after the species epithet, none after the autonym
+    ParsedName acer = parser.parse("Acer rubrum L. var. rubrum", null, null, NomCode.BOTANICAL);
+    assertEquals("rubrum", acer.getSpecificEpithet());
+    assertEquals("rubrum", acer.getInfraspecificEpithet());
+    assertTrue(acer.isAutonym());
+    assertEquals("L.", org.gbif.nameparser.util.NameFormatter.authorshipComplete(acer));
+    assertEquals("Acer rubrum L. var. rubrum",
+        org.gbif.nameparser.util.NameFormatter.canonical(acer));
+
+    // botanical recombination with basionym + combination author before the marker
+    ParsedName trim = parser.parse("Trimezia spathata (Klatt) Baker subsp. spathata", null, null, null);
+    assertTrue(trim.isAutonym());
+    assertEquals("spathata", trim.getSpecificEpithet());
+    assertEquals("spathata", trim.getInfraspecificEpithet());
+    assertNull(trim.getInfragenericEpithet());
+    assertEquals(NomCode.BOTANICAL, trim.getCode());
+    assertEquals("(Klatt) Baker", org.gbif.nameparser.util.NameFormatter.authorshipComplete(trim));
+    assertEquals("Trimezia spathata (Klatt) Baker subsp. spathata",
+        org.gbif.nameparser.util.NameFormatter.canonical(trim));
+
+    // zoological autonym: author at the very end, no rank marker
+    ParsedName vul = parser.parse("Vulpes vulpes vulpes Linnaeus, 1758", null, null, NomCode.ZOOLOGICAL);
+    assertTrue(vul.isAutonym());
+    assertEquals("Vulpes vulpes vulpes Linnaeus, 1758",
+        org.gbif.nameparser.util.NameFormatter.canonical(vul));
+
+    // botanical autonym with no author renders cleanly without one
+    ParsedName bare = parser.parse("Acer rubrum var. rubrum", null, null, NomCode.BOTANICAL);
+    assertTrue(bare.isAutonym());
+    assertEquals("Acer rubrum var. rubrum",
+        org.gbif.nameparser.util.NameFormatter.canonical(bare));
+  }
+
   @Test
   public void unparsablePlaceholder() throws Exception {
     assertUnparsable("Mollusca not assigned", PLACEHOLDER);
@@ -1059,6 +1101,9 @@ public class NameParserImplTest {
     assertUnparsable("Unident-Boraginaceae", PLACEHOLDER);
     assertUnparsable("Unident", PLACEHOLDER);
     assertUnparsable("IncertaeSedis justi", PLACEHOLDER);
+    // IPNI underscore-joined placeholder, https://github.com/CatalogueOfLife (name-parser v4 item 3)
+    assertUnparsable("Incertae_sedis", PLACEHOLDER);
+    assertUnparsable("Incertae_sedis", Rank.FAMILY, PLACEHOLDER);
   }
 
   @Test
@@ -2090,10 +2135,12 @@ public class NameParserImplTest {
             .combAuthors(null, "d'Urv.")
             .nothingElse();
 
-    // TODO: autonym authors are the species authors !!!
+    // Autonym authors are the species authors (ICN Art. 22.1/26.1): the autonym's final
+    // epithet carries no author, but the species author "d'Urv." is captured and rendered
+    // after the species epithet.
     assertName("Cirsium creticum d'Urv. subsp. creticum", "Cirsium creticum subsp. creticum")
             .infraSpecies("Cirsium", "creticum", SUBSPECIES, "creticum")
-            //.combAuthors(null, "d'Urv.")
+            .combAuthors(null, "d'Urv.")
             .autonym()
             .code(NomCode.BOTANICAL)
             .nothingElse();
@@ -3949,6 +3996,12 @@ public class NameParserImplTest {
 
     assertPhraseName("Verticordia sp.1", "Verticordia sp. 1", SPECIES, "1")
             .species("Verticordia", null)
+            .nothingElse();
+
+    // Spelled-out "species N" placeholder keeps the verbatim marker word in the phrase and
+    // renders it as-is ("Allium species 1"), not collapsed to the synthetic "sp." marker.
+    assertPhraseName("Allium species 1", "Allium species 1", SPECIES, "species 1")
+            .species("Allium", null)
             .nothingElse();
 
     assertPhraseName("Bryozoan sp. E", "Bryozoan sp. E", SPECIES, "E")
