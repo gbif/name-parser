@@ -51,15 +51,9 @@ public final class Preflight {
       Pattern.UNICODE_CHARACTER_CLASS);
 
   // ---------- HYBRID FORMULA ----------
-  // "Genus epithet ... × Genus epithet ..." — at least one × OR a lone " x " between two name-like spans.
-  // To avoid false positives on single-genus hybrids ("× Foo bar" / "Foo × bar"), we require something
-  // that looks like a second name (uppercase or epithet) on either side of the cross.
-  private static final Pattern HYBRID_FORMULA = Pattern.compile(
-      "^[\\s\\S]*?\\b(?:[\\p{Lu}][\\p{L}.\\-]+(?:\\s+[\\p{Ll}][\\p{L}.\\-]+)+|" +
-          "[\\p{Lu}][\\p{L}.\\-]+)\\s*[×x]\\s+" +
-          "(?:[\\p{Lu}][\\p{L}.\\-]+|[\\p{Ll}][\\p{L}.\\-]{2,})" +
-          "(?:\\s+[\\p{Ll}][\\p{L}.\\-]+|\\s+[\\p{Lu}]\\.?[\\p{L}.\\-]*)+",
-      Pattern.UNICODE_CHARACTER_CLASS);
+  // Hybrid-formula detection is done structurally in looksLikeHybridFormula() below
+  // rather than with a single regex — it needs to inspect the spans on either side of
+  // the cross to avoid false positives on single-genus notho markers.
 
   // ---------- NO_NAME ----------
   // Pure alphanumeric codes / OTU identifiers.
@@ -85,7 +79,7 @@ public final class Preflight {
   // ---------- PLACEHOLDER ----------
   private static final Pattern PLACEHOLDER_KEYWORDS = Pattern.compile(
       "(?:\\(delete\\)|\\b(?:" +
-          "incertae\\s*sedis|inc\\.\\s*sed\\.?|incertaesedis" +
+          "incertae[\\s_]*sedis|inc\\.\\s*sed\\.?|incertaesedis" +
           "|not\\s+assigned|unassigned" +
           "|unknown|unaccepted|unidentified|undetermined|undet|indet\\.?|indeterminate" +
           "|uncultured" +

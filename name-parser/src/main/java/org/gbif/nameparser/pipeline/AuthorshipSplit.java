@@ -14,10 +14,6 @@ public final class AuthorshipSplit {
 
   private AuthorshipSplit() {}
 
-  public static int findBoundary(List<Token> tokens) {
-    return findBoundary(tokens, null);
-  }
-
   public static int findBoundary(List<Token> tokens, ParseContext ctx) {
     final int n = tokens.size();
     if (n == 0) return 0;
@@ -398,18 +394,9 @@ public final class AuthorshipSplit {
     return lower.endsWith("aceae") || lower.endsWith("oideae");
   }
 
-  /** Strain-code-shaped token (mixed letters and digits, no spaces, length ≥ 3). */
-  private static boolean looksStrainCode(String s) {
-    if (s.length() < 3) return false;
-    boolean hasLetter = false;
-    boolean hasDigit = false;
-    for (int i = 0; i < s.length(); ) {
-      int cp = s.codePointAt(i);
-      if (Character.isLetter(cp)) hasLetter = true;
-      else if (Character.isDigit(cp)) hasDigit = true;
-      i += Character.charCount(cp);
-    }
-    return hasLetter && hasDigit;
+  /** Bridge so NameTokens shares the same apostrophe-particle test ("d'Urv", "L'Hér"). */
+  public static boolean isApostropheParticle(String s) {
+    return looksLikeApostropheParticle(s);
   }
 
   private static boolean looksLikeApostropheParticle(String s) {

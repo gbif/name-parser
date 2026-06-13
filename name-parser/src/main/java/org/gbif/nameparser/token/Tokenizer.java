@@ -44,8 +44,9 @@ public final class Tokenizer {
             i += cl;
             continue;
           }
-          // allow internal hyphen or apostrophe if next char is a letter
-          if ((c == '-' || c == '\'' || c == '’' || c == '_'
+          // allow internal hyphen, apostrophe or a stray "!" (OCR/typo artefact, e.g.
+          // "pu!chra") if the next char is a letter, so the word is kept intact
+          if ((c == '-' || c == '\'' || c == '’' || c == '_' || c == '!'
               || c == '‐' || c == '‑' || c == '‒' || c == '–' || c == '—')
               && i + cl < n) {
             int next = input.codePointAt(i + cl);

@@ -295,6 +295,42 @@ public class UnicodeUtils {
     return MARKER.matcher(x).replaceAll("");
   }
 
+  // Unicode apostrophe / single-quote variants that normalise to the ASCII apostrophe '
+  private static final String SINGLE_QUOTES =
+      "\u0060\u00B4\u02B9\u02BB\u02BC\u02BD\u02CA\u02CB\u0091\u0092"
+          + "\u2018\u2019\u201A\u201B\u2032\u2035\u275B\u275C\uFF07";
+  // Unicode double-quote / double-prime variants that normalise to the ASCII double quote "
+  private static final String DOUBLE_QUOTES =
+      "\u0093\u0094\u201C\u201D\u201E\u201F\u2033\u2036\u275D\u275E\u301D\u301E\u301F\uFF02";
+
+  /**
+   * Normalises the many unicode apostrophe / single-quote variants to the ASCII apostrophe
+   * (') and the unicode double-quote variants to the ASCII double quote ("). Author names and
+   * quoted/provisional names routinely arrive with curly, prime, modifier-letter, low-9,
+   * fullwidth or Windows-1252 quotes; collapsing them to ASCII keeps tokenisation and the
+   * parsed output consistent regardless of the input's quote style.
+   */
+  public static String normalizeQuotes(String x) {
+    if (x == null) return null;
+    StringBuilder sb = null;
+    for (int i = 0, n = x.length(); i < n; i++) {
+      char c = x.charAt(i);
+      char repl = c;
+      if (SINGLE_QUOTES.indexOf(c) >= 0) {
+        repl = '\'';
+      } else if (DOUBLE_QUOTES.indexOf(c) >= 0) {
+        repl = '"';
+      }
+      if (repl != c) {
+        if (sb == null) sb = new StringBuilder(x.length()).append(x, 0, i);
+        sb.append(repl);
+      } else if (sb != null) {
+        sb.append(c);
+      }
+    }
+    return sb == null ? x : sb.toString();
+  }
+
   /**
    * Removes all characters that are not ASCII chars, i.e. above the first 7 bits
    */

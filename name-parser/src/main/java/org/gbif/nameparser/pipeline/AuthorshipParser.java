@@ -1,8 +1,6 @@
 package org.gbif.nameparser.pipeline;
 
 import org.gbif.nameparser.api.Authorship;
-import org.gbif.nameparser.api.NomCode;
-import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.token.AuthorParticles;
 import org.gbif.nameparser.token.Token;
 import org.gbif.nameparser.token.TokenKind;
@@ -17,8 +15,6 @@ import java.util.Set;
  */
 public final class AuthorshipParser {
 
-  /** Tokens that, on their own, mark a transition to "ex authors". */
-  private static final Set<String> EX = Set.of("ex");
   /** Tokens that are filius/junior/etc. abbreviations gluing onto the previous author. */
   private static final Set<String> AUTHOR_SUFFIXES = Set.of(
       "f", "fil", "filius",
@@ -286,10 +282,8 @@ public final class AuthorshipParser {
             && !endsWithParticleOnly(cur)) {
           StringBuilder initials = new StringBuilder(t.text);
           int j = i + 1;
-          boolean hasDot = false;
           while (j < to && tokens.get(j).kind == TokenKind.DOT) {
             initials.append('.');
-            hasDot = true;
             j++;
           }
           // Decide whether to flip "<Surname> <ALLCAPS>" → "<initials>.<Surname>" or to
@@ -702,47 +696,6 @@ public final class AuthorshipParser {
       }
     }
     return sb.toString();
-  }
-
-  static NomCode inferCode(AuthState s, Rank rank) {
-    if (s.sanctioningAuthor != null) return NomCode.BOTANICAL;
-    // "(BasAuthor) RecombAuthor, year" with an explicit infraspecific rank marker
-    // (subsp./var./f.) is the botanical recombination form — the year is the
-    // publication year of the recombination, not a zoological author-year citation.
-    // Run before the generic "year → zoological" rule.
-    if (s.basionymPresent && s.basionym.getYear() == null
-        && s.combination.hasAuthors() && s.combination.getYear() != null
-        && hasInfraSpecificMarker(rank)) {
-      return NomCode.BOTANICAL;
-    }
-    // Any year (basionym or combination) paired with an actual author is a strong
-    // zoological signal: year citation is mandatory in zoological nomenclature but
-    // optional in botanical. A bare year with no authors at all is not enough to
-    // pick a code.
-    boolean basYear = s.basionymPresent && s.basionym.getYear() != null && s.basionym.hasAuthors();
-    boolean combYear = s.combination.getYear() != null && s.combination.hasAuthors();
-    if (basYear || combYear) {
-      return NomCode.ZOOLOGICAL;
-    }
-    // The "f."/"fil."/"filius" suffix is the standard botanical convention for the son
-    // of a same-named author. It does also occur in older zoological literature
-    // ("Lacerta agilis Linnaeus f., 1789") but those cases always carry a year and
-    // are caught by the year rule above. A filius without any year is therefore a
-    // strong botanical hint.
-    if (s.hasFilius) return NomCode.BOTANICAL;
-    // No years: two-part citation (original author in parens + recombination author)
-    // without years is the standard botanical pattern; one-part basionym-only is
-    // zoological.
-    if (s.basionymPresent) {
-      return s.combination.hasAuthors() ? NomCode.BOTANICAL : NomCode.ZOOLOGICAL;
-    }
-    return null;
-  }
-
-  /** True for rank values that carry an explicit infraspecific marker (subsp./var./f.). */
-  private static boolean hasInfraSpecificMarker(Rank r) {
-    return r == Rank.SUBSPECIES || r == Rank.VARIETY || r == Rank.SUBVARIETY
-        || r == Rank.FORM || r == Rank.SUBFORM;
   }
 
   /** True if any token in [from, to) is a WORD that starts with an upper-case letter. */

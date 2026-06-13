@@ -59,7 +59,11 @@ public final class NameTokens {
         i++;
         continue;
       }
+      // "(Word)" → subgenus, but only before any species epithet. After a species
+      // epithet "(Klatt)" is a basionym author span (e.g. the autonym "Trimezia spathata
+      // (Klatt) Baker subsp. spathata"), handled by the skipParenAuthorBlock branch below.
       if (t.kind == TokenKind.OPEN_PAREN
+          && lowerEpithets.isEmpty() && subgenus == null
           && i + 2 < boundary
           && ts.get(i + 1).kind == TokenKind.WORD
           && ts.get(i + 1).startsUpper()
@@ -90,6 +94,13 @@ public final class NameTokens {
           && genus != null && !lowerEpithets.isEmpty()) {
         int after = skipParenAuthorBlock(ts, i, boundary);
         if (after > i) {
+          // Record the species-level author span [i, after) so the pipeline can attach it
+          // to an autonym (ICN Art. 22.1/26.1). Only the first span, right after the
+          // species epithet and before any infraspecific marker, is the species author.
+          if (ctx.midAuthorFrom < 0 && lowerEpithets.size() == 1 && markerIdxInEpithets < 0) {
+            ctx.midAuthorFrom = i;
+            ctx.midAuthorTo = after;
+          }
           i = after;
           continue;
         }
@@ -143,10 +154,18 @@ public final class NameTokens {
         // skipped so that downstream classification operates only on the structural
         // tokens.
         boolean canStartAuthor = t.startsUpper()
-            || (t.startsLower() && AuthorParticles.isParticle(t.text));
+            || (t.startsLower() && (AuthorParticles.isParticle(t.text)
+                || AuthorshipSplit.isApostropheParticle(t.text)));
         if (genus != null && canStartAuthor) {
           int after = AuthorshipSplit.midNameAuthorEnd(ts, i, boundary);
           if (after > i) {
+            // Record the species-level author span so the pipeline can attach it to an
+            // autonym (ICN Art. 22.1/26.1): only the first span, sitting directly after
+            // the species epithet and before any infraspecific marker.
+            if (ctx.midAuthorFrom < 0 && lowerEpithets.size() == 1 && markerIdxInEpithets < 0) {
+              ctx.midAuthorFrom = i;
+              ctx.midAuthorTo = after;
+            }
             pendingMidNameAuthor = renderAuthorSpan(ts, i, after);
             i = after;
             continue;
@@ -224,9 +243,17 @@ public final class NameTokens {
             ctx.name.setType(NameType.INFORMAL);
             i++;
             if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
-            // A number immediately following the indet marker becomes the informal phrase
+            // A number immediately following the indet marker becomes the informal phrase.
+            // When the source spelled out the marker as the full word "species" we keep it
+            // verbatim in the phrase ("Allium species 1" → phrase "species 1") rather than
+            // collapsing it to the synthetic "sp." marker; the formatter then renders the
+            // phrase as-is. Abbreviated "sp."/"spec." keep the number-only phrase.
             if (i < boundary && ts.get(i).kind == TokenKind.NUMBER) {
-              ctx.name.setPhrase(ts.get(i).text);
+              if (w.equalsIgnoreCase("species")) {
+                ctx.name.setPhrase("species " + ts.get(i).text);
+              } else {
+                ctx.name.setPhrase(ts.get(i).text);
+              }
               i++;
             } else if (i < boundary && ts.get(i).kind == TokenKind.WORD
                 && ts.get(i).text.length() == 1 && ts.get(i).startsUpper()

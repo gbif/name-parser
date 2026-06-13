@@ -25,11 +25,11 @@ public class NameFormatter {
   
   /**
    * A full scientific name with authorship from the individual properties in its canonical form.
-   * Autonyms are rendered without authorship and subspecies are using the subsp rank marker
-   * unless a name is assigned to the zoological code.
+   * Autonym authorship is the species author and is placed per the nomenclatural code: after
+   * the species epithet for botany (ICN Art. 22.1/26.1), at the very end for zoology (ICZN).
+   * Subspecies use the subsp rank marker unless a name is assigned to the zoological code.
    */
   public static String canonical(ParsedName n) {
-    // TODO: show authorship for zoological autonyms?
     // TODO: how can we best remove subsp from zoological names?
     // https://github.com/gbif/portal-feedback/issues/640
     return buildName(n, true, true, true, true, false, false, false, true, true, false,  false, true, true, true, true, true, true, false);
@@ -237,7 +237,9 @@ public class NameFormatter {
             if (n.getRank().isInfraspecific()) {
               // maybe we have an infraspecific epithet? force to show the rank marker
               appendInfraspecific(sb, n, hybridMarker, showQualifier, rankMarker, true, html);
-            } else {
+            } else if (!phraseLeadsWithSpeciesMarker(n)) {
+              // Skip the synthetic "sp." when an informal phrase already spells out the
+              // species marker verbatim ("Allium species 1") — the phrase carries it.
               sb.append(" ");
               sb.append(n.getRank().getMarker());
             }
@@ -279,12 +281,23 @@ public class NameFormatter {
           }
           
         } else {
-          // infraspecific part
-          appendInfraspecific(sb, n, hybridMarker, showQualifier, rankMarker, false, html);
-          // non autonym authorship ?
-          if (n.isAutonym()) {
+          // Autonym authorship placement follows the codes. The autonym's final epithet
+          // never carries an author of its own; the author shown is the species author.
+          //   ICN Art. 22.1/26.1 (botany): cite it right after the species epithet —
+          //     "Acer rubrum L. var. rubrum", "Trimezia spathata (Klatt) Baker subsp. spathata".
+          //   ICZN (zoology): cite it at the very end of the trinomen —
+          //     "Vulpes vulpes vulpes Linnaeus, 1758".
+          // Only an explicit botanical code triggers the after-species placement; zoological
+          // and unknown-code autonyms keep the author in its default end position below.
+          if (n.isAutonym() && NomCode.BOTANICAL == n.getCode()) {
+            if (authorship && n.hasAuthorship()) {
+              sb.append(' ');
+              appendAuthorship(n, sb, n.getCode(), showImprintYear);
+            }
             authorship = false;
           }
+          // infraspecific part
+          appendInfraspecific(sb, n, hybridMarker, showQualifier, rankMarker, false, html);
         }
       }
     }
@@ -411,6 +424,16 @@ public class NameFormatter {
     return code != null && code != NomCode.ZOOLOGICAL;
   }
 
+  // Informal phrase that already spells out the species marker as a leading word
+  // ("species 1") — the verbatim phrase carries the marker, so the formatter must not
+  // also synthesise an "sp." marker (which would yield "Genus sp. species 1").
+  private static final Pattern PHRASE_SPECIES_MARKER =
+      Pattern.compile("^(?:species|spec|sp)\\b.*", Pattern.CASE_INSENSITIVE);
+
+  private static boolean phraseLeadsWithSpeciesMarker(ParsedName n) {
+    return n.isPhraseName() && PHRASE_SPECIES_MARKER.matcher(n.getPhrase().trim()).matches();
+  }
+
   private static boolean isUnknown(Rank r) {
     return r == null || r.otherOrUnranked();
   }
@@ -490,8 +513,10 @@ public class NameFormatter {
   public static void appendAuthorship(StringBuilder sb, Authorship auth, boolean includeYear, NomCode code) {
     if (auth != null && auth.exists()) {
       boolean authorsAppended = false;
-      // we don't want to include the year for botanical names
-      includeYear = includeYear && code != NomCode.BOTANICAL;
+      // Botanical citations don't normally carry the author year, but the ICN doesn't
+      // forbid it and some groups (e.g. Fungi) do include it. So whenever a year is
+      // present we render it regardless of code; absence of a year keeps the usual
+      // year-less botanical form.
       if (auth.hasExAuthors()) {
         sb.append(joinAuthors(auth.getExAuthors(), NomCode.BACTERIAL == code ? 2 : null));
         sb.append(" ex ");

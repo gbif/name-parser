@@ -488,6 +488,19 @@ public class NameParserImplTest {
             .warning(Warnings.NULL_EPITHET)
             .nothingElse();
 
+    // a literal "Null" genus is a data artefact too — flag doubtful like a null epithet
+    assertName("Null bactus", "Null bactus")
+            .species("Null", "bactus")
+            .doubtful()
+            .warning(Warnings.NULL_EPITHET)
+            .nothingElse();
+
+    assertName("Null", "Null")
+            .monomial("Null")
+            .doubtful()
+            .warning(Warnings.NULL_EPITHET)
+            .nothingElse();
+
     assertUnparsable("Unidentified unidentified Hood", PLACEHOLDER);
 
     assertUnparsable("Abies unidentified", PLACEHOLDER);
@@ -1019,6 +1032,48 @@ public class NameParserImplTest {
   /**
    * http://dev.gbif.org/issues/browse/POR-2459
    */
+  /**
+   * Autonym authorship is the species author and follows the nomenclatural codes:
+   * ICN Art. 22.1/26.1 (botany) cite it after the species epithet, ICZN (zoology) at the
+   * very end of the trinomen. The autonym's final epithet never carries an author itself.
+   * https://www.iapt-taxon.org/icbn/frameset/0026Ch3Sec3a022.htm (ICN Art. 26)
+   * https://code.iczn.org/types-in-the-species-group/article-72-general-provisions/ (ICZN Art. 72)
+   */
+  @Test
+  public void autonymAuthorship() throws Exception {
+    // botanical: species author after the species epithet, none after the autonym
+    ParsedName acer = parser.parse("Acer rubrum L. var. rubrum", null, null, NomCode.BOTANICAL);
+    assertEquals("rubrum", acer.getSpecificEpithet());
+    assertEquals("rubrum", acer.getInfraspecificEpithet());
+    assertTrue(acer.isAutonym());
+    assertEquals("L.", org.gbif.nameparser.util.NameFormatter.authorshipComplete(acer));
+    assertEquals("Acer rubrum L. var. rubrum",
+        org.gbif.nameparser.util.NameFormatter.canonical(acer));
+
+    // botanical recombination with basionym + combination author before the marker
+    ParsedName trim = parser.parse("Trimezia spathata (Klatt) Baker subsp. spathata", null, null, null);
+    assertTrue(trim.isAutonym());
+    assertEquals("spathata", trim.getSpecificEpithet());
+    assertEquals("spathata", trim.getInfraspecificEpithet());
+    assertNull(trim.getInfragenericEpithet());
+    assertEquals(NomCode.BOTANICAL, trim.getCode());
+    assertEquals("(Klatt) Baker", org.gbif.nameparser.util.NameFormatter.authorshipComplete(trim));
+    assertEquals("Trimezia spathata (Klatt) Baker subsp. spathata",
+        org.gbif.nameparser.util.NameFormatter.canonical(trim));
+
+    // zoological autonym: author at the very end, no rank marker
+    ParsedName vul = parser.parse("Vulpes vulpes vulpes Linnaeus, 1758", null, null, NomCode.ZOOLOGICAL);
+    assertTrue(vul.isAutonym());
+    assertEquals("Vulpes vulpes vulpes Linnaeus, 1758",
+        org.gbif.nameparser.util.NameFormatter.canonical(vul));
+
+    // botanical autonym with no author renders cleanly without one
+    ParsedName bare = parser.parse("Acer rubrum var. rubrum", null, null, NomCode.BOTANICAL);
+    assertTrue(bare.isAutonym());
+    assertEquals("Acer rubrum var. rubrum",
+        org.gbif.nameparser.util.NameFormatter.canonical(bare));
+  }
+
   @Test
   public void unparsablePlaceholder() throws Exception {
     assertUnparsable("Mollusca not assigned", PLACEHOLDER);
@@ -1046,6 +1101,9 @@ public class NameParserImplTest {
     assertUnparsable("Unident-Boraginaceae", PLACEHOLDER);
     assertUnparsable("Unident", PLACEHOLDER);
     assertUnparsable("IncertaeSedis justi", PLACEHOLDER);
+    // IPNI underscore-joined placeholder, https://github.com/CatalogueOfLife (name-parser v4 item 3)
+    assertUnparsable("Incertae_sedis", PLACEHOLDER);
+    assertUnparsable("Incertae_sedis", Rank.FAMILY, PLACEHOLDER);
   }
 
   @Test
@@ -2077,10 +2135,12 @@ public class NameParserImplTest {
             .combAuthors(null, "d'Urv.")
             .nothingElse();
 
-    // TODO: autonym authors are the species authors !!!
+    // Autonym authors are the species authors (ICN Art. 22.1/26.1): the autonym's final
+    // epithet carries no author, but the species author "d'Urv." is captured and rendered
+    // after the species epithet.
     assertName("Cirsium creticum d'Urv. subsp. creticum", "Cirsium creticum subsp. creticum")
             .infraSpecies("Cirsium", "creticum", SUBSPECIES, "creticum")
-            //.combAuthors(null, "d'Urv.")
+            .combAuthors(null, "d'Urv.")
             .autonym()
             .code(NomCode.BOTANICAL)
             .nothingElse();
@@ -2603,6 +2663,68 @@ public class NameParserImplTest {
             .nothingElse();
   }
 
+  /**
+   * The longest known real, valid name (~860 chars): Homo naledi with its 47-author
+   * describing team plus an equally long {@code sec.} concept reference. It must parse
+   * cleanly — not get rejected by the 1000-char DoS cap — and, because it exceeds 250
+   * chars, carry the LONG_NAME warning. A genuinely over-long input is still rejected.
+   */
+  @Test
+  public void longName() throws Exception {
+    String authors = "Berger, Hawks, de Ruiter, Churchill, Schmid, Delezene, Kivell, "
+        + "Garvin, Williams, DeSilva, Skinner, Musiba, Cameron, Holliday, Harcourt-Smith, "
+        + "Ackermann, Bastir, Bogin, Bolter, Brophy, Cofran, Congdon, Deane, Dembo, Drapeau, "
+        + "Elliott, Feuerriegel, Garcia-Martinez, Green, Gurtov, Irish, Kruger, Laird, Marchi, "
+        + "Meyer, Nalla, Negash, Orr, Radovcic, Schroeder, Scott, Throckmorton, Tocheri, "
+        + "VanSickle, Walker, Wei & Zipfel";
+    String homoNaledi = "Homo naledi " + authors + ", 2015 sec. " + authors;
+    assertTrue(homoNaledi.length() > 250 && homoNaledi.length() < 1000);
+
+    assertName(homoNaledi, "Homo naledi")
+            .species("Homo", "naledi")
+            .combAuthors("2015",
+                "Berger", "Hawks", "de Ruiter", "Churchill", "Schmid", "Delezene", "Kivell",
+                "Garvin", "Williams", "DeSilva", "Skinner", "Musiba", "Cameron", "Holliday",
+                "Harcourt-Smith", "Ackermann", "Bastir", "Bogin", "Bolter", "Brophy", "Cofran",
+                "Congdon", "Deane", "Dembo", "Drapeau", "Elliott", "Feuerriegel", "Garcia-Martinez",
+                "Green", "Gurtov", "Irish", "Kruger", "Laird", "Marchi", "Meyer", "Nalla", "Negash",
+                "Orr", "Radovcic", "Schroeder", "Scott", "Throckmorton", "Tocheri", "VanSickle",
+                "Walker", "Wei", "Zipfel")
+            .sensu("sec. " + authors)
+            .warning(Warnings.LONG_NAME)
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    // A long-but-valid authorship (~420 chars) supplied on its own via parseAuthorship
+    // still parses fine — the cap only rejects beyond 1000 chars.
+    ParsedAuthorship pa = parser.parseAuthorship(authors + ", 2015", null);
+    assertEquals("2015", pa.getCombinationAuthorship().getYear());
+    assertEquals(47, pa.getCombinationAuthorship().getAuthors().size());
+    assertEquals("Berger", pa.getCombinationAuthorship().getAuthors().get(0));
+    assertEquals("Zipfel", pa.getCombinationAuthorship().getAuthors().get(46));
+
+    // Beyond the 1000-char cap the input is rejected rather than parsed (DoS guard).
+    StringBuilder tooLong = new StringBuilder("Homo naledi ");
+    while (tooLong.length() <= 1000) {
+      tooLong.append("Berger, ");
+    }
+    tooLong.append("2015");
+    assertUnparsable(tooLong.toString(), NameType.OTHER);
+
+    // The same cap guards the separately supplied authorship argument.
+    StringBuilder longAuthorship = new StringBuilder();
+    while (longAuthorship.length() <= 1000) {
+      longAuthorship.append("Berger, ");
+    }
+    longAuthorship.append("2015");
+    try {
+      parser.parseAuthorship(longAuthorship.toString(), null);
+      fail("expected over-long authorship to be rejected");
+    } catch (UnparsableNameException e) {
+      assertEquals(NameType.OTHER, e.getType());
+    }
+  }
+
   @Test
   public void taxonomicNotes() throws Exception {
     // bacteria
@@ -2707,21 +2829,6 @@ public class NameParserImplTest {
             .sensu("sensu Turcz., p.p.");
   }
 
-  /**
-   * sensu.txt cases that are not yet handled correctly. Each assertion encodes the desired
-   * parse; the comment describes the current bug. @Ignore'd so the build stays green — drop
-   * the annotation and move the case into {@link #taxonomicNotes()} once fixed.
-   */
-  @Ignore("desired parse for still-unsupported sensu.txt authorship cases — not yet implemented")
-  @Test
-  public void taxonomicNotesUnsupported() throws Exception {
-    // "sensu …" inside the basionym parentheses currently becomes the basionym authorship
-    // ("sensu Mereschkowsky, 1878") instead of the taxonomic note.
-    assertAuthorship("(sensu Mereschkowsky, 1878) Jankowski, 1992", "Jankowski")
-            .combAuthors("1992", "Jankowski")
-            .sensu("sensu Mereschkowsky, 1878");
-  }
-
   @Test
   public void nonNames() throws Exception {
     // the entire name ends up as a taxonomic note, consider this as unparsed...
@@ -2790,6 +2897,58 @@ public class NameParserImplTest {
         .species("Latrodectus", "marikitates")
         .sensu("auct. nec Whittaker")
         .nothingElse();
+  }
+
+  /**
+   * Unicode apostrophe / quote variants are normalised to ASCII (' and ") in the parsed output,
+   * on both the scientific name and the separately supplied authorship.
+   */
+  @Test
+  public void quoteNormalisation() throws Exception {
+    assertName("Abies alba O’Brien", "Abies alba")
+            .species("Abies", "alba")
+            .combAuthors(null, "O'Brien")
+            .nothingElse();
+
+    assertAuthorship("O’Brien", "O'Brien");   // U+2019 right single quotation mark
+    assertAuthorship("OʼBrien", "O'Brien");   // U+02BC modifier letter apostrophe
+    assertAuthorship("L´Hér.", "L'Hér.");     // U+00B4 acute accent used as apostrophe
+
+    // In zoological nomenclature, names written like:
+    //
+    //'Prosthète' Hesse, 1861
+    //
+    //often indicate that the word is not available as a scientific name.
+    // The quotation marks signal that it was published but is not recognized as a valid nomenclatural act.
+    //
+     // 'Prosthète' Hesse, 1861 is not a valid scientific genus name.
+    //
+    // It was a French vernacular (common-language) name introduced by the French zoologist Eugène Hesse in 1861 for an isopod crustacean.
+    // The name was later ruled to be a vernacular term rather than an available zoological name under the ICZN.
+    // The Official Index of Zoological Names explicitly lists 'Prosthète' Hesse, 1861 as "a vernacular name."
+    assertName("'Prosthète' Hesse 1861", "'Prosthète'")
+        .monomial("'Prosthète'")
+        .doubtful() // because the quotes indicate it is not a valid scientific name
+        .combAuthors("1861", "Hesse")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+
+    // the curly-quoted input parses identically to the ASCII-quoted one (‘Prosthète’ Hesse 1861)
+    assertEquals(parser.parse("'Prosthète' Hesse 1861", null, null, null),
+                 parser.parse("‘Prosthète’ Hesse 1861", null, null, null));
+    assertEquals(parser.parse("\"Prosthète\" Hesse 1861", null, null, null),
+                 parser.parse("“Prosthète” Hesse 1861", null, null, null));
+  }
+
+  @Test
+  public void strayCharInEpithet() throws Exception {
+    // a stray "!" inside an epithet (OCR/typo artefact for "pulchra") is kept as part of the
+    // epithet, not split off into the authorship
+    assertName("Lamprostiba pu!chra Pace, 2014", "Lamprostiba pu!chra")
+            .species("Lamprostiba", "pu!chra")
+            .combAuthors("2014", "Pace")
+            .code(ZOOLOGICAL)
+            .nothingElse();
   }
 
   private void assertSensu(String raw, String sensu) throws UnparsableNameException, InterruptedException {
@@ -3249,12 +3408,31 @@ public class NameParserImplTest {
 
   @Test
   public void authorshipOnlyNotes() throws Exception {
+    // "(auct.) Author": the parens mark a note, not a basionym → author + taxonomic note
     assertAuthorship("(auct.) Rolfe")
-            .sensu("(auct.) Rolfe")
+            .combAuthors(null, "Rolfe")
+            .sensu("auct.")
             .nothingElse();
 
+    assertAuthorship("(auct.) auct.")
+            .sensu("auct.")
+            .nothingElse();
+
+    // taxonomic note + nomenclatural note are split into their own fields
     assertAuthorship("auct., nom. subnud.")
-            .sensu("auct., nom. subnud.")
+            .sensu("auct.")
+            .nomNote("nom. subnud.")
+            .nothingElse();
+
+    // a parenthesised "(sensu …)" is the taxonomic note; the trailing name is the author
+    assertAuthorship("(sensu Mereschkowsky, 1878) Jankowski, 1992")
+            .combAuthors("1992", "Jankowski")
+            .sensu("sensu Mereschkowsky, 1878")
+            .nothingElse();
+
+    // a leading parenthesised homonym citation makes the whole string a taxonomic note
+    assertAuthorship("(non Scacchi, 1836) sensu Zibrowius, 1968")
+            .sensu("(non Scacchi, 1836) sensu Zibrowius, 1968")
             .nothingElse();
 
     assertAuthorship("Fischer-Le Saux et al., 1999 emend. Akhurst et al., 2004")
@@ -3537,6 +3715,13 @@ public class NameParserImplTest {
 
   @Test
   public void testNomenclaturalNotesPattern() throws Exception {
+    // author only
+    var pa = parser.parseAuthorship("nom. illeg.", null);
+    var na =  new NameAssertion(pa);
+    na.type(null);
+    na.nomNote("nom. illeg.");
+    na.nothingElse();
+
     assertNomNote("nom. illeg.",  "Vaucheria longicaulis var. bengalensis Islam, nom. illeg.");
     assertNomNote("nom. correct",  "Dorataspidae nom. correct");
     assertNomNote("nom. transf.",  "Ethmosphaeridae nom. transf.");
@@ -3650,7 +3835,7 @@ public class NameParserImplTest {
             .combAuthors(null, "Bidaud")
             .nothingElse();
 
-    assertName("Asarum sieboldii f. non-maculatum (Y.N.Lee) M.Kim", "Asarum sieboldii f. non-maculatum")
+    assertName("Asarum sieboldii f. non-maculatum (Y.N.Lee) M. Kim", "Asarum sieboldii f. non-maculatum")
             .infraSpecies("Asarum", "sieboldii", FORM, "non-maculatum")
             .combAuthors(null, "M.Kim")
             .basAuthors(null, "Y.N.Lee")
@@ -3811,6 +3996,12 @@ public class NameParserImplTest {
 
     assertPhraseName("Verticordia sp.1", "Verticordia sp. 1", SPECIES, "1")
             .species("Verticordia", null)
+            .nothingElse();
+
+    // Spelled-out "species N" placeholder keeps the verbatim marker word in the phrase and
+    // renders it as-is ("Allium species 1"), not collapsed to the synthetic "sp." marker.
+    assertPhraseName("Allium species 1", "Allium species 1", SPECIES, "species 1")
+            .species("Allium", null)
             .nothingElse();
 
     assertPhraseName("Bryozoan sp. E", "Bryozoan sp. E", SPECIES, "E")

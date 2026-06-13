@@ -49,6 +49,25 @@ public final class ParseContext {
    * else has settled the code.
    */
   public boolean inAuthorCitation;
+  /**
+   * Quote char ("'" or '"') a leading monomial was wrapped in (e.g. "'Prosthète' Hesse, 1861").
+   * Such quotes mark a name that is not an available scientific name; the quotes are stripped
+   * for parsing and re-wrapped around the parsed uninomial in {@link Assemble} so the output
+   * keeps them, and the name is flagged doubtful.
+   */
+  public String quotedMonomial;
+  /**
+   * Token index range [{@code midAuthorFrom}, {@code midAuthorTo}) of an author span that
+   * sits between the species epithet and a following infraspecific rank marker
+   * ("Cirsium creticum d'Urv. subsp. creticum", "Trimezia spathata (Klatt) Baker subsp.
+   * spathata"). Recorded by {@link NameTokens}. For an autonym this is the <em>species</em>
+   * author (ICN Art. 22.1/26.1) — the autonym's final epithet bears no author of its own —
+   * so {@link Pipeline} parses this span and applies it as the name's authorship. For
+   * non-autonym infraspecific names the model holds the terminal (infraspecific) author
+   * instead, so this span is left dropped.
+   */
+  public int midAuthorFrom = -1;
+  public int midAuthorTo = -1;
 
   public ParseContext(String scientificName, String authorship, Rank rank, NomCode code) {
     this.original = scientificName;

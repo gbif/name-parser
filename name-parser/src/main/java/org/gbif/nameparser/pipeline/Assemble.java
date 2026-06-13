@@ -124,94 +124,14 @@ public final class Assemble {
         if (pinned != null) n.setCode(pinned);
       }
     } else if (n.getCode() == null) {
-      // Code-restricted ranks pin the code regardless of authorship shape.
-      Rank r = n.getRank();
-      NomCode pinned = r == null ? null : r.isRestrictedToCode();
-      if (pinned != null) {
-        n.setCode(pinned);
-      } else if (authState != null) {
-        // For manuscript names with only a basionym citation and no year, the
-        // basionym-only-zoological rule doesn't apply — manuscripts are by definition
-        // unpublished and the code follows from the eventual publication, not the
-        // cited authors. Skip inference in that narrow case.
-        boolean skipInference = n.isManuscript()
-            && authState.basionymPresent
-            && authState.basionym.getYear() == null
-            && !authState.combination.hasAuthors()
-            && authState.combination.getYear() == null;
-        if (!skipInference) {
-          NomCode inferred = AuthorshipParser.inferCode(authState, n.getRank());
-          if (inferred != null) {
-            n.setCode(inferred);
-          }
-        }
-      }
-      // A "nom. …" nomenclatural note (nom.cons., nom.illeg., nom.nud., …) is the
-      // botanical convention; combined with comb authorship and no year on the author
-      // span, it tips the code to BOTANICAL. (Year on the authorship would already
-      // have fired the ZOOLOGICAL rule above.) When the name also has an explicit
-      // infraspecific marker or ex-authors, those richer signals take precedence and
-      // the nom-note is skipped here.
-      if (n.getCode() == null && n.getNomenclaturalNote() != null
-          && n.getNomenclaturalNote().toLowerCase().startsWith("nom")
-          && n.hasCombinationAuthorship()
-          && n.getCombinationAuthorship().getYear() == null
-          && !ctx.explicitInfraMarker
-          && !n.getCombinationAuthorship().hasExAuthors()) {
-        n.setCode(NomCode.BOTANICAL);
-      }
-      // An explicit "subsp." / "var." / "f." marker on a name with no authorship at
-      // all but with a parenthesised "(non … YYYY)" homonym citation is a botanical
-      // citation pattern (the homonym reference is the sole authorship surrogate).
-      if (n.getCode() == null && ctx.explicitInfraMarker
-          && hasBotanicalRankMarker(n.getRank())
-          && n.getTaxonomicNote() != null
-          && !n.hasCombinationAuthorship()
-          && (n.getBasionymAuthorship() == null || !n.getBasionymAuthorship().exists())) {
-        n.setCode(NomCode.BOTANICAL);
-      }
-      // Manuscript name with an explicit subsp./var./f. marker is the botanical
-      // pattern — manuscripts in zoology don't use rank markers. Force BOTANICAL even
-      // when there's some parenthesised pseudo-basionym left over by the parser.
-      if (ctx.explicitInfraMarker
-          && hasBotanicalRankMarker(n.getRank())
-          && n.isManuscript()
-          && (n.getCode() == null || n.getCode() == NomCode.ZOOLOGICAL)) {
-        n.setCode(NomCode.BOTANICAL);
-      }
-      // Autonym + explicit rank marker is the botanical convention. Zoological
-      // trinomials don't use rank markers and don't repeat the species epithet.
-      if (n.getCode() == null && n.isAutonym()
-          && ctx.explicitInfraMarker
-          && hasBotanicalRankMarker(n.getRank())) {
-        n.setCode(NomCode.BOTANICAL);
-      }
-      // "Author(s) in Editor, YYYY" with a real publication year and no other code
-      // signal — the year-bearing in-citation form is the zoological convention.
-      // Skip for manuscript names ("ms.", "ined.") and IPNI-style references that
-      // end in a year in parens (those are botanical citation form).
-      if (n.getCode() == null && ctx.inAuthorCitation
-          && ctx.pendingYear != null
-          && n.hasCombinationAuthorship()
-          && !n.isManuscript()
-          && !publishedInLooksBotanical(n.getPublishedIn())) {
-        n.setCode(NomCode.ZOOLOGICAL);
-      }
+      // All code-setting heuristics live in CodeInference (called only when the name
+      // has no code yet).
+      CodeInference.infer(ctx, authState);
     }
 
-    // Rank-restricted code mismatch with the caller-supplied code → override the
-    // code to what the rank requires and warn about it. E.g. supersect. is only
-    // valid in botany; if the caller asked for ZOOLOGICAL, surface a CODE_MISMATCH
-    // and pin BOTANICAL.
-    {
-      Rank rmm = n.getRank();
-      NomCode pinnedRank = rmm == null ? null : rmm.isRestrictedToCode();
-      if (pinnedRank != null && n.getCode() != null && n.getCode() != pinnedRank
-          && ctx.requestedCode != null && ctx.requestedCode != pinnedRank) {
-        n.setCode(pinnedRank);
-        n.addWarning(Warnings.CODE_MISMATCH);
-      }
-    }
+    // Rank-restricted code mismatch with the caller-supplied code → override the code
+    // to what the rank requires and warn (e.g. supersect. is botany-only).
+    CodeInference.applyRankCodeMismatch(ctx);
 
     // Zoological trinomials default to SUBSPECIES, not the generic INFRASPECIFIC_NAME:
     // ICZN doesn't use rank markers for subspecies, so a bare "Genus species infra"
@@ -262,36 +182,37 @@ public final class Assemble {
       }
       n.setType(NameType.INFORMAL);
     }
-  }
 
-  private static void flagBlacklistedEpithets(ParsedName n) {
-    String[] epithets = {n.getSpecificEpithet(), n.getInfraspecificEpithet()};
-    for (String ep : epithets) {
-      if (ep == null) continue;
-      if ("null".equalsIgnoreCase(ep)) {
-        n.setDoubtful(true);
-        n.addWarning(Warnings.NULL_EPITHET);
-      } else if (BlacklistedEpithets.contains(ep)) {
-        n.setDoubtful(true);
-        n.addWarning(Warnings.BLACKLISTED_EPITHET);
+    // Re-wrap a quoted leading monomial ("'Prosthète'") so the output keeps the quotes that
+    // mark it as an unavailable name; the quotes were stripped for parsing in StripAndStash.
+    if (ctx.quotedMonomial != null) {
+      String q = ctx.quotedMonomial;
+      if (n.getUninomial() != null) {
+        n.setUninomial(q + n.getUninomial() + q);
+      } else if (n.getGenus() != null) {
+        n.setGenus(q + n.getGenus() + q);
       }
     }
   }
 
-  /**
-   * Heuristic for "this publishedIn looks like a botanical citation". IPNI-style refs
-   * end in a parenthesised year ("(1817)") and the in-citation form for them is the
-   * botanical convention ("Author in Editor, Title (Year)").
-   */
-  private static boolean publishedInLooksBotanical(String pub) {
-    if (pub == null) return false;
-    return pub.matches(".*\\(\\d{4}\\)\\s*\\.?\\s*$");
-  }
-
-  /** Ranks whose canonical rendering uses a botanical-style marker (subsp./var./f.). */
-  private static boolean hasBotanicalRankMarker(Rank r) {
-    return r == Rank.SUBSPECIES || r == Rank.VARIETY || r == Rank.SUBVARIETY
-        || r == Rank.FORM || r == Rank.SUBFORM;
+  private static void flagBlacklistedEpithets(ParsedName n) {
+    // A literal "null" is a data artefact in any name part — uninomial or genus just as much
+    // as an epithet ("Null bactus", "Abies null Hood"). Flag the name doubtful in all cases.
+    String[] nameParts = {n.getUninomial(), n.getGenus(), n.getSpecificEpithet(), n.getInfraspecificEpithet()};
+    for (String part : nameParts) {
+      if (part != null && "null".equalsIgnoreCase(part)) {
+        n.setDoubtful(true);
+        n.addWarning(Warnings.NULL_EPITHET);
+      }
+    }
+    String[] epithets = {n.getSpecificEpithet(), n.getInfraspecificEpithet()};
+    for (String ep : epithets) {
+      if (ep == null) continue;
+      if (BlacklistedEpithets.contains(ep)) {
+        n.setDoubtful(true);
+        n.addWarning(Warnings.BLACKLISTED_EPITHET);
+      }
+    }
   }
 
   private static Rank rankFromSuffix(String name, NomCode code) {

@@ -27,6 +27,7 @@ public class Warnings {
   public static final String ABBREVIATED_GENUS = "abbreviated genus name";
   public static final String ABBREVIATED_SUBGENUS = "abbreviated subgenus name";
   public static final String REMOVED_PREFIX = "Removed: ";
+  public static final String LONG_NAME = "unusually long name";
 
   private Warnings() {
   }
