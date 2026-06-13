@@ -214,8 +214,10 @@ public class NameFormatterTest {
     pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill."));
     assertEquals("(Carl. 1999) Mill. 1887", NameFormatter.authorshipComplete(pn));
 
+    // Botanical names usually omit the year, but the ICN doesn't forbid it (some Fungi
+    // groups cite it) — so when a year is present it is still rendered.
     pn.setCode(NomCode.BOTANICAL);
-    assertEquals("(Carl.) Mill.", NameFormatter.authorshipComplete(pn));
+    assertEquals("(Carl., 1999) Mill., 1887", NameFormatter.authorshipComplete(pn));
   }
   
   @Test
@@ -239,7 +241,7 @@ public class NameFormatterTest {
     assertEquals("carrera subsp. vulgaris", NameFormatter.canonicalWithoutAuthorship(pn));
 
     pn.setCombinationAuthorship(Authorship.yearAuthors("1887", "Mill."));
-    assertEquals("carrera subsp. vulgaris Mill.", NameFormatter.canonical(pn));
+    assertEquals("carrera subsp. vulgaris Mill., 1887", NameFormatter.canonical(pn));
   }
   
   @Test
@@ -516,8 +518,10 @@ public class NameFormatterTest {
     pn.setRank(Rank.SUBSPECIES);
     assertName("Abax carinatus urinatus", "Abax carinatus urinatus (Duftschmid, 1812)");
     
+    // Botanical: subsp. rank marker shown; the basionym year is kept now that botanical
+    // names render the year when one is present (ICN doesn't forbid it).
     pn.setCode(NomCode.BOTANICAL);
-    assertName("Abax carinatus urinatus", "Abax carinatus subsp. urinatus (Duftschmid)");
+    assertName("Abax carinatus urinatus", "Abax carinatus subsp. urinatus (Duftschmid, 1812)");
     
     
     pn = new ParsedName();

@@ -513,8 +513,10 @@ public class NameFormatter {
   public static void appendAuthorship(StringBuilder sb, Authorship auth, boolean includeYear, NomCode code) {
     if (auth != null && auth.exists()) {
       boolean authorsAppended = false;
-      // we don't want to include the year for botanical names
-      includeYear = includeYear && code != NomCode.BOTANICAL;
+      // Botanical citations don't normally carry the author year, but the ICN doesn't
+      // forbid it and some groups (e.g. Fungi) do include it. So whenever a year is
+      // present we render it regardless of code; absence of a year keeps the usual
+      // year-less botanical form.
       if (auth.hasExAuthors()) {
         sb.append(joinAuthors(auth.getExAuthors(), NomCode.BACTERIAL == code ? 2 : null));
         sb.append(" ex ");
