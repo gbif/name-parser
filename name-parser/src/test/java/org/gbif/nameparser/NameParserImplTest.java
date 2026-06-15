@@ -2100,6 +2100,11 @@ public class NameParserImplTest {
             .combAuthors(null, "Ilçim", "Çenet", "Dadandi")
             .nothingElse();
 
+    // cedilla inside an epithet must not split the word (gbif/name-parser#104)
+    assertName("Euphrasia mendonçae", "Euphrasia mendonçae")
+            .species("Euphrasia", "mendonçae")
+            .nothingElse();
+
     assertName("Viola bocquetiana S. Yildirimli", "Viola bocquetiana")
             .species("Viola", "bocquetiana")
             .combAuthors(null, "S.Yildirimli")
