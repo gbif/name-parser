@@ -540,6 +540,19 @@ public class NameFormatterTest {
 
 
   @Test
+  public void testHybridFormula() throws Exception {
+    // Ophrys × varvarae Faller & Kreutz — genus and epithet italicised,
+    // the hybrid marker and authorship are not.
+    pn.setGenus("Ophrys");
+    pn.setSpecificEpithet("varvarae");
+    pn.setNotho(NamePart.SPECIFIC);
+    pn.setCombinationAuthorship(Authorship.authors("Faller", "Kreutz"));
+
+    assertEquals("Ophrys × varvarae Faller & Kreutz", NameFormatter.canonicalComplete(pn));
+    assertEquals("<i>Ophrys</i> × <i>varvarae</i> Faller & Kreutz", NameFormatter.canonicalCompleteHtml(pn));
+  }
+
+  @Test
   public void testPhraseName() throws Exception {
     pn.setGenus("Acacia");
     pn.setRank(Rank.SPECIES);
