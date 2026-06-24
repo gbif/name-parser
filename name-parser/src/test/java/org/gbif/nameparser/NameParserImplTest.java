@@ -4188,6 +4188,16 @@ public class NameParserImplTest {
     assertUnparsable("Basal_Cryptophyceae-1", NameType.OTHER);
   }
 
+  @Test
+  public void digitEpithetsTrailing() throws Exception {
+    assertName("Simplexvirus humanalpha1", "Simplexvirus humanalpha1")
+        .species("Simplexvirus", "humanalpha1").code(NomCode.VIRUS).nothingElse();
+    assertName("Simplexvirus humanalpha2", "Simplexvirus humanalpha2")
+        .species("Simplexvirus", "humanalpha2").code(NomCode.VIRUS).nothingElse();
+    assertName("Lentivirus humimdef1", "Lentivirus humimdef1")
+        .species("Lentivirus", "humimdef1").code(NomCode.VIRUS).nothingElse();
+  }
+
   // **************
   // HELPER METHODS
   // **************

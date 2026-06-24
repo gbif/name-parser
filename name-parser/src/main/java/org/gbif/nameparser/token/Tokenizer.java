@@ -40,17 +40,17 @@ public final class Tokenizer {
         while (i < n) {
           int c = input.codePointAt(i);
           int cl = Character.charCount(c);
-          if (Character.isLetter(c)) {
+          if (Character.isLetter(c) || Character.isDigit(c)) {
             i += cl;
             continue;
           }
           // allow internal hyphen, apostrophe or a stray "!" (OCR/typo artefact, e.g.
-          // "pu!chra") if the next char is a letter, so the word is kept intact
+          // "pu!chra") if the next char is a letter or digit, so the word is kept intact
           if ((c == '-' || c == '\'' || c == '’' || c == '_' || c == '!'
               || c == '‐' || c == '‑' || c == '‒' || c == '–' || c == '—')
               && i + cl < n) {
             int next = input.codePointAt(i + cl);
-            if (Character.isLetter(next)) {
+            if (Character.isLetter(next) || Character.isDigit(next)) {
               i += cl;
               continue;
             }

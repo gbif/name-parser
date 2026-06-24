@@ -192,11 +192,12 @@ public final class AuthorshipParser {
             }
           }
         }
-        // Drop a single trailing lowercase-letter year disambiguator ("1935h" / "1935 h")
-        // so it isn't picked up as a phantom author.
+        // Drop a single trailing lowercase-letter year disambiguator ("1935h" / "1935 h",
+        // or "193k7" where the k is an OCR/typo artifact followed by digits).
+        // Matches: a single lowercase letter, optionally followed by digits only (e.g. "k7").
         if (i < to) {
           Token nx = tokens.get(i);
-          if (nx.kind == TokenKind.WORD && nx.text.length() == 1 && nx.startsLower()) {
+          if (nx.kind == TokenKind.WORD && nx.startsLower() && isYearDisambiguator(nx.text)) {
             i++;
           }
         }
@@ -576,6 +577,19 @@ public final class AuthorshipParser {
       i += Character.charCount(cp);
     }
     return b.toString();
+  }
+
+  /**
+   * True when the token text looks like a year-disambiguator suffix that should be
+   * dropped after a year token. Matches a single lowercase letter optionally followed by
+   * all-digit characters — e.g. "h" (from "1935h"), "k7" (OCR artifact in "193k7").
+   */
+  private static boolean isYearDisambiguator(String s) {
+    if (s.isEmpty() || !Character.isLowerCase(s.codePointAt(0))) return false;
+    for (int i = Character.charCount(s.codePointAt(0)); i < s.length(); i++) {
+      if (!Character.isDigit(s.charAt(i))) return false;
+    }
+    return true;
   }
 
   private static boolean isAllUpper(String s) {
