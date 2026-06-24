@@ -65,7 +65,7 @@ public final class Pipeline {
       ctx.name.addWarning(Warnings.LONG_NAME);
     }
     splitGluedPhraseName(ctx);
-    Preflight.run(scientificName, ctx.working);
+    Preflight.run(scientificName, ctx);
     StripAndStash.run(ctx);
     if (!hasLetter(ctx.working)) {
       throw new UnparsableNameException(NameType.OTHER, scientificName);

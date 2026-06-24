@@ -129,6 +129,10 @@ public final class Assemble {
       CodeInference.infer(ctx, authState);
     }
 
+    if (ctx.viralShape && n.getCode() == null) {
+      n.setCode(NomCode.VIRUS);
+    }
+
     // Rank-restricted code mismatch with the caller-supplied code → override the code
     // to what the rank requires and warn (e.g. supersect. is botany-only).
     CodeInference.applyRankCodeMismatch(ctx);
@@ -144,10 +148,15 @@ public final class Assemble {
 
     // Suffix-based rank inference for monomials: use the explicitly-requested code when
     // provided, otherwise fall back to globally unambiguous suffixes only (-aceae, -oideae).
+    // Viral code is inferred from a highly reliable suffix, so it is safe to drive
+    // suffix-based rank inference (e.g. "Coronaviridae" -> FAMILY).
     // Never apply code-specific suffix maps derived from authorship-inferred code — that
     // would silently assign ranks to names whose code we merely guessed.
     if (n.getRank() == Rank.UNRANKED && n.getUninomial() != null) {
-      NomCode codeForInference = ctx.requestedCode;
+      // Viral code is inferred from a highly reliable suffix, so it is safe to drive
+      // suffix-based rank inference (e.g. "Coronaviridae" -> FAMILY).
+      NomCode codeForInference = ctx.requestedCode != null ? ctx.requestedCode
+          : (ctx.viralShape ? n.getCode() : null);
       Rank r = codeForInference != null
           ? rankFromSuffix(n.getUninomial(), codeForInference)
           : rankFromGlobalSuffix(n.getUninomial());

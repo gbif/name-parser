@@ -3020,6 +3020,22 @@ public class NameParserImplTest {
   }
 
   @Test
+  public void virusBinomialsParse() throws Exception {
+    assertName("Tobamovirus tabaci", "Tobamovirus tabaci")
+        .species("Tobamovirus", "tabaci").code(NomCode.VIRUS).nothingElse();
+    assertName("Orthoebolavirus zairense", "Orthoebolavirus zairense")
+        .species("Orthoebolavirus", "zairense").code(NomCode.VIRUS).nothingElse();
+    assertName("Lausannevirus", "Lausannevirus")
+        .monomial("Lausannevirus").code(NomCode.VIRUS).nothingElse();
+    assertName("Coronaviridae", "Coronaviridae")
+        .monomial("Coronaviridae", Rank.FAMILY).code(NomCode.VIRUS).nothingElse();
+    // legacy vernacular → unparsable OTHER + code VIRUS
+    assertUnparsable("Tobacco mosaic virus", NameType.OTHER, NomCode.VIRUS);
+    assertUnparsable("Human papillomavirus", NameType.OTHER, NomCode.VIRUS);
+    assertUnparsable("Acara virus", NameType.OTHER, NomCode.VIRUS);
+  }
+
+  @Test
   public void apostropheEpithets() throws Exception {
     assertName("Junellia o'donelli Moldenke, 1946", "Junellia o'donelli")
             .species("Junellia", "o'donelli")
@@ -4149,14 +4165,11 @@ public class NameParserImplTest {
 
   public boolean isViralName(String name) throws InterruptedException {
     try {
-      parser.parse(name, null);
+      var pn = parser.parse(name, null);
+      return pn.getCode() == NomCode.VIRUS;
     } catch (UnparsableNameException e) {
-      // swallow
-      if (NameType.VIRUS == e.getType()) {
-        return true;
-      }
+      return e.getType() == NameType.OTHER && e.getCode() == NomCode.VIRUS;
     }
-    return false;
   }
 
   private void assertNoName(String name) throws InterruptedException {
@@ -4169,6 +4182,16 @@ public class NameParserImplTest {
 
   private void assertUnparsable(String name, Rank rank, NameType type) {
     assertUnparsableName(name, rank, type, name);
+  }
+
+  private void assertUnparsable(String name, NameType type, NomCode code) {
+    try {
+      parser.parse(name, null, Rank.UNRANKED, null);
+      fail("Expected " + name + " to be unparsable");
+    } catch (UnparsableNameException ex) {
+      assertEquals(type, ex.getType());
+      assertEquals(code, ex.getCode());
+    }
   }
 
   private void assertUnparsableName(String name, Rank rank, NameType type, String expectedName) {

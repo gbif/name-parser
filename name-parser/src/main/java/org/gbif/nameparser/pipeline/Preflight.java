@@ -50,6 +50,19 @@ public final class Preflight {
       + "\\s*,?\\s*\\b(1[6-9]\\d\\d|20\\d\\d)\\b",        // comma + 4-digit year (16xx–20xx)
       Pattern.UNICODE_CHARACTER_CLASS);
 
+  private static final Pattern CLEAN_BINOMIAL = Pattern.compile(
+      "^\\p{Lu}\\p{Ll}+(?:\\s+\\(\\p{Lu}\\p{Ll}+\\))?\\s+\\p{Ll}[\\p{Ll}\\d\\-]*$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern CLEAN_MONOMIAL = Pattern.compile(
+      "^\\p{Lu}[\\p{Ll}\\-]+$", Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern SOFT_WORD = Pattern.compile(
+      "(?:vector|prions?|particles?|replicons?|rna)$", Pattern.CASE_INSENSITIVE);
+  private static final Pattern HARD_WORD = Pattern.compile(
+      "(?:virus|viroid|phages?|virion|satellite)$", Pattern.CASE_INSENSITIVE);
+  private static final Pattern AUTH_ZOO = Pattern.compile(
+      "^\\(?\\p{Lu}\\p{Ll}{2,}.*\\b(?:1[6-9]\\d\\d|20\\d\\d)\\b",
+      Pattern.UNICODE_CHARACTER_CLASS);
+
   // ---------- HYBRID FORMULA ----------
   // Hybrid-formula detection is done structurally in looksLikeHybridFormula() below
   // rather than with a single regex — it needs to inspect the spans on either side of
@@ -121,8 +134,8 @@ public final class Preflight {
    * If the input matches a non-scientific category, throws {@link UnparsableNameException}
    * with the appropriate {@link NameType}. Otherwise returns silently.
    */
-  static void run(String original, String working) throws UnparsableNameException {
-    String s = working.trim();
+  static void run(String original, ParseContext ctx) throws UnparsableNameException {
+    String s = ctx.working.trim();
     if (s.isEmpty()) {
       throw new UnparsableNameException(NameType.OTHER, original);
     }
@@ -173,13 +186,9 @@ public final class Preflight {
 
     // Virus — check before the leading-question-mark placeholder so that "? circular
     // satellites" reads as a virus rather than an unstructured placeholder.
-    // Exception: a "Genus species[ (Subgenus)]?[ Author], YYYY" / "… Author YYYY"
-    // pattern is a real zoological species citation (e.g. "Ceylonesmus vector
-    // Chamberlin, 1941") — the trailing author + 4-digit year overrides a stray
-    // "virus" / "vector" / "phage" token in the epithet position.
-    if (VIRUS.matcher(s).find() && !ZOOLOGICAL_BINOMIAL.matcher(s).find()) {
-      throw new UnparsableNameException(NameType.VIRUS, original);
-    }
+    // Clean ICTV binomials/monomials with a viral genus suffix are let through to parse;
+    // legacy vernacular virus names become OTHER + NomCode.VIRUS.
+    applyVirusGate(s, ctx, original);
 
     // Monomial-aggregate forms ("Iteaphila-group", "Bartonella group", "Foo-complex"):
     // a single uninomial followed by an aggregate marker is an informal taxonomic
@@ -248,6 +257,53 @@ public final class Preflight {
     if (looksLikeHybridFormula(s)) {
       throw new UnparsableNameException(NameType.FORMULA, original);
     }
+  }
+
+  private static void applyVirusGate(String s, ParseContext ctx, String original)
+      throws UnparsableNameException {
+    boolean clean = CLEAN_BINOMIAL.matcher(s).matches() || CLEAN_MONOMIAL.matcher(s).matches();
+    org.gbif.nameparser.api.NomCode req = ctx.requestedCode;
+
+    // Bucket A: clean uni/binomial whose genus/monomial carries a viral rank suffix.
+    if (clean && ViralSuffix.isViral(firstWord(s))) {
+      if (req == null || req == org.gbif.nameparser.api.NomCode.VIRUS) {
+        ctx.viralShape = true;
+      }
+      return; // parse; a non-virus caller code is kept and wins over inference
+    }
+    if (!VIRUS.matcher(s).find()) {
+      return; // no viral trigger at all
+    }
+    // Inline "Genus [(Subgenus)] epithet Author, YYYY" overrides a stray viral token.
+    if (ZOOLOGICAL_BINOMIAL.matcher(s).find()) {
+      return;
+    }
+    if (req == org.gbif.nameparser.api.NomCode.VIRUS) {
+      if (clean) { ctx.viralShape = true; return; }
+      throw new UnparsableNameException(NameType.OTHER, org.gbif.nameparser.api.NomCode.VIRUS, original);
+    }
+    if (clean && req != null) {
+      return; // caller asserts a non-virus code for a clean binomial
+    }
+    if (clean && SOFT_WORD.matcher(lastWord(s)).find()) {
+      return; // bucket B soft
+    }
+    if (clean && HARD_WORD.matcher(lastWord(s)).find()
+        && ctx.authorshipInput != null
+        && AUTH_ZOO.matcher(ctx.authorshipInput.trim()).find()) {
+      return; // bucket B hard, rescued by a separately supplied zoological author+year
+    }
+    throw new UnparsableNameException(NameType.OTHER, org.gbif.nameparser.api.NomCode.VIRUS, original);
+  }
+
+  private static String firstWord(String s) {
+    int sp = s.indexOf(' ');
+    return sp < 0 ? s : s.substring(0, sp);
+  }
+
+  private static String lastWord(String s) {
+    int sp = s.lastIndexOf(' ');
+    return sp < 0 ? s : s.substring(sp + 1);
   }
 
   private static boolean looksLikeHybridFormula(String s) {

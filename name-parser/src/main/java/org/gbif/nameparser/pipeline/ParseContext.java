@@ -25,6 +25,12 @@ public final class ParseContext {
   /** Set by StripAndStash when an aggregate marker was stripped from the input. */
   public boolean aggregate;
   /**
+   * Set by {@link Preflight} when the input is a clean uni/binomial whose genus (or
+   * monomial) carries an ICTV viral rank suffix. {@link Assemble} turns this into
+   * {@link NomCode#VIRUS} when the caller supplied no code.
+   */
+  public boolean viralShape;
+  /**
    * True when {@link NameTokens} consumed an explicit infraspecific rank marker
    * (subsp./var./f./…). The marker itself is the botanical convention — zoological
    * trinomials simply stack epithets — so its presence is a soft botanical signal
