@@ -1,6 +1,7 @@
 package org.gbif.nameparser.cli;
 
 import org.gbif.nameparser.api.NameType;
+import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.UnparsableNameException;
 
@@ -13,7 +14,7 @@ import org.gbif.nameparser.api.UnparsableNameException;
  * the desired flat shape:
  * <pre>{"line":42,"input":"Felis catus","parsed":{...}}</pre>
  * or
- * <pre>{"line":99,"input":"Iridoviridae","error":{"type":"VIRUS","message":"..."}}</pre>
+ * <pre>{"line":99,"input":"Iridoviridae","error":{"type":"OTHER","code":"VIRUS","message":"..."}}</pre>
  */
 public final class ParseResult {
   public long line;
@@ -25,12 +26,19 @@ public final class ParseResult {
 
   public static final class Err {
     public NameType type;
+    /** Nomenclatural code associated with the unparsable name, e.g. {@code VIRUS}. May be null. */
+    public NomCode code;
     public String message;
 
     public Err() {}
 
     public Err(NameType type, String message) {
+      this(type, (NomCode) null, message);
+    }
+
+    public Err(NameType type, NomCode code, String message) {
       this.type = type;
+      this.code = code;
       this.message = message;
     }
   }

@@ -114,7 +114,7 @@ public final class ParseCli {
           result.parsed = parser.parse(row.name(), row.authorship(), row.rank(), row.code());
           stats.ok++;
         } catch (UnparsableNameException e) {
-          result.error = new ParseResult.Err(e.getType(), e.getMessage());
+          result.error = new ParseResult.Err(e.getType(), e.getCode(), e.getMessage());
           stats.unparsable++;
         } catch (RuntimeException e) {
           result.error = new ParseResult.Err(null,

@@ -3,6 +3,7 @@ package org.gbif.nameparser.cli.io;
 import org.gbif.nameparser.NameParserImpl;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.NameType;
+import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.nameparser.cli.ParseResult;
 import org.junit.Rule;
@@ -59,7 +60,7 @@ public class ColdpWriterTest {
       bad.line = 2;
       bad.id = "virus1";
       bad.input = "Iridoviridae sp.";
-      bad.error = new ParseResult.Err(NameType.VIRUS, "boom");
+      bad.error = new ParseResult.Err(NameType.OTHER, NomCode.VIRUS, "boom");
       w.write(bad);
     }
 
@@ -99,7 +100,7 @@ public class ColdpWriterTest {
     Map<String, String> errRow = rowAsMap(header, lines.get(2));
     assertEquals("virus1", errRow.get("ID"));
     assertEquals("Iridoviridae sp.", errRow.get("scientificName"));
-    assertEquals("VIRUS", errRow.get("np:type"));
+    assertEquals("OTHER", errRow.get("np:type"));
     assertEquals("boom", errRow.get("np:error"));
     assertEquals("", errRow.get("authorship"));
     assertEquals("", errRow.get("rank"));
