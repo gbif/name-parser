@@ -2,52 +2,161 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Parse ICTV binomial virus names as ordinary scientific names (inferring `NomCode.VIRUS` from the genus suffix), rescue the false-positive animals whose epithet collides with a viral token, and support digit-bearing epithets — while keeping legacy vernacular virus strings unparsable `VIRUS`.
+**Goal:** Parse ICTV binomial virus names as ordinary scientific names (inferring `NomCode.VIRUS` from the genus suffix), rescue the false-positive animals whose epithet collides with a viral token, support digit-bearing epithets, and remove `NameType.VIRUS` — legacy virus strings become `NameType.OTHER` + `NomCode.VIRUS`.
 
-**Architecture:** All virus-vs-not routing stays in `Preflight` (one place). A new `ViralSuffix` helper recognises the ICTV rank suffixes. `Preflight` sets a `ParseContext.viralShape` flag; `Assemble` turns that flag into `NomCode.VIRUS` when the caller supplied no code. Digit-bearing epithets are handled in the `Tokenizer` (gluing digits into epithet tokens) plus small accommodations in `NameTokens` and `AuthorshipSplit`.
+**Architecture:** "Virus-ness" is carried uniformly by `NomCode.VIRUS` (on parsable and unparsable results); `NameType` describes only parse quality. All virus routing stays in `Preflight`. A new `ViralSuffix` helper recognises the ICTV rank suffixes; `Preflight` sets `ParseContext.viralShape`, which `Assemble` turns into `NomCode.VIRUS`. Unparsable legacy viruses throw `UnparsableNameException(OTHER, VIRUS, name)` — the exception gains an optional `NomCode`. Digit-bearing epithets are handled in the `Tokenizer` plus small accommodations in `NameTokens`/`AuthorshipSplit`.
 
 **Tech Stack:** Java 17, Maven multi-module (`name-parser-api`, `name-parser`, `name-parser-cli`), JUnit 4, the `NameAssertion` fluent test helper.
 
 ## Global Constraints
 
 - Java 17 source/target. Apache 2.0 license header on every new source file (copy from any existing file in the same package).
-- Regexes use Unicode classes (`\p{Lu}`, `\p{Ll}`) and must be **linear-time** — the parser has no execution timeout. No nested unbounded quantifiers.
-- Behaviour is verified through `NameParserImplTest` (canonical) and `NameParserGnaTest` using the `NameAssertion` helper. Add a failing test before each behaviour change.
-- Run a single test class: `mvn -pl name-parser -Dtest=NameParserImplTest test`. Single method: `mvn -pl name-parser -Dtest=NameParserImplTest#methodName test`.
-- The reference design spec is `docs/superpowers/specs/2026-06-24-virus-name-parsing-design.md`.
-- `NomCode.VIRUS` and `NameType.VIRUS` already exist in `name-parser-api`. Do not add enum values.
+- Regexes use Unicode classes (`\p{Lu}`, `\p{Ll}`) and must be **linear-time** — no execution timeout exists. No nested unbounded quantifiers.
+- Behaviour is verified through `NameParserImplTest` (canonical) and `NameParserGnaTest` via the `NameAssertion` helper. Add a failing test before each behaviour change.
+- Single class: `mvn -pl name-parser -Dtest=NameParserImplTest test`. Single method: append `#methodName`. API module: `mvn -pl name-parser-api test`. Full: `mvn install`.
+- Reference design: `docs/superpowers/specs/2026-06-24-virus-name-parsing-design.md`.
+- `NomCode.VIRUS` already exists. `NameType.VIRUS` is being **removed** (breaking API change — warrants a major version bump).
 
 ## Key facts about the existing code (read before starting)
 
-- `Preflight.run(String original, String working)` is called once from `Pipeline.run` at `Pipeline.java:68`. It only sees the name portion — **not** the `authorship` argument. The current virus gate is `Preflight.java:180-182`:
-  ```java
-  if (VIRUS.matcher(s).find() && !ZOOLOGICAL_BINOMIAL.matcher(s).find()) {
-    throw new UnparsableNameException(NameType.VIRUS, original);
+- `NameType.VIRUS` is *thrown* in exactly one main-code location: `Preflight.java:181`. Everything else referencing it is tests.
+- `RankUtils` already has a `NomCode.VIRUS` suffix→rank map (`RankUtils.java:246`), and `RankUtilsTest` asserts `Negarnaviricota → VIRUS, PHYLUM`. So viral higher-taxon rank inference works once `code=VIRUS` is set.
+- `UnparsableNameException` (`name-parser-api/.../UnparsableNameException.java`) currently has `NameType type` + `String name`, no code.
+- `Preflight.run(String original, String working)` is called once from `Pipeline.java:68`; it does NOT see the `authorship` argument.
+- `ParseContext` holds `requestedCode`, `authorshipInput`, `working`, and mutable `name` (with the caller's code pre-set in the constructor).
+- `Assemble.finish` sets code in the block at `Assemble.java:126-130`; suffix-based rank inference is at `Assemble.java:149-155` and deliberately uses `ctx.requestedCode` only (not inferred code).
+- `Tokenizer.tokenize`: letters → `WORD` (absorbing internal hyphen/apostrophe between letters, lines 43-58); digit run → separate `NUMBER` (lines 83-91).
+- `NameParserImplTest.isViralName` (line ~4150) catches `UnparsableNameException` and returns `NameType.VIRUS == e.getType()`. `assertUnparsableName` (line ~4174) asserts `assertEquals(type, ex.getType())`.
+- `NameAssertion` API: `.monomial(name)`, `.monomial(name, rank)`, `.species(g, ep)`, `.species(g, infrageneric, ep)`, `.infraSpecies(g, ep, rank, infraEp)`, `.combAuthors(year, authors...)`, `.basAuthors(year, authors...)`, `.type(NameType)`, `.code(NomCode)`, `.nothingElse()`.
+
+---
+
+## Phase 0 — API change (foundational)
+
+### Task 1: Add `NomCode` to `UnparsableNameException`; remove `NameType.VIRUS`
+
+This is a mechanical, cross-module API change. Do it first; later tasks build on the new shape. After this task the **api module** compiles and its tests pass; the `name-parser` and `name-parser-cli` modules will not compile until Tasks 3 and 6 migrate their references — that is expected and acceptable mid-plan, but run the api-module tests in isolation here.
+
+**Files:**
+- Modify: `name-parser-api/src/main/java/org/gbif/nameparser/api/UnparsableNameException.java`
+- Modify: `name-parser-api/src/main/java/org/gbif/nameparser/api/NameType.java`
+- Modify: `name-parser-api/src/test/java/org/gbif/nameparser/api/NameTypeTest.java:14`
+
+**Interfaces:**
+- Produces: `UnparsableNameException(NameType type, NomCode code, String name)` and `UnparsableNameException(NameType type, NomCode code, String name, String message)`; `NomCode UnparsableNameException.getCode()` (null when unknown). `NameType.VIRUS` no longer exists.
+
+- [ ] **Step 1: Write/adjust the failing test**
+
+Edit `NameTypeTest.java` — remove the line referencing the deleted constant:
+```java
+    // DELETE this line (NameType.VIRUS no longer exists):
+    // assertFalse(NameType.VIRUS.isParsable());
+```
+Add a test of the new exception field in the same test class:
+```java
+  @Test
+  public void unparsableCarriesCode() {
+    UnparsableNameException e =
+        new UnparsableNameException(NameType.OTHER, NomCode.VIRUS, "Tobacco mosaic virus");
+    assertEquals(NameType.OTHER, e.getType());
+    assertEquals(NomCode.VIRUS, e.getCode());
+    assertNull(new UnparsableNameException(NameType.OTHER, "x").getCode());
   }
-  ```
-- `VIRUS` (`Preflight.java:20-35`) and `ZOOLOGICAL_BINOMIAL` (`Preflight.java:43-51`) patterns stay as-is and are reused.
-- `ParseContext` (`ParseContext.java`) holds `requestedCode`, `authorshipInput`, `working`, and the mutable `name`. The caller's code is also pre-set on `name` in the constructor (`name.setCode(code)`).
-- `Assemble.finish` (`Assemble.java:20`) sets the code: the `else if (n.getCode() == null) { CodeInference.infer(...); }` block at `Assemble.java:126-130`.
-- `Tokenizer.tokenize` (`Tokenizer.java:24`): letters form a `WORD` token (absorbing internal hyphen/apostrophe when between letters, `Tokenizer.java:43-58`); a digit run forms a separate `NUMBER` token (`Tokenizer.java:83-91`).
-- `NameAssertion` API: `assertName(raw, expectedCanonical)`, `assertName(raw, rawAuthorship, rank, code, expectedCanonical)` and overloads; `.monomial(name)`, `.monomial(name, rank)`, `.species(genus, epithet)`, `.species(genus, infrageneric, epithet)`, `.infraSpecies(genus, epithet, rank, infraEpithet)`, `.combAuthors(year, authors...)`, `.basAuthors(year, authors...)`, `.type(NameType)`, `.code(NomCode)`, `.nothingElse()`. `assertUnparsable(name, NameType)`.
+```
+Add imports as needed: `import org.gbif.nameparser.api.NomCode;` is same package (no import needed); ensure `assertNull` is statically imported.
+
+- [ ] **Step 2: Run to verify it fails**
+
+Run: `mvn -pl name-parser-api -Dtest=NameTypeTest test`
+Expected: FAIL — `getCode()` / the 3-arg constructor don't exist yet.
+
+- [ ] **Step 3a: Add the code field + constructors to `UnparsableNameException`**
+
+```java
+public class UnparsableNameException extends Exception {
+  private final NameType type;
+  private final NomCode code;
+  private final String name;
+
+  public UnparsableNameException(NameType type, String name, String message) {
+    this(type, null, name, message);
+  }
+
+  public UnparsableNameException(NameType type, String name) {
+    this(type, null, name);
+  }
+
+  public UnparsableNameException(NameType type, NomCode code, String name) {
+    super("Unparsable " + type + " name: " + name);
+    this.type = type;
+    this.code = code;
+    this.name = name;
+  }
+
+  public UnparsableNameException(NameType type, NomCode code, String name, String message) {
+    super(message);
+    this.type = type;
+    this.code = code;
+    this.name = name;
+  }
+
+  public NameType getType() {
+    return type;
+  }
+
+  /** The nomenclatural code when known despite the name being unparsable (e.g. VIRUS), else null. */
+  public NomCode getCode() {
+    return code;
+  }
+
+  public String getName() {
+    return name;
+  }
+  // ... keep the nested UnparsableAuthorshipException unchanged ...
+}
+```
+
+- [ ] **Step 3b: Remove the `VIRUS` constant from `NameType`**
+
+In `NameType.java`, delete the `VIRUS` enum constant and its javadoc block:
+```java
+  /**
+   * An unparsable virus name.
+   */
+  VIRUS,
+```
+Update the `SCIENTIFIC` javadoc that mentions "(virus, hybrid, cultivar, etc.)" only if it now reads oddly — leave the word "virus" as a description of a concept; no functional change. Update the class-level note in `UnparsableNameException.java` that says "explicitly includes virus names" → "explicitly includes hybrid formulas, and carries a NomCode for code-known unparsables such as viruses."
+
+- [ ] **Step 4: Run to verify it passes**
+
+Run: `mvn -pl name-parser-api test`
+Expected: PASS (whole api module).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add name-parser-api/src/main/java/org/gbif/nameparser/api/UnparsableNameException.java \
+        name-parser-api/src/main/java/org/gbif/nameparser/api/NameType.java \
+        name-parser-api/src/test/java/org/gbif/nameparser/api/NameTypeTest.java
+git commit -m "Remove NameType.VIRUS; carry NomCode on UnparsableNameException"
+```
 
 ---
 
 ## Phase 1 — Virus binomial parsing
 
-### Task 1: `ViralSuffix` helper
+### Task 2: `ViralSuffix` helper
 
 **Files:**
 - Create: `name-parser/src/main/java/org/gbif/nameparser/pipeline/ViralSuffix.java`
 - Test: `name-parser/src/test/java/org/gbif/nameparser/pipeline/ViralSuffixTest.java`
 
 **Interfaces:**
-- Produces: `static boolean ViralSuffix.isViral(String word)` — true when `word` ends in an ICTV viral rank suffix (genus..realm). Uses **singular** suffixes only, so plural Linnaean look-alikes (`Crassatellites`) are NOT matched.
+- Produces: `static boolean ViralSuffix.isViral(String word)` — true when `word` ends in an ICTV viral rank suffix (genus..realm), **singular** suffixes only.
 
 - [ ] **Step 1: Write the failing test**
 
 ```java
-// name-parser/src/test/java/org/gbif/nameparser/pipeline/ViralSuffixTest.java
 package org.gbif.nameparser.pipeline;
 
 import org.junit.Test;
@@ -62,52 +171,48 @@ public class ViralSuffixTest {
     assertTrue(ViralSuffix.isViral("Lausannevirus"));
     assertTrue(ViralSuffix.isViral("Pospiviroid"));
     assertTrue(ViralSuffix.isViral("Colecusatellite"));
-    assertTrue(ViralSuffix.isViral("Coronaviridae"));   // family
-    assertTrue(ViralSuffix.isViral("Nidovirales"));     // order
-    assertTrue(ViralSuffix.isViral("Pisuviricota"));    // phylum
+    assertTrue(ViralSuffix.isViral("Coronaviridae"));
+    assertTrue(ViralSuffix.isViral("Nidovirales"));
+    assertTrue(ViralSuffix.isViral("Pisuviricota"));
   }
 
   @Test
   public void nonViralLookAlikes() {
     assertFalse(ViralSuffix.isViral("Crassatellites")); // mollusk, plural -satellites
     assertFalse(ViralSuffix.isViral("Aspilota"));
-    assertFalse(ViralSuffix.isViral("Adomaviruses"));   // plural -viruses (legacy, not bucket A)
+    assertFalse(ViralSuffix.isViral("Adomaviruses"));   // plural -viruses
     assertFalse(ViralSuffix.isViral(null));
   }
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run to verify it fails**
 
 Run: `mvn -pl name-parser -Dtest=ViralSuffixTest test`
-Expected: FAIL — `ViralSuffix` does not exist (compilation error).
+Expected: FAIL — `ViralSuffix` does not exist.
 
-- [ ] **Step 3: Write minimal implementation**
+- [ ] **Step 3: Implement**
 
 ```java
-// name-parser/src/main/java/org/gbif/nameparser/pipeline/ViralSuffix.java
 package org.gbif.nameparser.pipeline;
 
 import java.util.regex.Pattern;
 
 /**
- * Recognises the standardized ICTV viral rank suffixes on a single word (a genus,
+ * Recognises the standardized ICTV viral rank suffixes on a single word (genus,
  * monomial, or higher-taxon name). Per MSL41 every virus genus ends in one of these,
- * so the suffix alone is a reliable "this is a virus name" signal.
+ * so the suffix alone is a reliable virus signal.
  *
- * <p>Only the <b>singular</b> canonical suffixes are matched. Plural legacy spellings
- * ({@code -viruses}, {@code -satellites}) are intentionally excluded so Linnaean
- * look-alikes such as the mollusk genus {@code Crassatellites} ({@code -satellites})
- * are not misread as viral.
+ * <p>Only the <b>singular</b> canonical suffixes are matched, so Linnaean look-alikes
+ * such as the mollusk genus {@code Crassatellites} ({@code -satellites}) are not
+ * misread as viral.
  */
 final class ViralSuffix {
   private ViralSuffix() {}
 
-  // genus / species / viroid / satellite rank suffixes
   private static final Pattern GENUS = Pattern.compile(
       "(?:virus|viroid|satellite|viriform)$", Pattern.CASE_INSENSITIVE);
 
-  // family … realm rank suffixes
   private static final Pattern HIGHER = Pattern.compile(
       "(?:viridae|viroidae|satellitidae"
       + "|virinae|viroinae|satellitinae"
@@ -122,10 +227,12 @@ final class ViralSuffix {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Run to verify it passes**
 
 Run: `mvn -pl name-parser -Dtest=ViralSuffixTest test`
-Expected: PASS
+Expected: PASS (compiles only `ViralSuffix` + its test; the rest of the module is migrated in Task 3).
+
+> If the module fails to compile because of unmigrated `NameType.VIRUS` test references, do Task 3 next and run this test as part of Task 3's green build.
 
 - [ ] **Step 5: Commit**
 
@@ -137,115 +244,100 @@ git commit -m "Add ViralSuffix helper for ICTV rank suffix detection"
 
 ---
 
-### Task 2: `ParseContext.viralShape` + Preflight virus-gate rewrite
+### Task 3: `ParseContext.viralShape` + Preflight virus-gate rewrite + name-parser test migration
 
-This is the core behaviour change. `Preflight.run` starts taking the full `ParseContext` (so it can see `requestedCode` and `authorshipInput` and set `viralShape`).
+The core behaviour change plus the test migration that makes the `name-parser` module compile again after Task 1.
 
 **Files:**
-- Modify: `name-parser/src/main/java/org/gbif/nameparser/pipeline/ParseContext.java` (add field)
-- Modify: `name-parser/src/main/java/org/gbif/nameparser/pipeline/Preflight.java` (signature + gate)
-- Modify: `name-parser/src/main/java/org/gbif/nameparser/pipeline/Pipeline.java:68` (call site)
-- Test: `name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java` (new method)
+- Modify: `name-parser/src/main/java/org/gbif/nameparser/pipeline/ParseContext.java`
+- Modify: `name-parser/src/main/java/org/gbif/nameparser/pipeline/Preflight.java`
+- Modify: `name-parser/src/main/java/org/gbif/nameparser/pipeline/Pipeline.java:68`
+- Modify: `name-parser/src/main/java/org/gbif/nameparser/pipeline/Assemble.java`
+- Modify: `name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java` (migrate `isViralName`, `assertUnparsable`; new test)
 
 **Interfaces:**
-- Consumes: `ViralSuffix.isViral(String)` (Task 1).
-- Produces: `ParseContext.viralShape` (public boolean field, default false); `Preflight.run(String original, ParseContext ctx)`.
+- Consumes: `ViralSuffix.isViral` (Task 2); `UnparsableNameException(NameType, NomCode, String)` (Task 1).
+- Produces: `ParseContext.viralShape` (public boolean, default false); `Preflight.run(String original, ParseContext ctx)`.
 
-- [ ] **Step 1: Write the failing test** (append a new method to `NameParserImplTest`)
+- [ ] **Step 1: Migrate the test helpers so the module compiles, then write the failing behaviour test**
 
+In `NameParserImplTest`, change `isViralName` to the new model:
+```java
+  public boolean isViralName(String name) throws InterruptedException {
+    try {
+      parser.parse(name, null);
+    } catch (UnparsableNameException e) {
+      return e.getType() == NameType.OTHER && e.getCode() == NomCode.VIRUS;
+    }
+    return false;
+  }
+```
+Add an `assertUnparsable` overload that also checks the code (place next to the existing overloads ~line 4166):
+```java
+  private void assertUnparsable(String name, NameType type, NomCode code) {
+    try {
+      parser.parse(name, null, Rank.UNRANKED, null);
+      fail("Expected " + name + " to be unparsable");
+    } catch (UnparsableNameException ex) {
+      assertEquals(type, ex.getType());
+      assertEquals(code, ex.getCode());
+    }
+  }
+```
+Add the new behaviour test:
 ```java
   @Test
   public void virusBinomialsParse() throws Exception {
-    // Bucket A: clean uni/binomial whose genus carries a viral suffix → SCIENTIFIC + VIRUS
     assertName("Tobamovirus tabaci", "Tobamovirus tabaci")
-        .species("Tobamovirus", "tabaci")
-        .code(NomCode.VIRUS)
-        .nothingElse();
+        .species("Tobamovirus", "tabaci").code(NomCode.VIRUS).nothingElse();
     assertName("Orthoebolavirus zairense", "Orthoebolavirus zairense")
-        .species("Orthoebolavirus", "zairense")
-        .code(NomCode.VIRUS)
-        .nothingElse();
+        .species("Orthoebolavirus", "zairense").code(NomCode.VIRUS).nothingElse();
     assertName("Lausannevirus", "Lausannevirus")
-        .monomial("Lausannevirus")
-        .code(NomCode.VIRUS)
-        .nothingElse();
-    // higher taxon monomial
+        .monomial("Lausannevirus").code(NomCode.VIRUS).nothingElse();
     assertName("Coronaviridae", "Coronaviridae")
-        .monomial("Coronaviridae", Rank.FAMILY)
-        .code(NomCode.VIRUS)
-        .nothingElse();
-    // legacy vernacular names stay unparsable VIRUS
-    assertUnparsable("Tobacco mosaic virus", NameType.VIRUS);
-    assertUnparsable("Human papillomavirus", NameType.VIRUS);
-    assertUnparsable("Acara virus", NameType.VIRUS);
+        .monomial("Coronaviridae", Rank.FAMILY).code(NomCode.VIRUS).nothingElse();
+    // legacy vernacular → unparsable OTHER + code VIRUS
+    assertUnparsable("Tobacco mosaic virus", NameType.OTHER, NomCode.VIRUS);
+    assertUnparsable("Human papillomavirus", NameType.OTHER, NomCode.VIRUS);
+    assertUnparsable("Acara virus", NameType.OTHER, NomCode.VIRUS);
   }
 ```
 
-> Note on `Coronaviridae` rank: `Assemble.rankFromGlobalSuffix` only knows `-aceae`/`-oideae`. If `Rank.FAMILY` is not produced for `-viridae`, change that one assertion to `.monomial("Coronaviridae")` (rank UNRANKED) — rank inference for viral suffixes is explicitly out of scope (see spec). Decide by running the test.
-
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run to verify it fails**
 
 Run: `mvn -pl name-parser -Dtest=NameParserImplTest#virusBinomialsParse test`
-Expected: FAIL — `Tobamovirus tabaci` etc. currently throw `UnparsableNameException(VIRUS)`.
+Expected: FAIL — virus binomials still throw; legacy names throw `VIRUS`-less / wrong type until the gate is rewritten.
 
-- [ ] **Step 3a: Add the `viralShape` field to `ParseContext`**
-
-Insert after the `aggregate` field (`ParseContext.java:26`):
-
+- [ ] **Step 3a: Add `viralShape` to `ParseContext`** (after the `aggregate` field, ~line 26)
 ```java
   /**
    * Set by {@link Preflight} when the input is a clean uni/binomial whose genus (or
-   * monomial) carries an ICTV viral rank suffix — i.e. a virus name that fits the
-   * binomial model. {@link Assemble} turns this into {@link NomCode#VIRUS} when the
-   * caller supplied no code.
+   * monomial) carries an ICTV viral rank suffix. {@link Assemble} turns this into
+   * {@link NomCode#VIRUS} when the caller supplied no code.
    */
   public boolean viralShape;
 ```
 
 - [ ] **Step 3b: Rewrite the Preflight virus gate**
 
-In `Preflight.java`, add these patterns next to `ZOOLOGICAL_BINOMIAL` (after line 51):
-
+Add patterns after `ZOOLOGICAL_BINOMIAL` (`Preflight.java:51`):
 ```java
-  // A clean uni/binomial shape: Genus [ (Subgenus) ] epithet, nothing else. The epithet
-  // may carry digits/hyphens (virus epithets like "humanalpha1", zoological "11-punctata").
   private static final Pattern CLEAN_BINOMIAL = Pattern.compile(
       "^\\p{Lu}\\p{Ll}+(?:\\s+\\(\\p{Lu}\\p{Ll}+\\))?\\s+\\p{Ll}[\\p{Ll}\\d\\-]*$",
       Pattern.UNICODE_CHARACTER_CLASS);
   private static final Pattern CLEAN_MONOMIAL = Pattern.compile(
       "^\\p{Lu}[\\p{Ll}\\-]+$", Pattern.UNICODE_CHARACTER_CLASS);
-
-  // Epithet that is a "soft" viral token: a real organism, never a standalone virus
-  // binomial. Matched against the last whitespace-separated word (so it also covers the
-  // monomial petrel genus "Prion").
   private static final Pattern SOFT_WORD = Pattern.compile(
       "(?:vector|prions?|particles?|replicons?|rna)$", Pattern.CASE_INSENSITIVE);
-  // Epithet ending in a "hard" viral token (bare "virus"/"phage" or a compound like
-  // "papillomavirus", "attavirus"). Rescuable only by a real zoological author+year.
   private static final Pattern HARD_WORD = Pattern.compile(
       "(?:virus|viroid|phages?|virion|satellite)$", Pattern.CASE_INSENSITIVE);
-  // A separately supplied authorship that looks like a Linnaean citation: a Title-cased
-  // surname at the very start (optionally bracketed) and a 4-digit year somewhere after.
-  // Committee citations ("ICTV", "ICTV 7th Report (2000)") start all-caps and do NOT match.
   private static final Pattern AUTH_ZOO = Pattern.compile(
       "^\\(?\\p{Lu}\\p{Ll}{2,}.*\\b(?:1[6-9]\\d\\d|20\\d\\d)\\b",
       Pattern.UNICODE_CHARACTER_CLASS);
 ```
 
-Replace the gate at `Preflight.java:180-182` with a call:
-
+Replace the gate at `Preflight.java:180-182` with `applyVirusGate(s, ctx, original);` and add:
 ```java
-    applyVirusGate(s, ctx, original);
-```
-
-Add the method (place it near the bottom of the class, before `looksLikeHybridFormula`):
-
-```java
-  /**
-   * Decides whether a trigger-bearing input is a virus. Sets {@link ParseContext#viralShape}
-   * for bucket-A virus binomials; throws {@link UnparsableNameException} for legacy
-   * vernacular virus strings. See the design spec for the full bucket model.
-   */
   private static void applyVirusGate(String s, ParseContext ctx, String original)
       throws UnparsableNameException {
     boolean clean = CLEAN_BINOMIAL.matcher(s).matches() || CLEAN_MONOMIAL.matcher(s).matches();
@@ -258,32 +350,29 @@ Add the method (place it near the bottom of the class, before `looksLikeHybridFo
       }
       return; // parse; a non-virus caller code is kept and wins over inference
     }
-
-    // No viral genus: only the legacy trigger words matter.
     if (!VIRUS.matcher(s).find()) {
-      return;
+      return; // no viral trigger at all
     }
-    // Inline "Genus [(Subgenus)] epithet Author, YYYY" zoological citation overrides a
-    // stray viral token in the epithet (e.g. "Turkozelotes attavirus Chatzaki, 2019").
+    // Inline "Genus [(Subgenus)] epithet Author, YYYY" overrides a stray viral token.
     if (ZOOLOGICAL_BINOMIAL.matcher(s).find()) {
       return;
     }
     if (req == org.gbif.nameparser.api.NomCode.VIRUS) {
       if (clean) { ctx.viralShape = true; return; }
-      throw new UnparsableNameException(NameType.VIRUS, original);
+      throw new UnparsableNameException(NameType.OTHER, org.gbif.nameparser.api.NomCode.VIRUS, original);
     }
     if (clean && req != null) {
       return; // caller asserts a non-virus code for a clean binomial
     }
     if (clean && SOFT_WORD.matcher(lastWord(s)).find()) {
-      return; // bucket B soft: real animal/plant
+      return; // bucket B soft
     }
     if (clean && HARD_WORD.matcher(lastWord(s)).find()
         && ctx.authorshipInput != null
         && AUTH_ZOO.matcher(ctx.authorshipInput.trim()).find()) {
-      return; // bucket B hard: rescued by a separately supplied zoological author+year
+      return; // bucket B hard, rescued by a separately supplied zoological author+year
     }
-    throw new UnparsableNameException(NameType.VIRUS, original);
+    throw new UnparsableNameException(NameType.OTHER, org.gbif.nameparser.api.NomCode.VIRUS, original);
   }
 
   private static String firstWord(String s) {
@@ -297,45 +386,38 @@ Add the method (place it near the bottom of the class, before `looksLikeHybridFo
   }
 ```
 
-Change the method signature `Preflight.run` at `Preflight.java:124` from
-`static void run(String original, String working)` to
-`static void run(String original, ParseContext ctx)` and, at its top, replace
-`String s = working.trim();` with `String s = ctx.working.trim();`.
+Change `Preflight.run` signature (`Preflight.java:124`) from `(String original, String working)` to `(String original, ParseContext ctx)`; at the top replace `String s = working.trim();` with `String s = ctx.working.trim();`.
 
-- [ ] **Step 3c: Update the call site in `Pipeline`**
+- [ ] **Step 3c: Update the call site** — `Pipeline.java:68`: `Preflight.run(scientificName, ctx);`
 
-`Pipeline.java:68`: change
+- [ ] **Step 3d: Set `VIRUS` from `viralShape` in `Assemble` + enable viral rank inference**
+
+After the code-setting block (`Assemble.java:130`), add:
 ```java
-    Preflight.run(scientificName, ctx.working);
-```
-to
-```java
-    Preflight.run(scientificName, ctx);
-```
-
-- [ ] **Step 3d: Set `VIRUS` from `viralShape` in `Assemble`**
-
-In `Assemble.finish`, immediately after the `if (...) { ... } else if (n.getCode() == null) { CodeInference.infer(ctx, authState); }` block (after `Assemble.java:130`), add:
-
-```java
-    // A clean virus binomial (genus carries an ICTV viral suffix) with no caller code
-    // → infer the virus code. Caller-supplied codes are already on the name and win.
     if (ctx.viralShape && n.getCode() == null) {
       n.setCode(NomCode.VIRUS);
     }
 ```
+And let the suffix-rank block use the viral code. Change `Assemble.java:150`:
+```java
+      NomCode codeForInference = ctx.requestedCode;
+```
+to
+```java
+      // Viral code is inferred from a highly reliable suffix, so it is safe to drive
+      // suffix-based rank inference (e.g. "Coronaviridae" -> FAMILY).
+      NomCode codeForInference = ctx.requestedCode != null ? ctx.requestedCode
+          : (ctx.viralShape ? n.getCode() : null);
+```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [ ] **Step 4: Run targeted test, then full suite**
 
-Run: `mvn -pl name-parser -Dtest=NameParserImplTest#virusBinomialsParse test`
-Expected: PASS (adjust the `Coronaviridae` rank assertion per the Step 1 note if needed).
+Run: `mvn -pl name-parser -Dtest=NameParserImplTest#virusBinomialsParse test` → Expected: PASS.
+> If `Coronaviridae` does not resolve to `Rank.FAMILY`, inspect `RankUtils.SUFFICES_RANK_MAP.get(NomCode.VIRUS)` for the `-viridae` key; if absent, relax that assertion to `.monomial("Coronaviridae")` and note rank inference as out of scope.
 
-- [ ] **Step 5: Run the full parser test suite to catch regressions**
+Run: `mvn -pl name-parser test` → Expected: only `virusesPlasmidsPrionsEtc` may still fail (Task 4). Any other failure (e.g. an `assertUnparsable(name, NameType.VIRUS)` leftover) must be migrated to `NameType.OTHER` / `NomCode.VIRUS` now.
 
-Run: `mvn -pl name-parser test`
-Expected: Only `virusesPlasmidsPrionsEtc` (and possibly `NameParserGnaTest`) may fail now — those are addressed in Task 3. If any OTHER test fails, fix before continuing.
-
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add name-parser/src/main/java/org/gbif/nameparser/pipeline/ParseContext.java \
@@ -343,25 +425,21 @@ git add name-parser/src/main/java/org/gbif/nameparser/pipeline/ParseContext.java
         name-parser/src/main/java/org/gbif/nameparser/pipeline/Pipeline.java \
         name-parser/src/main/java/org/gbif/nameparser/pipeline/Assemble.java \
         name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java
-git commit -m "Parse ICTV virus binomials; infer NomCode.VIRUS from genus suffix"
+git commit -m "Parse ICTV virus binomials; infer VIRUS code; legacy viruses -> OTHER+VIRUS"
 ```
 
 ---
 
-### Task 3: Re-curate the `viruses.txt` corpus assertion
-
-The all-`isViralName` assertion in `virusesPlasmidsPrionsEtc` now fails for the handful of entries that have become parsable virus binomials. Move them out of the corpus and assert them positively.
+### Task 4: Re-curate the `viruses.txt` corpus assertion
 
 **Files:**
-- Modify: `name-parser/src/test/resources/viruses.txt` (remove the now-parsable lines)
+- Modify: `name-parser/src/test/resources/viruses.txt`
 - Modify: `name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java` (`virusesPlasmidsPrionsEtc`)
 
-**Interfaces:** none (test-only).
-
-- [ ] **Step 1: Identify the entries that now parse**
+- [ ] **Step 1: Identify the now-parsable entries**
 
 Run: `mvn -pl name-parser -Dtest=NameParserImplTest#virusesPlasmidsPrionsEtc test`
-Expected: FAIL, listing lines that are no longer `isViralName`. They are the viral-suffix monomials and lowercase-epithet binomials:
+Expected: FAIL listing the viral-suffix monomials and lowercase-epithet binomials:
 ```
 Lausannevirus
 Tunisvirus
@@ -372,26 +450,19 @@ Marseillevirus marseillevirus
 Senegalvirus marseillevirus
 ```
 
-- [ ] **Step 2: Remove those 7 lines from `viruses.txt`**
+- [ ] **Step 2: Remove those 7 lines from `viruses.txt`** (leave everything else intact).
 
-Delete exactly those 7 lines from `name-parser/src/test/resources/viruses.txt` (leave everything else). Keep the file otherwise intact.
-
-- [ ] **Step 3: Add positive assertions for them**
-
-In `virusesPlasmidsPrionsEtc`, just before the `Reader reader = resourceReader("viruses.txt");` line (`NameParserImplTest.java:3011`), add:
-
+- [ ] **Step 3: Add positive assertions** just before `Reader reader = resourceReader("viruses.txt");` (~line 3011):
 ```java
-    // ICTV binomial nomenclature: virus genera/species now parse as SCIENTIFIC + VIRUS.
     assertName("Lausannevirus", "Lausannevirus").monomial("Lausannevirus").code(NomCode.VIRUS).nothingElse();
     assertName("Clecrusatellite", "Clecrusatellite").monomial("Clecrusatellite").code(NomCode.VIRUS).nothingElse();
     assertName("Marseillevirus marseillevirus", "Marseillevirus marseillevirus")
         .species("Marseillevirus", "marseillevirus").code(NomCode.VIRUS).nothingElse();
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [ ] **Step 4: Run to verify it passes**
 
-Run: `mvn -pl name-parser -Dtest=NameParserImplTest#virusesPlasmidsPrionsEtc test`
-Expected: PASS
+Run: `mvn -pl name-parser -Dtest=NameParserImplTest#virusesPlasmidsPrionsEtc test` → Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
@@ -403,66 +474,50 @@ git commit -m "Re-curate viruses.txt: ICTV binomials now parse as SCIENTIFIC+VIR
 
 ---
 
-### Task 4: False-positive animals (bucket B) + caller-code override
+### Task 5: False-positive animals (bucket B) + caller-code override
 
-Closes `PREFLIGHT_VIRUS_FALSE_POSITIVES.md`: real animals whose epithet collides with a viral token now parse, and the caller `code` overrides the virus gate.
+Closes `PREFLIGHT_VIRUS_FALSE_POSITIVES.md`.
 
 **Files:**
-- Test: `name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java` (new methods)
+- Test: `name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java`
 
-**Interfaces:** none (behaviour from Task 2).
-
-- [ ] **Step 1: Write the failing tests**
-
+- [ ] **Step 1: Write the tests**
 ```java
   @Test
   public void virusFalsePositiveAnimals() throws Exception {
-    // soft epithet — parse without needing an author, real (zoological) code, NOT virus
     assertName("Aspilota vector", "Belokobylskij, 2007", Rank.SPECIES, NomCode.ZOOLOGICAL, "Aspilota vector")
         .species("Aspilota", "vector").combAuthors("2007", "Belokobylskij").code(NomCode.ZOOLOGICAL).nothingElse();
     assertName("Euragallia prion", "Euragallia prion")
         .species("Euragallia", "prion").nothingElse();
     assertName("Cryptops (Cryptops) vector", "Chamberlin, 1939", Rank.SPECIES, NomCode.ZOOLOGICAL, "Cryptops vector")
         .species("Cryptops", "Cryptops", "vector").combAuthors("1939", "Chamberlin").code(NomCode.ZOOLOGICAL).nothingElse();
-    // soft monomial — the petrel genus Prion
     assertName("Prion", "Prion").monomial("Prion").nothingElse();
-    // hard epithet rescued by a separately supplied zoological author+year
     assertName("Exochus virus", "Gauld & Sithole, 2002", Rank.SPECIES, NomCode.ZOOLOGICAL, "Exochus virus")
         .species("Exochus", "virus").combAuthors("2002", "Gauld", "Sithole").code(NomCode.ZOOLOGICAL).nothingElse();
-    // hard epithet, committee "authorship" → stays VIRUS
-    assertUnparsable("Acara virus", NameType.VIRUS);
+    assertUnparsable("Acara virus", NameType.OTHER, NomCode.VIRUS);
   }
 
   @Test
   public void virusCallerCodeOverride() throws Exception {
-    // caller asserts a non-virus code on an otherwise viral-looking clean binomial
-    assertName("Exochus virus", "Gauld & Sithole, 2002", Rank.SPECIES, NomCode.ZOOLOGICAL, "Exochus virus")
-        .species("Exochus", "virus").code(NomCode.ZOOLOGICAL);
-    // caller forces VIRUS on a legacy bare-virus binomial → still unparsable, type VIRUS
-    assertUnparsable("Acara virus", null, NameType.VIRUS); // uses assertUnparsable(name, rank, type); rank null
+    // caller asserts a non-virus code → bucket-A name parses under that code
+    assertName("Tobamovirus tabaci", NomCode.ZOOLOGICAL, "Tobamovirus tabaci")
+        .species("Tobamovirus", "tabaci").code(NomCode.ZOOLOGICAL);
+    // caller forces VIRUS on a legacy bare-virus binomial → unparsable OTHER + VIRUS
+    assertUnparsable("Acara virus", NameType.OTHER, NomCode.VIRUS);
   }
 ```
 
-> If `assertUnparsable(String, Rank, NameType)` requires a non-null rank in your tree, drop the second method's last assertion and instead assert `assertName("Tobamovirus tabaci", NomCode.ZOOLOGICAL, "Tobamovirus tabaci").species("Tobamovirus","tabaci").code(NomCode.ZOOLOGICAL);` to prove caller code wins on a bucket-A name. Verify the available overloads at `NameParserImplTest.java:4166-4235`.
-
-- [ ] **Step 2: Run to verify it fails / passes**
+- [ ] **Step 2: Run**
 
 Run: `mvn -pl name-parser -Dtest=NameParserImplTest#virusFalsePositiveAnimals+virusCallerCodeOverride test`
-Expected: PASS if Task 2 is correct (these are regression guards for the bucket-B logic). If any FAIL, fix `applyVirusGate` in `Preflight` — do **not** weaken the tests.
+Expected: PASS (regression guards for Task 3). If any FAIL, fix `applyVirusGate` — do not weaken tests.
 
 - [ ] **Step 3: Delete the obsolete handoff note**
-
 ```bash
 git rm PREFLIGHT_VIRUS_FALSE_POSITIVES.md
 ```
 
-- [ ] **Step 4: Run the full suite**
-
-Run: `mvn -pl name-parser test`
-Expected: PASS (all).
-
-- [ ] **Step 5: Commit**
-
+- [ ] **Step 4: Commit**
 ```bash
 git add name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java
 git commit -m "Test virus false-positive animals + caller-code override; drop handoff note"
@@ -470,27 +525,82 @@ git commit -m "Test virus false-positive animals + caller-code override; drop ha
 
 ---
 
-## Phase 2 — Digit-bearing epithets
+### Task 6: name-parser-cli migration
 
-> Independent of Phase 1's routing, but virus epithets need it (1/3 of ICTV species carry digits). Land Phase 1 first.
-
-### Task 5: Trailing / internal digits in epithets
-
-Today `Tokenizer` splits `humanalpha1` into `WORD("humanalpha") + NUMBER("1")` and `NameTokens` drops the number — silently merging `humanalpha1` and `humanalpha2`. Fix: glue glued (no-whitespace) trailing digits and hyphen-digit runs into the letter-started `WORD` token.
+Make the CLI module compile and reflect the new model (capture/emit `code` on unparsable results).
 
 **Files:**
-- Modify: `name-parser/src/main/java/org/gbif/nameparser/token/Tokenizer.java:43-58`
-- Test: `name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java` (new method)
+- Modify: `name-parser-cli/src/main/java/org/gbif/nameparser/cli/ParseResult.java`
+- Modify: `name-parser-cli/src/main/java/org/gbif/nameparser/cli/ParseCli.java` (wherever it builds an `Err` from a caught `UnparsableNameException`)
+- Modify: `name-parser-cli/src/test/java/org/gbif/nameparser/cli/io/ColdpWriterTest.java:62,102`
 
 **Interfaces:**
-- Produces: a single `WORD` token for a letter-started run with glued trailing digits / hyphen-digits (e.g. `WORD("humanalpha1")`, `WORD("herpesvirus-1")`).
+- Produces: `ParseResult.Err` gains an optional `NomCode code` field, populated from `UnparsableNameException.getCode()`.
+
+- [ ] **Step 1: Adjust the failing test** — in `ColdpWriterTest`, change the constructor call and assertion:
+```java
+      bad.error = new ParseResult.Err(NameType.OTHER, NomCode.VIRUS, "boom");
+      // ...
+    assertEquals("OTHER", errRow.get("np:type"));
+```
+(Add a `np:code`/`VIRUS` assertion if the writer emits the code — see Step 3.)
+
+- [ ] **Step 2: Run to verify it fails**
+
+Run: `mvn -pl name-parser-cli -am -Dtest=ColdpWriterTest test`
+Expected: FAIL (compile) — `Err` has no 3-arg constructor / `NameType.VIRUS` gone.
+
+- [ ] **Step 3: Implement**
+
+In `ParseResult.Err`, add an optional code:
+```java
+    public NameType type;
+    public NomCode code;          // may be null
+    public String message;
+
+    public Err(NameType type, String message) { this(type, null, message); }
+
+    public Err(NameType type, NomCode code, String message) {
+      this.type = type;
+      this.code = code;
+      this.message = message;
+    }
+```
+Where `ParseCli` catches `UnparsableNameException`, pass the code through:
+```java
+    } catch (UnparsableNameException ex) {
+      result.error = new ParseResult.Err(ex.getType(), ex.getCode(), ex.getMessage());
+    }
+```
+(Use the exact existing variable names at the catch site.)
+
+- [ ] **Step 4: Run module tests, then full build**
+
+Run: `mvn -pl name-parser-cli -am test` → Expected: PASS.
+Run: `mvn install` → Expected: BUILD SUCCESS, all modules.
+
+- [ ] **Step 5: Commit**
+```bash
+git add name-parser-cli/src/main/java/org/gbif/nameparser/cli/ParseResult.java \
+        name-parser-cli/src/main/java/org/gbif/nameparser/cli/ParseCli.java \
+        name-parser-cli/src/test/java/org/gbif/nameparser/cli/io/ColdpWriterTest.java
+git commit -m "CLI: migrate off NameType.VIRUS; carry code on parse errors"
+```
+
+---
+
+## Phase 2 — Digit-bearing epithets
+
+### Task 7: Trailing / internal digits in epithets
+
+**Files:**
+- Modify: `name-parser/src/main/java/org/gbif/nameparser/token/Tokenizer.java:40-59`
+- Test: `name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java`
 
 - [ ] **Step 1: Write the failing test**
-
 ```java
   @Test
   public void digitEpithetsTrailing() throws Exception {
-    // distinct epithets must NOT collapse
     assertName("Simplexvirus humanalpha1", "Simplexvirus humanalpha1")
         .species("Simplexvirus", "humanalpha1").code(NomCode.VIRUS).nothingElse();
     assertName("Simplexvirus humanalpha2", "Simplexvirus humanalpha2")
@@ -503,12 +613,9 @@ Today `Tokenizer` splits `humanalpha1` into `WORD("humanalpha") + NUMBER("1")` a
 - [ ] **Step 2: Run to verify it fails**
 
 Run: `mvn -pl name-parser -Dtest=NameParserImplTest#digitEpithetsTrailing test`
-Expected: FAIL — epithet comes back as `humanalpha` (digit dropped), so `.nothingElse()`/epithet assertions fail.
+Expected: FAIL — epithet returns as `humanalpha` (digit dropped).
 
-- [ ] **Step 3: Implement the tokenizer glue**
-
-In `Tokenizer.tokenize`, inside the WORD continuation loop (`Tokenizer.java:40-59`), extend the accepted continuation characters. Replace the loop body so it also absorbs digits and a hyphen followed by a digit:
-
+- [ ] **Step 3: Implement the tokenizer glue** — replace the WORD continuation loop (`Tokenizer.java:40-59`):
 ```java
         while (i < n) {
           int c = input.codePointAt(i);
@@ -517,8 +624,6 @@ In `Tokenizer.tokenize`, inside the WORD continuation loop (`Tokenizer.java:40-5
             i += cl;
             continue;
           }
-          // internal hyphen / apostrophe / underscore / stray "!" when followed by a
-          // letter OR digit, so alphanumeric epithets ("herpesvirus-1") stay intact.
           if ((c == '-' || c == '\'' || c == '’' || c == '_' || c == '!'
               || c == '‐' || c == '‑' || c == '‒' || c == '–' || c == '—')
               && i + cl < n) {
@@ -531,16 +636,14 @@ In `Tokenizer.tokenize`, inside the WORD continuation loop (`Tokenizer.java:40-5
           break;
         }
 ```
+(Changes: `|| Character.isDigit(c)` on the first `if`; `|| Character.isDigit(next)` in the hyphen look-ahead.)
 
-(The only changes vs the original are the added `|| Character.isDigit(c)` on the first `if`, and `|| Character.isDigit(next)` on the hyphen look-ahead.)
+- [ ] **Step 4: Run targeted, then full suite**
 
-- [ ] **Step 4: Run the targeted test, then the full suite**
-
-Run: `mvn -pl name-parser -Dtest=NameParserImplTest#digitEpithetsTrailing test` → Expected: PASS
-Run: `mvn -pl name-parser test` → Expected: PASS. If a previously-passing test now fails because a code/strain token gained digits, inspect: the most likely spots are the `sp.`-phrase strain-code handling in `NameTokens.java:265-283` (it already re-globs `WORD + NUMBER`, so a single glued WORD is fine) and any test asserting an authorship token with glued digits. Fix the implementation, not the unrelated tests.
+Run: `mvn -pl name-parser -Dtest=NameParserImplTest#digitEpithetsTrailing test` → PASS.
+Run: `mvn -pl name-parser test` → PASS. If a strain-code/`sp.`-phrase test changes (`NameTokens.java:265-283` already re-globs WORD+NUMBER, so a single glued WORD is fine), fix the implementation, not unrelated tests.
 
 - [ ] **Step 5: Commit**
-
 ```bash
 git add name-parser/src/main/java/org/gbif/nameparser/token/Tokenizer.java \
         name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java
@@ -549,44 +652,32 @@ git commit -m "Preserve trailing/internal digits in epithet tokens"
 
 ---
 
-### Task 6: Leading-numeral historical zoological epithets
-
-`Coccinella 11-punctata` is corrupted today: `AuthorshipSplit` ends the name at the `NUMBER` after the genus (treating `11-punctata Linnaeus, 1758` as authorship). Fix in three coordinated changes: tokenize `11-punctata` as one alphanumeric `WORD`; let `AuthorshipSplit` keep a digit-led epithet word inside the name; let `NameTokens` classify it as an epithet.
+### Task 8: Leading-numeral historical zoological epithets
 
 **Files:**
-- Modify: `name-parser/src/main/java/org/gbif/nameparser/token/Tokenizer.java:83-91` (NUMBER branch)
+- Modify: `name-parser/src/main/java/org/gbif/nameparser/token/Tokenizer.java:83-91`
+- Modify: `name-parser/src/main/java/org/gbif/nameparser/token/Token.java`
 - Modify: `name-parser/src/main/java/org/gbif/nameparser/pipeline/AuthorshipSplit.java`
 - Modify: `name-parser/src/main/java/org/gbif/nameparser/pipeline/NameTokens.java`
-- Test: `name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java` (new method)
-
-**Interfaces:**
-- Produces: a single `WORD` token for a digit-run glued to `-` + letter (e.g. `WORD("11-punctata")`), classified as a specific/infraspecific epithet.
+- Test: `name-parser/src/test/java/org/gbif/nameparser/NameParserImplTest.java`
 
 - [ ] **Step 1: Write the failing test**
-
 ```java
   @Test
   public void digitEpithetsLeadingNumeral() throws Exception {
     assertName("Coccinella 11-punctata Linnaeus, 1758", "Coccinella 11-punctata")
-        .species("Coccinella", "11-punctata")
-        .combAuthors("1758", "Linnaeus")
-        .code(NomCode.ZOOLOGICAL)
-        .nothingElse();
+        .species("Coccinella", "11-punctata").combAuthors("1758", "Linnaeus").code(NomCode.ZOOLOGICAL).nothingElse();
     assertName("Coccinella 2-pustulata", "Coccinella 2-pustulata")
-        .species("Coccinella", "2-pustulata")
-        .nothingElse();
+        .species("Coccinella", "2-pustulata").nothingElse();
   }
 ```
 
 - [ ] **Step 2: Run to verify it fails**
 
 Run: `mvn -pl name-parser -Dtest=NameParserImplTest#digitEpithetsLeadingNumeral test`
-Expected: FAIL — epithet missing; `punctata` lands in authorship.
+Expected: FAIL — `punctata` lands in authorship; epithet missing.
 
-- [ ] **Step 3a: Tokenizer — glue number + hyphen + letter into one WORD**
-
-In `Tokenizer.tokenize`, replace the NUMBER branch (`Tokenizer.java:83-91`) so a digit run that is immediately followed by a hyphen + letter becomes a single alphanumeric `WORD` token; otherwise it stays a `NUMBER`:
-
+- [ ] **Step 3a: Tokenizer — glue number + hyphen + letter into one WORD** (replace `Tokenizer.java:83-91`):
 ```java
       if (Character.isDigit(cp)) {
         int numStart = i;
@@ -595,9 +686,9 @@ In `Tokenizer.tokenize`, replace the NUMBER branch (`Tokenizer.java:83-91`) so a
           i++;
         }
         // "11-punctata" / "2-pustulata": a number glued to a hyphen + letter is the
-        // leading-numeral epithet form, not a bare number. Absorb the rest as a WORD.
+        // leading-numeral epithet form, not a bare number.
         if (i + 1 < n && input.charAt(i) == '-' && Character.isLetter(input.codePointAt(i + 1))) {
-          i++; // consume the hyphen
+          i++; // consume hyphen
           while (i < n) {
             int c = input.codePointAt(i);
             int cl = Character.charCount(c);
@@ -616,10 +707,7 @@ In `Tokenizer.tokenize`, replace the NUMBER branch (`Tokenizer.java:83-91`) so a
       }
 ```
 
-- [ ] **Step 3b: `Token` — recognise a digit-led alphanumeric epithet word**
-
-Check `name-parser/src/main/java/org/gbif/nameparser/token/Token.java` for a `startsLower()` helper. Add a small helper used by the pipeline:
-
+- [ ] **Step 3b: `Token` — add `startsDigitEpithet()`** (in `Token.java`, near `startsLower()`):
 ```java
   /** True for an alphanumeric epithet word that begins with a digit, e.g. "11-punctata". */
   public boolean startsDigitEpithet() {
@@ -629,13 +717,8 @@ Check `name-parser/src/main/java/org/gbif/nameparser/token/Token.java` for a `st
   }
 ```
 
-- [ ] **Step 3c: `AuthorshipSplit` — keep a digit-led epithet inside the name**
-
-In `AuthorshipSplit.findBoundary`, the WORD branch only handles `startsLower()` / uppercase. A digit-led WORD currently falls through to `return i` at the end of the WORD block (`AuthorshipSplit.java:206-207`) — actually it reaches the bottom `return i` because neither `startsLower()` nor the uppercase branches match. Add, right after the `if (t.startsLower()) { ... }` block closes (after `AuthorshipSplit.java:176`) and before the mid-name-author handling:
-
+- [ ] **Step 3c: `AuthorshipSplit` — keep a digit-led epithet in the name** — after the `if (t.startsLower()) { ... }` block closes (`AuthorshipSplit.java:176`):
 ```java
-        // Digit-led alphanumeric epithet ("11-punctata") in epithet position — part of
-        // the name, not authorship.
         if (afterGenus && t.startsDigitEpithet()) {
           nameWords++;
           haveEpithet = true;
@@ -645,12 +728,8 @@ In `AuthorshipSplit.findBoundary`, the WORD branch only handles `startsLower()` 
         }
 ```
 
-- [ ] **Step 3d: `NameTokens` — classify a digit-led epithet word**
-
-In `NameTokens.classify`, the WORD handling (`NameTokens.java:151`) processes uppercase and `startsLower()` words. Add a branch for the digit-led epithet just before the `if (t.startsLower()) {` block (`NameTokens.java:210`):
-
+- [ ] **Step 3d: `NameTokens` — classify a digit-led epithet** — just before the `if (t.startsLower()) {` block (`NameTokens.java:210`):
 ```java
-        // Digit-led alphanumeric epithet ("11-punctata"): treat as an ordinary epithet.
         if (genus != null && t.startsDigitEpithet()) {
           lowerEpithets.add(t.text);
           i++;
@@ -658,13 +737,12 @@ In `NameTokens.classify`, the WORD handling (`NameTokens.java:151`) processes up
         }
 ```
 
-- [ ] **Step 4: Run the targeted test, then the full suite**
+- [ ] **Step 4: Run targeted, then full suite**
 
-Run: `mvn -pl name-parser -Dtest=NameParserImplTest#digitEpithetsLeadingNumeral test` → Expected: PASS
-Run: `mvn -pl name-parser test` → Expected: PASS. Watch for: year-range tokens (`1976-1981`) must stay `NUMBER`-based — the Step 3a guard only absorbs hyphen+**letter**, so `1976-1981` is unaffected; verify any author/year-range test still passes.
+Run: `mvn -pl name-parser -Dtest=NameParserImplTest#digitEpithetsLeadingNumeral test` → PASS.
+Run: `mvn -pl name-parser test` → PASS. Year-range tokens (`1976-1981`) stay `NUMBER` (Step 3a only absorbs hyphen+letter); verify any author year-range test still passes.
 
 - [ ] **Step 5: Commit**
-
 ```bash
 git add name-parser/src/main/java/org/gbif/nameparser/token/Tokenizer.java \
         name-parser/src/main/java/org/gbif/nameparser/token/Token.java \
@@ -678,30 +756,22 @@ git commit -m "Parse leading-numeral zoological epithets (Coccinella 11-punctata
 
 ## Phase 3 — Validation
 
-### Task 7: End-to-end validation against real data
+### Task 9: End-to-end validation
 
-**Files:** none (verification only).
+- [ ] **Step 1: Full build + tests**
 
-- [ ] **Step 1: Full build + tests across all modules**
+Run: `mvn install` → Expected: BUILD SUCCESS, all modules.
 
-Run: `mvn install`
-Expected: BUILD SUCCESS, all modules.
-
-- [ ] **Step 2: Re-run the MSL41 corpus through the CLI (optional but recommended)**
-
-If the MSL41 species file from brainstorming is still in the scratchpad, re-run it and confirm the parse rate jumped from 131 to the vast majority. Pure-alpha and trailing-digit epithets should parse with `code=VIRUS`; `Genus LETTER` serotype forms remain `VIRUS`.
-
+- [ ] **Step 2: Re-run MSL41 through the CLI (recommended)**
 ```bash
-JAR=name-parser-cli/target/name-parser-cli-*-shaded.jar
 mvn -pl name-parser-cli -am install -DskipTests -q
+JAR=name-parser-cli/target/name-parser-cli-*-shaded.jar
 java -jar $JAR parse --input=<msl_species.txt> --output=- --format=jsonl --quiet 2>/dev/null \
-  | python3 -c "import sys,json,collections; c=collections.Counter('VIRUS' if 'error' in json.loads(l) else 'ok' for l in sys.stdin); print(c)"
+  | python3 -c "import sys,json,collections; c=collections.Counter('err' if 'error' in json.loads(l) else 'ok' for l in sys.stdin); print(c)"
 ```
-Expected: `ok` now dominates (≈17k), down from 131.
+Expected: `ok` now dominates (≈17k of 17,554), up from 131. Remaining errors are `Genus LETTER` serotype forms (type OTHER, code VIRUS).
 
-- [ ] **Step 3: Commit any final doc updates**
-
-Mark the spec as implemented if you keep a status line, then:
+- [ ] **Step 3: Final commit (docs/status)**
 ```bash
 git add -A && git commit -m "Virus name parsing: full build green"
 ```
@@ -710,6 +780,7 @@ git add -A && git commit -m "Virus name parsing: full build green"
 
 ## Self-Review notes (addressed)
 
-- **Spec rule #4 refinement:** the spec's "compound epithet ⇒ always virus" is superseded by a unified rule — *any* hard epithet (bare or compound) is rescued only by a real `Surname + year` (inline `ZOOLOGICAL_BINOMIAL`, or the `AUTH_ZOO` pattern on a separately supplied authorship). Committee citations (`ICTV …`) don't match either, so legacy names stay `VIRUS`. This is required to keep the existing `Turkozelotes attavirus Chatzaki, 2019` test green. The spec will be updated to match.
-- **Plural suffix safety:** `ViralSuffix` uses singular suffixes only, so `Crassatellites` (mollusk) is not flagged; the existing `Crassatellites janus` test stays green.
-- **Type consistency:** `ParseContext.viralShape` (set in `Preflight.applyVirusGate`, read in `Assemble.finish`); `ViralSuffix.isViral`; `Token.startsDigitEpithet` (added in Task 6, used by `AuthorshipSplit` and `NameTokens`).
+- **Spec coverage:** API change (Task 1), ViralSuffix (Task 2), gate + code inference + viral rank inference (Task 3), corpus re-curation (Task 4), bucket-B + caller override (Task 5), CLI (Task 6), digit epithets both shapes (Tasks 7-8), validation (Task 9). Known limitations (lab vectors; `Necocli virus`) are accepted in the spec — no task.
+- **Spec rule #4 refinement:** unified hard-epithet rescue (any viral epithet rescued by a real `Surname + year`; committee citations like `ICTV` don't match), required to keep `Turkozelotes attavirus Chatzaki, 2019` green.
+- **Compile-order caveat:** Task 1 removes `NameType.VIRUS`, breaking `name-parser` (fixed in Task 3) and `name-parser-cli` (fixed in Task 6) until those tasks run. Run per-module tests as noted; `mvn install` only green after Task 6.
+- **Type consistency:** `ParseContext.viralShape`, `ViralSuffix.isViral`, `UnparsableNameException(NameType, NomCode, String)` / `getCode()`, `ParseResult.Err(NameType, NomCode, String)`, `Token.startsDigitEpithet()`.

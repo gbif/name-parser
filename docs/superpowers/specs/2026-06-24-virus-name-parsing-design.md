@@ -83,7 +83,30 @@ So a proper `Surname + 4-digit-year` rescue rule mis-classifies **1 in
 |---|---|---|
 | **A** formal ICTV name | genus/monomial (any rank) carries a viral suffix | parse as normal uni/binomial; infer `code=VIRUS` |
 | **B** coincidental binomial | normal genus, trigger only in epithet, real organism | parse; infer the *real* code (zoological/etc.) |
-| **C** legacy vernacular | anything with a trigger that is not A or B | unchanged: unparsable `NameType.VIRUS`, **no** code attached |
+| **C** legacy vernacular | anything with a trigger that is not A or B | unparsable: `UnparsableNameException(NameType.OTHER, code=VIRUS)` |
+
+> **Below, "→ `VIRUS` (C)" means** "throw `UnparsableNameException` with
+> `NameType.OTHER` and `NomCode.VIRUS`". See *NameType.VIRUS removal*.
+
+## NameType.VIRUS removal
+
+`NameType.VIRUS` is removed from the model. The "virus-ness" of a name is now
+carried uniformly by `NomCode.VIRUS`, on both parsable and unparsable results,
+leaving `NameType` to describe only the *parse quality*:
+
+- a parsable virus binomial → `NameType.SCIENTIFIC` + `NomCode.VIRUS`;
+- an unparsable legacy virus string → `NameType.OTHER` + `NomCode.VIRUS`.
+
+To carry the code on an unparsable result, `UnparsableNameException` gains an
+optional `NomCode code` field (with `getCode()`), set when the parser knows the
+code despite being unable to atomise the name. `Preflight` throws
+`new UnparsableNameException(NameType.OTHER, NomCode.VIRUS, original)` for
+bucket C. `NameType.FORMULA` / `NameType.OTHER` (without a code) are unchanged.
+
+This is a **breaking API change** (a public enum constant is removed) and a
+small constructor addition; it warrants a major version bump per the GBIF
+engineering handbook. Downstream callers that special-cased `NameType.VIRUS`
+migrate to checking `getType() == OTHER && getCode() == VIRUS`.
 
 ### Detection logic in `Preflight` (precedence order)
 
@@ -158,8 +181,18 @@ across the pipeline (not limited to the virus path).
 
 ## Affected components
 
+- `org.gbif.nameparser.api.NameType` — remove the `VIRUS` constant.
+- `org.gbif.nameparser.api.UnparsableNameException` — add optional `NomCode code`
+  + `getCode()` and a `(NameType, NomCode, String)` constructor.
+- `org.gbif.nameparser.api.util.RankUtils` — already carries a `NomCode.VIRUS`
+  suffix→rank map, so viral higher-taxon rank inference works once `code=VIRUS`
+  is set (e.g. `Coronaviridae` → FAMILY). No change needed beyond letting
+  `Assemble` use the inferred viral code for suffix-rank inference.
+- `name-parser-cli` (`ParseResult`, `Coldp*`) — migrate `NameType.VIRUS`
+  references; capture and emit `getCode()` on unparsable results.
 - `org.gbif.nameparser.pipeline.Preflight` — virus-gate rewrite; accept the
-  `authorship` argument; suffix detection; soft/hard/bare epithet logic.
+  `authorship` argument; suffix detection; soft/hard/bare epithet logic;
+  throw `(OTHER, VIRUS, …)` for bucket C.
 - `org.gbif.nameparser.pipeline.Pipeline` — pass `authorship` into
   `Preflight.run`; carry the `viralShape` signal through to code inference.
 - `org.gbif.nameparser.pipeline.ParseContext` — `viralShape` flag.
@@ -170,13 +203,18 @@ across the pipeline (not limited to the virus path).
 
 ## Test plan
 
+- **API migration** — `NameTypeTest` (drop `VIRUS.isParsable()`), the
+  `isViralName` helper (now `getType()==OTHER && getCode()==VIRUS`), and every
+  `assertUnparsable(…, NameType.VIRUS)` → `(…, NameType.OTHER)` with a
+  `NomCode.VIRUS` check. Add an `assertUnparsable(name, NameType, NomCode)`
+  overload.
 - **`viruses.txt` + `NameParserImplTest.virusesPlasmidsPrionsEtc`** — move the
   now-parsable entries (monomial genera `Lausannevirus`, `Tunisvirus`,
   `Clecrusatellite`, `Milvetsatellite`, `Subclovsatellite`; binomials
   `Marseillevirus marseillevirus`, `Senegalvirus marseillevirus`; the
-  viral-genus binomials and plural forms) out of the all-`isViralName`
-  assertion. Add positive parse assertions for them (`SCIENTIFIC`,
-  `code=VIRUS`). The remaining legacy polynomials must still assert `VIRUS`.
+  viral-genus binomials and plural forms) out of the corpus assertion. Add
+  positive parse assertions for them (`SCIENTIFIC`, `code=VIRUS`). The remaining
+  legacy polynomials must still come back `OTHER` + `code=VIRUS`.
 - **New: bucket A** — `Tobamovirus tabaci`, `Orthoebolavirus zairense`,
   `Betacoronavirus pandemicum`, monomial `Lausannevirus`, higher taxa
   `Coronaviridae`, `Nidovirales` → `SCIENTIFIC`, `code=VIRUS`. Sample from
