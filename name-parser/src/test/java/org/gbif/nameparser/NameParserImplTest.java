@@ -3008,6 +3008,12 @@ public class NameParserImplTest {
             .species("Nephodia", "satellites")
             .nothingElse();
 
+    // ICTV binomials that now parse as proper scientific names with code=VIRUS
+    assertName("Lausannevirus", "Lausannevirus").monomial("Lausannevirus").code(NomCode.VIRUS).nothingElse();
+    assertName("Clecrusatellite", "Clecrusatellite").monomial("Clecrusatellite").code(NomCode.VIRUS).nothingElse();
+    assertName("Marseillevirus marseillevirus", "Marseillevirus marseillevirus")
+        .species("Marseillevirus", "marseillevirus").code(NomCode.VIRUS).nothingElse();
+
     Reader reader = resourceReader("viruses.txt");
     LineIterator iter = new LineIterator(reader);
     while (iter.hasNext()) {
