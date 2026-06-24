@@ -112,14 +112,17 @@ Replace the current blunt rule
    petrel genus) → bucket B: do not throw; parse; infer the real code via the
    normal pipeline (not virus). No genuine virus collides with these as a
    binomial epithet.
-4. **No code, normal genus, hard trigger in epithet:**
-   - epithet is a *compound* group-word ending in a viral suffix
-     (`herpesvirus`, `parvovirus`, `bracovirus`, `cevirus`, …) → `VIRUS` (C).
-     Never rescued, even with an author.
-   - epithet is the *bare* trigger word (`virus`, `phage`, `viroid`, `virion`,
-     `satellite`) → rescue as a species only when a real `Surname + 4-digit
-     year` citation is present (inline **or** in the supplied `authorship`
-     argument); otherwise `VIRUS` (C).
+4. **No code, normal genus, hard trigger in epithet** (epithet is or ends with a
+   viral word — bare `virus`/`phage`/… or a compound `papillomavirus`,
+   `attavirus`, …) → rescue as a species only when a real `Surname + 4-digit
+   year` citation is present (inline, matched by `ZOOLOGICAL_BINOMIAL`, **or** in
+   the separately supplied `authorship`, matched by a Title-cased-surname +
+   year pattern); otherwise `VIRUS` (C). The bare-vs-compound distinction is
+   *not* used: empirically the ~740 authored legacy collisions are committee
+   citations (`ICTV`, `ICTV 7th Report (2000)`) that start all-caps and do not
+   match a Linnaean surname-year, so they stay `VIRUS` either way — while real
+   animals like `Turkozelotes attavirus Chatzaki, 2019` (a compound) are
+   correctly rescued.
 5. **Non-binomial input carrying a trigger** (polynomials, strain codes,
    parenthetical / colon / slash noise) → `VIRUS` (C), unchanged.
 
