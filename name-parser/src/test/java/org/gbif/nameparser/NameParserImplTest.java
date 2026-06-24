@@ -3042,6 +3042,29 @@ public class NameParserImplTest {
   }
 
   @Test
+  public void virusFalsePositiveAnimals() throws Exception {
+    assertName("Aspilota vector", "Belokobylskij, 2007", Rank.SPECIES, NomCode.ZOOLOGICAL, "Aspilota vector")
+        .species("Aspilota", "vector").combAuthors("2007", "Belokobylskij").code(NomCode.ZOOLOGICAL).nothingElse();
+    assertName("Euragallia prion", "Euragallia prion")
+        .species("Euragallia", "prion").nothingElse();
+    assertName("Cryptops (Cryptops) vector", "Chamberlin, 1939", Rank.SPECIES, NomCode.ZOOLOGICAL, "Cryptops vector")
+        .species("Cryptops", "Cryptops", "vector").combAuthors("1939", "Chamberlin").code(NomCode.ZOOLOGICAL).nothingElse();
+    assertName("Prion", "Prion").monomial("Prion").nothingElse();
+    assertName("Exochus virus", "Gauld & Sithole, 2002", Rank.SPECIES, NomCode.ZOOLOGICAL, "Exochus virus")
+        .species("Exochus", "virus").combAuthors("2002", "Gauld", "Sithole").code(NomCode.ZOOLOGICAL).nothingElse();
+    assertUnparsable("Acara virus", NameType.OTHER, NomCode.VIRUS);
+  }
+
+  @Test
+  public void virusCallerCodeOverride() throws Exception {
+    // caller asserts a non-virus code → bucket-A name parses under that code
+    assertName("Tobamovirus tabaci", NomCode.ZOOLOGICAL, "Tobamovirus tabaci")
+        .species("Tobamovirus", "tabaci").code(NomCode.ZOOLOGICAL);
+    // caller forces VIRUS on a legacy bare-virus binomial → unparsable OTHER + VIRUS
+    assertUnparsable("Acara virus", NameType.OTHER, NomCode.VIRUS);
+  }
+
+  @Test
   public void apostropheEpithets() throws Exception {
     assertName("Junellia o'donelli Moldenke, 1946", "Junellia o'donelli")
             .species("Junellia", "o'donelli")
