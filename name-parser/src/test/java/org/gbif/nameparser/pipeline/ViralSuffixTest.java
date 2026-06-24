@@ -15,6 +15,9 @@ public class ViralSuffixTest {
     assertTrue(ViralSuffix.isViral("Coronaviridae"));
     assertTrue(ViralSuffix.isViral("Nidovirales"));
     assertTrue(ViralSuffix.isViral("Pisuviricota"));
+    // ICTV realms (suffix -viria) and kingdoms (suffix -virae) must match
+    assertTrue(ViralSuffix.isViral("Riboviria"));        // principal ICTV realm
+    assertTrue(ViralSuffix.isViral("Orthornavirae"));    // ICTV kingdom
   }
 
   @Test
@@ -23,5 +26,7 @@ public class ViralSuffixTest {
     assertFalse(ViralSuffix.isViral("Aspilota"));
     assertFalse(ViralSuffix.isViral("Adomaviruses"));   // plural -viruses
     assertFalse(ViralSuffix.isViral(null));
+    assertFalse(ViralSuffix.isViral("Mahavira"));        // Sanskrit word, not viral
+    assertFalse(ViralSuffix.isViral("Elvira"));          // hummingbird genus, ends -vira
   }
 }

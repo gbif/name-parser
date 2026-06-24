@@ -153,8 +153,6 @@ public final class Assemble {
     // Never apply code-specific suffix maps derived from authorship-inferred code — that
     // would silently assign ranks to names whose code we merely guessed.
     if (n.getRank() == Rank.UNRANKED && n.getUninomial() != null) {
-      // Viral code is inferred from a highly reliable suffix, so it is safe to drive
-      // suffix-based rank inference (e.g. "Coronaviridae" -> FAMILY).
       NomCode codeForInference = ctx.requestedCode != null ? ctx.requestedCode
           : (ctx.viralShape ? n.getCode() : null);
       Rank r = codeForInference != null

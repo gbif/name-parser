@@ -17,26 +17,21 @@ final class ViralSuffix {
   private static final Pattern GENUS = Pattern.compile(
       "(?:virus|viroid|satellite|viriform)$", Pattern.CASE_INSENSITIVE);
 
-  // Longer, unambiguous higher-taxon suffixes (7+ chars): safe for any word length.
-  private static final Pattern HIGHER_LONG = Pattern.compile(
+  // Higher-taxon suffixes: longer ones (7+ chars) are unambiguous; the short realm
+  // suffix -viria and kingdom suffix -virae are included unguarded because ICTV MSL41
+  // has zero subrealm taxa (the formerly guarded -vira is omitted entirely to avoid
+  // false positives such as the hummingbird genus Elvira or the word Mahavira).
+  private static final Pattern HIGHER = Pattern.compile(
       "(?:viridae|viroidae|satellitidae"
       + "|virinae|viroinae|satellitinae"
       + "|virales|virineae"
       + "|viricetes|viricetidae|viricotina|viricota"
-      + "|virites)$",
-      Pattern.CASE_INSENSITIVE);
-
-  // Short realm/kingdom suffixes (4–5 chars): require at least 5 characters before
-  // the suffix so short names like "Mahavira" (only 4 chars before -vira) are excluded.
-  // Real ICTV realm/kingdom names (e.g. "Orthornaviria", "Riboviria") have long stems.
-  private static final Pattern HIGHER_SHORT = Pattern.compile(
-      ".{5,}(?:virae|viria|vira)$",
+      + "|virites|viria|virae)$",
       Pattern.CASE_INSENSITIVE);
 
   static boolean isViral(String word) {
     if (word == null) return false;
     return GENUS.matcher(word).find()
-        || HIGHER_LONG.matcher(word).find()
-        || HIGHER_SHORT.matcher(word).matches();
+        || HIGHER.matcher(word).find();
   }
 }
