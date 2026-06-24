@@ -25,6 +25,13 @@ public final class Token {
     return !text.isEmpty() && Character.isLowerCase(text.codePointAt(0));
   }
 
+  /** True for an alphanumeric epithet word that begins with a digit, e.g. "11-punctata". */
+  public boolean startsDigitEpithet() {
+    return kind == TokenKind.WORD && !text.isEmpty()
+        && Character.isDigit(text.codePointAt(0))
+        && text.chars().anyMatch(Character::isLetter);
+  }
+
   @Override
   public String toString() {
     return kind + "(" + text + ")";

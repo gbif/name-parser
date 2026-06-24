@@ -86,6 +86,23 @@ public final class Tokenizer {
         while (i < n && Character.isDigit(input.codePointAt(i))) {
           i++;
         }
+        // "11-punctata" / "2-pustulata": a number glued to a hyphen + letter is the
+        // leading-numeral epithet form, not a bare number.
+        if (i + 1 < n && input.charAt(i) == '-' && Character.isLetter(input.codePointAt(i + 1))) {
+          i++; // consume hyphen
+          while (i < n) {
+            int c = input.codePointAt(i);
+            int cl = Character.charCount(c);
+            if (Character.isLetter(c) || Character.isDigit(c)) { i += cl; continue; }
+            if (c == '-' && i + cl < n) {
+              int next = input.codePointAt(i + cl);
+              if (Character.isLetter(next) || Character.isDigit(next)) { i += cl; continue; }
+            }
+            break;
+          }
+          out.add(new Token(TokenKind.WORD, input.substring(numStart, i), numStart, i));
+          continue;
+        }
         out.add(new Token(TokenKind.NUMBER, input.substring(numStart, i), numStart, i));
         continue;
       }

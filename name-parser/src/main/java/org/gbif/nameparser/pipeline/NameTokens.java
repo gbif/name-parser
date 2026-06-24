@@ -207,6 +207,11 @@ public final class NameTokens {
           }
           // Otherwise fall through to author-recovery handling below.
         }
+        if (genus != null && t.startsDigitEpithet()) {
+          lowerEpithets.add(t.text);
+          i++;
+          continue;
+        }
         if (t.startsLower()) {
           String w = stripDot(t.text);
           // 0. Single Greek letter or short ASCII letter between two lowercase epithets

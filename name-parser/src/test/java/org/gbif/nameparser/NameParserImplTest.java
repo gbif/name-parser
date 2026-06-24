@@ -163,6 +163,14 @@ public class NameParserImplTest {
   }
 
   @Test
+  public void digitEpithetsLeadingNumeral() throws Exception {
+    assertName("Coccinella 11-punctata Linnaeus, 1758", "Coccinella 11-punctata")
+        .species("Coccinella", "11-punctata").combAuthors("1758", "Linnaeus").code(NomCode.ZOOLOGICAL).nothingElse();
+    assertName("Coccinella 2-pustulata", "Coccinella 2-pustulata")
+        .species("Coccinella", "2-pustulata").nothingElse();
+  }
+
+  @Test
   public void squareGenera() throws Exception {
     assertName("[Acontia] chia Holland, 1894", "Acontia chia")
             .species("Acontia", "chia")

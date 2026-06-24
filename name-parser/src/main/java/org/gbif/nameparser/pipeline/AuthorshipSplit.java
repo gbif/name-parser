@@ -174,6 +174,13 @@ public final class AuthorshipSplit {
           i++;
           continue;
         }
+        if (afterGenus && t.startsDigitEpithet()) {
+          nameWords++;
+          haveEpithet = true;
+          afterSubgenus = false;
+          i++;
+          continue;
+        }
         // Mid-name author span: an Author abbreviation between the genus (or
         // species epithet) and a following rank marker. e.g. "Centaurea L. subg.
         // Jacea" or "Festuca ovina L. subvar. gracilis Hackel". The author tokens
