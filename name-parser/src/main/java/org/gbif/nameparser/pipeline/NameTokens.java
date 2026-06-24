@@ -208,7 +208,8 @@ public final class NameTokens {
           // Otherwise fall through to author-recovery handling below.
         }
         if (genus != null && t.startsDigitEpithet()) {
-          lowerEpithets.add(t.text);
+          // lower-case like the ordinary-epithet branch below ("11-Punctata" -> "11-punctata")
+          lowerEpithets.add(t.text.toLowerCase());
           i++;
           continue;
         }
