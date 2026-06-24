@@ -582,12 +582,14 @@ public final class AuthorshipParser {
   /**
    * True when the token text looks like a year-disambiguator suffix that should be
    * dropped after a year token. Matches a single lowercase letter optionally followed by
-   * all-digit characters — e.g. "h" (from "1935h"), "k7" (OCR artifact in "193k7").
+   * all-digit characters — e.g. "h" (from "1935h"), "k7" (OCR-garbled year-suffix artifact in "193k7").
    */
   private static boolean isYearDisambiguator(String s) {
     if (s.isEmpty() || !Character.isLowerCase(s.codePointAt(0))) return false;
-    for (int i = Character.charCount(s.codePointAt(0)); i < s.length(); i++) {
-      if (!Character.isDigit(s.charAt(i))) return false;
+    for (int i = Character.charCount(s.codePointAt(0)); i < s.length(); ) {
+      int cp = s.codePointAt(i);
+      if (!Character.isDigit(cp)) return false;
+      i += Character.charCount(cp);
     }
     return true;
   }
