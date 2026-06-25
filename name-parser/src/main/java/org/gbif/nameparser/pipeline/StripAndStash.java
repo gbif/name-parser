@@ -30,8 +30,9 @@ public final class StripAndStash {
   // [sic, ...] / (sic, ...) — keep the inner text in the unparsed remainder.
   private static final Pattern SIC_WITH_COMMENT =
       Pattern.compile("\\s*[\\(\\[]\\s*sic\\s*,([^)\\]]+)[\\)\\]]");
+  // bracketed "(corrig.)" / "[corrig.]" (like SIC) or a bare " corrig." token
   private static final Pattern CORRIG =
-      Pattern.compile("(?<=\\s)corrig\\.?(?=\\s|$)");
+      Pattern.compile("\\s*[\\(\\[]\\s*corrig\\.?\\s*[\\)\\]]|(?<=\\s)corrig\\.?(?=\\s|$)");
 
   // ---- Nomenclatural notes ----
   // Anchors on a nom/comb/orth/spec keyword and captures from there to end of string.
@@ -179,7 +180,8 @@ public final class StripAndStash {
     m = CORRIG.matcher(" " + s);
     if (m.find()) {
       name.setOriginalSpelling(Boolean.FALSE);
-      s = s.replaceAll("(?<=\\s)corrig\\.?(?=\\s|$)", "").replaceAll("\\s+", " ").trim();
+      // prepend a space so a leading "corrig." (e.g. a standalone authorship) also matches
+      s = CORRIG.matcher(" " + s).replaceAll("").replaceAll("\\s+", " ").trim();
     }
     // "?" inside a word — transcription artefact for a missing letter ("Istv?nffi").
     // Strip the ? and glue the surrounding word parts; flag doubtful + warning.
@@ -743,8 +745,8 @@ public final class StripAndStash {
     m = CORRIG.matcher(" " + s);
     if (m.find()) {
       ctx.name.setOriginalSpelling(Boolean.FALSE);
-      // remove "corrig." token from working string
-      s = s.replaceAll("(?<=\\s)corrig\\.?(?=\\s|$)", "").replaceAll("\\s+", " ").trim();
+      // remove the "corrig." marker (bare or bracketed); prepend a space so a leading marker matches too
+      s = CORRIG.matcher(" " + s).replaceAll("").replaceAll("\\s+", " ").trim();
     }
     return s;
   }

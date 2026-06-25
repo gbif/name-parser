@@ -130,6 +130,14 @@ public class NameParserImplTest {
             .code(ZOOLOGICAL)
             .nothingElse();
 
+    // parenthesised corrig., like (sic) above
+    assertName("Campylobacter lari (corrig.) Benjamin et al. 1984", "Campylobacter lari")
+            .species("Campylobacter", "lari")
+            .combAuthors("1984", "Benjamin", "al.")
+            .corrig()
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
     assertName("Campylobacter laridis (sic) Benjamin et al. 1984", "Campylobacter laridis")
             .species("Campylobacter", "laridis")
             .combAuthors("1984", "Benjamin", "al.")
