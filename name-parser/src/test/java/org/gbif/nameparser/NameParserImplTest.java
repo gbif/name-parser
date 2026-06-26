@@ -3058,6 +3058,19 @@ public class NameParserImplTest {
   }
 
   @Test
+  public void botanicalCodeFromSeparateRecombinationAuthorship() throws Exception {
+    // A separately supplied botanical recombination authorship "(Basionym) Combination" (no year)
+    // must infer BOTANICAL, just like the same authorship embedded in the name string does.
+    assertName("Cerastium ligusticum subsp. granulatum", "(Huter et al.) P. D. Sell & Whitehead",
+               Rank.SUBSPECIES, null, "Cerastium ligusticum subsp. granulatum")
+        .infraSpecies("Cerastium", "ligusticum", Rank.SUBSPECIES, "granulatum")
+        .basAuthors(null, "Huter", "al.")
+        .combAuthors(null, "P.D.Sell", "Whitehead")
+        .code(NomCode.BOTANICAL)
+        .nothingElse();
+  }
+
+  @Test
   public void virusFalsePositiveAnimals() throws Exception {
     assertName("Aspilota vector", "Belokobylskij, 2007", Rank.SPECIES, NomCode.ZOOLOGICAL, "Aspilota vector")
         .species("Aspilota", "vector").combAuthors("2007", "Belokobylskij").code(NomCode.ZOOLOGICAL).nothingElse();

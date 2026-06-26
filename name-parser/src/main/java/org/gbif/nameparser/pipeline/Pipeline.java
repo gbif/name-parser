@@ -121,13 +121,17 @@ public final class Pipeline {
 
     // Code inference uses the main scientific name's authState by default. When the
     // main name had no authorship of its own, fall back to the auxiliary authorship
-    // state only when it has a basionym citation (parens) with a year — that's the
-    // "(Author, YYYY)" zoological pattern. Year-only or plain "Author, year" supplied
-    // as separate authorship is parsed for authors but doesn't tip the code on its own.
+    // state when it carries a basionym citation (parens) that tips the code:
+    //  - "(Author, YYYY)" — the zoological recombination pattern (year inside the parens);
+    //  - "(Basionym) Combination" — the botanical recombination pattern (a combination
+    //    author follows the parenthesised basionym, no year needed).
+    // A bare "(Author)" or plain "Author, year" supplied as separate authorship is parsed
+    // for authors but doesn't tip the code on its own.
     AuthorshipParser.AuthState codeState = authState;
     if ((codeState == null || (!codeState.combination.exists() && !codeState.basionymPresent))
         && extraState != null
-        && extraState.basionymPresent && extraState.basionym.getYear() != null) {
+        && extraState.basionymPresent
+        && (extraState.basionym.getYear() != null || extraState.combination.exists())) {
       codeState = extraState;
     }
     // An autonym's species author (captured mid-name) drives code inference when the name
