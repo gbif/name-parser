@@ -33,6 +33,10 @@ public final class StripAndStash {
   // bracketed "(corrig.)" / "[corrig.]" (like SIC) or a bare " corrig." token
   private static final Pattern CORRIG =
       Pattern.compile("\\s*[\\(\\[]\\s*corrig\\.?\\s*[\\)\\]]|(?<=\\s)corrig\\.?(?=\\s|$)");
+  // A standalone manuscript marker supplied as the whole authorship ("ined." / "ms." / "msc." /
+  // "unpublished"). A marker that follows an author ("Monterosato ms.") is glued as a suffix instead.
+  private static final Pattern STANDALONE_MS =
+      Pattern.compile("(?i)^(?:ined|ms|msc|unpublished)\\.?$");
 
   // ---- Nomenclatural notes ----
   // Anchors on a nom/comb/orth/spec keyword and captures from there to end of string.
@@ -167,6 +171,11 @@ public final class StripAndStash {
   static String stripAuthorshipMarkers(String authorship, ParsedName name) {
     String s = authorship.trim();
     if (s.isEmpty()) return s;
+    // A standalone manuscript marker as the whole authorship is a manuscript flag, not an author.
+    if (STANDALONE_MS.matcher(s).matches()) {
+      name.setManuscript(true);
+      return "";
+    }
     Matcher m = SIC_WITH_COMMENT.matcher(s);
     if (m.find()) {
       name.setOriginalSpelling(Boolean.TRUE);

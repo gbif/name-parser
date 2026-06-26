@@ -3071,6 +3071,20 @@ public class NameParserImplTest {
   }
 
   @Test
+  public void standaloneManuscriptAuthorship() throws Exception {
+    // a standalone "ined." / "ms." supplied as the whole authorship is a manuscript marker,
+    // not an author (whereas "Author ms." glues the suffix onto the author).
+    assertName("Eucnidoideae", "ined.", Rank.SUPERFAMILY, null, "Eucnidoideae")
+        .monomial("Eucnidoideae", Rank.SUPERFAMILY)
+        .manuscript()
+        .nothingElse();
+    assertName("Eucnidoideae", "ms.", Rank.SUPERFAMILY, null, "Eucnidoideae")
+        .monomial("Eucnidoideae", Rank.SUPERFAMILY)
+        .manuscript()
+        .nothingElse();
+  }
+
+  @Test
   public void virusFalsePositiveAnimals() throws Exception {
     assertName("Aspilota vector", "Belokobylskij, 2007", Rank.SPECIES, NomCode.ZOOLOGICAL, "Aspilota vector")
         .species("Aspilota", "vector").combAuthors("2007", "Belokobylskij").code(NomCode.ZOOLOGICAL).nothingElse();
