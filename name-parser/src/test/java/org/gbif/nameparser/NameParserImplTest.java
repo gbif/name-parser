@@ -2279,7 +2279,11 @@ public class NameParserImplTest {
             .code(ZOOLOGICAL)
             .nothingElse();
 
-
+    assertName("Errantia Audouin & H Milne Edwards, 1832", "Errantia")
+        .monomial("Errantia")
+        .combAuthors("1832", "Audouin", "H.Milne Edwards")
+        .code(ZOOLOGICAL)
+        .nothingElse();
   }
 
   /**
