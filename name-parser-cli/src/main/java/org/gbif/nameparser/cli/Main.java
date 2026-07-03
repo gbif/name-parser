@@ -9,6 +9,7 @@ import java.util.Arrays;
  *   <li>{@code parse}     — parse a list of names into JSONL ({@link ParseCli})</li>
  *   <li>{@code compare}   — diff two JSONL files row-by-row ({@link CompareCli})</li>
  *   <li>{@code benchmark} — measure parser throughput ({@link BenchmarkCli})</li>
+ *   <li>{@code validate}  — LLM-audit parser output over a corpus ({@link ValidateCli})</li>
  * </ul>
  * Run {@code java -jar name-parser-cli.jar &lt;command&gt; --help} for per-command options.
  */
@@ -32,6 +33,9 @@ public final class Main {
       case "benchmark":
         BenchmarkCli.main(rest);
         break;
+      case "validate":
+        ValidateCli.main(rest);
+        break;
       default:
         System.err.println("Unknown command: " + cmd);
         printUsage();
@@ -46,6 +50,7 @@ public final class Main {
     System.out.println("  parse      Parse a list of names into JSONL");
     System.out.println("  compare    Compare two JSONL outputs row-by-row");
     System.out.println("  benchmark  Measure parser throughput");
+    System.out.println("  validate   LLM-audit parser output over a corpus (offline)");
     System.out.println();
     System.out.println("Run 'name-parser-cli <command> --help' for per-command options.");
   }
