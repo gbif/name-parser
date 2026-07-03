@@ -2332,25 +2332,27 @@ public class NameParserGnaTest {
   }
 
   @Test
-  public void unparseableHortAnnotations() throws Exception {
-      // group: Hort. annotations — "ht.<Author>" tail is parsed as the rank marker
-      // "ht" plus an authorship span. The leftover semicolon-separated authors join
-      // into a multi-author comb authorship.
-      assertName("Asplenium mayi ht.May; Gard.", "Asplenium mayi ht")
-          .infraSpecies("Asplenium", "mayi", INFRASPECIFIC_NAME, "ht")
-          .combAuthors(null, "May", "Gard.");
-      assertName("Asplenium mayii ht.May; Gard.", "Asplenium mayii ht")
-          .infraSpecies("Asplenium", "mayii", INFRASPECIFIC_NAME, "ht")
-          .combAuthors(null, "May", "Gard.");
-      assertName("Davallia decora ht.Bull.; Gard.Chr.", "Davallia decora ht")
-          .infraSpecies("Davallia", "decora", INFRASPECIFIC_NAME, "ht")
-          .combAuthors(null, "Bull.", "Gard.Chr.");
-      assertName("Gymnogramma alstoni ht.Birkenh.; Gard.", "Gymnogramma alstoni ht")
-          .infraSpecies("Gymnogramma", "alstoni", INFRASPECIFIC_NAME, "ht")
-          .combAuthors(null, "Birkenh.", "Gard.");
-      assertName("Gymnogramma sprengeriana ht.Wiener Ill.", "Gymnogramma sprengeriana ht")
-          .infraSpecies("Gymnogramma", "sprengeriana", INFRASPECIFIC_NAME, "ht")
-          .combAuthors(null, "Wiener Ill.");
+  public void hortAnnotations() throws Exception {
+      // group: Hort. annotations — "ht." is normalised to the horticultural marker
+      // "hort." (StripAndStash), so "ht.<Author>" parses as a species with the
+      // horticultural author glued to the following semicolon-separated author span
+      // (matching the spelled-out "hort.<Author>" twin), rather than leaking "ht" in
+      // as a bogus infraspecific epithet.
+      assertName("Asplenium mayi ht.May; Gard.", "Asplenium mayi")
+          .species("Asplenium", "mayi")
+          .combAuthors(null, "hort.May", "Gard.");
+      assertName("Asplenium mayii ht.May; Gard.", "Asplenium mayii")
+          .species("Asplenium", "mayii")
+          .combAuthors(null, "hort.May", "Gard.");
+      assertName("Davallia decora ht.Bull.; Gard.Chr.", "Davallia decora")
+          .species("Davallia", "decora")
+          .combAuthors(null, "hort.Bull.", "Gard.Chr.");
+      assertName("Gymnogramma alstoni ht.Birkenh.; Gard.", "Gymnogramma alstoni")
+          .species("Gymnogramma", "alstoni")
+          .combAuthors(null, "hort.Birkenh.", "Gard.");
+      assertName("Gymnogramma sprengeriana ht.Wiener Ill.", "Gymnogramma sprengeriana")
+          .species("Gymnogramma", "sprengeriana")
+          .combAuthors(null, "hort.Wiener Ill.");
   }
 
   @Test
@@ -2447,19 +2449,20 @@ public class NameParserGnaTest {
   public void horticulturalAnnotation() throws Exception {
       // group: Horticultural annotation. Botanical "var." kept in canonical; the
       // (ht.) / (hort.) marker after the rank-marker variety is left as an unparsed
-      // tail (state=PARTIAL).
+      // tail (state=PARTIAL). "ht." is normalised to "hort." on the way in.
       assertName("Lachenalia tricolor var. nelsonii (ht.) Baker", "Lachenalia tricolor var. nelsonii")
           .infraSpecies("Lachenalia", "tricolor", VARIETY, "nelsonii")
           .combAuthors(null, "Baker")
-          .partial("(ht.)");
+          .partial("(hort.)");
       assertName("Lachenalia tricolor var. nelsonii (hort.) Baker", "Lachenalia tricolor var. nelsonii")
           .infraSpecies("Lachenalia", "tricolor", VARIETY, "nelsonii")
           .combAuthors(null, "Baker")
           .partial("(hort.)");
-      // Trailing "ht."/"hort." after a binomial: parser captures it as an infrasp
-      // epithet ("ht") or as the comb author ("hort."). Treat both as parsed.
-      assertName("Puya acris ht.", "Puya acris ht")
-          .infraSpecies("Puya", "acris", INFRASPECIFIC_NAME, "ht");
+      // Trailing "ht."/"hort." after a binomial both parse as a species with the
+      // horticultural marker as the comb author ("ht." is normalised to "hort.").
+      assertName("Puya acris ht.", "Puya acris")
+          .species("Puya", "acris")
+          .combAuthors(null, "hort.");
       assertName("Puya acris hort.", "Puya acris")
           .species("Puya", "acris")
           .combAuthors(null, "hort.");

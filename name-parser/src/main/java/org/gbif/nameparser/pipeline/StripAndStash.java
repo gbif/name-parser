@@ -648,6 +648,11 @@ public final class StripAndStash {
     s = s.replaceAll("\\bcv\\.(?=\\s+ex\\s+)", "hort.");
     s = s.replaceAll("\\bHort\\.(?=\\s+ex\\s+)", "hort.");
     s = s.replaceAll("\\bhortus[a]?\\b(?=\\s+ex\\s+)", "hort.");
+    // "ht." is an occasional abbreviation of the horticultural marker "hort." used
+    // directly on the author span ("Gymnogramma alstoni ht.Birkenh.; Gard."). Normalise
+    // it so it parses like its spelled-out twin instead of leaking "ht" in as a bogus
+    // infraspecific epithet. A lowercase standalone "ht." is not a real epithet or author.
+    s = s.replaceAll("\\bht\\.", "hort.");
     return s;
   }
 
@@ -697,6 +702,28 @@ public final class StripAndStash {
         ctx.name.setRank(Rank.CULTIVAR);
         s = (s.substring(0, cmMid.start()) + cmMid.group(3)).trim();
         s = s.replaceAll("\\s+cv\\.?(?=\\s|$)", "").trim();
+      } else {
+        // Unclosed trailing cultivar quote: " 'albino" / " \"albino" (opening quote,
+        // no closing one) — common in aquarium/horticultural trade lists. Treat it like
+        // the closed form. The content is restricted to lowercase letters and spaces so
+        // this never swallows an apostrophe-particle author ("… 't Veld & Visser, 1993)")
+        // nor a capitalised bogus apostrophe author ("Nereidavus kulkovi 'Kulkov"), both
+        // of which start upper-case or carry punctuation. Same rank-marker guard as above.
+        Matcher cmOpen = Pattern.compile(
+            "\\s+(cv\\.?\\s+)?(['\"])(\\p{Ll}[\\p{Ll} ]*)\\s*$",
+            Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+        boolean openFound = cmOpen.find();
+        boolean openHasCv = openFound && cmOpen.group(1) != null;
+        String openPreceding = openFound ? s.substring(0, cmOpen.start()).trim() : null;
+        boolean openRankPrefix = !openHasCv && openPreceding != null
+            && openPreceding.matches(".*\\b(?:sp|spec|subsp|ssp|var|form|f)\\.?$");
+        if (openFound && !openRankPrefix) {
+          ctx.name.setCultivarEpithet(cmOpen.group(3).trim());
+          ctx.name.setCode(NomCode.CULTIVARS);
+          ctx.name.setRank(Rank.CULTIVAR);
+          s = s.substring(0, cmOpen.start()).trim();
+          s = s.replaceAll("\\s+cv\\.?\\s*$", "").trim();
+        }
       }
     }
     return s;

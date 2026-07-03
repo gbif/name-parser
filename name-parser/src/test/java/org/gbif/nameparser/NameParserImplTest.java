@@ -1814,6 +1814,36 @@ public class NameParserImplTest {
             .nothingElse();
   }
 
+  /**
+   * An unclosed leading cultivar quote (single or double) trailing a name — common in
+   * aquarium/horticultural trade lists — must be treated like the properly closed form
+   * rather than being mistaken for a combination author.
+   */
+  @Test
+  public void unclosedCultivarQuote() throws Exception {
+    assertName("Labeotropheus trewavasae 'albino", "Labeotropheus trewavasae 'albino'")
+            .cultivar("Labeotropheus", "trewavasae", "albino")
+            .nothingElse();
+
+    assertName("Labeotropheus trewavasae \"albino", "Labeotropheus trewavasae 'albino'")
+            .cultivar("Labeotropheus", "trewavasae", "albino")
+            .nothingElse();
+  }
+
+  /**
+   * "ht." is an occasional abbreviation of the horticultural marker "hort." written
+   * directly on the author span. It must parse like its spelled-out twin
+   * ("Gymnogramma alstoni hort.Birkenh.; Gard.") instead of leaking "ht" in as a bogus
+   * infraspecific epithet.
+   */
+  @Test
+  public void hortAbbreviation() throws Exception {
+    assertName("Gymnogramma alstoni ht.Birkenh.; Gard.", "Gymnogramma alstoni")
+            .species("Gymnogramma", "alstoni")
+            .combAuthors(null, "hort.Birkenh.", "Gard.")
+            .nothingElse();
+  }
+
   @Test
   public void hybridFormulas() throws Exception {
     assertName("Polypodium  x vulgare nothosubsp. mantoniae (Rothm.) Schidlay", "Polypodium vulgare nothosubsp. mantoniae")
