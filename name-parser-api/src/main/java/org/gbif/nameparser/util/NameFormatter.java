@@ -401,8 +401,10 @@ public class NameFormatter {
         sb.append(" ");
       }
     }
-    // hide subsp. from zoological names
-    if (forceRankMarker || rankMarker && (isNotZoo(n.getCode()) || Rank.SUBSPECIES != n.getRank() || n.isHybridName())) {
+    // Render the infraspecific rank marker. Other ranks always show it; the subspecies
+    // marker is hidden only for zoological names (ICZN trinomials carry no marker), so a
+    // subspecies with no code — or any non-zoological code — keeps its "subsp." marker.
+    if (forceRankMarker || rankMarker && (n.getCode() != NomCode.ZOOLOGICAL || Rank.SUBSPECIES != n.getRank() || n.isHybridName())) {
       if (appendRankMarker(sb, n.getRank(), NameFormatter::isInfraspecificMarker, false) && n.getInfraspecificEpithet() != null) {
         sb.append(' ');
       }
@@ -420,10 +422,6 @@ public class NameFormatter {
     return sb;
   }
   
-  private static boolean isNotZoo(NomCode code) {
-    return code != null && code != NomCode.ZOOLOGICAL;
-  }
-
   // Informal phrase that already spells out the species marker as a leading word
   // ("species 1") — the verbatim phrase carries the marker, so the formatter must not
   // also synthesise an "sp." marker (which would yield "Genus sp. species 1").

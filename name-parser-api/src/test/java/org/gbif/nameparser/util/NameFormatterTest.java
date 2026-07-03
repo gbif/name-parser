@@ -516,8 +516,8 @@ public class NameFormatterTest {
     assertName("Abax carinatus urinatus", "Abax carinatus urinatus (Duftschmid, 1812)");
     
     pn.setRank(Rank.SUBSPECIES);
-    assertName("Abax carinatus urinatus", "Abax carinatus urinatus (Duftschmid, 1812)");
-    
+    assertName("Abax carinatus urinatus", "Abax carinatus subsp. urinatus (Duftschmid, 1812)");
+
     // Botanical: subsp. rank marker shown; the basionym year is kept now that botanical
     // names render the year when one is present (ICN doesn't forbid it).
     pn.setCode(NomCode.BOTANICAL);
