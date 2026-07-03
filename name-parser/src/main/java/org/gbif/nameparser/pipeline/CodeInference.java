@@ -5,148 +5,86 @@ import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.api.Warnings;
 
+import java.util.EnumSet;
+
 /**
- * Infers a name's nomenclatural {@link NomCode} from the shape of its authorship and
- * from the nomenclatural / taxonomic notes the strippers extracted.
+ * Infers a name's nomenclatural {@link NomCode} from the shape of its authorship.
  *
- * <p>All code-setting logic lives here so the rule cascade and its priorities sit in
- * one place. {@link Assemble} calls {@link #infer} once, only when the name has no code
- * yet, and {@link #applyRankCodeMismatch} unconditionally afterwards.
+ * <p>Inference is a <b>vote tally</b>, not a priority cascade: each independent signal
+ * casts a vote for a code, and a code is assigned only when every vote agrees.
+ * Contradicting signals — or no signal at all — leave the code unset rather than guessing.
+ * {@link Assemble} calls {@link #infer} once, only when the name has no code yet, and
+ * {@link #applyRankCodeMismatch} unconditionally afterwards.
  */
 public final class CodeInference {
 
   private CodeInference() {}
 
   /**
-   * Core authorship-based inference: maps the shape of the parsed authorship onto a
-   * code, or returns null when the authorship gives no signal. Signal priority,
-   * highest first:
-   * <ol>
-   *   <li>sanctioning author → BOTANICAL</li>
-   *   <li>{@code (BasAuthor) RecombAuthor, year} with an explicit infraspecific marker
-   *       → BOTANICAL (botanical recombination; the year is the publication year)</li>
-   *   <li>any year on an authored span → ZOOLOGICAL (year citation is mandatory in
-   *       zoology, optional in botany)</li>
-   *   <li>filius suffix without a year → BOTANICAL</li>
-   *   <li>basionym + recombination authors without years → BOTANICAL;
-   *       basionym-only without years → ZOOLOGICAL</li>
-   * </ol>
-   */
-  static NomCode fromAuthorship(AuthorshipParser.AuthState s, Rank rank) {
-    if (s.sanctioningAuthor != null) return NomCode.BOTANICAL;
-    // "(BasAuthor) RecombAuthor, year" with an explicit infraspecific rank marker
-    // (subsp./var./f.) is the botanical recombination form — the year is the
-    // publication year of the recombination, not a zoological author-year citation.
-    // Run before the generic "year → zoological" rule.
-    if (s.basionymPresent && s.basionym.getYear() == null
-        && s.combination.hasAuthors() && s.combination.getYear() != null
-        && hasBotanicalRankMarker(rank)) {
-      return NomCode.BOTANICAL;
-    }
-    // Any year (basionym or combination) paired with an actual author is a strong
-    // zoological signal: year citation is mandatory in zoological nomenclature but
-    // optional in botanical. A bare year with no authors at all is not enough to
-    // pick a code.
-    boolean basYear = s.basionymPresent && s.basionym.getYear() != null && s.basionym.hasAuthors();
-    boolean combYear = s.combination.getYear() != null && s.combination.hasAuthors();
-    if (basYear || combYear) {
-      return NomCode.ZOOLOGICAL;
-    }
-    // The "f."/"fil."/"filius" suffix is the standard botanical convention for the son
-    // of a same-named author. It does also occur in older zoological literature
-    // ("Lacerta agilis Linnaeus f., 1789") but those cases always carry a year and
-    // are caught by the year rule above. A filius without any year is therefore a
-    // strong botanical hint.
-    if (s.hasFilius) return NomCode.BOTANICAL;
-    // No years: two-part citation (original author in parens + recombination author)
-    // without years is the standard botanical pattern; one-part basionym-only is
-    // zoological.
-    if (s.basionymPresent) {
-      return s.combination.hasAuthors() ? NomCode.BOTANICAL : NomCode.ZOOLOGICAL;
-    }
-    return null;
-  }
-
-  /**
-   * Runs the full code-inference cascade onto a name whose code is not yet set. Called
-   * by {@link Assemble} only when {@code ctx.name.getCode() == null}. The botanical
-   * rules each re-guard on {@code getCode() == null}; the manuscript+marker rule may
-   * override an already-inferred ZOOLOGICAL back to BOTANICAL.
+   * Tallies the authorship signals onto a name whose code is not yet set. Called by
+   * {@link Assemble} only when {@code ctx.name.getCode() == null}.
+   *
+   * <p>Votes:
+   * <ul>
+   *   <li>BOTANICAL — a sanctioning author; a {@code (Basionym) Recombination} two-author
+   *       citation; a filius suffix with no year</li>
+   *   <li>ZOOLOGICAL — a basionym-only {@code (Author, year)} citation; a year on an
+   *       authored basionym or combination</li>
+   *   <li>BACTERIAL — a {@code Candidatus} name</li>
+   * </ul>
+   * A single distinct vote wins; zero or contradicting votes leave the code null.
    */
   static void infer(ParseContext ctx, AuthorshipParser.AuthState authState) {
     ParsedName n = ctx.name;
-    // Code-restricted ranks pin the code regardless of authorship shape.
+    // A rank that is restricted to a single code pins it outright (e.g. cultivar ranks,
+    // viral ranks) — no vote needed.
     Rank r = n.getRank();
     NomCode pinned = r == null ? null : r.isRestrictedToCode();
     if (pinned != null) {
       n.setCode(pinned);
-    } else if (authState != null) {
-      // For manuscript names with only a basionym citation and no year, the
-      // basionym-only-zoological rule doesn't apply — manuscripts are by definition
-      // unpublished and the code follows from the eventual publication, not the
-      // cited authors. Skip inference in that narrow case.
-      boolean skipInference = n.isManuscript()
-          && authState.basionymPresent
-          && authState.basionym.getYear() == null
-          && !authState.combination.hasAuthors()
-          && authState.combination.getYear() == null;
-      if (!skipInference) {
-        NomCode inferred = fromAuthorship(authState, n.getRank());
-        if (inferred != null) {
-          n.setCode(inferred);
-        }
+      return;
+    }
+
+    EnumSet<NomCode> votes = EnumSet.noneOf(NomCode.class);
+
+    // Bacterial: a Candidatus name is a provisional prokaryote name.
+    if (n.isCandidatus()) {
+      votes.add(NomCode.BACTERIAL);
+    }
+
+    if (authState != null) {
+      boolean basYear = authState.basionymPresent
+          && authState.basionym.getYear() != null && authState.basionym.hasAuthors();
+      boolean combYear = authState.combination.getYear() != null && authState.combination.hasAuthors();
+      boolean anyAuthorYear = basYear || combYear;
+
+      // --- botanical votes ---
+      // Sanctioning author (": Fr." / ": Pers.").
+      if (authState.sanctioningAuthor != null || n.getSanctioningAuthor() != null) {
+        votes.add(NomCode.BOTANICAL);
+      }
+      // "(Basionym) Recombination" — a parenthesised basionym plus a recombination author.
+      if (authState.basionymPresent && authState.combination.hasAuthors()) {
+        votes.add(NomCode.BOTANICAL);
+      }
+      // Filius ("f." / "fil.") without any year.
+      if (authState.hasFilius && !anyAuthorYear) {
+        votes.add(NomCode.BOTANICAL);
+      }
+
+      // --- zoological votes ---
+      // Basionym-only "(Author, year)" recombination with no recombination author.
+      if (authState.basionymPresent && !authState.combination.hasAuthors()) {
+        votes.add(NomCode.ZOOLOGICAL);
+      }
+      // A year on an authored basionym or combination.
+      if (anyAuthorYear) {
+        votes.add(NomCode.ZOOLOGICAL);
       }
     }
-    // A "nom. …" nomenclatural note (nom.cons., nom.illeg., nom.nud., …) is the
-    // botanical convention; combined with comb authorship and no year on the author
-    // span, it tips the code to BOTANICAL. (Year on the authorship would already
-    // have fired the ZOOLOGICAL rule above.) When the name also has an explicit
-    // infraspecific marker or ex-authors, those richer signals take precedence and
-    // the nom-note is skipped here.
-    if (n.getCode() == null && n.getNomenclaturalNote() != null
-        && n.getNomenclaturalNote().toLowerCase().startsWith("nom")
-        && n.hasCombinationAuthorship()
-        && n.getCombinationAuthorship().getYear() == null
-        && !ctx.explicitInfraMarker
-        && !n.getCombinationAuthorship().hasExAuthors()) {
-      n.setCode(NomCode.BOTANICAL);
-    }
-    // An explicit "subsp." / "var." / "f." marker on a name with no authorship at
-    // all but with a parenthesised "(non … YYYY)" homonym citation is a botanical
-    // citation pattern (the homonym reference is the sole authorship surrogate).
-    if (n.getCode() == null && ctx.explicitInfraMarker
-        && hasBotanicalRankMarker(n.getRank())
-        && n.getTaxonomicNote() != null
-        && !n.hasCombinationAuthorship()
-        && (n.getBasionymAuthorship() == null || !n.getBasionymAuthorship().exists())) {
-      n.setCode(NomCode.BOTANICAL);
-    }
-    // Manuscript name with an explicit subsp./var./f. marker is the botanical
-    // pattern — manuscripts in zoology don't use rank markers. Force BOTANICAL even
-    // when there's some parenthesised pseudo-basionym left over by the parser.
-    if (ctx.explicitInfraMarker
-        && hasBotanicalRankMarker(n.getRank())
-        && n.isManuscript()
-        && (n.getCode() == null || n.getCode() == NomCode.ZOOLOGICAL)) {
-      n.setCode(NomCode.BOTANICAL);
-    }
-    // Autonym + explicit rank marker is the botanical convention. Zoological
-    // trinomials don't use rank markers and don't repeat the species epithet.
-    if (n.getCode() == null && n.isAutonym()
-        && ctx.explicitInfraMarker
-        && hasBotanicalRankMarker(n.getRank())) {
-      n.setCode(NomCode.BOTANICAL);
-    }
-    // "Author(s) in Editor, YYYY" with a real publication year and no other code
-    // signal — the year-bearing in-citation form is the zoological convention.
-    // Skip for manuscript names ("ms.", "ined.") and IPNI-style references that
-    // end in a year in parens (those are botanical citation form).
-    if (n.getCode() == null && ctx.inAuthorCitation
-        && ctx.pendingYear != null
-        && n.hasCombinationAuthorship()
-        && !n.isManuscript()
-        && !publishedInLooksBotanical(n.getPublishedIn())) {
-      n.setCode(NomCode.ZOOLOGICAL);
+
+    if (votes.size() == 1) {
+      n.setCode(votes.iterator().next());
     }
   }
 
@@ -164,25 +102,5 @@ public final class CodeInference {
       n.setCode(pinnedRank);
       n.addWarning(Warnings.CODE_MISMATCH);
     }
-  }
-
-  /**
-   * Ranks whose canonical rendering uses a botanical-style marker (subsp./var./f.).
-   * The same set serves as the "explicit infraspecific marker" test in
-   * {@link #fromAuthorship} — zoological trinomials never carry a rank marker.
-   */
-  private static boolean hasBotanicalRankMarker(Rank r) {
-    return r == Rank.SUBSPECIES || r == Rank.VARIETY || r == Rank.SUBVARIETY
-        || r == Rank.FORM || r == Rank.SUBFORM;
-  }
-
-  /**
-   * Heuristic for "this publishedIn looks like a botanical citation". IPNI-style refs
-   * end in a parenthesised year ("(1817)") and the in-citation form for them is the
-   * botanical convention ("Author in Editor, Title (Year)").
-   */
-  private static boolean publishedInLooksBotanical(String pub) {
-    if (pub == null) return false;
-    return pub.matches(".*\\(\\d{4}\\)\\s*\\.?\\s*$");
   }
 }

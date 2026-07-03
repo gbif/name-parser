@@ -393,7 +393,6 @@ public class NameParserGnaTest {
           .species("Psoronaias", "semigranosa")
           .combAuthors("1845", "von dem Busch")
           .publishedIn("Philippi, 1845")
-          .code(NomCode.ZOOLOGICAL)
           .nothingElse();
 
       assertName("Phora sororcula v d Wulp 1871", "Phora sororcula")
@@ -424,7 +423,6 @@ public class NameParserGnaTest {
           .species("Nereidavus", "kulkovi")
           .combAuthors("1973", "Kul'kov")
           .publishedIn("Kul'kov & Obut, 1973")
-          .code(NomCode.ZOOLOGICAL)
           .nothingElse();
 
       assertName("Xylaria potentillae A S. Xu", "Xylaria potentillae")
@@ -649,23 +647,19 @@ public class NameParserGnaTest {
       assertName("Yarrowia lipolytica var. lipolytica (Wick., Kurtzman & E.A. Herrm.) Van der Walt & Arx 1981", "Yarrowia lipolytica var. lipolytica")
           .infraSpecies("Yarrowia", "lipolytica", VARIETY, "lipolytica")
           .combAuthors("1981", "Van der Walt", "Arx")
-          .basAuthors(null, "Wick.", "Kurtzman", "E.A.Herrm.")
-          .code(NomCode.BOTANICAL);
+          .basAuthors(null, "Wick.", "Kurtzman", "E.A.Herrm.");
       assertName("Pseudocercospora dendrobii(H.C.     Burnett)U. Braun & Crous     2003", "Pseudocercospora dendrobii")
           .species("Pseudocercospora", "dendrobii")
           .combAuthors("2003", "U.Braun", "Crous")
-          .basAuthors(null, "H.C.Burnett")
-          .code(NomCode.ZOOLOGICAL);
+          .basAuthors(null, "H.C.Burnett");
       assertName("Pseudocercospora dendrobii(H.C.     Burnett, 1873)U. Braun & Crous     2003", "Pseudocercospora dendrobii")
           .species("Pseudocercospora", "dendrobii")
           .combAuthors("2003", "U.Braun", "Crous")
-          .basAuthors("1873", "H.C.Burnett")
-          .code(NomCode.ZOOLOGICAL);
+          .basAuthors("1873", "H.C.Burnett");
       assertName("Pseudocercospora dendrobii(H.C.     Burnett 1873)U. Braun & Crous ,    2003", "Pseudocercospora dendrobii")
           .species("Pseudocercospora", "dendrobii")
           .combAuthors("2003", "U.Braun", "Crous")
-          .basAuthors("1873", "H.C.Burnett")
-          .code(NomCode.ZOOLOGICAL);
+          .basAuthors("1873", "H.C.Burnett");
       assertName("Sedella pumila (Benth.) Britton & Rose", "Sedella pumila")
           .species("Sedella", "pumila")
           .combAuthors(null, "Britton", "Rose")
@@ -745,21 +739,18 @@ public class NameParserGnaTest {
       assertName("Triticum repens vulgäre", "Triticum repens vulgäre")
           .infraSpecies("Triticum", "repens", INFRASPECIFIC_NAME, "vulgäre");
       assertName("Hydnellum scrobiculatum zonatum (Batsch) K. A. Harrison 1961", "Hydnellum scrobiculatum zonatum")
-          .infraSpecies("Hydnellum", "scrobiculatum", SUBSPECIES, "zonatum")
+          .infraSpecies("Hydnellum", "scrobiculatum", INFRASPECIFIC_NAME, "zonatum")
           .combAuthors("1961", "K.A.Harrison")
-          .basAuthors(null, "Batsch")
-          .code(NomCode.ZOOLOGICAL);
+          .basAuthors(null, "Batsch");
       assertName("Hydnellum scrobiculatum zonatum (Banker) D. Hall & D.E. Stuntz 1972", "Hydnellum scrobiculatum zonatum")
-          .infraSpecies("Hydnellum", "scrobiculatum", SUBSPECIES, "zonatum")
+          .infraSpecies("Hydnellum", "scrobiculatum", INFRASPECIFIC_NAME, "zonatum")
           .combAuthors("1972", "D.Hall", "D.E.Stuntz")
-          .basAuthors(null, "Banker")
-          .code(NomCode.ZOOLOGICAL);
+          .basAuthors(null, "Banker");
       assertName("Hydnellum (Hydnellum) scrobiculatum zonatum (Banker) D. Hall & D.E. Stuntz 1972", "Hydnellum scrobiculatum zonatum")
-          .infraSpecies("Hydnellum", "scrobiculatum", SUBSPECIES, "zonatum")
+          .infraSpecies("Hydnellum", "scrobiculatum", INFRASPECIFIC_NAME, "zonatum")
           .infraGeneric("Hydnellum")
           .combAuthors("1972", "D.Hall", "D.E.Stuntz")
-          .basAuthors(null, "Banker")
-          .code(NomCode.ZOOLOGICAL);
+          .basAuthors(null, "Banker");
       assertName("Hydnellum scrobiculatum zonatum", "Hydnellum scrobiculatum zonatum")
           .infraSpecies("Hydnellum", "scrobiculatum", INFRASPECIFIC_NAME, "zonatum");
       assertName("Mus musculus hortulanus", "Mus musculus hortulanus")
@@ -798,8 +789,7 @@ public class NameParserGnaTest {
       assertName("Cantharellus sinuosus var. multiplex(A.H.Sm.) Romagn., 1995", "Cantharellus sinuosus var. multiplex")
           .infraSpecies("Cantharellus", "sinuosus", VARIETY, "multiplex")
           .combAuthors("1995", "Romagn.")
-          .basAuthors(null, "A.H.Sm.")
-          .code(NomCode.BOTANICAL);
+          .basAuthors(null, "A.H.Sm.");
       assertName("Crematogaster impressa st. brazzai Santschi 1937", "Crematogaster impressa brazzai")
           .infraSpecies("Crematogaster", "impressa", SUBSPECIES, "brazzai")
           .combAuthors("1937", "Santschi")
@@ -817,8 +807,7 @@ public class NameParserGnaTest {
           .basAuthors(null, "Lipsky")
           .code(NomCode.BOTANICAL);
       assertName("Tillandsia utriculata subspec. utriculata", "Tillandsia utriculata subsp. utriculata")
-          .infraSpecies("Tillandsia", "utriculata", SUBSPECIES, "utriculata")
-          .code(NomCode.BOTANICAL);
+          .infraSpecies("Tillandsia", "utriculata", SUBSPECIES, "utriculata");
       assertName("Prunus mexicana S. Watson var. reticulata (Sarg.) Sarg.", "Prunus mexicana var. reticulata")
           .infraSpecies("Prunus", "mexicana", VARIETY, "reticulata")
           .combAuthors(null, "Sarg.")
@@ -834,13 +823,11 @@ public class NameParserGnaTest {
       assertName("Triticum repens var. vulgäre", "Triticum repens var. vulgäre")
           .infraSpecies("Triticum", "repens", VARIETY, "vulgäre");
       assertName("Aus bus Linn. var. bus", "Aus bus var. bus")
-          .infraSpecies("Aus", "bus", VARIETY, "bus")
-          .code(NomCode.BOTANICAL);
+          .infraSpecies("Aus", "bus", VARIETY, "bus");
       assertName("Agalinis purpurea (L.) Briton var. borealis (Berg.) Peterson 1987", "Agalinis purpurea var. borealis")
           .infraSpecies("Agalinis", "purpurea", VARIETY, "borealis")
           .combAuthors("1987", "Peterson")
-          .basAuthors(null, "Berg.")
-          .code(NomCode.BOTANICAL);
+          .basAuthors(null, "Berg.");
       assertName("Callideriphus flavicollis morph. reductus Fuchs 1961", "Callideriphus flavicollis morph reductus")
           .infraSpecies("Callideriphus", "flavicollis", MORPH, "reductus")
           .combAuthors("1961", "Fuchs")
@@ -865,8 +852,7 @@ public class NameParserGnaTest {
           .combAuthors("1967", "Movss.")
           .code(NomCode.ZOOLOGICAL);
       assertName("Allophylus amazonicus var amazonicus", "Allophylus amazonicus var. amazonicus")
-          .infraSpecies("Allophylus", "amazonicus", VARIETY, "amazonicus")
-          .code(NomCode.BOTANICAL);
+          .infraSpecies("Allophylus", "amazonicus", VARIETY, "amazonicus");
       assertName("Yarrowia lipolytica variety lipolytic", "Yarrowia lipolytica var. lipolytic")
           .infraSpecies("Yarrowia", "lipolytica", VARIETY, "lipolytic");
       assertName("Prunus armeniaca convar. budae (Pénzes) Soó", "Prunus armeniaca convar. budae")
@@ -924,10 +910,9 @@ public class NameParserGnaTest {
           .basAuthors(null, "Mull.Arg.")
           .code(NomCode.BOTANICAL);
       assertName("Calicium furfuraceum * furfuraceum (L.) Pers. 1797", "Calicium furfuraceum furfuraceum")
-          .infraSpecies("Calicium", "furfuraceum", SUBSPECIES, "furfuraceum")
+          .infraSpecies("Calicium", "furfuraceum", INFRASPECIFIC_NAME, "furfuraceum")
           .combAuthors("1797", "Pers.")
-          .basAuthors(null, "L.")
-          .code(NomCode.ZOOLOGICAL);
+          .basAuthors(null, "L.");
       assertName("Polyrhachis orsyllus nat musculus Forel 1901", "Polyrhachis orsyllus natio musculus")
           .infraSpecies("Polyrhachis", "orsyllus", NATIO, "musculus")
           .combAuthors("1901", "Forel")
@@ -952,7 +937,6 @@ public class NameParserGnaTest {
           .infraSpecies("Hydnellum", "scrobiculatum", FORM, "parvum")
           .combAuthors("1972", "D.Hall", "D.E.Stuntz")
           .basAuthors(null, "Banker")
-          .code(NomCode.BOTANICAL)
           .warning("Removed: var. zonatum", Warnings.QUADRINOMIAL);
       assertName("Senecio fuchsii C.C.Gmel. subsp. fuchsii var. expansus (Boiss. & Heldr.) Hayek", "Senecio fuchsii var. expansus")
           .infraSpecies("Senecio", "fuchsii", VARIETY, "expansus")
@@ -962,7 +946,6 @@ public class NameParserGnaTest {
           .warning("Removed: subsp. fuchsii", Warnings.QUADRINOMIAL);
       assertName("Senecio fuchsii C.C.Gmel. subsp. fuchsii var. fuchsii", "Senecio fuchsii var. fuchsii")
           .infraSpecies("Senecio", "fuchsii", VARIETY, "fuchsii")
-          .code(NomCode.BOTANICAL)
           .warning("Removed: subsp. fuchsii", Warnings.QUADRINOMIAL);
       assertName("Euastrum divergens var. rhodesiense f. coronulum A.M. Scott & Prescott", "Euastrum divergens f. coronulum")
           .infraSpecies("Euastrum", "divergens", FORM, "coronulum")
@@ -2752,7 +2735,6 @@ public class NameParserGnaTest {
           .species("Velutina", "haliotoides")
           .basAuthors("1758", "Linnaeus")
           .combAuthors("1780", "Fabricius")
-          .code(NomCode.ZOOLOGICAL)
           .nothingElse();
 
       assertName("Velutina haliotoides (Linnaeus, 1758), <i>sensu</i> Fabricius, 1780", "Velutina haliotoides")

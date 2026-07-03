@@ -276,7 +276,6 @@ public class NameParserImplTest {
             .species("Agrostis", "compressa")
             .combAuthors(null, "Willd.")
             .nomNote("nom. superfl.")
-            .code(BOTANICAL)
             .nothingElse();
   }
 
@@ -295,10 +294,9 @@ public class NameParserImplTest {
         .nothingElse();
 
     assertName("Clada tricostata clada (Clada) Pascoe, 1887", "Clada tricostata clada")
-        .infraSpecies("Clada", "tricostata", SUBSPECIES, "clada")
+        .infraSpecies("Clada", "tricostata", INFRASPECIFIC_NAME, "clada")
         .combAuthors("1887", "Pascoe")
         .basAuthors(null, "Clada")
-        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -453,7 +451,6 @@ public class NameParserImplTest {
             .species("Lepidodens", "similis")
             .combAuthors("2016", "F.Zhang", "Z-X.Pan")
             .publishedIn("Zhang, F, Pan, Z-X, Wu, J, Ding, Y-H, Yu, D-Y & Wang, B-X, 2016")
-            .code(ZOOLOGICAL)
             .nothingElse();
   }
 
@@ -580,21 +577,18 @@ public class NameParserImplTest {
         .monomial("Amplexoididae")
         .combAuthors("2018", "Wang", "Guang-Xu")
         .publishedIn("Wang, He, Tang & Percival, 2018")
-        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Roelofinae St Laurent & Kawahara in St Laurent, Mielke, Herbin, Dexter & Kawahara 2020", "Roelofinae")
         .monomial("Roelofinae")
         .combAuthors("2020", "St Laurent", "Kawahara")
         .publishedIn("St Laurent, Mielke, Herbin, Dexter & Kawahara 2020")
-        .code(ZOOLOGICAL)
         .nothingElse();
 
     assertName("Charlottea Whalen & Carter in Carter, Whalen & Guex, 1998", "Charlottea")
         .monomial("Charlottea")
         .combAuthors("1998", "Whalen", "Carter")
         .publishedIn("Carter, Whalen & Guex, 1998")
-        .code(ZOOLOGICAL)
         .nothingElse();
   }
 
@@ -698,11 +692,10 @@ public class NameParserImplTest {
             .infraSpecies("Poa", "pratensis", Rank.SUBSPECIES, "anceps")
             .basAuthors(null, "Gaudin")
             .combAuthors("1824", "Dumort.")
-            .code(BOTANICAL)
             .warning(Warnings.SUBSPECIES_ASSIGNED)
             .nothingElse();
 
-    assertName("Abies alba ssp. alpina Mill.", "Abies alba alpina")
+    assertName("Abies alba ssp. alpina Mill.", "Abies alba subsp. alpina")
             .infraSpecies("Abies", "alba", SUBSPECIES, "alpina")
             .combAuthors(null, "Mill.")
             .nothingElse();
@@ -815,7 +808,6 @@ public class NameParserImplTest {
             .infraSpecies("Poa", "pratensis", INFRASUBSPECIFIC_NAME, "primula")
             .combAuthors("1913", "Rouy")
             .basAuthors(null, "L.")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Bombus sichelii alticola latofasciatus", "Bombus sichelii latofasciatus")
@@ -890,14 +882,12 @@ public class NameParserImplTest {
             .species("Abies", "denheyeri")
             .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
             .publishedIn("Eghbalian, Khanjani & Ueckermann, 2017")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Mica Budde-Lund in Voeltzkow, 1908", "Mica")
             .monomial("Mica")
             .combAuthors("1908", "Budde-Lund")
             .publishedIn("Voeltzkow, 1908")
-            .code(NomCode.ZOOLOGICAL)
             .nothingElse();
 
   }
@@ -1129,7 +1119,6 @@ public class NameParserImplTest {
             .combAuthors("2017", "Eghbalian", "Khanjani", "Ueckermann")
             .type(PLACEHOLDER)
             .publishedIn("Eghbalian, Khanjani & Ueckermann, 2017")
-            .code(NomCode.ZOOLOGICAL)
             .warning(Warnings.MISSING_GENUS)
             .nothingElse();
 
@@ -1143,7 +1132,6 @@ public class NameParserImplTest {
             .basAuthors("1870", "Bourguignat")
             .combAuthors("1909", "Schoepf.")
             .type(PLACEHOLDER)
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Missing penchinati Bourguignat, 1870", "? penchinati")
@@ -1309,6 +1297,7 @@ public class NameParserImplTest {
             .basAuthors(null, "Virot")
             .nomNote("comb. ined.")
             .manuscript()
+            .code(NomCode.ZOOLOGICAL)
             .nothingElse();
 
     assertName("Vernoniastrum musofense var. miamensis (S. Moore) comb. ined.", "Vernoniastrum musofense var. miamensis")
@@ -1316,7 +1305,7 @@ public class NameParserImplTest {
             .basAuthors(null, "S.Moore")
             .nomNote("comb. ined.")
             .manuscript()
-            .code(BOTANICAL)
+            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Spermacoce tenuis Sess? & Moc., orth. var.", "Spermacoce tenuis")
@@ -1345,7 +1334,6 @@ public class NameParserImplTest {
             .species("Roridomyces", "albororidus")
             .basAuthors(null, "Maas Geest.", "de Meijer")
             .combAuthors("2010", "anon.")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Collybia mephitica sensu Rea (1922); fide Checklist of Basidiomycota of Great Britain and Ireland (2005)", "Collybia mephitica")
@@ -1370,10 +1358,9 @@ public class NameParserImplTest {
             .nothingElse();
 
     assertName("Apatura iris junonina (Lambillion) & Cabeau, 1910", "Apatura iris junonina")
-            .infraSpecies("Apatura", "iris", SUBSPECIES, "junonina")
+            .infraSpecies("Apatura", "iris", INFRASPECIFIC_NAME, "junonina")
             .basAuthors(null, "Lambillion")
             .combAuthors("1910", "Cabeau")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Scleropogon kelloggi (Wilcox, 137)", "Scleropogon kelloggi")
@@ -1420,7 +1407,6 @@ public class NameParserImplTest {
             .species("Pseudostenophylax", "clavatus")
             .combAuthors("1993", "Tian", "Li")
             .publishedIn("Tian, Li, Yang & Sun, in Chen, editor, 1993")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Kanimia nitida (DC:) Baker", "Kanimia nitida")
@@ -1739,21 +1725,18 @@ public class NameParserImplTest {
             .species("Tripodiscium", "gephyristes")
             .basAuthors("1963", "Hülseman")
             .combAuthors(null, "BJ", "KR-Atsdatabanken")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Protocystis xiphodon  (Haeckel, 1887), Borgert, 1901", "Protocystis xiphodon")
             .species("Protocystis", "xiphodon")
             .basAuthors("1887", "Haeckel")
             .combAuthors("1901", "Borgert")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Acrosphaera lappacea  (Haeckel, 1887) Takahashi, 1991", "Acrosphaera lappacea")
             .species("Acrosphaera", "lappacea")
             .basAuthors("1887", "Haeckel")
             .combAuthors("1991", "Takahashi")
-            .code(ZOOLOGICAL)
             .nothingElse();
   }
 
@@ -2163,7 +2146,6 @@ public class NameParserImplTest {
             .infraSpecies("Cirsium", "creticum", SUBSPECIES, "creticum")
             .combAuthors(null, "d'Urv.")
             .autonym()
-            .code(NomCode.BOTANICAL)
             .nothingElse();
 
     assertName("Cirsium creticum Balsamo M Fregni E Tongiorgi P", "Cirsium creticum")
@@ -2283,6 +2265,17 @@ public class NameParserImplTest {
         .monomial("Errantia")
         .combAuthors("1832", "Audouin", "H.Milne Edwards")
         .code(ZOOLOGICAL)
+        .nothingElse();
+
+    assertName("Thuja pyramidalis var. stricta John M.Mill.", "Thuja pyramidalis var. stricta")
+        .infraSpecies("Thuja", "pyramidalis", VARIETY, "stricta")
+        .combAuthors(null, "John M.Mill.")
+        .nothingElse();
+
+    assertName("Tetralobus flabellicornis subsp. flabellicornis (Linnaeus, 1767) Linnaeus 1767", "Tetralobus flabellicornis subsp. flabellicornis")
+        .infraSpecies("Tetralobus", "flabellicornis", SUBSPECIES, "flabellicornis")
+        .basAuthors("1767", "Linnaeus")
+        .combAuthors("1767", "Linnaeus")
         .nothingElse();
   }
 
@@ -2467,7 +2460,6 @@ public class NameParserImplTest {
             .combAuthors("1971", "Petrushevskaya")
             .type(INFORMAL)
             .qualifiers(SPECIFIC, "aff.")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Cerapachys mayeri cf. var. brachynodus", "Cerapachys mayeri cf. var. brachynodus")
@@ -2514,7 +2506,6 @@ public class NameParserImplTest {
             .species("Anthurium", "lanceum")
             .combAuthors(null, "Engl.")
             .nomNote("nom. illeg.")
-            .code(BOTANICAL)
             .sensu("non. A.lancea.")
             .nothingElse();
 
@@ -2532,7 +2523,6 @@ public class NameParserImplTest {
             .species("Anthurium", "lanceum")
             .combAuthors(null, "Engl.")
             .nomNote("nom. illeg.")
-            .code(BOTANICAL)
             .nothingElse();
 
   }
@@ -2819,7 +2809,6 @@ public class NameParserImplTest {
             .basAuthors(null, "Coker")
             .combAuthors("1950", "Corner")
             .sensu("ss. auct. europ.")
-            .code(ZOOLOGICAL)
             .nothingElse();
 
     assertName("Thelephora cuticularis Berk. ss. auct. europ.", "Thelephora cuticularis")
@@ -2893,7 +2882,6 @@ public class NameParserImplTest {
     assertName("Puntius arulius subsp. tambraparniei (non Silas 1954)", "Puntius arulius subsp. tambraparniei")
             .infraSpecies("Puntius", "arulius", Rank.SUBSPECIES, "tambraparniei")
             .sensu("non Silas 1954")
-            .code(NomCode.BOTANICAL)
             .nothingElse();
 
   }
@@ -4062,6 +4050,7 @@ public class NameParserImplTest {
             .type(SCIENTIFIC)
             .nomNote("comb. ined.")
             .manuscript()
+            .code(NomCode.ZOOLOGICAL)
             .nothingElse();
 
     assertName("Acranthera virescens (Ridl.) ined.", "Acranthera virescens")
@@ -4070,6 +4059,7 @@ public class NameParserImplTest {
             .type(SCIENTIFIC)
             .nomNote("ined.")
             .manuscript()
+            .code(NomCode.ZOOLOGICAL)
             .nothingElse();
 
     // real authorship is Siliç
@@ -4080,7 +4070,6 @@ public class NameParserImplTest {
             .type(SCIENTIFIC)
             .nomNote("ined.")
             .manuscript()
-            .code(BOTANICAL)
             .nothingElse();
 
     assertName("Genoplesium vernalis D.L.Jones ms.", "Genoplesium vernalis")
