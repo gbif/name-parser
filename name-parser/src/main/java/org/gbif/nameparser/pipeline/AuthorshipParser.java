@@ -311,11 +311,23 @@ public final class AuthorshipParser {
               }
             }
           }
-          String surname = cur.toString().trim();
-          cur.setLength(0);
-          authors.add(formatInitials(initials.toString()) + surname);
-          i = k;
-          continue;
+          // "Forename M.Surname": a dotted initial glued (no whitespace) to a following
+          // capitalised surname word means the all-caps token is a middle initial of a
+          // single author whose forename was spelled out — e.g. "John M.Mill." is ONE
+          // author ("John M.Mill."), not the inversion "M.John" + "Mill.". Skip the flip
+          // and let the normal surname handling below build the full author.
+          boolean gluedSurnameFollows = j > i + 1 && k < to
+              && tokens.get(k).kind == TokenKind.WORD
+              && tokens.get(k).startsUpper()
+              && tokens.get(k).start == tokens.get(k - 1).end
+              && containsLower(tokens.get(k).text);
+          if (!gluedSurnameFollows) {
+            String surname = cur.toString().trim();
+            cur.setLength(0);
+            authors.add(formatInitials(initials.toString()) + surname);
+            i = k;
+            continue;
+          }
         }
         // If full ALL-CAPS author name (e.g. FISCHER) length > 1, normalise to title case
         String text = normaliseAuthorCase(t.text);
@@ -622,9 +634,9 @@ public final class AuthorshipParser {
     return AuthorParticles.isParticle(last);
   }
 
-  private static boolean containsLower(StringBuilder cur) {
+  private static boolean containsLower(CharSequence cur) {
     for (int i = 0; i < cur.length(); ) {
-      int cp = cur.codePointAt(i);
+      int cp = Character.codePointAt(cur, i);
       if (Character.isLowerCase(cp)) return true;
       i += Character.charCount(cp);
     }
