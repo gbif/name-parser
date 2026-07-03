@@ -2277,6 +2277,12 @@ public class NameParserImplTest {
         .basAuthors("1767", "Linnaeus")
         .combAuthors("1767", "Linnaeus")
         .nothingElse();
+
+    assertName("Parachipteria van der Hammen, 1952", "Parachipteria")
+        .monomial("Parachipteria")
+        .combAuthors("1952", "van der Hammen")
+        .code(ZOOLOGICAL)
+        .nothingElse();
   }
 
   /**
