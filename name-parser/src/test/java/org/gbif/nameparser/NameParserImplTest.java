@@ -4310,6 +4310,41 @@ public class NameParserImplTest {
   }
 
   /**
+   * "s.s." (and spaced "s. s.") is the abbreviation of sensu stricto and becomes the
+   * taxonomic note — but only in its lower-case form, so uppercase author initials
+   * ("S.S.Ying") are never mistaken for it.
+   */
+  @Test
+  public void sensuStrictoSS() throws Exception {
+    assertName("Achillea millefolium s.s.", "Achillea millefolium")
+            .species("Achillea", "millefolium")
+            .sensu("s.s.")
+            .nothingElse();
+    assertName("Achillea millefolium s. s.", "Achillea millefolium")
+            .species("Achillea", "millefolium")
+            .sensu("s.s.")
+            .nothingElse();
+    assertName("Achillea millefolium L. s.s.", "Achillea millefolium")
+            .species("Achillea", "millefolium")
+            .combAuthors(null, "L.")
+            .sensu("s.s.")
+            .nothingElse();
+    assertName("Achillea millefolium L. s.s. - junk here", "Achillea millefolium")
+            .species("Achillea", "millefolium")
+            .combAuthors(null, "L.")
+            .sensu("s.s.")
+            .partial("- junk here")
+            .nothingElse();
+    // uppercase "S.S." initials must stay part of the author
+    assertName("Amitostigma formosana (S.S.Ying) S.S.Ying", "Amitostigma formosana")
+            .species("Amitostigma", "formosana")
+            .combAuthors(null, "S.S.Ying")
+            .basAuthors(null, "S.S.Ying")
+            .code(BOTANICAL)
+            .nothingElse();
+  }
+
+  /**
    * A parenthesised subgenus written in lower case ("(acanthoderes)") is a malformed
    * infrageneric name — capitalise it and flag the name doubtful, but still parse the
    * surrounding species.

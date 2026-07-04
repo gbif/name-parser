@@ -82,6 +82,11 @@ public final class StripAndStash {
   private static final Pattern SENSU_LATO_REMAINDER = Pattern.compile(
       "\\s+(s\\.\\s*l\\.?|s\\.\\s*lat\\.?|s\\.\\s*str\\.?|s\\.\\s*ampl\\.?)\\s+(\\S.*?)\\s*$");
 
+  // "s.s." / "s. s." = sensu stricto, at end of string or before trailing junk. Case-sensitive
+  // (lower-case) so uppercase author initials ("S.S.Ying") are never taken as the marker.
+  private static final Pattern SENSU_STRICTO_SS = Pattern.compile(
+      "\\s+s\\.\\s*s\\.?(\\s+\\S.*?)?\\s*$");
+
   // Parenthesised "(nec ..., YYYY)" / "(non ..., YYYY)" / "(not ..., YYYY)" at end —
   // homonym citation, captured as taxonomic note.
   private static final Pattern PAREN_TAX_NOTE = Pattern.compile(
@@ -353,6 +358,7 @@ public final class StripAndStash {
     s = stripBracketedTaxNote(ctx, s);
     s = stripParenTaxNote(ctx, s);
     s = stripSensuLatoRemainder(ctx, s);
+    s = stripSensuStrictoSS(ctx, s);
     s = stripTaxNote(ctx, s);
     s = stripAggregateSuffix(ctx, s);
     s = stripPublishedPage(ctx, s);
@@ -1037,6 +1043,23 @@ public final class StripAndStash {
       ctx.name.setTaxonomicNote(existing == null ? note : existing + " " + note);
       if (ctx.pendingUnparsed == null && !remainder.isEmpty()) {
         ctx.pendingUnparsed = remainder;
+      }
+      s = s.substring(0, m.start()).trim();
+    }
+    return s;
+  }
+
+  private static String stripSensuStrictoSS(ParseContext ctx, String s) {
+    // "s.s." (sensu stricto) at end, optionally before trailing junk → note + unparsed.
+    Matcher m = SENSU_STRICTO_SS.matcher(s);
+    if (m.find()) {
+      String existing = ctx.name.getTaxonomicNote();
+      ctx.name.setTaxonomicNote(existing == null ? "s.s." : existing + " s.s.");
+      if (m.group(1) != null) {
+        String remainder = m.group(1).trim();
+        if (ctx.pendingUnparsed == null && !remainder.isEmpty()) {
+          ctx.pendingUnparsed = remainder;
+        }
       }
       s = s.substring(0, m.start()).trim();
     }
