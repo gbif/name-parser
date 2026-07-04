@@ -3,8 +3,11 @@ package org.gbif.nameparser.cli.llm;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -30,6 +33,7 @@ import java.util.List;
  */
 public final class OpenAiClient implements Judge {
 
+  private static final Logger LOG = LoggerFactory.getLogger(OpenAiClient.class);
   private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
   private static final int MAX_ATTEMPTS = 4;
 
@@ -75,7 +79,7 @@ public final class OpenAiClient implements Judge {
       HttpResponse<String> resp = http.send(request, HttpResponse.BodyHandlers.ofString());
       int sc = resp.statusCode();
       if (sc == 200) {
-        return Verdicts.parse(extractContent(resp.body()));
+        return parseReply(resp.body(), batchSize);
       }
       if (sc == 429 || sc >= 500) {
         last = new IOException("OpenAI-compatible API " + sc + " (attempt " + attempt + "): "
@@ -89,6 +93,34 @@ public final class OpenAiClient implements Judge {
           + "\nEndpoint: " + endpoint + " (is the local server running and the model pulled?)");
     }
     throw last;
+  }
+
+  /**
+   * Turn a 200 chat-completions body into verdicts, resiliently. Local models are flaky
+   * — a batch may come back truncated at {@code max_tokens}, empty, or otherwise
+   * unparseable — and a single bad batch must not abort the whole judging run. On any
+   * such failure this warns and returns an empty list: those names stay unjudged and,
+   * because callers only cache non-null verdicts, uncached — so a later run retries them.
+   */
+  List<Verdict> parseReply(String responseBody, int batchSize) {
+    if ("length".equals(finishReason(responseBody))) {
+      LOG.warn("Model '{}' hit max_tokens and truncated its reply for this batch of {}; "
+          + "verdicts up to the cut-off are salvaged, the rest are left unjudged. "
+          + "Use a smaller --batch or a less verbose model to judge them all.", model, batchSize);
+    }
+    try {
+      List<Verdict> verdicts = Verdicts.parse(extractContent(responseBody));
+      if (verdicts.isEmpty()) {
+        LOG.warn("Model '{}' returned no verdicts for this batch of {}; leaving these names "
+            + "unjudged (they stay uncached, so a later run retries them).", model, batchSize);
+      }
+      return verdicts;
+    } catch (RuntimeException e) {
+      LOG.warn("Model '{}' produced an unusable reply for this batch of {} ({}); leaving these "
+          + "names unjudged (they stay uncached, so a later run retries them).",
+          model, batchSize, e.getMessage());
+      return List.of();
+    }
   }
 
   private JsonObject requestBody(String userMessage, int batchSize) {
@@ -128,6 +160,24 @@ public final class OpenAiClient implements Judge {
       throw new IllegalStateException("No message content in response: " + Verdicts.brief(responseBody));
     }
     return message.get("content").getAsString();
+  }
+
+  /**
+   * {@code choices[0].finish_reason} from a chat-completions reply, or {@code null} if
+   * absent/unparseable. {@code "length"} means the model was cut off at {@code max_tokens}.
+   */
+  static String finishReason(String responseBody) {
+    try {
+      JsonObject resp = JsonParser.parseString(responseBody).getAsJsonObject();
+      JsonArray choices = resp.getAsJsonArray("choices");
+      if (choices == null || choices.isEmpty()) {
+        return null;
+      }
+      JsonElement fr = choices.get(0).getAsJsonObject().get("finish_reason");
+      return fr == null || fr.isJsonNull() ? null : fr.getAsString();
+    } catch (RuntimeException e) {
+      return null;
+    }
   }
 
   private static String trimTrailingSlash(String s) {
