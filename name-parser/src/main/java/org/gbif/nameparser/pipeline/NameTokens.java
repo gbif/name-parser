@@ -66,9 +66,16 @@ public final class NameTokens {
           && lowerEpithets.isEmpty() && subgenus == null
           && i + 2 < boundary
           && ts.get(i + 1).kind == TokenKind.WORD
-          && ts.get(i + 1).startsUpper()
+          && (ts.get(i + 1).startsUpper() || ts.get(i + 1).startsLower())
           && ts.get(i + 2).kind == TokenKind.CLOSE_PAREN) {
-        subgenus = ts.get(i + 1).text;
+        String sub = ts.get(i + 1).text;
+        // A lower-case parenthesised subgenus ("(acanthoderes)") is malformed — capitalise
+        // it to the conventional form and flag the name doubtful.
+        if (ts.get(i + 1).startsLower()) {
+          sub = Character.toUpperCase(sub.charAt(0)) + sub.substring(1);
+          ctx.name.setDoubtful(true);
+        }
+        subgenus = sub;
         i += 3;
         continue;
       }

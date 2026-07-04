@@ -217,10 +217,13 @@ public final class AuthorshipSplit {
       if (t.kind == TokenKind.OPEN_PAREN) {
         if (afterGenus && !haveEpithet && !afterSubgenus && !genusFamilyShape) {
           int j = i + 1;
-          if (j < n && tokens.get(j).kind == TokenKind.WORD && tokens.get(j).startsUpper()) {
+          // The subgenus word is normally Title-cased; a lower-case word ("(acanthoderes)")
+          // is a malformed subgenus that NameTokens capitalises and flags doubtful.
+          if (j < n && tokens.get(j).kind == TokenKind.WORD
+              && (tokens.get(j).startsUpper() || tokens.get(j).startsLower())) {
             int k = j + 1;
             // Abbreviated subgenus "(Tin.)" — Title-cased word + DOT + close paren.
-            if (k + 1 < n
+            if (tokens.get(j).startsUpper() && k + 1 < n
                 && tokens.get(k).kind == TokenKind.DOT
                 && tokens.get(k + 1).kind == TokenKind.CLOSE_PAREN) {
               i = k + 2;

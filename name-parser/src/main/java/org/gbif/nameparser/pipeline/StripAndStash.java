@@ -74,6 +74,14 @@ public final class StripAndStash {
           ")$",
       Pattern.CASE_INSENSITIVE);
 
+  // Abbreviated sensu-lato / sensu-stricto marker followed by trailing junk that is not
+  // part of the name, e.g. "Asplenium trichomanes L. s.lat. - Asplen trich". The marker
+  // becomes the taxonomic note and the trailing remainder is parked as unparsed.
+  // Case-sensitive: the marker is lower-case "s", so uppercase author initials ("S. L.
+  // Schultes", "S.L. Mill.") are not mistaken for a sensu-lato marker.
+  private static final Pattern SENSU_LATO_REMAINDER = Pattern.compile(
+      "\\s+(s\\.\\s*l\\.?|s\\.\\s*lat\\.?|s\\.\\s*str\\.?|s\\.\\s*ampl\\.?)\\s+(\\S.*?)\\s*$");
+
   // Parenthesised "(nec ..., YYYY)" / "(non ..., YYYY)" / "(not ..., YYYY)" at end —
   // homonym citation, captured as taxonomic note.
   private static final Pattern PAREN_TAX_NOTE = Pattern.compile(
@@ -344,6 +352,7 @@ public final class StripAndStash {
     s = stripColonConceptReference(ctx, s);
     s = stripBracketedTaxNote(ctx, s);
     s = stripParenTaxNote(ctx, s);
+    s = stripSensuLatoRemainder(ctx, s);
     s = stripTaxNote(ctx, s);
     s = stripAggregateSuffix(ctx, s);
     s = stripPublishedPage(ctx, s);
@@ -654,9 +663,9 @@ public final class StripAndStash {
   private static String stripHtml(ParseContext ctx, String s) {
     // Strip HTML tags and decode HTML entities (e.g. "<i>sensu</i> Author" or "&amp;").
     if (s.indexOf('<') >= 0 || s.indexOf('&') >= 0) {
-      // Strip HTML-tagged taxonomic connectors entirely (tag + content), e.g. <i>sensu</i>
-      s = s.replaceAll("<[^>]+>(?:sensu|auct\\.?|s\\.l\\.?|s\\.str\\.?|sec\\.?)</[^>]+>", "");
-      // Strip remaining HTML tags but keep their text content
+      // Strip HTML tags but keep their text content, so a tagged connector like
+      // "<i>sensu</i> Fabricius, 1780" becomes "sensu Fabricius, 1780" and is picked up
+      // as a taxonomic note by the normal note handling downstream.
       s = s.replaceAll("<[^>]+>", "");
       // Decode basic HTML entities
       s = s.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&nbsp;", " ");
@@ -739,7 +748,10 @@ public final class StripAndStash {
         ctx.name.setCultivarEpithet(cmMid.group(2).trim());
         ctx.name.setCode(NomCode.CULTIVARS);
         ctx.name.setRank(Rank.CULTIVAR);
-        s = (s.substring(0, cmMid.start()) + cmMid.group(3)).trim();
+        // Insert a comma where the cultivar epithet was removed so a species author before
+        // it and a cultivar author after it stay two distinct authors ("Acer campestre L.
+        // cv. 'Elsrijk' Broerse" → authors "L." and "Broerse", not glued "L.Broerse").
+        s = (s.substring(0, cmMid.start()) + "," + cmMid.group(3)).trim();
         s = s.replaceAll("\\s+cv\\.?(?=\\s|$)", "").trim();
       } else {
         // Unclosed trailing cultivar quote: " 'albino" / " \"albino" (opening quote,
@@ -1010,6 +1022,22 @@ public final class StripAndStash {
       note = note.replaceAll("^(Auct)", "auct").replaceAll("^(Auctt)", "auctt");
       String existing = ctx.name.getTaxonomicNote();
       ctx.name.setTaxonomicNote(existing == null ? note : existing + " " + note);
+      s = s.substring(0, m.start()).trim();
+    }
+    return s;
+  }
+
+  private static String stripSensuLatoRemainder(ParseContext ctx, String s) {
+    // "s.lat." / "s.str." etc. mid-string, followed by trailing junk → note + unparsed.
+    Matcher m = SENSU_LATO_REMAINDER.matcher(s);
+    if (m.find()) {
+      String note = m.group(1).replaceAll("\\s+", "").toLowerCase();
+      String remainder = m.group(2).trim();
+      String existing = ctx.name.getTaxonomicNote();
+      ctx.name.setTaxonomicNote(existing == null ? note : existing + " " + note);
+      if (ctx.pendingUnparsed == null && !remainder.isEmpty()) {
+        ctx.pendingUnparsed = remainder;
+      }
       s = s.substring(0, m.start()).trim();
     }
     return s;

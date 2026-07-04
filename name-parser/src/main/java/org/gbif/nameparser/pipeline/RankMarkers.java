@@ -74,6 +74,10 @@ public final class RankMarkers {
     INFRASPECIFIC.put("*", Rank.INFRASPECIFIC_NAME);
 
     // infrageneric
+    // "div." between a genus and an infrageneric epithet is the botanical divisio rank
+    // (Lindley's "Rosa div. Caninae"), not the zoological suprageneric division.
+    INFRAGENERIC.put("div", Rank.DIVISION_BOTANY);
+    INFRAGENERIC.put("divisio", Rank.DIVISION_BOTANY);
     INFRAGENERIC.put("subg", Rank.SUBGENUS);
     INFRAGENERIC.put("subgen", Rank.SUBGENUS);
     INFRAGENERIC.put("sect", Rank.SECTION_BOTANY);

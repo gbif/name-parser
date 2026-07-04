@@ -941,6 +941,14 @@ public class NameParserImplTest {
             .code(BOTANICAL)
             .nothingElse();
 
+    // "div." between a botanical genus and a capitalised epithet is the botanical
+    // divisio infrageneric rank (not the zoological suprageneric division).
+    assertName("Rosa div. Caninae Lindl.", "Rosa div. Caninae")
+            .infraGeneric("Rosa", Rank.DIVISION_BOTANY, "Caninae")
+            .combAuthors(null, "Lindl.")
+            .code(BOTANICAL)
+            .nothingElse();
+
     // with zoological code it is an impossible name! The zoological section is above family rank and cannot be enclosed in a genus
     assertName("Pinus suprasect. Taeda", ZOOLOGICAL, "Pinus supersect. Taeda")
             .infraGeneric("Pinus", SUPERSECTION_BOTANY, "Taeda")
@@ -1603,7 +1611,7 @@ public class NameParserImplTest {
 
     // higher ranks should be marked as doubtful
     for (Rank r : Rank.values()) {
-      if (r.otherOrUnranked() || r.isSpeciesOrBelow() || r.getMajorRank()==DIVISION) continue;
+      if (r.otherOrUnranked() || r.isSpeciesOrBelow() || r.getMajorRank()==DIVISION_ZOOLOGY) continue;
       NameAssertion ass = assertName("Achillea millefolium L.", r, "Achillea millefolium")
               .binomial("Achillea", null, "millefolium", r)
               .combAuthors(null, "L.")
@@ -1822,6 +1830,13 @@ public class NameParserImplTest {
 
     assertName("Symphoricarpos sp. cv. 'mother of pearl'", "Symphoricarpos 'mother of pearl'")
             .cultivar("Symphoricarpos", CULTIVAR, "mother of pearl")
+            .nothingElse();
+
+    // Species author before the cultivar and cultivar author after it are two distinct
+    // authors, not one concatenated "L.Broerse".
+    assertName("Acer campestre L. cv. 'Elsrijk' Broerse", "Acer campestre 'Elsrijk'")
+            .cultivar("Acer", "campestre", "Elsrijk")
+            .combAuthors(null, "L.", "Broerse")
             .nothingElse();
 
     assertName("Primula Border Auricula Group", "Primula Border Auricula Group")
@@ -4277,6 +4292,35 @@ public class NameParserImplTest {
             .infraSpecies("Xylocopa", "senior", Rank.INFRASPECIFIC_NAME, "clitelligera")
             .infraGeneric("Koptortosoma")
             .combAuthors(null, "Friese")
+            .nothingElse();
+  }
+
+  /**
+   * A sensu-lato marker followed by trailing junk ("L. s.lat. - Asplen trich") still
+   * captures "s.lat." as the taxonomic note; the dangling remainder is parked as unparsed.
+   */
+  @Test
+  public void sensuLatoWithTrailingJunk() throws Exception {
+    assertName("Asplenium trichomanes L. s.lat. - Asplen trich", "Asplenium trichomanes")
+            .species("Asplenium", "trichomanes")
+            .combAuthors(null, "L.")
+            .sensu("s.lat.")
+            .partial("- Asplen trich")
+            .nothingElse();
+  }
+
+  /**
+   * A parenthesised subgenus written in lower case ("(acanthoderes)") is a malformed
+   * infrageneric name — capitalise it and flag the name doubtful, but still parse the
+   * surrounding species.
+   */
+  @Test
+  public void lowercaseSubgenus() throws Exception {
+    assertName("Acanthoderes (acanthoderes) satanas Aurivillius, 1923", "Acanthoderes satanas")
+            .species("Acanthoderes", "Acanthoderes", "satanas")
+            .combAuthors("1923", "Aurivillius")
+            .code(ZOOLOGICAL)
+            .doubtful()
             .nothingElse();
   }
 

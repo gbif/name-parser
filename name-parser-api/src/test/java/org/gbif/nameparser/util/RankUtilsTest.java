@@ -61,7 +61,7 @@ public class RankUtilsTest {
     assertTrue(ranks.contains(Rank.SPECIES));
     assertTrue(ranks.contains(Rank.SUBSPECIES));
     assertTrue(ranks.contains(Rank.NATIO));
-    assertEquals(43, ranks.size());
+    assertEquals(44, ranks.size());
   }
 
   @Test

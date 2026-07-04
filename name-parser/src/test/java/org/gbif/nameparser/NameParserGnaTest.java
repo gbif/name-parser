@@ -2734,10 +2734,13 @@ public class NameParserGnaTest {
   @Test
   public void htmlTagsAndEntities() throws Exception {
       // group: HTML tags and entities
+      // HTML tags are stripped but their text content is kept, so the "sensu Fabricius,
+      // 1780" concept reference lands in the taxonomic note rather than the authorship.
       assertName("Velutina haliotoides (Linnaeus, 1758) <i>sensu</i> Fabricius, 1780", "Velutina haliotoides")
           .species("Velutina", "haliotoides")
           .basAuthors("1758", "Linnaeus")
-          .combAuthors("1780", "Fabricius")
+          .sensu("sensu Fabricius, 1780")
+          .code(NomCode.ZOOLOGICAL)
           .nothingElse();
 
       assertName("Velutina haliotoides (Linnaeus, 1758), <i>sensu</i> Fabricius, 1780", "Velutina haliotoides")
