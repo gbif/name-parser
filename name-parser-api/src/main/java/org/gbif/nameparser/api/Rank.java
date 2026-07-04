@@ -122,7 +122,7 @@ public enum Rank {
   /**
    * Botanical divisio used by some authors as an informal infrageneric subdivision of a
    * genus (e.g. Lindley's "Rosa div. Caninae"). Distinct from the zoological
-   * {@link #DIVISION_ZOOLOGY}, which is a suprageneric rank near phylum.
+   * {@link #DIVISION_ZOOLOGY}, which is a suprageneric rank near phylum or the official botanical Divisio for {@link #PHYLUM}.
    */
   DIVISION_BOTANY(NomCode.BOTANICAL, "div.", "divisions"),
 
