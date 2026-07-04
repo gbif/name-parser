@@ -95,6 +95,23 @@ public final class StripAndStash {
   private static final Pattern SYNONYM_BRACKET = Pattern.compile(
       "\\s*\\[\\s*=\\s*[^\\]]+\\]\\s*\\.?\\s*$");
 
+  // Trailing square-bracket comment introduced by a taxonomic-concept keyword, e.g.
+  // "Eunoa [auctt. misspelling for Eunoe]" — the whole bracket content becomes the
+  // taxonomic note. Handled separately from the "[= synonym]" and "[sic]" brackets.
+  private static final Pattern BRACKETED_TAX_NOTE = Pattern.compile(
+      "\\s*\\[\\s*((?:auctt?|sensu|sec|non|nec|misspelling|misapplied|misident)\\b[^\\]]*)\\]\\s*\\.?\\s*$",
+      Pattern.CASE_INSENSITIVE);
+
+  // Informal letter-based species subdivision from old floras: a species (optionally
+  // followed by its abbreviated author) then a lowercase letter marker ("a.", "b.",
+  // "a.b.") then an epithet — "Graphis scripta L. a.b pulverulenta". The marker is
+  // replaced by a synthetic rank marker so downstream parsing maps it to Rank.OTHER.
+  private static final Pattern LETTER_SUBDIVISION_MARKER = Pattern.compile(
+      "^(\\p{Lu}[\\p{Ll}-]+\\s+[\\p{Ll}][\\p{Ll}-]+(?:\\s+\\p{Lu}[\\p{Ll}]*\\.?)*)"
+          + "\\s+((?:[a-z]\\.){1,3}[a-z]?)"
+          + "\\s+([\\p{Ll}][\\p{Ll}-]{2,})\\s*$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+
   // ---- Aggregate markers (suffix forms) ----
   private static final Pattern AGGREGATE = Pattern.compile(
       "(?:\\s+(?:agg\\.?|aggregate|species\\s+group|species\\s+complex|group|complex)" +
@@ -293,6 +310,7 @@ public final class StripAndStash {
     s = stripQuotedMonomial(ctx, s);
     s = applyMissingGenusPlaceholder(ctx, s);
     s = stripInfraRankLetters(ctx, s);
+    s = normaliseLetterSubdivisionMarker(ctx, s);
     s = repairQuestionMarkInWord(ctx, s);
     s = stashTrailingStrainCode(ctx, s);
     s = stripImprintYears(ctx, s);
@@ -324,6 +342,7 @@ public final class StripAndStash {
     s = stripMihi(ctx, s);
     s = normaliseAnon(ctx, s);
     s = stripColonConceptReference(ctx, s);
+    s = stripBracketedTaxNote(ctx, s);
     s = stripParenTaxNote(ctx, s);
     s = stripTaxNote(ctx, s);
     s = stripAggregateSuffix(ctx, s);
@@ -398,6 +417,26 @@ public final class StripAndStash {
         || s.matches(".*\\p{Ll}\\s+\\*+\\s+\\p{Ll}.*")) {
       s = s.replaceAll("([\\p{Ll}.])\\s*[\\u03B1-\\u03C9\\u237A](?:\\s+|\\.\\s*)(?=[\\p{Ll}])", "$1 ");
       s = s.replaceAll("(?<=\\p{Ll})\\s+\\*+\\s+(?=\\p{Ll})", " ");
+    }
+    return s;
+  }
+
+  private static String normaliseLetterSubdivisionMarker(ParseContext ctx, String s) {
+    // Old floras subdivide a species informally with letters ("a.", "b.", "a.b.").
+    // Rewrite such a marker to the synthetic RankMarkers.LETTER_SUBDIVISION token so
+    // the normal rank-marker path treats the trailing epithet as an infraspecific of
+    // rank OTHER. Any abbreviated author before the marker is left in place and dropped
+    // by the mid-name-author logic, exactly as it would be before a "var." marker.
+    Matcher m = LETTER_SUBDIVISION_MARKER.matcher(s);
+    if (m.find()) {
+      // A single-letter marker that is itself a real rank marker ("f." = forma) must be
+      // left for the normal machinery; only genuine subdivision letters are rewritten.
+      String[] segments = m.group(2).split("[^a-z]+");
+      boolean realMarker = segments.length == 1
+          && RankMarkers.matchInfraspecific(segments[0]) != null;
+      if (!realMarker) {
+        s = m.group(1) + " " + RankMarkers.LETTER_SUBDIVISION + " " + m.group(3);
+      }
     }
     return s;
   }
@@ -958,6 +997,20 @@ public final class StripAndStash {
       String existing = ctx.name.getTaxonomicNote();
       ctx.name.setTaxonomicNote(existing == null ? note : existing + " " + note);
       s = s.substring(0, pm.start()).trim();
+    }
+    return s;
+  }
+
+  private static String stripBracketedTaxNote(ParseContext ctx, String s) {
+    // Trailing "[auctt. misspelling for Eunoe]" style bracket introduced by a
+    // taxonomic-concept keyword → the whole bracket content becomes the taxonomic note.
+    Matcher m = BRACKETED_TAX_NOTE.matcher(s);
+    if (m.find()) {
+      String note = m.group(1).trim().replaceAll("\\s+", " ");
+      note = note.replaceAll("^(Auct)", "auct").replaceAll("^(Auctt)", "auctt");
+      String existing = ctx.name.getTaxonomicNote();
+      ctx.name.setTaxonomicNote(existing == null ? note : existing + " " + note);
+      s = s.substring(0, m.start()).trim();
     }
     return s;
   }

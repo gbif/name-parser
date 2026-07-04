@@ -12,10 +12,19 @@ import java.util.Map;
  */
 public final class RankMarkers {
 
+  /**
+   * Synthetic single-token marker that {@link StripAndStash} substitutes for informal
+   * letter-based species subdivisions ("a.", "b.", "a.b." — old floras) so the normal
+   * rank-marker machinery treats the following epithet as an infraspecific of the
+   * unmappable rank {@link Rank#OTHER}. Never appears in user input.
+   */
+  public static final String LETTER_SUBDIVISION = "infrasubdivision";
+
   private static final Map<String, Rank> INFRASPECIFIC = new HashMap<>();
   private static final Map<String, Rank> INFRAGENERIC = new HashMap<>();
 
   static {
+    INFRASPECIFIC.put(LETTER_SUBDIVISION, Rank.OTHER);
     // infraspecific
     INFRASPECIFIC.put("subsp", Rank.SUBSPECIES);
     INFRASPECIFIC.put("ssp", Rank.SUBSPECIES);

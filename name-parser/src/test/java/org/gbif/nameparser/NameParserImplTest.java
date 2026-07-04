@@ -4270,6 +4270,41 @@ public class NameParserImplTest {
         .species("Lentivirus", "humimdef1").code(NomCode.VIRUS).nothingElse();
   }
 
+  /**
+   * A trailing bracketed comment introduced by a taxonomic-concept keyword
+   * ("[auctt. misspelling for Eunoe]") is not part of the name — the whole bracket
+   * content is captured as the taxonomic note and the leading monomial parses cleanly.
+   */
+  @Test
+  public void bracketedAuctNote() throws Exception {
+    assertName("Eunoa [auctt. misspelling for Eunoe]", "Eunoa")
+        .monomial("Eunoa")
+        .sensu("auctt. misspelling for Eunoe")
+        .nothingElse();
+  }
+
+  /**
+   * Old lichenological/botanical floras subdivide a species informally with letters
+   * ("a.", "b.", "a.a.", "a.b."). Such a letter marker between the species (with or
+   * without its author) and a following epithet is an infraspecific rank marker of the
+   * unmappable rank OTHER — "pulverulenta" is the infraspecific epithet.
+   */
+  @Test
+  public void letterSubdivisionRank() throws Exception {
+    assertName("Graphis scripta L. a.b pulverulenta", "Graphis scripta pulverulenta")
+        .infraSpecies("Graphis", "scripta", Rank.OTHER, "pulverulenta")
+        .nothingElse();
+    assertName("Graphis scripta L. a.b. pulverulenta", "Graphis scripta pulverulenta")
+        .infraSpecies("Graphis", "scripta", Rank.OTHER, "pulverulenta")
+        .nothingElse();
+    assertName("Graphis scripta a.b pulverulenta", "Graphis scripta pulverulenta")
+        .infraSpecies("Graphis", "scripta", Rank.OTHER, "pulverulenta")
+        .nothingElse();
+    assertName("Graphis scripta a. pulverulenta", "Graphis scripta pulverulenta")
+        .infraSpecies("Graphis", "scripta", Rank.OTHER, "pulverulenta")
+        .nothingElse();
+  }
+
   // **************
   // HELPER METHODS
   // **************
