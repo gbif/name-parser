@@ -423,6 +423,33 @@ public class NameParserImplTest {
   }
 
   /**
+   * "L. f." is Carl Linnaeus the Younger (filius), rendered in the glued IPNI form
+   * "L.f." — a single author, distinct from the second author "Rosenst." (Rosenstock).
+   * The filius suffix marks the name as botanical.
+   */
+  @Test
+  public void filiusTwoAuthors() throws Exception {
+    assertName("Polypodium pectinatum L. f., Rosenst.", "Polypodium pectinatum")
+            .species("Polypodium", "pectinatum")
+            .combAuthors(null, "L.f.", "Rosenst.")
+            .code(BOTANICAL)
+            .nothingElse();
+  }
+
+  /**
+   * "filius" directly after the genus is the species epithet, not a filius author suffix:
+   * "Gyracanthus filius Snyder, 2011" is the species Gyracanthus filius authored by Snyder.
+   */
+  @Test
+  public void filiusAsEpithet() throws Exception {
+    assertName("Gyracanthus filius Snyder, 2011", "Gyracanthus filius")
+            .species("Gyracanthus", "filius")
+            .combAuthors("2011", "Snyder")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+  }
+
+  /**
    * https://github.com/gbif/name-parser/issues/49
    */
   @Test
@@ -2624,6 +2651,8 @@ public class NameParserImplTest {
     assertAuthorship("DeFilipps",  "DeFilipps");
     assertAuthorship("Henk 't Hart",  "Henk 't Hart");
     assertAuthorship("P.E.Berry & Reg.B.Miller",  "P.E.Berry", "Reg.B.Miller");
+    // forename + spaced middle initial + surname is one author, not a surname-first flip
+    assertAuthorship("Calder & Roy L. Taylor",  "Calder", "Roy L.Taylor");
     assertAuthorship("'t Hart",  "'t Hart");
     assertAuthorship("Abdallah & Sa'ad",  "Abdallah", "Sa'ad");
     assertSingleAuthor("Linnaeus filius");

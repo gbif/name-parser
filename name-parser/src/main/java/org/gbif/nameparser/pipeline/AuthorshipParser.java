@@ -311,17 +311,18 @@ public final class AuthorshipParser {
               }
             }
           }
-          // "Forename M.Surname": a dotted initial glued (no whitespace) to a following
-          // capitalised surname word means the all-caps token is a middle initial of a
-          // single author whose forename was spelled out — e.g. "John M.Mill." is ONE
-          // author ("John M.Mill."), not the inversion "M.John" + "Mill.". Skip the flip
-          // and let the normal surname handling below build the full author.
-          boolean gluedSurnameFollows = j > i + 1 && k < to
+          // "Forename M. Surname": a DOTTED middle initial followed by a capitalised
+          // surname-shaped word (glued "John M.Mill." or spaced "Roy L. Taylor") means the
+          // all-caps token is a middle initial of a single author whose forename was spelled
+          // out — ONE author ("John M.Mill." / "Roy L.Taylor"), not the inversion
+          // "M.John" + "Mill.". Skip the flip and let the normal surname handling below build
+          // the full author. Only dotted initials qualify; an undotted run-on
+          // ("Balsamo M Fregni") still flips to end the current author.
+          boolean middleInitialSurnameFollows = j > i + 1 && k < to
               && tokens.get(k).kind == TokenKind.WORD
               && tokens.get(k).startsUpper()
-              && tokens.get(k).start == tokens.get(k - 1).end
               && containsLower(tokens.get(k).text);
-          if (!gluedSurnameFollows) {
+          if (!middleInitialSurnameFollows) {
             String surname = cur.toString().trim();
             cur.setLength(0);
             authors.add(formatInitials(initials.toString()) + surname);
