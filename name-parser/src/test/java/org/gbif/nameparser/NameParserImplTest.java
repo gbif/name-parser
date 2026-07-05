@@ -1752,6 +1752,48 @@ public class NameParserImplTest {
             .nothingElse();
   }
 
+  /**
+   * A quoted strain designation introduced by a "str."/"strain" marker must be kept intact as the
+   * phrase of an informal STRAIN name — not mangled into fake authorship ("K.2.'Aph & '") by the
+   * messy "str ." spacing and glued ".'Aph" quote, and not reinterpreted as a cultivar epithet
+   * (which silently dropped the requested STRAIN rank). See parser-handover-strain.md / CoL
+   * HomotypicConsolidatorIT.
+   */
+  @Test
+  public void strainDesignations() throws Exception {
+    // glued dot before the quote, with a redundant leading "strain" marker
+    assertName("Aphanizomenon flos-aquae strain str .'Aph K2'", Rank.STRAIN,
+               "Aphanizomenon flos-aquae strain Aph K2")
+        .binomial("Aphanizomenon", null, "flos-aquae", Rank.STRAIN)
+        .phrase("Aph K2")
+        .type(INFORMAL)
+        .nothingElse();
+
+    // "str ." spaced dot + glued quote
+    assertName("Aphanizomenon flos-aquae str .'Aph K2'", Rank.STRAIN,
+               "Aphanizomenon flos-aquae strain Aph K2")
+        .binomial("Aphanizomenon", null, "flos-aquae", Rank.STRAIN)
+        .phrase("Aph K2")
+        .type(INFORMAL)
+        .nothingElse();
+
+    // clean spacing must NOT become a CULTIVAR
+    assertName("Aphanizomenon flos-aquae str. 'Aph K2'", Rank.STRAIN,
+               "Aphanizomenon flos-aquae strain Aph K2")
+        .binomial("Aphanizomenon", null, "flos-aquae", Rank.STRAIN)
+        .phrase("Aph K2")
+        .type(INFORMAL)
+        .nothingElse();
+
+    // designation with digits and slashes stays verbatim
+    assertName("Aphanizomenon gracile str .'Heaney 1986/Camb140 1/1'", Rank.STRAIN,
+               "Aphanizomenon gracile strain Heaney 1986/Camb140 1/1")
+        .binomial("Aphanizomenon", null, "gracile", Rank.STRAIN)
+        .phrase("Heaney 1986/Camb140 1/1")
+        .type(INFORMAL)
+        .nothingElse();
+  }
+
 
   @Test
   public void norwegianRadiolaria() throws Exception {
@@ -3265,6 +3307,34 @@ public class NameParserImplTest {
     assertName("Exochus virus", "Gauld & Sithole, 2002", Rank.SPECIES, NomCode.ZOOLOGICAL, "Exochus virus")
         .species("Exochus", "virus").combAuthors("2002", "Gauld", "Sithole").code(NomCode.ZOOLOGICAL).nothingElse();
     assertUnparsable("Acara virus", NameType.OTHER, NomCode.VIRUS);
+
+    // A soft virus-word (prion/vector/particle/replicon/rna) sitting as the leading Title-cased
+    // GENUS is a real animal genus, not a virus — Prion (Lacépède, 1799) is a petrel genus. The
+    // reject must only fire when a genuinely viral token is also present. Previously the binomial
+    // and authored-monomial forms were wrongly thrown as OTHER + VIRUS (only bare "Prion" survived).
+    assertName("Prion vittatus", "Prion vittatus")
+        .species("Prion", "vittatus").nothingElse();
+    assertName("Prion Lacépède, 1799", "Prion")
+        .monomial("Prion")
+        .combAuthors("1799", "Lacépède")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
+  /**
+   * The Preflight {@code ZOOLOGICAL_BINOMIAL} regex used to be an overlapping-alternation ReDoS —
+   * on an input that triggers the virus gate but has no trailing year it could backtrack
+   * exponentially. The parser has no execution timeout, so this guards the hardened (possessive)
+   * pattern: an adversarial string must be classified in linear time, not hang the thread.
+   */
+  @Test(timeout = 3000)
+  public void virusGateNoCatastrophicBacktracking() throws Exception {
+    String adversarial = "Rnavirus bus " + "Aa.-".repeat(30);
+    try {
+      parser.parse(adversarial, null);
+    } catch (UnparsableNameException e) {
+      // expected — the point is that the classification returns fast, not that it parses.
+    }
   }
 
   @Test

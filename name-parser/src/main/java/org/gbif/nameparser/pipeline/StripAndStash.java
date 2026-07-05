@@ -158,6 +158,16 @@ public final class StripAndStash {
           + "([dr]?RNA[a-zA-Z0-9_\\-]*|[\\p{Lu}][\\p{L}\\d]*\\d[\\p{L}\\d_\\-]*)"
           + "\\s*$",
       Pattern.UNICODE_CHARACTER_CLASS);
+  // A quoted strain designation introduced by one or more "str"/"strain" markers, at end of
+  // input: "… str .'Aph K2'", "… str. 'Aph K2'", "… strain str .'Aph K2'",
+  // "… str .'Heaney 1986/Camb140 1/1'". The marker's abbreviation dot may be spaced ("str .")
+  // and the quote may be glued to it (".'Aph"). group(2) is the designation text. The designation
+  // is kept as the phrase (not mangled into authorship or reinterpreted as a cultivar epithet).
+  private static final Pattern STRAIN_DESIGNATION = Pattern.compile(
+      "\\s+(?:str|strain)\\b\\s*\\.?"
+          + "(?:\\s+(?:str|strain)\\b\\s*\\.?)*"
+          + "\\s*(['\"])(.+?)\\1\\s*$",
+      Pattern.CASE_INSENSITIVE);
   private static final Pattern IMPRINT_YEAR_QUOTED = Pattern.compile(
       "\\s*[\\[\\(]\\s*\"(\\d{4}(?:[-\\u2013]\\d{4})?)\"\\s*[\\]\\)]\\s*\\.?\\s*$");
   private static final Pattern IMPRINT_YEAR_KEYWORD = Pattern.compile(
@@ -555,6 +565,7 @@ public final class StripAndStash {
     s = stripInfraRankLetters(ctx, s);
     s = normaliseLetterSubdivisionMarker(ctx, s);
     s = repairQuestionMarkInWord(ctx, s);
+    s = stripStrainDesignation(ctx, s);
     s = stashTrailingStrainCode(ctx, s);
     s = stripImprintYears(ctx, s);
     s = stripNullBetweenEpithets(ctx, s);
@@ -602,6 +613,27 @@ public final class StripAndStash {
     s = stripLeadingInfragenericMarker(ctx, s);
     s = stashPhraseName(ctx, s);
     ctx.working = s;
+  }
+
+  private static String stripStrainDesignation(ParseContext ctx, String s) {
+    // A quoted strain designation after a "str"/"strain" marker ("Aphanizomenon flos-aquae
+    // str .'Aph K2'") is kept intact as the phrase of an informal STRAIN name. Without this the
+    // messy "str ." spacing and the glued ".'Aph" quote let the designation leak into the
+    // authorship parser (mangled to "K.2.'Aph & '") or, with clean spacing, get reinterpreted as
+    // a cultivar epithet — losing the requested STRAIN rank. The remaining "Genus species str."
+    // is left for NameTokens, which resolves the trailing "str" marker to Rank.STRAIN; the stashed
+    // phrase then makes it a phrase name.
+    Matcher m = STRAIN_DESIGNATION.matcher(s);
+    if (m.find()) {
+      String prefix = s.substring(0, m.start()).trim();
+      // Only when a plausible name precedes the marker (a capitalised genus), never on junk.
+      if (!prefix.isEmpty() && Character.isUpperCase(prefix.codePointAt(0))) {
+        ctx.name.setPhrase(m.group(2).trim());
+        ctx.name.setType(NameType.INFORMAL);
+        return prefix + " str.";
+      }
+    }
+    return s;
   }
 
   private static String stripQuotedMonomial(ParseContext ctx, String s) {

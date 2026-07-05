@@ -40,14 +40,21 @@ public final class Preflight {
   // must start with an uppercase letter and look like a Latin surname (≥3 chars,
   // with optional initials / particle / hyphen / dot prefix) — strain-code-like
   // trailing tokens ("WM-, 2008") don't qualify.
+  // Every quantifier here is possessive and the author span is expressed as two non-overlapping
+  // character-class runs (an upper/punctuation run, then a required lowercase surname letter, then
+  // the rest), so the whole pattern is linear-time — no backtracking. The earlier form used an
+  // overlapping separator/token loop "(?:[\s,&.-][\p{L}.-']+)*" that was a catastrophic-backtracking
+  // (ReDoS) hazard on inputs with a long dotted/hyphenated tail and no trailing year; the parser has
+  // no execution timeout, so that must stay linear. The required lowercase letter keeps all-caps
+  // strain codes ("WM-, 2008") from qualifying as a Latin surname, exactly as before.
   private static final Pattern ZOOLOGICAL_BINOMIAL = Pattern.compile(
-      "^\\p{Lu}\\p{Ll}+"                                  // Genus
-      + "\\s+(?:\\(\\p{Lu}\\p{Ll}+\\)\\s+)?"              // optional (Subgenus)
-      + "\\p{Ll}[\\p{Ll}\\-]*\\s+"                        // species (lowercase, ≥1 char)
-      + "(?:\\([^)]*\\)\\s*)?"                            // optional (basionym) span
-      + "(?:[\\p{Lu}](?:[\\p{L}.\\-']*\\p{Ll}{2,}|\\.?)"  // first author token (Title-cased surname)
-        + "(?:[\\s,&.\\-][\\p{L}.\\-']+)*)"                // additional author tokens
-      + "\\s*,?\\s*\\b(1[6-9]\\d\\d|20\\d\\d)\\b",        // comma + 4-digit year (16xx–20xx)
+      "^\\p{Lu}\\p{Ll}++"                                 // Genus
+      + "\\s++(?:\\(\\p{Lu}\\p{Ll}++\\)\\s++)?"           // optional (Subgenus)
+      + "\\p{Ll}[\\p{Ll}\\-]*+\\s++"                      // species (lowercase, ≥1 char)
+      + "(?:\\([^)]*+\\)\\s*+)?"                          // optional (basionym) span
+      + "\\p{Lu}[\\p{Lu}.,&'\\-\\s]*+"                    // author: upper start + non-lowercase run
+      + "\\p{Ll}[\\p{L}.,&'\\-\\s]*+"                     // ...a real surname lowercase, then the rest
+      + "\\b(1[6-9]\\d\\d|20\\d\\d)\\b",                  // 4-digit year (16xx–20xx)
       Pattern.UNICODE_CHARACTER_CLASS);
 
   private static final Pattern CLEAN_BINOMIAL = Pattern.compile(
@@ -57,6 +64,26 @@ public final class Preflight {
       "^\\p{Lu}[\\p{Ll}\\-]+$", Pattern.UNICODE_CHARACTER_CLASS);
   private static final Pattern SOFT_WORD = Pattern.compile(
       "(?:vector|prions?|particles?|replicons?|rna)$", Pattern.CASE_INSENSITIVE);
+  // A soft virus-word appearing as the leading Title-cased GENUS token — "Prion vittatus",
+  // "Prion Lacépède, 1799". These are real animal genera (Prion = petrels), not viruses. The
+  // reject only fires on them when a genuinely viral token (HARD_VIRUS below) is also present.
+  // Case-sensitive and anchored so a lowercase epithet ("Euragallia prion") or a viral genus with
+  // a suffix ("Rnavirus …", where "Rna" is not followed by a word boundary) never matches.
+  private static final Pattern SOFT_GENUS = Pattern.compile(
+      "^(?:Vector|Prions?|Particles?|Replicons?|Rna)\\b");
+  // The genuinely viral triggers (VIRUS minus the ambiguous English SOFT_WORDs). When only a soft
+  // word matched, there is no real viral signal and a leading soft-genus is let through to parse.
+  private static final Pattern HARD_VIRUS = Pattern.compile(
+      "(?:viru(?:s|ses)\\b" +
+          "|viroid(?:s)?\\b" +
+          "|phages?" +
+          "|virion(?:s)?\\b" +
+          "|\\bsatellite\\b" +
+          "|(?:alpha|beta|delta|circular)[\\s_-]*satellites?\\b" +
+          "|\\b(?:Clecru|Milvet|Subclov)satellite\\b" +
+          "|bacteriophages?\\b" +
+          "|\\b[MSC]?NPV\\b|\\bGV\\b|\\bICTV\\b)",
+      Pattern.CASE_INSENSITIVE);
   private static final Pattern HARD_WORD = Pattern.compile(
       "(?:virus|viroid|phages?|virion|satellite)$", Pattern.CASE_INSENSITIVE);
   private static final Pattern AUTH_ZOO = Pattern.compile(
@@ -296,6 +323,12 @@ public final class Preflight {
     if (req == org.gbif.nameparser.api.NomCode.VIRUS) {
       if (clean) { ctx.viralShape = true; return; }
       throw new UnparsableNameException(NameType.OTHER, org.gbif.nameparser.api.NomCode.VIRUS, original);
+    }
+    // Soft virus-word as the leading GENUS with no genuinely viral token present → a real animal
+    // genus (e.g. "Prion vittatus", "Prion Lacépède, 1799"), not a virus. Covers both the clean
+    // binomial and the authored-monomial forms, which the last-word SOFT_WORD rescue below misses.
+    if (SOFT_GENUS.matcher(s).find() && !HARD_VIRUS.matcher(s).find()) {
+      return;
     }
     if (clean && req != null) {
       return; // caller asserts a non-virus code for a clean binomial
