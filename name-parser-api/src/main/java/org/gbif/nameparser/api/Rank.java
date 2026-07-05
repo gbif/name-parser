@@ -278,13 +278,12 @@ public enum Rank {
   CHEMOFORM(NomCode.BACTERIAL, "chemoform"),
   
   /**
-   * Microbial infrasubspecific rank.
-   * A parasitic, symbiotic, or commensal microorganism distinguished primarily by adaptation to a particular host or habitat.
+   * A rank applied to a parasite (most frequently a fungus) which is adapted to a specific host.
    * Named preferably by the scientific name of the host in the genitive.
-   * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
+   * See <a href="https://en.wikipedia.org/wiki/Forma_specialis">Forma specialis</a>.
    * For example Puccinia graminis f. sp. avenae
    */
-  FORMA_SPECIALIS(NomCode.BACTERIAL, "f.sp."),
+  FORMA_SPECIALIS(NomCode.BOTANICAL, "f.sp."),
 
   /**
    * Botanical rank

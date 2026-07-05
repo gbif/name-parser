@@ -194,19 +194,13 @@ public final class NameTokens {
           continue;
         }
         // upper-case epithets (e.g. all-caps "ELEVATA") — treat as lower-case epithets after recovery.
-        // Don't synthesise an epithet from an all-caps token that contains a non-ASCII
-        // letter ("ELEVÄTA") or that's followed by an abbreviation dot ("ELEV." → "ELEV"
-        // + "."): those look like all-caps author surnames, not epithets.
+        // A diacritic is not a discriminator: "ELEVÄTA" is lower-cased to an epithet exactly like
+        // its ASCII twin "ELEVATA". Only an abbreviation dot ("ELEV." → "ELEV" + ".") still routes
+        // the token to author-recovery, since that shape is an abbreviated author surname.
         if (t.startsUpper() && genus != null && t.text.length() > 1
             && isAllUpperLetters(t.text)) {
-          boolean hasNonAscii = false;
-          for (int j = 0; j < t.text.length(); ) {
-            int cp = t.text.codePointAt(j);
-            if (cp > 0x7F) { hasNonAscii = true; break; }
-            j += Character.charCount(cp);
-          }
           boolean isAbbrev = i + 1 < boundary && ts.get(i + 1).kind == TokenKind.DOT;
-          if (!hasNonAscii && !isAbbrev) {
+          if (!isAbbrev) {
             String w = t.text.toLowerCase();
             lowerEpithets.add(w);
             i++;
@@ -313,7 +307,6 @@ public final class NameTokens {
           Rank rmInfra = RankMarkers.matchInfraspecificAllowNotho(w, notho);
           if (rmInfra != null) {
             if (hasInfraspecificEpithetAfter(ts, i, boundary)) {
-              ctx.explicitInfraMarker = true;
               // Second marker overriding the first: the previous classification
               // (oldRank.epithet + author) was an intermediate level the model can't
               // hold, so warn about the drop.

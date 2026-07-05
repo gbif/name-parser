@@ -1,2 +1,0 @@
-# Doubtful test names — names that should parse but be flagged as doubtful.
-# One name per line. Lines starting with # or that are blank are skipped.

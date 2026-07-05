@@ -191,18 +191,12 @@ public final class AuthorshipSplit {
           continue;
         }
         // All-caps multi-letter word in epithet position only counts as an upper-cased
-        // epithet when the genus itself was all-caps (so the whole input is shouted),
-        // AND the word contains no non-ASCII letter (ELEVÄTA → author surname) and
-        // isn't followed by an abbreviation dot (ELEV. → author).
+        // epithet when the genus itself was all-caps (so the whole input is shouted) and it
+        // isn't followed by an abbreviation dot (ELEV. → author). A diacritic no longer
+        // disqualifies it: "CHIONE ELEVÄTA" is read like "CHIONE ELEVATA".
         if (genusAllCaps && afterGenus && t.text.length() > 1 && isAllUpper(t.text)) {
-          boolean hasNonAscii = false;
-          for (int j = 0; j < t.text.length(); ) {
-            int cp = t.text.codePointAt(j);
-            if (cp > 0x7F) { hasNonAscii = true; break; }
-            j += Character.charCount(cp);
-          }
           boolean isAbbrev = i + 1 < n && tokens.get(i + 1).kind == TokenKind.DOT;
-          if (!hasNonAscii && !isAbbrev) {
+          if (!isAbbrev) {
             nameWords++;
             haveEpithet = true;
             afterSubgenus = false;

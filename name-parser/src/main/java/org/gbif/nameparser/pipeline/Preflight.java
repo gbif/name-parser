@@ -128,6 +128,21 @@ public final class Preflight {
       "^[\\p{L}][\\p{L}\\d]*(?:-lineage|\\s+lineage)$",
       Pattern.UNICODE_CHARACTER_CLASS);
 
+  // ---------- Precompiled in-method literals ----------
+  private static final Pattern HTML_ENTITY_NAMED = Pattern.compile("&[a-zA-Z]+;");
+  private static final Pattern HTML_ENTITY_NUMERIC = Pattern.compile("&#\\d+;");
+  private static final Pattern DELETE_MARKER =
+      Pattern.compile("(?:.*\\s)?delete(?:\\s.*|,.*|\\s*)");
+  private static final Pattern NON_HOMONYM =
+      Pattern.compile("(?i)non\\s+\\p{Lu}\\p{L}+(?:\\s.*)?");
+  private static final Pattern QUESTION_ONLY = Pattern.compile("^\\?\\s+\\p{Ll}+\\s*$");
+  private static final Pattern LATIN_WORD =
+      Pattern.compile("[\\p{L}][\\p{L}.\\-]+", Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern LATIN_WORD_MIN2 =
+      Pattern.compile("[\\p{L}]{2,}", Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern AUTHOR_ABBREV =
+      Pattern.compile("\\b[\\p{Lu}][\\p{L}]*\\.", Pattern.UNICODE_CHARACTER_CLASS);
+
   private Preflight() {}
 
   /**
@@ -151,7 +166,7 @@ public final class Preflight {
         throw new UnparsableNameException(NameType.OTHER, original);
       }
     }
-    if (s.matches("&[a-zA-Z]+;") || s.matches("&#\\d+;")) {
+    if (HTML_ENTITY_NAMED.matcher(s).matches() || HTML_ENTITY_NUMERIC.matcher(s).matches()) {
       throw new UnparsableNameException(NameType.OTHER, original);
     }
 
@@ -163,13 +178,13 @@ public final class Preflight {
     if (lower.contains("tobedeleted")
         || lower.contains("(delete)")
         || s.startsWith("@")
-        || lower.matches("(?:.*\\s)?delete(?:\\s.*|,.*|\\s*)")
+        || DELETE_MARKER.matcher(lower).matches()
         || lower.contains("[delete]")
         || lower.contains("[none]")) {
       throw new UnparsableNameException(NameType.OTHER, original);
     }
     if (lower.startsWith("non ")
-        && (!s.matches("(?i)non\\s+\\p{Lu}\\p{L}+(?:\\s.*)?") || s.contains("="))) {
+        && (!NON_HOMONYM.matcher(s).matches() || s.contains("="))) {
       throw new UnparsableNameException(NameType.OTHER, original);
     }
 
@@ -209,7 +224,7 @@ public final class Preflight {
     // missing-genus form is reconstructed downstream (see StripAndStash).
     if (QUESTION_PREFIX.matcher(s).find()
         && !INDET_SPECIES.matcher(s).matches()
-        && s.matches("^\\?\\s+\\p{Ll}+\\s*$")) {
+        && QUESTION_ONLY.matcher(s).matches()) {
       throw new UnparsableNameException(NameType.PLACEHOLDER, original);
     }
 
@@ -344,19 +359,18 @@ public final class Preflight {
   }
 
   private static int countLatinWords(String s) {
-    Matcher m = Pattern.compile("[\\p{L}][\\p{L}.\\-]+", Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+    Matcher m = LATIN_WORD.matcher(s);
     int count = 0;
     while (m.find()) count++;
     return count;
   }
 
   private static boolean containsLatinWord(String s) {
-    return Pattern.compile("[\\p{L}]{2,}", Pattern.UNICODE_CHARACTER_CLASS).matcher(s).find();
+    return LATIN_WORD_MIN2.matcher(s).find();
   }
 
   private static boolean hasAuthorAbbrev(String s) {
-    return Pattern.compile("\\b[\\p{Lu}][\\p{L}]*\\.", Pattern.UNICODE_CHARACTER_CLASS)
-        .matcher(s).find();
+    return AUTHOR_ABBREV.matcher(s).find();
   }
 
   private static int countLetters(String s) {

@@ -41,6 +41,13 @@ public final class BenchmarkCli {
   static final Path DEFAULT_INPUT = Paths.get("data/benchmark-data.txt");
   /** Number of names parsed during the optional --warmup pre-pass. */
   private static final int WARMUP_NAMES = 100;
+  /**
+   * Any single parse slower than this is logged to stderr with the offending name.
+   * The parser has no internal timeout, so a catastrophic-backtracking regression would
+   * otherwise be invisible (it just inflates the max/p95). Flagging the individual row
+   * makes the culprit name observable. 50 ms is ~1000× a normal parse.
+   */
+  private static final long SLOW_PARSE_THRESHOLD_NANOS = 50_000_000L;
 
   private final NameParser parser;
 
@@ -121,6 +128,9 @@ public final class BenchmarkCli {
           type = e.getType();
         }
         long elapsed = System.nanoTime() - t0;
+        if (elapsed > SLOW_PARSE_THRESHOLD_NANOS) {
+          System.err.printf("SLOW %d ms: %s%n", elapsed / 1_000_000, name);
+        }
 
         if (n == timings.length) {
           long[] grown = new long[timings.length * 2];

@@ -276,6 +276,7 @@ public class NameParserImplTest {
             .species("Agrostis", "compressa")
             .combAuthors(null, "Willd.")
             .nomNote("nom. superfl.")
+            .code(BOTANICAL)
             .nothingElse();
   }
 
@@ -319,7 +320,7 @@ public class NameParserImplTest {
             .species("Polygala", "vulgaris")
             .combAuthors("1753", "L.")
             .nomNote("nom. & typ. cons.")
-            .code(ZOOLOGICAL)
+            .code(BOTANICAL)
             .nothingElse();
   }
 
@@ -344,8 +345,10 @@ public class NameParserImplTest {
             .infraGeneric("Centaurea", SUBGENUS, "Jacea")
             .nothingElse();
 
+    // Author placed before the infrageneric marker is captured as the genus (generic) author.
     assertName("Centaurea L. subg. Jacea", "Centaurea subgen. Jacea")
             .infraGeneric("Centaurea", SUBGENUS, "Jacea")
+            .genericAuthors(null, "L.")
             .nothingElse();
 
     // not a series: https://github.com/gbif/checklistbank/issues/200
@@ -878,6 +881,8 @@ public class NameParserImplTest {
             .monomial("Salmonidae")
             .combAuthors("1822", "Jarocki or Schinz")
             .code(NomCode.ZOOLOGICAL)
+            .doubtful()
+            .warning(Warnings.UNCERTAIN_AUTHORSHIP)
             .nothingElse();
   }
 
@@ -938,6 +943,15 @@ public class NameParserImplTest {
     // default to botanical ranks for sections
     assertName("Pinus suprasect. Taeda", "Pinus supersect. Taeda")
             .infraGeneric("Pinus", SUPERSECTION_BOTANY, "Taeda")
+            .code(BOTANICAL)
+            .nothingElse();
+
+    // Authorship placed BEFORE the infrageneric marker is the genus author, captured as the
+    // generic authorship; "Salimori" is the (unauthored) sectional epithet, not an author.
+    assertName("Cordia (Adans.) Kuntze sect. Salimori", "Cordia sect. Salimori")
+            .infraGeneric("Cordia", SECTION_BOTANY, "Salimori")
+            .genericBasAuthors(null, "Adans.")
+            .genericAuthors(null, "Kuntze")
             .code(BOTANICAL)
             .nothingElse();
 
@@ -1347,6 +1361,8 @@ public class NameParserImplTest {
             .species("Spermacoce", "tenuis")
             .combAuthors(null, "Sess", "Moc.")
             .nomNote("orth. var.")
+            .doubtful()
+            .warning(Warnings.UNCERTAIN_AUTHORSHIP)
             .nothingElse();
 
     assertName("Quercus serra Liebm., non Unger (1845), fossil name.", "Quercus serra")
@@ -1390,6 +1406,8 @@ public class NameParserImplTest {
             .species("Uroleptopsis", "viridis")
             .basAuthors("1886", "Perejaslawzewa")
             .code(ZOOLOGICAL)
+            .doubtful()
+            .warning(Warnings.QUESTION_MARKS_REMOVED)
             .nothingElse();
 
     assertName("Apatura iris junonina (Lambillion) & Cabeau, 1910", "Apatura iris junonina")
@@ -1402,18 +1420,24 @@ public class NameParserImplTest {
             .species("Scleropogon", "kelloggi")
             .basAuthors("137", "Wilcox")
             .code(ZOOLOGICAL)
+            .doubtful()
+            .warning(Warnings.UNLIKELY_YEAR)
             .nothingElse();
 
     assertName("Ospriocerus arizonensis (Bromley, 193k7)", "Ospriocerus arizonensis")
             .species("Ospriocerus", "arizonensis")
             .basAuthors("193", "Bromley")
             .code(ZOOLOGICAL)
+            .doubtful()
+            .warning(Warnings.UNLIKELY_YEAR)
             .nothingElse();
 
     assertName("Lepidanthrax coquilletti Evenhuis and Hall, 0000", "Lepidanthrax coquilletti")
             .species("Lepidanthrax", "coquilletti")
             .combAuthors("0000", "Evenhuis", "Hall")
             .code(ZOOLOGICAL)
+            .doubtful()
+            .warning(Warnings.UNLIKELY_YEAR)
             .nothingElse();
 
     assertName("Scopula cajanderi (Herz, 1903), 1903-01-01", "Scopula cajanderi")
@@ -1832,11 +1856,12 @@ public class NameParserImplTest {
             .cultivar("Symphoricarpos", CULTIVAR, "mother of pearl")
             .nothingElse();
 
-    // Species author before the cultivar and cultivar author after it are two distinct
-    // authors, not one concatenated "L.Broerse".
+    // The cultivar name's author is the cultivar author (Broerse); the preceding species
+    // author (L.) is captured as the specific authorship, not merged into "L. & Broerse".
     assertName("Acer campestre L. cv. 'Elsrijk' Broerse", "Acer campestre 'Elsrijk'")
             .cultivar("Acer", "campestre", "Elsrijk")
-            .combAuthors(null, "L.", "Broerse")
+            .combAuthors(null, "Broerse")
+            .specificAuthors(null, "L.")
             .nothingElse();
 
     assertName("Primula Border Auricula Group", "Primula Border Auricula Group")
@@ -2002,9 +2027,9 @@ public class NameParserImplTest {
             .infraSpecies("Chione", "elevata", INFRASPECIFIC_NAME, "vulgaris")
             .nothingElse();
 
-    assertName("CHIONE ELEVÄTA", "Chione")
-            .monomial("Chione")
-            .combAuthors(null, "Eleväta")
+    // A diacritic in an all-caps epithet is treated like its ASCII twin (CHIONE ELEVATA).
+    assertName("CHIONE ELEVÄTA", "Chione eleväta")
+            .species("Chione", "eleväta")
             .nothingElse();
 
     assertName("CHIONE ELEV.", "Chione")
@@ -2418,24 +2443,6 @@ public class NameParserImplTest {
   }
 
   /**
-   * Test all names in doubtful.txt and make sure they parse without exception,
-   * but have a doubtful flag set.
-   * This test does not verify if the parsed name was correct in all its pieces,
-   * so only use this as a quick way to add names to tests.
-   * <p>
-   * Exceptional cases should better be tested in a test on its own!
-   */
-  @Test
-  public void doubtfulFile() throws Exception {
-    for (String name : iterResource("doubtful.txt")) {
-      ParsedName n = parser.parse(name, null);
-      assertTrue(name, n.isDoubtful());
-      assertTrue(name, n.getState().isParsed());
-      assertTrue(name, n.getType().isParsable());
-    }
-  }
-
-  /**
    * Test all names in other.txt and makes sure they are not parsable.
    */
   @Test
@@ -2585,6 +2592,7 @@ public class NameParserImplTest {
             .combAuthors(null, "Engl.")
             .nomNote("nom. illeg.")
             .sensu("non. A.lancea.")
+            .code(BOTANICAL)
             .nothingElse();
 
     //TODO: pro syn.
@@ -2594,17 +2602,83 @@ public class NameParserImplTest {
             .nomNote("nom. cons.")
             .doubtful()
             .partial("[= Grislea L. 1753].")
-            .code(NomCode.ZOOLOGICAL)
+            .code(BOTANICAL)
             .nothingElse();
 
     assertName("Anthurium lanceum Engl. nom.illeg.", "Anthurium lanceum")
             .species("Anthurium", "lanceum")
             .combAuthors(null, "Engl.")
             .nomNote("nom. illeg.")
+            .code(BOTANICAL)
             .nothingElse();
 
   }
 
+
+  /**
+   * A code-exclusive nomenclatural status settles the code even without any other cue, and
+   * even against a year that would otherwise read as a zoological author-year. Statuses that
+   * exist in both codes (nom. nud., etc.) stay code-neutral.
+   */
+  @Test
+  public void nomNoteCode() throws Exception {
+    // ICN-only status → BOTANICAL, overriding the year → zoological heuristic
+    assertName("Polygala vulgaris L., 1753, nom. cons.", "Polygala vulgaris")
+            .species("Polygala", "vulgaris")
+            .combAuthors("1753", "L.")
+            .nomNote("nom. cons.")
+            .code(BOTANICAL)
+            .nothingElse();
+    // ICZN-only status → ZOOLOGICAL, with no year present
+    assertName("Aus bus Smith, nomen oblitum", "Aus bus")
+            .species("Aus", "bus")
+            .combAuthors(null, "Smith")
+            .nomNote("nomen oblitum")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+    // shared status carries no code signal
+    assertName("Aus bus Smith, nom. nud.", "Aus bus")
+            .species("Aus", "bus")
+            .combAuthors(null, "Smith")
+            .nomNote("nom. nud.")
+            .nothingElse();
+  }
+
+  /** Open-nomenclature uncertainty in the authorship is flagged doubtful. */
+  @Test
+  public void uncertainAuthorship() throws Exception {
+    // trailing standalone "?" — dropped, name flagged doubtful
+    assertName("Uroleptopsis viridis (Perejaslawzewa, 1886) ?", "Uroleptopsis viridis")
+            .species("Uroleptopsis", "viridis")
+            .basAuthors("1886", "Perejaslawzewa")
+            .code(ZOOLOGICAL)
+            .doubtful()
+            .warning(Warnings.QUESTION_MARKS_REMOVED)
+            .nothingElse();
+    // "?" glued to a trailing author
+    assertName("Abies alba Smith?", "Abies alba")
+            .species("Abies", "alba")
+            .combAuthors(null, "Smith")
+            .doubtful()
+            .warning(Warnings.UNCERTAIN_AUTHORSHIP)
+            .nothingElse();
+    // alternative authors joined by "/" — the slash is retained in the author string
+    assertName("Abies alba Smith/Jones", "Abies alba")
+            .species("Abies", "alba")
+            .combAuthors(null, "Smith/Jones")
+            .doubtful()
+            .warning(Warnings.UNCERTAIN_AUTHORSHIP)
+            .nothingElse();
+  }
+
+  /** A comb-author list carrying a "de" particle must not be mistaken for a publishedIn ref. */
+  @Test
+  public void authorListWithParticle() throws Exception {
+    assertName("Leptographium conplurium M.L. Yin, Z.W. de Beer & M.J. Wingf.", "Leptographium conplurium")
+            .species("Leptographium", "conplurium")
+            .combAuthors(null, "M.L.Yin", "Z.W.de Beer", "M.J.Wingf.")
+            .nothingElse();
+  }
 
   @Test
   public void testAuthorteam() throws Exception {
@@ -3406,14 +3480,20 @@ public class NameParserImplTest {
             .warning(Warnings.INDETERMINED)
             .nothingElse();
 
+    // Indeterminate infraspecific names keep the authorship trailing the rank marker.
     assertName("Nitzschia sinuata var. (Grunow) Lange-Bert.", "Nitzschia sinuata var.")
             .infraSpecies("Nitzschia", "sinuata", Rank.VARIETY, null)
+            .basAuthors(null, "Grunow")
+            .combAuthors(null, "Lange-Bert.")
+            .code(BOTANICAL)
             .type(NameType.INFORMAL)
             .warning(Warnings.INDETERMINED)
             .nothingElse();
 
     assertName("Canis lupus subsp. Linnaeus, 1758", "Canis lupus ssp.")
             .infraSpecies("Canis", "lupus", Rank.SUBSPECIES, null)
+            .combAuthors("1758", "Linnaeus")
+            .code(ZOOLOGICAL)
             .type(NameType.INFORMAL)
             .warning(Warnings.INDETERMINED)
             .nothingElse();
@@ -3473,6 +3553,7 @@ public class NameParserImplTest {
 
     assertName("Lepidoptera alba DC.", Rank.SUBSPECIES, "Lepidoptera alba ssp.")
             .infraSpecies("Lepidoptera", "alba", Rank.SUBSPECIES, null)
+            .combAuthors(null, "DC.")
             .type(NameType.INFORMAL)
             .warning(Warnings.INDETERMINED)
             .nothingElse();
@@ -3532,7 +3613,7 @@ public class NameParserImplTest {
   public void microbialRanks2() throws Exception {
     assertName("Puccinia graminis f. sp. avenae", "Puccinia graminis f.sp. avenae")
             .infraSpecies("Puccinia", "graminis", Rank.FORMA_SPECIALIS, "avenae")
-            .code(NomCode.BACTERIAL)
+            .code(NomCode.BOTANICAL)
             .nothingElse();
   }
 
@@ -4099,6 +4180,14 @@ public class NameParserImplTest {
             .nothingElse();
 
     assertName("Ctenotus alacer Storr, 1970 (not 1969)", "Ctenotus alacer")
+            .species("Ctenotus", "alacer")
+            .combAuthors("1970", "Storr")
+            .imprintYear("1969")
+            .code(ZOOLOGICAL)
+            .nothingElse();
+
+    // unquoted bracketed imprint year
+    assertName("Ctenotus alacer Storr, 1970 [1969]", "Ctenotus alacer")
             .species("Ctenotus", "alacer")
             .combAuthors("1970", "Storr")
             .imprintYear("1969")

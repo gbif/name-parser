@@ -58,13 +58,21 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * Not used for standalone genus names which are represented as uninomials.
    */
   private String genus;
-  
+
+  private CombinedAuthorship genericAuthorship;
+
   /**
    * The infrageneric epithet.
    */
   private String infragenericEpithet;
   
   private String specificEpithet;
+
+  /**
+   * The species authorship when the name is an infraspecific trinomial and might contain both
+   * the species and infraspecies authorship. The main authorship is used for the infraspecies.
+   */
+  private CombinedAuthorship specificAuthorship;
   
   private String infraspecificEpithet;
   
@@ -128,8 +136,10 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     code = pn.code;
     uninomial = pn.uninomial;
     genus = pn.genus;
+    genericAuthorship = pn.genericAuthorship;
     infragenericEpithet = pn.infragenericEpithet;
     specificEpithet = pn.specificEpithet;
+    specificAuthorship = pn.specificAuthorship;
     infraspecificEpithet = pn.infraspecificEpithet;
     cultivarEpithet = pn.cultivarEpithet;
     phrase = pn.phrase;
@@ -189,7 +199,19 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
       this.genus = genus;
     }
   }
-  
+
+  public CombinedAuthorship getGenericAuthorship() {
+    return genericAuthorship;
+  }
+
+  public void setGenericAuthorship(CombinedAuthorship genericAuthorship) {
+    this.genericAuthorship = genericAuthorship;
+  }
+
+  public boolean hasGenericAuthorship() {
+    return genericAuthorship != null && genericAuthorship.hasAuthorship();
+  }
+
   @Override
   public String getInfragenericEpithet() {
     return infragenericEpithet;
@@ -219,7 +241,19 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
       specificEpithet = species;
     }
   }
-  
+
+  public CombinedAuthorship getSpecificAuthorship() {
+    return specificAuthorship;
+  }
+
+  public void setSpecificAuthorship(CombinedAuthorship specificAuthorship) {
+    this.specificAuthorship = specificAuthorship;
+  }
+
+  public boolean hasSpecificAuthorship() {
+    return specificAuthorship != null && specificAuthorship.hasAuthorship();
+  }
+
   @Override
   public String getInfraspecificEpithet() {
     return infraspecificEpithet;

@@ -35,8 +35,6 @@ public final class AuthorshipParser {
     String sanctioningAuthor;
     int unparsedFrom = -1;
     String unparsedText;
-    /** Secondary 4-digit year encountered after the publication year — imprint year. */
-    String imprintYear;
   }
 
   static AuthState parse(List<Token> tokens, int from) {
@@ -129,9 +127,9 @@ public final class AuthorshipParser {
 
   /**
    * Parses author list within [from, to), populating {@code into}. Handles "ex"
-   * splitting (ex authors come before main authors). When a second 4-digit year is
-   * encountered after the first, it's recorded into {@code state.imprintYear} (if
-   * non-null) so callers can surface it on the parsed name.
+   * splitting (ex authors come before main authors). A second 4-digit year encountered
+   * after the first (or a bracketed year) becomes {@code into}'s imprint year, sitting
+   * next to its publication year on the {@link Authorship}.
    * @return true if a year range was detected (e.g. "1845-1847", "1987-92")
    */
   private static boolean parseAuthors(List<Token> tokens, int from, int to, Authorship into, AuthState state) {
@@ -166,20 +164,20 @@ public final class AuthorshipParser {
           }
         }
         if (inBrackets) {
-          // Imprint year always goes to state.imprintYear; never overrides into.year.
-          if (state != null && state.imprintYear == null) {
-            state.imprintYear = year;
+          // A bracketed year is the imprint year of THIS authorship (basionym or
+          // combination), sitting next to its publication year; never its main year.
+          if (into.getImprintYear() == null) {
+            into.setImprintYear(year);
           }
           i++; // skip CLOSE_BRACKET
           continue;
         }
         // First year wins — imprint dates ("Linnaeus, 1898, 1897") keep the first
-        // (the actual publication year); the second is recorded into state.imprintYear
-        // so the caller can surface it on the parsed name.
+        // (the actual publication year); the second becomes this authorship's imprint year.
         if (into.getYear() == null) {
           into.setYear(year);
-        } else if (state != null && state.imprintYear == null) {
-          state.imprintYear = year;
+        } else if (into.getImprintYear() == null) {
+          into.setImprintYear(year);
         }
         // Detect year range: NUMBER + OTHER("-" or "/") + NUMBER → keep first year only
         if (i + 1 < to) {
@@ -462,6 +460,15 @@ public final class AuthorshipParser {
           continue;
         }
         i++;
+        continue;
+      }
+      // "/" between two author words ("Smith/Jones") marks alternative authorship. Keep the
+      // slash glued (no surrounding spaces) so the ambiguity stays visible in the output; the
+      // name is already flagged UNCERTAIN_AUTHORSHIP upstream.
+      if (t.kind == TokenKind.OTHER && t.text.equals("/")
+          && cur.length() > 0 && i + 1 < to && tokens.get(i + 1).kind == TokenKind.WORD) {
+        cur.append('/').append(tokens.get(i + 1).text);
+        i += 2;
         continue;
       }
       // Unknown punctuation in an author run — skip silently

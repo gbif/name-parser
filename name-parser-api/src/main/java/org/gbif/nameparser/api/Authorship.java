@@ -32,17 +32,24 @@ public class Authorship {
   private List<String> exAuthors = new ArrayList<>();
 
   /**
-   * list of in-authors excluding in itself. Usually followed by a publication citation.
-   * Author A in Author B
-   * Author A is the actual author of the name, but it was published within a work written/edited by Author B.
-   */
-  private List<String> inAuthors = new ArrayList<>();
-
-  /**
    * The year the combination or basionym was first published, usually the same as the publishedIn reference.
    * It is used for sorting names and ought to be populated even for botanical names which do not use it in the complete authorship string.
    */
   private String year;
+
+  /**
+   * The imprint or printing date — the year actually printed on the work, which
+   * may differ from the nominal publication year. By convention a year wrapped in
+   * square brackets is always an imprint year, even when it is the only year cited
+   * (e.g. {@code "Cabanis [1851]"} → year=null, imprintYear="1851"). When both the
+   * nominal year and the imprint year are given, the nominal year stays on the
+   * authorship and the imprint year is captured here
+   * (e.g. {@code "Storr, 1970 [\"1969\"]"} → year=1970, imprintYear="1969").
+   *
+   * <p>See ICZN Article 22 for the citation conventions:
+   * <a href="https://code.iczn.org/date-of-publication/article-22-citation-of-date/">code.iczn.org/date-of-publication/article-22-citation-of-date</a>.
+   */
+  private String imprintYear;
 
   public static Authorship authors(String... authors) {
     return yearAuthors(null, authors);
@@ -122,7 +129,19 @@ public class Authorship {
   public void setYear(String year) {
     this.year = year;
   }
-  
+
+  public String getImprintYear() {
+    return imprintYear;
+  }
+
+  public void setImprintYear(String imprintYear) {
+    this.imprintYear = imprintYear;
+  }
+
+  public boolean hasImprintYear() {
+    return imprintYear != null;
+  }
+
   public boolean isEmpty() {
     return (authors == null || authors.isEmpty()) && year == null;
   }
@@ -138,12 +157,13 @@ public class Authorship {
     Authorship that = (Authorship) o;
     return Objects.equals(authors, that.authors) &&
         Objects.equals(exAuthors, that.exAuthors) &&
-        Objects.equals(year, that.year);
+        Objects.equals(year, that.year) &&
+        Objects.equals(imprintYear, that.imprintYear);
   }
   
   @Override
   public int hashCode() {
-    return Objects.hash(authors, exAuthors, year);
+    return Objects.hash(authors, exAuthors, year, imprintYear);
   }
   
   /**
