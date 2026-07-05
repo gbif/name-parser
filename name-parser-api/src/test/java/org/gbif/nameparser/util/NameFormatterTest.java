@@ -49,6 +49,84 @@ public class NameFormatterTest {
     pn.setSanctioningAuthor("Pers.");
     assertEquals("L. : Pers.", pn.authorshipComplete());
   }
+
+  /** Imprint year (now on the Authorship) renders in canonicalComplete but not canonical. */
+  @Test
+  public void imprintYearRendering() throws Exception {
+    // imprint next to the combination year: "Storr, 1970 [1969]"
+    pn.setGenus("Ctenotus");
+    pn.setSpecificEpithet("alacer");
+    pn.setRank(Rank.SPECIES);
+    pn.setCode(NomCode.ZOOLOGICAL);
+    Authorship comb = Authorship.authors("Storr");
+    comb.setYear("1970");
+    comb.setImprintYear("1969");
+    pn.setCombinationAuthorship(comb);
+    assertEquals("Ctenotus alacer Storr, 1970 [1969]", NameFormatter.canonicalComplete(pn));
+    assertEquals("Ctenotus alacer Storr, 1970", NameFormatter.canonical(pn));
+    assertEquals("Ctenotus alacer", NameFormatter.canonicalWithoutAuthorship(pn));
+
+    // imprint inside the basionym brackets: "(Peters, 1876 [1877])"
+    ParsedName bn = new ParsedName();
+    bn.setGenus("Anomalopus");
+    bn.setSpecificEpithet("truncatus");
+    bn.setRank(Rank.SPECIES);
+    bn.setCode(NomCode.ZOOLOGICAL);
+    Authorship bas = Authorship.authors("Peters");
+    bas.setYear("1876");
+    bas.setImprintYear("1877");
+    bn.setBasionymAuthorship(bas);
+    assertEquals("Anomalopus truncatus (Peters, 1876 [1877])", NameFormatter.canonicalComplete(bn));
+    assertEquals("Anomalopus truncatus (Peters, 1876)", NameFormatter.canonical(bn));
+  }
+
+  /** The genus author of an infrageneric name renders in canonicalComplete but not canonical. */
+  @Test
+  public void genericAuthorshipRendering() throws Exception {
+    pn.setGenus("Cordia");
+    pn.setInfragenericEpithet("Salimori");
+    pn.setRank(Rank.SECTION_BOTANY);
+    pn.setCode(NomCode.BOTANICAL);
+    CombinedAuthorship generic = new CombinedAuthorship();
+    generic.setBasionymAuthorship(Authorship.authors("Adans."));
+    generic.setCombinationAuthorship(Authorship.authors("Kuntze"));
+    pn.setGenericAuthorship(generic);
+    assertEquals("Cordia (Adans.) Kuntze sect. Salimori", NameFormatter.canonicalComplete(pn));
+    assertEquals("Cordia sect. Salimori", NameFormatter.canonical(pn));
+    assertEquals("Cordia sect. Salimori", NameFormatter.canonicalWithoutAuthorship(pn));
+  }
+
+  /** The cultivar author follows the cultivar epithet; the species author precedes it (complete only). */
+  @Test
+  public void cultivarAuthorshipRendering() throws Exception {
+    pn.setGenus("Acer");
+    pn.setSpecificEpithet("campestre");
+    pn.setCultivarEpithet("Elsrijk");
+    pn.setRank(Rank.CULTIVAR);
+    pn.setCode(NomCode.CULTIVARS);
+    pn.setCombinationAuthorship(Authorship.authors("Broerse"));
+    CombinedAuthorship specific = new CombinedAuthorship();
+    specific.setCombinationAuthorship(Authorship.authors("L."));
+    pn.setSpecificAuthorship(specific);
+    assertEquals("Acer campestre L. 'Elsrijk' Broerse", NameFormatter.canonicalComplete(pn));
+    assertEquals("Acer campestre 'Elsrijk' Broerse", NameFormatter.canonical(pn));
+  }
+
+  /** The species author of a below-species name renders in canonicalComplete but not canonical. */
+  @Test
+  public void specificAuthorshipRendering() throws Exception {
+    pn.setGenus("Acer");
+    pn.setSpecificEpithet("campestre");
+    pn.setInfraspecificEpithet("hebecarpum");
+    pn.setRank(Rank.SUBSPECIES);
+    pn.setCode(NomCode.BOTANICAL);
+    pn.setCombinationAuthorship(Authorship.authors("Bar"));
+    CombinedAuthorship specific = new CombinedAuthorship();
+    specific.setCombinationAuthorship(Authorship.authors("L."));
+    pn.setSpecificAuthorship(specific);
+    assertEquals("Acer campestre L. subsp. hebecarpum Bar", NameFormatter.canonicalComplete(pn));
+    assertEquals("Acer campestre subsp. hebecarpum Bar", NameFormatter.canonical(pn));
+  }
   
   @Test
   public void testCandidatus() throws Exception {

@@ -2741,6 +2741,7 @@ public class NameParserGnaTest {
           .basAuthors("1758", "Linnaeus")
           .sensu("sensu Fabricius, 1780")
           .code(NomCode.ZOOLOGICAL)
+          .warning(Warnings.XML_TAGS)
           .nothingElse();
 
       assertName("Velutina haliotoides (Linnaeus, 1758), <i>sensu</i> Fabricius, 1780", "Velutina haliotoides")
@@ -2760,6 +2761,7 @@ public class NameParserGnaTest {
           .species("Torymus", "bangalorensis")
           .basAuthors("1953", "Mani", "Kurian")
           .code(NomCode.ZOOLOGICAL)
+          .warning(Warnings.HTML_ENTITIES)
           .nothingElse();
   }
 

@@ -892,9 +892,17 @@ public final class StripAndStash {
       // Strip HTML tags but keep their text content, so a tagged connector like
       // "<i>sensu</i> Fabricius, 1780" becomes "sensu Fabricius, 1780" and is picked up
       // as a taxonomic note by the normal note handling downstream.
+      String beforeTags = s;
       s = HTML_TAG.matcher(s).replaceAll("");
+      if (!s.equals(beforeTags)) {
+        ctx.name.addWarning(Warnings.XML_TAGS);
+      }
       // Decode basic HTML entities
+      String beforeEntities = s;
       s = s.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&nbsp;", " ");
+      if (!s.equals(beforeEntities)) {
+        ctx.name.addWarning(Warnings.HTML_ENTITIES);
+      }
       // Clean up any extra whitespace introduced by tag removal
       s = MULTI_SPACE.matcher(s).replaceAll(" ").trim();
     }

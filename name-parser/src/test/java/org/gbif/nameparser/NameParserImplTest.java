@@ -2644,6 +2644,29 @@ public class NameParserImplTest {
             .nothingElse();
   }
 
+  /** HTML tags and entities are stripped/decoded, each flagged with its own warning. */
+  @Test
+  public void htmlTagsAndEntities() throws Exception {
+    // tag only
+    assertName("<i>Abies alba</i> Mill.", "Abies alba")
+            .species("Abies", "alba")
+            .combAuthors(null, "Mill.")
+            .warning(Warnings.XML_TAGS)
+            .nothingElse();
+    // entity only
+    assertName("Abies alba Mill. &amp; Rohe", "Abies alba")
+            .species("Abies", "alba")
+            .combAuthors(null, "Mill.", "Rohe")
+            .warning(Warnings.HTML_ENTITIES)
+            .nothingElse();
+    // both a tag and an entity
+    assertName("<i>Abies alba</i> Mill. &amp; Rohe", "Abies alba")
+            .species("Abies", "alba")
+            .combAuthors(null, "Mill.", "Rohe")
+            .warning(Warnings.XML_TAGS, Warnings.HTML_ENTITIES)
+            .nothingElse();
+  }
+
   /** Open-nomenclature uncertainty in the authorship is flagged doubtful. */
   @Test
   public void uncertainAuthorship() throws Exception {

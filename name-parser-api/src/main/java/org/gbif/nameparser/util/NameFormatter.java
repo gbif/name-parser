@@ -32,14 +32,14 @@ public class NameFormatter {
   public static String canonical(ParsedName n) {
     // TODO: how can we best remove subsp from zoological names?
     // https://github.com/gbif/portal-feedback/issues/640
-    return buildName(n, true, true, true, true, false, false, false, true, true, false,  false, true, true, true, true, false);
+    return buildName(n, true, true, true, true, false, false, false, true, true, false,  false, true, true, true, false, false, false);
   }
 
   /**
    * A full scientific name just as canonicalName, but without any authorship.
    */
   public static String canonicalWithoutAuthorship(ParsedName n) {
-    return buildName(n, true, true, false, true, false, false, false, true, true, false,  false, true, true, true, true, false);
+    return buildName(n, true, true, false, true, false, false, false, true, true, false,  false, true, true, true, false, false, false);
   }
 
   /**
@@ -54,21 +54,21 @@ public class NameFormatter {
    * Bracteata
    */
   public static String canonicalMinimal(ParsedName n) {
-    return buildName(n, false, false, false, false, false, true, true, false, false, false,  false, false, false, false, false, false);
+    return buildName(n, false, false, false, false, false, true, true, false, false, false,  false, false, false, false, false, false, false);
   }
 
   /**
    * Assembles a full name with all details including non code compliant, informal remarks.
    */
   public static String canonicalComplete(ParsedName n) {
-    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, false);
+    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, false);
   }
 
   /**
    * Assembles a full name with all details including non code compliant, informal remarks and html markup.
    */
   public static String canonicalCompleteHtml(ParsedName n) {
-    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true);
+    return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true, true);
   }
   
   /**
@@ -135,6 +135,10 @@ public class NameFormatter {
    * @param showImprintYear      include the imprint year in ICZN bracketed form
    *                             (e.g. {@code Storr, 1970 [1969]} or, when only the
    *                             imprint year is known, {@code Cabanis [1851]})
+   * @param showExtraAuthorship  render the genus author of an infrageneric name and the
+   *                             species author of a below-species name (e.g.
+   *                             {@code Cordia (Adans.) Kuntze sect. Salimori},
+   *                             {@code Acer campestre L. 'Elsrijk' Broerse})
    * @param html                 add html markup
    */
   public static String buildName(ParsedName n,
@@ -153,6 +157,7 @@ public class NameFormatter {
                                  boolean showPhrase,
                                  boolean showStrain,
                                  boolean showImprintYear,
+                                 boolean showExtraAuthorship,
                                  boolean html
   ) {
     StringBuilder sb = new StringBuilder();
@@ -185,6 +190,12 @@ public class NameFormatter {
           // the infrageneric is the terminal rank. Always show it and wrap it with its genus if requested
           if (n.getGenus() != null && genusForinfrageneric) {
             appendGenus(sb, n, hybridMarker, showQualifier, html);
+            // The genus author of an infrageneric name sits between the genus and the rank
+            // marker ("Cordia (Adans.) Kuntze sect. Salimori").
+            if (showExtraAuthorship && n.hasGenericAuthorship()) {
+              sb.append(' ');
+              appendAuthorship(n.getGenericAuthorship(), sb, n.getCode(), showImprintYear);
+            }
             sb.append(" ");
             // we show zoological infragenerics in brackets,
             // but use rank markers for botanical names (unless its no defined rank)
@@ -257,7 +268,13 @@ public class NameFormatter {
               .append(" ");
         }
         appendInItalics(sb, n.getSpecificEpithet(), html);
-        
+        // The species author of a below-species name (cultivar / trinomial) sits right after
+        // the species epithet ("Acer campestre L. 'Elsrijk' Broerse").
+        if (showExtraAuthorship && n.hasSpecificAuthorship()) {
+          sb.append(' ');
+          appendAuthorship(n.getSpecificAuthorship(), sb, n.getCode(), showImprintYear);
+        }
+
         if (n.getInfraspecificEpithet() == null) {
           // Indetermined infraspecies? Only show indet cultivar marker if no cultivar epithet exists
           if (showIndet
@@ -306,8 +323,11 @@ public class NameFormatter {
       sb.append("\"");
     }
     
-    // uninomial, genus, infragen, species or infraspecies authorship
-    if (authorship && n.hasAuthorship()) {
+    // uninomial, genus, infragen, species or infraspecies authorship. For a cultivar the
+    // name's authorship IS the cultivar author, which is rendered AFTER the cultivar epithet
+    // below ("Acer campestre 'Elsrijk' Broerse"), so it is suppressed here.
+    boolean cultivarShown = showCultivar && n.getCultivarEpithet() != null;
+    if (authorship && n.hasAuthorship() && !cultivarShown) {
       sb.append(" ");
       appendAuthorship(n, sb, n.getCode(), showImprintYear);
     }
@@ -334,6 +354,11 @@ public class NameFormatter {
         sb.append(" '")
             .append(n.getCultivarEpithet())
             .append("'");
+      }
+      // The cultivar author follows the cultivar epithet ("Acer campestre 'Elsrijk' Broerse").
+      if (authorship && n.hasAuthorship()) {
+        sb.append(" ");
+        appendAuthorship(n, sb, n.getCode(), showImprintYear);
       }
     }
 
