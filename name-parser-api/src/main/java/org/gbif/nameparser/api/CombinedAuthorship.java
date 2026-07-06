@@ -1,6 +1,6 @@
 package org.gbif.nameparser.api;
 
-public class CombinedAuthorship {
+public class CombinedAuthorship implements CombinedAuthorshipIF {
 
   /**
    * Authorship with years of the name, but excluding any basionym authorship.
@@ -20,10 +20,12 @@ public class CombinedAuthorship {
   private String sanctioningAuthor;
 
 
+  @Override
   public boolean hasCombinationAuthorship() {
     return combinationAuthorship != null && !combinationAuthorship.isEmpty();
   }
 
+  @Override
   public Authorship getCombinationAuthorship() {
     return combinationAuthorship;
   }
@@ -32,10 +34,12 @@ public class CombinedAuthorship {
     this.combinationAuthorship = combinationAuthorship;
   }
 
+  @Override
   public boolean hasBasionymAuthorship() {
     return basionymAuthorship != null && !basionymAuthorship.isEmpty();
   }
 
+  @Override
   public Authorship getBasionymAuthorship() {
     return basionymAuthorship;
   }
@@ -44,6 +48,7 @@ public class CombinedAuthorship {
     this.basionymAuthorship = basionymAuthorship;
   }
 
+  @Override
   public String getSanctioningAuthor() {
     return sanctioningAuthor;
   }
@@ -55,6 +60,7 @@ public class CombinedAuthorship {
   /**
    * @return true if any kind of authorship exists
    */
+  @Override
   public boolean hasAuthorship() {
     return (combinationAuthorship != null && combinationAuthorship.exists()) || (basionymAuthorship != null && basionymAuthorship.exists());
   }

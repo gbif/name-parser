@@ -562,7 +562,7 @@ public class NameFormatter {
    * each authorship's year, so a basionym's imprint lands inside its brackets
    * ("(Peters, 1876 [1877])") and a combination's follows it ("Storr, 1970 [1969]").
    */
-  public static void appendAuthorship(StringBuilder sb, CombinedAuthorship a, boolean includeYear, NomCode code) {
+  public static void appendAuthorship(StringBuilder sb, CombinedAuthorshipIF a, boolean includeYear, NomCode code) {
     final int origLength = sb.length();
     if (a.hasBasionymAuthorship()) {
       sb.append("(");
