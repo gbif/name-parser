@@ -3597,6 +3597,27 @@ public class NameParserImplTest {
   /**
    * https://github.com/gbif/name-parser/issues/28
    */
+  /**
+   * A roman-numeral generational suffix ("Loeblich III" = Loeblich the third) stays behind the
+   * surname as an upper-case suffix — it must NOT be read as the initials "I.I.I." and flipped in
+   * front of the surname. Both the all-caps and title-case input forms normalise to "III".
+   */
+  @Test
+  public void generationalSuffix() throws Exception {
+    assertAuthorship("Loeblich III", "Loeblich III");
+    assertAuthorship("Loeblich Iii", "Loeblich III");
+    assertName("Ceratium hirundinella (Paulsen) Loeblich III, 1969", "Ceratium hirundinella")
+        .species("Ceratium", "hirundinella")
+        .basAuthors(null, "Paulsen")
+        .combAuthors("1969", "Loeblich III")
+        .nothingElse();
+    assertName("Ceratium hirundinella (Paulsen) Loeblich Iii, 1969", "Ceratium hirundinella")
+        .species("Ceratium", "hirundinella")
+        .basAuthors(null, "Paulsen")
+        .combAuthors("1969", "Loeblich III")
+        .nothingElse();
+  }
+
   @Test
   public void initialsAfterSurname() throws Exception {
     assertName("Purana guttularis (Walker, F., 1858)", "Purana guttularis")

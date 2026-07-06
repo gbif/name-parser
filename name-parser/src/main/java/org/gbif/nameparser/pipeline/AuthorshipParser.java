@@ -23,6 +23,14 @@ public final class AuthorshipParser {
       "ms", "ined", "Bis", "bis"
   );
 
+  /**
+   * Roman-numeral generational suffixes on a surname ("Loeblich III" = Loeblich the third).
+   * Kept verbatim (upper-case) behind the surname, never read as the initials "I.I.I.". Single
+   * letters (I/V/X) are deliberately excluded — those are author initials, not suffixes.
+   */
+  private static final Set<String> GENERATIONAL_SUFFIXES = Set.of(
+      "II", "III", "IV", "VI", "VII", "VIII", "IX");
+
   private AuthorshipParser() {}
 
   static class AuthState {
@@ -270,6 +278,19 @@ public final class AuthorshipParser {
 
       // surname token
       if (t.kind == TokenKind.WORD && t.startsUpper()) {
+        // A roman-numeral generational suffix directly after a complete surname
+        // ("Loeblich III" = Loeblich the third) stays behind the surname as a suffix, rendered
+        // upper-case ("Iii" → "III") — it is NOT the initials "I.I.I." that the all-caps
+        // inversion below would otherwise produce.
+        if (cur.length() > 0 && containsLower(cur)
+            && cur.charAt(cur.length() - 1) != '.'
+            && !endsWithParticleOnly(cur)
+            && GENERATIONAL_SUFFIXES.contains(t.text.toUpperCase())) {
+          appendSpace(cur);
+          cur.append(t.text.toUpperCase());
+          i++;
+          continue;
+        }
         // No-comma "<Surname> <Initials>" inversion pattern: if cur already holds a Latin
         // surname AND the incoming token is a short all-caps word, treat it as the
         // initials trailing the surname and flush as a single inverted author.
