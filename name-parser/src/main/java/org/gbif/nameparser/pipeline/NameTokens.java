@@ -302,6 +302,19 @@ public final class NameTokens {
             if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
             continue;
           }
+          // 2c. A bare trailing "sp."/"spec."/"species" after a species epithet, with nothing
+          // following, is a redundant leftover marker — drop it and keep the binomial at SPECIES
+          // rather than reading "sp" as an infraspecific epithet (which yielded INFRASPECIFIC_NAME
+          // with epithet "sp"). The sp.→ssp. case (2b) already handled a following epithet.
+          if ((w.equalsIgnoreCase("sp") || w.equalsIgnoreCase("spec") || w.equalsIgnoreCase("species"))
+              && !lowerEpithets.isEmpty() && markerIdxInEpithets < 0) {
+            int j = i + 1;
+            if (j < boundary && ts.get(j).kind == TokenKind.DOT) j++;
+            if (j >= boundary) {
+              i = j;
+              continue;
+            }
+          }
           // 3. infraspecific rank marker (with notho-prefix support)
           boolean[] notho = new boolean[1];
           Rank rmInfra = RankMarkers.matchInfraspecificAllowNotho(w, notho);

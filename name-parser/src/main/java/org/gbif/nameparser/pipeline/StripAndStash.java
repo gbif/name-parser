@@ -5,6 +5,7 @@ import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.api.Warnings;
+import org.gbif.nameparser.token.AuthorParticles;
 import org.gbif.nameparser.util.RankUtils;
 import org.gbif.nameparser.util.UnicodeUtils;
 
@@ -75,7 +76,10 @@ public final class StripAndStash {
           "|according\\s+to\\s+\\p{Lu}.*" +
           "|excl\\.\\s+.*" +
           "|ss\\b\\.?\\s+.*" +
-          "|s\\.\\s*l\\.?|s\\.\\s*str\\.?|s\\.\\s*lat\\.?|s\\.\\s*ampl\\.?" +
+          // Case-sensitive (lower-case "s") so trailing uppercase author initials ("Author S.L.",
+          // "Mill. S.L.") are not mistaken for a sensu-lato marker — matching the sibling
+          // SENSU_LATO_REMAINDER / SENSU_STRICTO_SS patterns.
+          "|(?-i:s\\.\\s*l\\.?|s\\.\\s*str\\.?|s\\.\\s*lat\\.?|s\\.\\s*ampl\\.?)" +
           ")$",
       Pattern.CASE_INSENSITIVE);
 
@@ -636,6 +640,12 @@ public final class StripAndStash {
     return s;
   }
 
+  private static String firstWord(String s) {
+    int sp = 0;
+    while (sp < s.length() && !Character.isWhitespace(s.charAt(sp))) sp++;
+    return s.substring(0, sp);
+  }
+
   private static String stripQuotedMonomial(ParseContext ctx, String s) {
     // A leading monomial wrapped in quotes ("'Prosthète' Hesse, 1861" / "\"Foo\" Bar, 2000")
     // marks a word that is not an available scientific name. Strip the quotes for parsing,
@@ -664,12 +674,15 @@ public final class StripAndStash {
       missing = "? " + s.substring(8);
     } else if (s.length() > 1 && Character.isLowerCase(s.codePointAt(0))
         && MISSING_GENUS_EPITHET.matcher(s).matches()
-        && !MISSING_GENUS_NOTE_KEYWORD.matcher(s).matches()) {
+        && !MISSING_GENUS_NOTE_KEYWORD.matcher(s).matches()
+        && !AuthorParticles.isParticle(firstWord(s))) {
       // Lowercase-starting epithet followed by a capitalised author/year — assume
       // the genus is missing and prepend the placeholder. This is the only form
       // that emits MISSING_GENUS (the others have an explicit "?" or "Missing"
       // marker that the user wrote on purpose). Skip when the first word is a
-      // known taxonomic-note keyword that's NOT a real epithet.
+      // known taxonomic-note keyword that's NOT a real epithet, or a surname particle
+      // ("van Berg", "del Rosario Author") — a particle-led input is an author name,
+      // not an epithet whose genus went missing.
       missing = "? " + s;
       emitWarning = true;
     }

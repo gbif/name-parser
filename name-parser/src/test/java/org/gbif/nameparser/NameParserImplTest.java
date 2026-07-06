@@ -1031,10 +1031,11 @@ public class NameParserImplTest {
             .code(BOTANICAL)
             .nothingElse();
 
-    assertName("Arrhoges (Antarctohoges)", "Arrhoges")
-            .monomial("Arrhoges")
-            .basAuthors(null, "Antarctohoges")
-            .code(NomCode.ZOOLOGICAL)
+    // "Arrhoges (Antarctohoges)" without an explicit rank: the parenthesised single word is a
+    // subgenus (a genus can't carry a parenthesised basionym author), not authorship. Parses as
+    // genus + infrageneric epithet at the generic infrageneric rank.
+    assertName("Arrhoges (Antarctohoges)", "Arrhoges infragen. Antarctohoges")
+            .infraGeneric("Arrhoges", INFRAGENERIC_NAME, "Antarctohoges")
             .nothingElse();
 
     assertName("Festuca subg. Schedonorus (P. Beauv. ) Peterm.", "Festuca subgen. Schedonorus")
@@ -1794,6 +1795,170 @@ public class NameParserImplTest {
         .nothingElse();
   }
 
+
+  /**
+   * A name carrying an explicit infraspecific rank marker keeps that specific rank (SUBSPECIES,
+   * VARIETY, …) and is never downgraded to the unspecific INFRASPECIFIC_NAME — including the
+   * indeterminate forms where the terminal epithet is absent and only authorship trails the marker.
+   */
+  @Test
+  public void explicitMarkerKeepsSpecificRank() throws Exception {
+    assertEquals(SUBSPECIES, parser.parse("Canis lupus subsp. Linnaeus, 1758", null, null, null).getRank());
+    assertEquals(VARIETY, parser.parse("Nitzschia sinuata var. (Grunow) Lange-Bert.", null, null, null).getRank());
+    assertEquals(SUBSPECIES, parser.parse("Aphelocoma californica subsp.", null, null, null).getRank());
+    assertEquals(VARIETY, parser.parse("Aus bus var.", null, null, null).getRank());
+  }
+
+  /**
+   * Surname-first authors with comma-separated hyphenated given-name initials invert to the
+   * canonical "&lt;initials&gt;.&lt;surname&gt;" form, keeping the hyphen and the input case of a
+   * lower-case follow-up letter. Previously the comma form produced two authors ("Wang &amp; Y.-j.")
+   * or dropped a dot ("C-K.Yang"). (A2)
+   */
+  @Test
+  public void commaHyphenatedInitials() throws Exception {
+    assertAuthorship("Wang, Y.-j.", "Y.-j.Wang");
+    assertAuthorship("Yang, C.-K.", "C.-K.Yang");
+    assertAuthorship("Wang, Y.-j. & Liu, Z.-q.", "Y.-j.Wang", "Z.-q.Liu");
+    // the space form was already correct and stays so
+    assertAuthorship("Y.-j. Wang", "Y.-j.Wang");
+  }
+
+  /**
+   * A bare trailing "sp."/"spec." after a complete binomial is a redundant leftover marker: it is
+   * dropped and the name stays a SPECIES, instead of "sp" becoming an infraspecific epithet at the
+   * unspecific INFRASPECIFIC_NAME rank. (A3)
+   */
+  @Test
+  public void trailingSpMarker() throws Exception {
+    assertName("Vulpes vulpes sp.", "Vulpes vulpes")
+        .species("Vulpes", "vulpes")
+        .nothingElse();
+    assertName("Vulpes vulpes sp", "Vulpes vulpes")
+        .species("Vulpes", "vulpes")
+        .nothingElse();
+  }
+
+  /**
+   * "Genus (Word)" alone is a subgenus, not a monomial + parenthesised basionym author (a genus
+   * cannot carry a parenthesised basionym author). A genuine species recombination keeps its
+   * parenthesised basionym and votes ZOOLOGICAL, with or without a year. (A5)
+   */
+  @Test
+  public void parenthesisedSubgenusNotBasionym() throws Exception {
+    assertName("Arrhoges (Antarctohoges)", "Arrhoges infragen. Antarctohoges")
+        .infraGeneric("Arrhoges", INFRAGENERIC_NAME, "Antarctohoges")
+        .nothingElse();
+    assertName("Abies alba (Smith)", "Abies alba")
+        .species("Abies", "alba")
+        .basAuthors(null, "Smith")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
+  /**
+   * A genus (monomial) parenthesised token disambiguates subgenus vs. basionym author by the
+   * year: (1) a botanical genus recombination "Genus (BasAuthor) CombAuthor" (no year, a
+   * combination author follows) is a basionym; (2) a zoological "Genus (Author, year)" with the
+   * year INSIDE the brackets is a basionym; (3) a "Genus (Subgenus) Author, year" with the year
+   * OUTSIDE the brackets is a subgenus + authorship; (4) "Genus (Word)" alone is a subgenus.
+   */
+  @Test
+  public void genusBasionymVersusSubgenus() throws Exception {
+    // (1) botanical genus recombination — parenthesised basionym author + combination author
+    assertName("Kyphocarpa (Fenzl) Lopr.", "Kyphocarpa")
+        .monomial("Kyphocarpa")
+        .basAuthors(null, "Fenzl")
+        .combAuthors(null, "Lopr.")
+        .code(BOTANICAL)
+        .nothingElse();
+    assertName("Thliphthisa (Griseb.) P.Caputo & Del Guacchio", "Thliphthisa")
+        .monomial("Thliphthisa")
+        .basAuthors(null, "Griseb.")
+        .combAuthors(null, "P.Caputo", "Del Guacchio")
+        .code(BOTANICAL)
+        .nothingElse();
+    // an ABBREVIATED parenthesised word is always an author, never a subgenus (subgenera are a
+    // single unabbreviated capitalised word) — so it is a basionym even with a trailing year,
+    // which would otherwise (for an unabbreviated word) signal the "Genus (Subgenus) Author, year"
+    // subgenus form.
+    assertName("Foa (Grev.) Kutz. 1849", "Foa")
+        .monomial("Foa")
+        .basAuthors(null, "Grev.")
+        .combAuthors("1849", "Kutz.")
+        .nothingElse();
+    // (2) zoological genus basionym — year inside the brackets, no combination author
+    assertName("Heptacyclus (Vasileyev, 1939)", "Heptacyclus")
+        .monomial("Heptacyclus")
+        .basAuthors("1939", "Vasileyev")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+    // (3) genus + subgenus + authorship — year OUTSIDE the brackets (ZooBank mixed format)
+    assertName("Dicromita (Pterodicromita) Fowler, 1925", "Dicromita (Pterodicromita)")
+        .infraGeneric("Dicromita", INFRAGENERIC_NAME, "Pterodicromita")
+        .combAuthors("1925", "Fowler")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+    assertName("Tenthredo (Macrophya) Dahlbom, 1835", "Tenthredo (Macrophya)")
+        .infraGeneric("Tenthredo", INFRAGENERIC_NAME, "Macrophya")
+        .combAuthors("1835", "Dahlbom")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+    assertName("Caranx (Usa) Whitley, 1927", "Caranx (Usa)")
+        .infraGeneric("Caranx", INFRAGENERIC_NAME, "Usa")
+        .combAuthors("1927", "Whitley")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+    assertName("Oligota (Logiota) Mulsant & Rey 1873", "Oligota (Logiota)")
+        .infraGeneric("Oligota", INFRAGENERIC_NAME, "Logiota")
+        .combAuthors("1873", "Mulsant", "Rey")
+        .code(ZOOLOGICAL)
+        .nothingElse();
+  }
+
+  /**
+   * ZooBank-style "Author in Author & Author, year" citation: the leading author is the name's
+   * author, the "in …" part is the publication reference and its year is the authorship year.
+   */
+  @Test
+  public void inAuthorsCitation() throws Exception {
+    assertName("Gnatholigota Sharp in Sharp & Scott, 1908", "Gnatholigota")
+        .monomial("Gnatholigota")
+        .combAuthors("1908", "Sharp")
+        .publishedIn("Sharp & Scott, 1908")
+        .nothingElse();
+  }
+
+  /**
+   * The end-anchored sensu-lato marker is case-sensitive: lower-case "s.lat."/"s.l." is a
+   * taxonomic note, but uppercase trailing author initials ("… S.L.") are NOT swept into the
+   * taxonomicNote. (A6)
+   */
+  @Test
+  public void sensuLatoNotEatingUppercaseInitials() throws Exception {
+    assertName("Asplenium trichomanes L. s.lat.", "Asplenium trichomanes")
+        .species("Asplenium", "trichomanes")
+        .combAuthors(null, "L.")
+        .sensu("s.lat.")
+        .nothingElse();
+    // uppercase "S.L." is author initials, not a sensu marker
+    assertNull(parser.parse("Quercus robur Author S.L.", null, null, null).getTaxonomicNote());
+  }
+
+  /**
+   * A particle-led input ("van Berg", "del Rosario Author") is an author name, not a lowercase
+   * epithet whose genus went missing — it must NOT be turned into a "? van Berg" PLACEHOLDER with
+   * a MISSING_GENUS warning. (A7)
+   */
+  @Test
+  public void missingGenusNotParticle() throws Exception {
+    ParsedName n = parser.parse("van Berg", null, null, null);
+    assertNotEquals(NameType.PLACEHOLDER, n.getType());
+    assertFalse(n.getWarnings().contains(Warnings.MISSING_GENUS));
+    ParsedName n2 = parser.parse("del Rosario Author", null, null, null);
+    assertNotEquals(NameType.PLACEHOLDER, n2.getType());
+    assertFalse(n2.getWarnings().contains(Warnings.MISSING_GENUS));
+  }
 
   @Test
   public void norwegianRadiolaria() throws Exception {

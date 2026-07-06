@@ -560,34 +560,53 @@ public final class AuthorshipParser {
 
   private static boolean looksLikeInitials(String s) {
     if (s.isEmpty()) return false;
-    String stripped = s.replace(".", "").replace("-", "").replace(" ", "");
-    if (stripped.isEmpty() || stripped.length() > 4) return false;
-    // All characters must be UPPER-case letters (true initials, not a short surname
-    // like "Liu"/"Fr."/"Sacc." which would have lower-case follow-up letters).
-    for (int i = 0; i < stripped.length(); ) {
-      int cp = stripped.codePointAt(i);
-      if (!Character.isLetter(cp) || !Character.isUpperCase(cp)) return false;
-      i += Character.charCount(cp);
+    // Initials are ≤4 single letters, the first upper-case. A lower-case letter is only
+    // allowed immediately after a hyphen — that is a hyphenated given-name initial
+    // ("Y.-j.", "C.-K."). This still rejects abbreviated surnames ("Fr.", "Liu", "Sacc.")
+    // whose lower-case follow-up letters are NOT preceded by a hyphen.
+    int letters = 0;
+    boolean firstLetterSeen = false;
+    boolean prevHyphen = false;
+    for (int i = 0; i < s.length(); ) {
+      int cp = s.codePointAt(i);
+      int cc = Character.charCount(cp);
+      if (cp == '.' || cp == ' ') { i += cc; continue; }
+      if (cp == '-') { prevHyphen = true; i += cc; continue; }
+      if (!Character.isLetter(cp)) return false;
+      if (++letters > 4) return false;
+      boolean upper = Character.isUpperCase(cp);
+      if (!firstLetterSeen) {
+        if (!upper) return false;
+        firstLetterSeen = true;
+      } else if (!upper && !prevHyphen) {
+        return false;
+      }
+      prevHyphen = false;
+      i += cc;
     }
-    return true;
+    return letters > 0;
   }
 
   private static String formatInitials(String s) {
+    boolean hadDots = s.indexOf('.') >= 0;
     String cleaned = s.replace(".", "").replace(" ", "");
-    // Hyphenated CJK-style initials ("Z-X", "Y-H") keep the hyphen and get a single
-    // trailing dot: "Z-X" → "Z-X.". Non-hyphenated initials emit one dot per letter.
     if (cleaned.contains("-")) {
+      // Dotted hyphenated initials ("C.-K.", "Y.-j.") get a dot after each letter and keep
+      // the input case of a single-letter follow-up (so "Y.-j." stays "Y.-j.", not "Y.-J.").
+      // Dot-less CJK-style hyphenated initials ("Z-X") get a single trailing dot, upper-cased.
       StringBuilder b = new StringBuilder();
       for (int i = 0; i < cleaned.length(); ) {
         int cp = cleaned.codePointAt(i);
         if (cp == '-') {
           b.append('-');
+        } else if (hadDots) {
+          b.appendCodePoint(cp).append('.');
         } else {
           b.appendCodePoint(Character.toUpperCase(cp));
         }
         i += Character.charCount(cp);
       }
-      b.append('.');
+      if (!hadDots) b.append('.');
       return b.toString();
     }
     StringBuilder b = new StringBuilder();

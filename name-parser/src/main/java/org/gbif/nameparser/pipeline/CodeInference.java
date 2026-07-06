@@ -91,7 +91,11 @@ public final class CodeInference {
       }
 
       // --- zoological votes ---
-      // Basionym-only "(Author, year)" recombination with no recombination author.
+      // Basionym-only parenthesised recombination with no recombination author, "(Author)" or
+      // "(Author, year)" — the year is optional. Fires on a species recombination
+      // ("Abies alba (Smith)") and on a genus basionym with the year inside the parens
+      // ("Heptacyclus (Vasileyev, 1939)"). A trailing "(Subgenus) Author, year" is split into a
+      // subgenus + combination author by AuthorshipSplit, so its parens are not a basionym here.
       if (authState.basionymPresent && !authState.combination.hasAuthors()) {
         votes.add(NomCode.ZOOLOGICAL);
       }
@@ -121,16 +125,23 @@ public final class CodeInference {
   static NomCode codeFromNomNote(String note) {
     if (note == null) return null;
     String s = note.toLowerCase();
-    if (s.contains("illeg") || s.contains("inval") || s.contains("super")
-        || s.contains("cons") || s.contains("rej") || s.contains("ambig")
-        || s.contains("confus")) {
+    // Word-boundary matching (not bare String.contains) so a status token is only recognised
+    // as a whole word — "cons" matches "nom. cons." but not an unrelated word that merely
+    // contains the letters. The tokens are the abbreviated ICN statuses, so a leading boundary
+    // plus the abbreviation stem (matching "illeg."/"illegit."/"superfl." etc.) is enough.
+    if (ICN_STATUS.matcher(s).find()) {
       return NomCode.BOTANICAL;
     }
-    if (s.contains("oblitum") || s.contains("protectum")) {
+    if (ICZN_STATUS.matcher(s).find()) {
       return NomCode.ZOOLOGICAL;
     }
     return null;
   }
+
+  private static final java.util.regex.Pattern ICN_STATUS = java.util.regex.Pattern.compile(
+      "\\b(?:illeg|inval|superfl|super|cons|rej|rejic|ambig|confus)");
+  private static final java.util.regex.Pattern ICZN_STATUS = java.util.regex.Pattern.compile(
+      "\\b(?:oblitum|protectum)\\b");
 
   /**
    * Rank-restricted code mismatch with the caller-supplied code → override the code to
