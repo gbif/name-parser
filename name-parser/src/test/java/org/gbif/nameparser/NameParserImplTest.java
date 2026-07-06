@@ -1984,6 +1984,23 @@ public class NameParserImplTest {
     assertNull(n3.getPublishedInYear());
   }
 
+  /**
+   * An "in &lt;publication&gt;" citation INSIDE the parenthesised basionym: the year is the
+   * basionym's and the "in …" tail is the publishedIn reference.
+   * "Hypsicera femoralis (Geoffroy in Fourcroy, 1785)" → basionym "Geoffroy, 1785" (ZOOLOGICAL),
+   * publishedIn "Fourcroy, 1785".
+   */
+  @Test
+  public void inAuthorInsideBasionym() throws Exception {
+    assertName("Hypsicera femoralis (Geoffroy in Fourcroy, 1785)", "Hypsicera femoralis")
+        .species("Hypsicera", "femoralis")
+        .basAuthors("1785", "Geoffroy")
+        .code(ZOOLOGICAL)
+        .publishedIn("Fourcroy, 1785")
+        .publishedInYear(1785)
+        .nothingElse();
+  }
+
   @Test
   public void norwegianRadiolaria() throws Exception {
     assertName("Actinomma leptodermum longispinum Cortese & Bjørklund 1998", "Actinomma leptodermum longispinum")

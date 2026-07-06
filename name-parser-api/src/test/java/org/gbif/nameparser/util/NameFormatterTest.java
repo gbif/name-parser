@@ -63,7 +63,8 @@ public class NameFormatterTest {
     comb.setImprintYear("1969");
     pn.setCombinationAuthorship(comb);
     assertEquals("Ctenotus alacer Storr, 1970 [1969]", NameFormatter.canonicalComplete(pn));
-    assertEquals("Ctenotus alacer Storr, 1970", NameFormatter.canonical(pn));
+    // the imprint year is part of the authorship, so it shows wherever the authorship shows
+    assertEquals("Ctenotus alacer Storr, 1970 [1969]", NameFormatter.canonical(pn));
     assertEquals("Ctenotus alacer", NameFormatter.canonicalWithoutAuthorship(pn));
 
     // imprint inside the basionym brackets: "(Peters, 1876 [1877])"
@@ -77,7 +78,7 @@ public class NameFormatterTest {
     bas.setImprintYear("1877");
     bn.setBasionymAuthorship(bas);
     assertEquals("Anomalopus truncatus (Peters, 1876 [1877])", NameFormatter.canonicalComplete(bn));
-    assertEquals("Anomalopus truncatus (Peters, 1876)", NameFormatter.canonical(bn));
+    assertEquals("Anomalopus truncatus (Peters, 1876 [1877])", NameFormatter.canonical(bn));
   }
 
   /** The genus author of an infrageneric name renders in canonicalComplete but not canonical. */

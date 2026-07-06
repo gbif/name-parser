@@ -147,6 +147,11 @@ public final class StripAndStash {
   // "Small apud Britton & Wilson".
   private static final Pattern IN_AUTHOR = Pattern.compile(
       "\\s+(?:in|apud)\\s+([\\p{Lu}][^\\s].*)$");
+  // "(Basionym in PubAuthor, year)" — an "in <publication>" citation INSIDE the parenthesised
+  // basionym. group(1) = basionym author span, group(2) = publication reference.
+  private static final Pattern IN_AUTHOR_IN_PARENS = Pattern.compile(
+      "\\(([^()]*?)\\s+(?:in|apud)\\s+(\\p{Lu}[^()]*?)\\)",
+      Pattern.UNICODE_CHARACTER_CLASS);
 
   // Trailing page reference: " : 377" / ": 12-18" — pulled into publishedInPage.
   private static final Pattern PUBLISHED_PAGE = Pattern.compile(
@@ -608,6 +613,7 @@ public final class StripAndStash {
     s = stripAggregateSuffix(ctx, s);
     s = stripPublishedPage(ctx, s);
     s = stripInPress(ctx, s);
+    s = stripInAuthorInParens(ctx, s);
     s = stripInAuthorCitation(ctx, s);
     s = stripIpniCitation(ctx, s);
     s = stripPeriodSeparatedReference(ctx, s);
@@ -1389,6 +1395,34 @@ public final class StripAndStash {
       String existing = ctx.name.getNomenclaturalNote();
       ctx.name.setNomenclaturalNote(existing == null ? "in press" : existing + " in press");
       s = m.replaceFirst("");
+    }
+    return s;
+  }
+
+  private static String stripInAuthorInParens(ParseContext ctx, String s) {
+    // An "in <publication>" citation INSIDE the parenthesised basionym, e.g.
+    // "Hypsicera femoralis (Geoffroy in Fourcroy, 1785)". The year is the basionym's (the name
+    // was published in that work), and the "in …" tail is the publishedIn reference. Rewrite the
+    // parens to "(Geoffroy, 1785)" — keeping the year on the basionym so it still infers
+    // ZOOLOGICAL — and capture "Fourcroy, 1785" as publishedIn. Without this the end-anchored
+    // IN_AUTHOR strip below swallows the closing paren and the basionym is lost.
+    Matcher m = IN_AUTHOR_IN_PARENS.matcher(s);
+    if (m.find()) {
+      String basPart = m.group(1).trim();   // "Geoffroy"
+      String ref = m.group(2).trim();       // "Fourcroy, 1785"
+      if (!basPart.isEmpty() && ref.length() >= 2) {
+        String existing = ctx.name.getPublishedIn();
+        ctx.name.setPublishedIn(existing == null ? ref : existing + " " + ref);
+        Matcher ym = IN_AUTHOR_YEAR.matcher(ref);
+        String newParens;
+        if (ym.find() && !YEAR_4DIGIT.matcher(basPart).find()) {
+          // Move the publication year onto the basionym so "(Geoffroy, 1785)" survives.
+          newParens = "(" + basPart + ", " + ym.group(1) + ")";
+        } else {
+          newParens = "(" + basPart + ")";
+        }
+        s = s.substring(0, m.start()) + newParens + s.substring(m.end());
+      }
     }
     return s;
   }
