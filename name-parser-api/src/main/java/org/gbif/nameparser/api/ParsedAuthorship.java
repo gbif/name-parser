@@ -34,6 +34,12 @@ public class ParsedAuthorship extends CombinedAuthorship {
   private String publishedIn;
 
   /**
+   * The publication year extracted from {@link #publishedIn}, if the reference carries one.
+   * The year is left in {@link #publishedIn} verbatim; this is only an additional structured copy.
+   */
+  private Integer publishedInYear;
+
+  /**
    * The exact page of the in reference stripped from the authorship
    */
   private String publishedInPage;
@@ -76,6 +82,9 @@ public class ParsedAuthorship extends CombinedAuthorship {
     setSanctioningAuthor(pa.getSanctioningAuthor());
     taxonomicNote = pa.getTaxonomicNote();
     nomenclaturalNote = pa.getNomenclaturalNote();
+    publishedIn = pa.getPublishedIn();
+    publishedInYear = pa.getPublishedInYear();
+    publishedInPage = pa.getPublishedInPage();
     unparsed = pa.getUnparsed();
     doubtful = pa.doubtful;
     manuscript = pa.manuscript;
@@ -102,8 +111,37 @@ public class ParsedAuthorship extends CombinedAuthorship {
     return publishedIn;
   }
 
+  /**
+   * Sets the publishedIn reference and, in addition, extracts its publication year into
+   * {@link #publishedInYear} (the year stays in the reference string verbatim). When several
+   * year-shaped numbers are present the last one is taken — publication references list page
+   * numbers (which can look like years) before the trailing year.
+   */
   public void setPublishedIn(String publishedIn) {
     this.publishedIn = publishedIn;
+    this.publishedInYear = extractYear(publishedIn);
+  }
+
+  public Integer getPublishedInYear() {
+    return publishedInYear;
+  }
+
+  public void setPublishedInYear(Integer publishedInYear) {
+    this.publishedInYear = publishedInYear;
+  }
+
+  /** 4-digit year in the range 1500–2100, standing as its own token. */
+  private static final java.util.regex.Pattern PUBLISHED_IN_YEAR =
+      java.util.regex.Pattern.compile("\\b(1[5-9]\\d{2}|20\\d{2}|2100)\\b");
+
+  private static Integer extractYear(String publishedIn) {
+    if (publishedIn == null) return null;
+    java.util.regex.Matcher m = PUBLISHED_IN_YEAR.matcher(publishedIn);
+    Integer year = null;
+    while (m.find()) {
+      year = Integer.valueOf(m.group(1)); // keep the last match — the trailing year
+    }
+    return year;
   }
 
   public String getPublishedInPage() {
@@ -195,6 +233,7 @@ public class ParsedAuthorship extends CombinedAuthorship {
         Objects.equals(taxonomicNote, that.taxonomicNote) &&
         Objects.equals(nomenclaturalNote, that.nomenclaturalNote) &&
         Objects.equals(publishedIn, that.publishedIn) &&
+        Objects.equals(publishedInYear, that.publishedInYear) &&
         Objects.equals(publishedInPage, that.publishedInPage) &&
         Objects.equals(unparsed, that.unparsed) &&
         state == that.state &&
@@ -203,7 +242,7 @@ public class ParsedAuthorship extends CombinedAuthorship {
 
   @Override
   public int hashCode() {
-    return Objects.hash(extinct, taxonomicNote, nomenclaturalNote, publishedIn, publishedInPage, unparsed, doubtful, manuscript, state, warnings);
+    return Objects.hash(extinct, taxonomicNote, nomenclaturalNote, publishedIn, publishedInYear, publishedInPage, unparsed, doubtful, manuscript, state, warnings);
   }
 
   @Override

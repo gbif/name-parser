@@ -1960,6 +1960,30 @@ public class NameParserImplTest {
     assertFalse(n2.getWarnings().contains(Warnings.MISSING_GENUS));
   }
 
+  /**
+   * The publication year is additionally extracted from the publishedIn reference into
+   * {@link ParsedName#getPublishedInYear()} (an Integer), while the reference string keeps the
+   * year verbatim. When several year-shaped numbers are present the trailing one is taken, since
+   * a reference lists page numbers (which can fall in the year range) before the publication year.
+   */
+  @Test
+  public void publishedInYear() throws Exception {
+    // trailing year 1988 even though the page range "1658-1662" earlier looks year-shaped
+    ParsedName n = parser.parse("Passiflora eglandulosa J.M. MacDougal. Annals of the Missouri "
+        + "Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37", null, null, null);
+    assertEquals("Annals of the Missouri Botanical Garden 75: 1658-1662. figs 1, 2B, and 3. 1988. Figs 36-37",
+        n.getPublishedIn());
+    assertEquals(Integer.valueOf(1988), n.getPublishedInYear());
+    // parenthesised year, kept in the reference
+    ParsedName n2 = parser.parse("Samyda arborea Rich., Actes Soc. Hist. Nat. Paris 1: 109 (1792).", null, null, null);
+    assertEquals("Actes Soc. Hist. Nat. Paris 1: 109 (1792)", n2.getPublishedIn());
+    assertEquals(Integer.valueOf(1792), n2.getPublishedInYear());
+    // a reference without a year → null
+    ParsedName n3 = parser.parse("Xolisma turquini Small apud Britton & Wilson", null, null, null);
+    assertEquals("Britton & Wilson", n3.getPublishedIn());
+    assertNull(n3.getPublishedInYear());
+  }
+
   @Test
   public void norwegianRadiolaria() throws Exception {
     assertName("Actinomma leptodermum longispinum Cortese & Bjørklund 1998", "Actinomma leptodermum longispinum")

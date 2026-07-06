@@ -412,6 +412,11 @@ public class NameAssertion {
     return add(NP.PUBLISHEDINPAGE);
   }
 
+  NameAssertion publishedInYear(Integer publishedInYear) {
+    assertEquals(publishedInYear, n.getPublishedInYear());
+    return this;
+  }
+
   NameAssertion imprintYear(String imprintYear) {
     assertEquals(imprintYear, imprintYearOf());
     return add(NP.IMPRINTYEAR);
