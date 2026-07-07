@@ -47,10 +47,14 @@ react to the changes below.
 
 ### API / model changes (recompile required)
 
-* **`NameType.VIRUS` removed.** A legacy vernacular virus now throws
-  `UnparsableNameException` with `NameType.OTHER` and a new `getCode() == NomCode.VIRUS`.
-  ICTV-style names (`Lausannevirus`, `Marseillevirus marseillevirus`, families ending
-  `-viridae`) instead parse as ordinary scientific names with `code = VIRUS`.
+* **`NameType.VIRUS` and `NameType.OTU` removed.** The enum is now just `SCIENTIFIC`,
+  `FORMULA`, `INFORMAL`, `PLACEHOLDER`, `OTHER`.
+  * A legacy vernacular virus throws `UnparsableNameException` with `NameType.OTHER` and a new
+    `getCode() == NomCode.VIRUS`. ICTV-style names (`Lausannevirus`,
+    `Marseillevirus marseillevirus`, families ending `-viridae`) instead parse as ordinary
+    scientific names with `code = VIRUS`.
+  * OTU / specimen codes (`BOLD:ACW2100`, SH/UBA/GTDB identifiers) throw
+    `UnparsableNameException` with `NameType.OTHER` (no code).
 * **`Rank.DIVISION` renamed to `Rank.DIVISION_ZOOLOGY`**, and a new `Rank.DIVISION_BOTANY`
   added (Lindley-style infrageneric `div.`). Update any references to `DIVISION`.
 * **Imprint years moved from `ParsedName` to `Authorship`** (`Authorship.getImprintYear()`,
