@@ -109,24 +109,17 @@ public final class Assemble {
       n.addWarning(Warnings.YEAR_INTERPRETED);
     }
 
-    // Indeterminate infraspecific names without a phrase ("Nitzschia sinuata var.")
-    // carry no valid authorship — any trailing author-like tokens are artefacts of
-    // parsing. When there IS a phrase ("Acacia mutabilis Maslin subsp. <phrase>")
-    // the species author is meaningful and stays.
-    if (n.getType() == NameType.INFORMAL
-        && n.getRank() != null && n.getRank().isInfraspecific()
-        && n.getInfraspecificEpithet() == null
-        && (n.getPhrase() == null || n.getPhrase().isEmpty())) {
-      n.setCombinationAuthorship(null);
-      n.setBasionymAuthorship(null);
-      if (n.getCode() == null) {
-        NomCode pinned = n.getRank().isRestrictedToCode();
-        if (pinned != null) n.setCode(pinned);
-      }
-    } else if (n.getCode() == null) {
+    // Indeterminate infraspecific names ("Nitzschia sinuata var. (Grunow) Lange-Bert.",
+    // "Canis lupus subsp. Linnaeus, 1758") keep the authorship trailing the rank marker —
+    // it belongs to the (unnamed) infraspecific taxon and is not a parsing artefact.
+    if (n.getCode() == null) {
       // All code-setting heuristics live in CodeInference (called only when the name
       // has no code yet).
       CodeInference.infer(ctx, authState);
+    }
+
+    if (ctx.viralShape && n.getCode() == null) {
+      n.setCode(NomCode.VIRUS);
     }
 
     // Rank-restricted code mismatch with the caller-supplied code → override the code
@@ -144,10 +137,13 @@ public final class Assemble {
 
     // Suffix-based rank inference for monomials: use the explicitly-requested code when
     // provided, otherwise fall back to globally unambiguous suffixes only (-aceae, -oideae).
+    // Viral code is inferred from a highly reliable suffix, so it is safe to drive
+    // suffix-based rank inference (e.g. "Coronaviridae" -> FAMILY).
     // Never apply code-specific suffix maps derived from authorship-inferred code — that
     // would silently assign ranks to names whose code we merely guessed.
     if (n.getRank() == Rank.UNRANKED && n.getUninomial() != null) {
-      NomCode codeForInference = ctx.requestedCode;
+      NomCode codeForInference = ctx.requestedCode != null ? ctx.requestedCode
+          : (ctx.viralShape ? n.getCode() : null);
       Rank r = codeForInference != null
           ? rankFromSuffix(n.getUninomial(), codeForInference)
           : rankFromGlobalSuffix(n.getUninomial());
@@ -156,6 +152,9 @@ public final class Assemble {
 
     // Flag the literal "null" epithet and any blacklisted epithet as doubtful.
     flagBlacklistedEpithets(n);
+
+    // Flag implausible authorship years ("Wilcox, 137", "Hall, 0000", "Bromley, 193k7"→193).
+    flagUnlikelyYears(n);
 
     // A cultivar epithet pins the name as a valid scientific identification — clear the
     // INFORMAL flag and INDETERMINED warning that an "sp." indet marker may have left
@@ -193,6 +192,32 @@ public final class Assemble {
         n.setGenus(q + n.getGenus() + q);
       }
     }
+  }
+
+  /** Plausible authorship years fall in this inclusive range; anything else is flagged. */
+  private static final int MIN_YEAR = 1500;
+  private static final int MAX_YEAR = 2100;
+  private static final java.util.regex.Pattern YEAR_4DIGIT =
+      java.util.regex.Pattern.compile("\\d{4}");
+
+  /**
+   * A parsed authorship year that isn't a clean 4-digit number in a plausible range is a
+   * data-quality artefact ("Wilcox, 137", "Hall, 0000", the "193" truncated from "193k7").
+   * Flag the name doubtful and warn. An intentionally uncertain year ("198?") is left alone.
+   */
+  private static void flagUnlikelyYears(ParsedName n) {
+    if (isUnlikelyYear(n.getCombinationAuthorship() == null ? null : n.getCombinationAuthorship().getYear())
+        || isUnlikelyYear(n.getBasionymAuthorship() == null ? null : n.getBasionymAuthorship().getYear())) {
+      n.setDoubtful(true);
+      n.addWarning(Warnings.UNLIKELY_YEAR);
+    }
+  }
+
+  private static boolean isUnlikelyYear(String year) {
+    if (year == null || year.endsWith("?")) return false;
+    if (!YEAR_4DIGIT.matcher(year).matches()) return true;
+    int v = Integer.parseInt(year);
+    return v < MIN_YEAR || v > MAX_YEAR;
   }
 
   private static void flagBlacklistedEpithets(ParsedName n) {

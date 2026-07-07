@@ -66,9 +66,16 @@ public final class NameTokens {
           && lowerEpithets.isEmpty() && subgenus == null
           && i + 2 < boundary
           && ts.get(i + 1).kind == TokenKind.WORD
-          && ts.get(i + 1).startsUpper()
+          && (ts.get(i + 1).startsUpper() || ts.get(i + 1).startsLower())
           && ts.get(i + 2).kind == TokenKind.CLOSE_PAREN) {
-        subgenus = ts.get(i + 1).text;
+        String sub = ts.get(i + 1).text;
+        // A lower-case parenthesised subgenus ("(acanthoderes)") is malformed — capitalise
+        // it to the conventional form and flag the name doubtful.
+        if (ts.get(i + 1).startsLower()) {
+          sub = Character.toUpperCase(sub.charAt(0)) + sub.substring(1);
+          ctx.name.setDoubtful(true);
+        }
+        subgenus = sub;
         i += 3;
         continue;
       }
@@ -187,25 +194,25 @@ public final class NameTokens {
           continue;
         }
         // upper-case epithets (e.g. all-caps "ELEVATA") — treat as lower-case epithets after recovery.
-        // Don't synthesise an epithet from an all-caps token that contains a non-ASCII
-        // letter ("ELEVÄTA") or that's followed by an abbreviation dot ("ELEV." → "ELEV"
-        // + "."): those look like all-caps author surnames, not epithets.
+        // A diacritic is not a discriminator: "ELEVÄTA" is lower-cased to an epithet exactly like
+        // its ASCII twin "ELEVATA". Only an abbreviation dot ("ELEV." → "ELEV" + ".") still routes
+        // the token to author-recovery, since that shape is an abbreviated author surname.
         if (t.startsUpper() && genus != null && t.text.length() > 1
             && isAllUpperLetters(t.text)) {
-          boolean hasNonAscii = false;
-          for (int j = 0; j < t.text.length(); ) {
-            int cp = t.text.codePointAt(j);
-            if (cp > 0x7F) { hasNonAscii = true; break; }
-            j += Character.charCount(cp);
-          }
           boolean isAbbrev = i + 1 < boundary && ts.get(i + 1).kind == TokenKind.DOT;
-          if (!hasNonAscii && !isAbbrev) {
+          if (!isAbbrev) {
             String w = t.text.toLowerCase();
             lowerEpithets.add(w);
             i++;
             continue;
           }
           // Otherwise fall through to author-recovery handling below.
+        }
+        if (genus != null && t.startsDigitEpithet()) {
+          // lower-case like the ordinary-epithet branch below ("11-Punctata" -> "11-punctata")
+          lowerEpithets.add(t.text.toLowerCase());
+          i++;
+          continue;
         }
         if (t.startsLower()) {
           String w = stripDot(t.text);
@@ -295,12 +302,24 @@ public final class NameTokens {
             if (i < boundary && ts.get(i).kind == TokenKind.DOT) i++;
             continue;
           }
+          // 2c. A bare trailing "sp."/"spec."/"species" after a species epithet, with nothing
+          // following, is a redundant leftover marker — drop it and keep the binomial at SPECIES
+          // rather than reading "sp" as an infraspecific epithet (which yielded INFRASPECIFIC_NAME
+          // with epithet "sp"). The sp.→ssp. case (2b) already handled a following epithet.
+          if ((w.equalsIgnoreCase("sp") || w.equalsIgnoreCase("spec") || w.equalsIgnoreCase("species"))
+              && !lowerEpithets.isEmpty() && markerIdxInEpithets < 0) {
+            int j = i + 1;
+            if (j < boundary && ts.get(j).kind == TokenKind.DOT) j++;
+            if (j >= boundary) {
+              i = j;
+              continue;
+            }
+          }
           // 3. infraspecific rank marker (with notho-prefix support)
           boolean[] notho = new boolean[1];
           Rank rmInfra = RankMarkers.matchInfraspecificAllowNotho(w, notho);
           if (rmInfra != null) {
             if (hasInfraspecificEpithetAfter(ts, i, boundary)) {
-              ctx.explicitInfraMarker = true;
               // Second marker overriding the first: the previous classification
               // (oldRank.epithet + author) was an intermediate level the model can't
               // hold, so warn about the drop.

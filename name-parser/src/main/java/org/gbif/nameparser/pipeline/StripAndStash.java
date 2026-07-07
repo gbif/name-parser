@@ -5,6 +5,7 @@ import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.Rank;
 import org.gbif.nameparser.api.Warnings;
+import org.gbif.nameparser.token.AuthorParticles;
 import org.gbif.nameparser.util.RankUtils;
 import org.gbif.nameparser.util.UnicodeUtils;
 
@@ -30,15 +31,25 @@ public final class StripAndStash {
   // [sic, ...] / (sic, ...) — keep the inner text in the unparsed remainder.
   private static final Pattern SIC_WITH_COMMENT =
       Pattern.compile("\\s*[\\(\\[]\\s*sic\\s*,([^)\\]]+)[\\)\\]]");
+  // bracketed "(corrig.)" / "[corrig.]" (like SIC) or a bare " corrig." token
   private static final Pattern CORRIG =
-      Pattern.compile("(?<=\\s)corrig\\.?(?=\\s|$)");
+      Pattern.compile("\\s*[\\(\\[]\\s*corrig\\.?\\s*[\\)\\]]|(?<=\\s)corrig\\.?(?=\\s|$)");
+  // A standalone manuscript marker supplied as the whole authorship ("ined." / "ms." / "msc." /
+  // "unpublished"). A marker that follows an author ("Monterosato ms.") is glued as a suffix instead.
+  private static final Pattern STANDALONE_MS =
+      Pattern.compile("(?i)^(?:ined|ms|msc|unpublished)\\.?$");
 
   // ---- Nomenclatural notes ----
   // Anchors on a nom/comb/orth/spec keyword and captures from there to end of string.
   // Stops before " non " / " nec " (those are taxonomic-note tails).
   private static final Pattern NOM_NOTE = Pattern.compile(
       "\\s+(" +
-          "(?i:nom|comb|orth|nomen)\\b\\.?(?:(?!\\s+in\\s+\\p{Lu})[\\s.&]*[a-z][a-z.]*)*" +
+          // Possessive (*+) on the word run: [\s.&]* and [a-z.]* both accept '.', so a
+          // greedy star could re-partition a dotted run exponentially. The run only ever
+          // matches lowercase abbreviation words and never needs to give a completed
+          // iteration back (the trailing lookahead needs whitespace/uppercase/comma, none
+          // of which this run consumes), so forbidding backtracking is behaviour-neutral.
+          "(?i:nom|comb|orth|nomen)\\b\\.?(?:(?!\\s+in\\s+\\p{Lu})[\\s.&]*[a-z][a-z.]*)*+" +
           "|(?i:sp|spec|gen|fam|var|form)\\b\\.?\\s*(?i:nov)\\b\\.?(?:\\s+ined\\b\\.?)?(?:\\s+(?i:sp|spec|gen|fam|var|form)\\b\\.?\\s*(?i:nov)\\b\\.?(?:\\s+ined\\b\\.?)?)*" +
           "|(?i:nov)\\b\\.?\\s+(?i:sp|spec|gen|fam|var|form)\\b\\.?" +
           "|(?:in\\s+obs\\b\\.?,?\\s*)?pro\\s+syn\\b\\.?" +
@@ -65,9 +76,25 @@ public final class StripAndStash {
           "|according\\s+to\\s+\\p{Lu}.*" +
           "|excl\\.\\s+.*" +
           "|ss\\b\\.?\\s+.*" +
-          "|s\\.\\s*l\\.?|s\\.\\s*str\\.?|s\\.\\s*lat\\.?|s\\.\\s*ampl\\.?" +
+          // Case-sensitive (lower-case "s") so trailing uppercase author initials ("Author S.L.",
+          // "Mill. S.L.") are not mistaken for a sensu-lato marker — matching the sibling
+          // SENSU_LATO_REMAINDER / SENSU_STRICTO_SS patterns.
+          "|(?-i:s\\.\\s*l\\.?|s\\.\\s*str\\.?|s\\.\\s*lat\\.?|s\\.\\s*ampl\\.?)" +
           ")$",
       Pattern.CASE_INSENSITIVE);
+
+  // Abbreviated sensu-lato / sensu-stricto marker followed by trailing junk that is not
+  // part of the name, e.g. "Asplenium trichomanes L. s.lat. - Asplen trich". The marker
+  // becomes the taxonomic note and the trailing remainder is parked as unparsed.
+  // Case-sensitive: the marker is lower-case "s", so uppercase author initials ("S. L.
+  // Schultes", "S.L. Mill.") are not mistaken for a sensu-lato marker.
+  private static final Pattern SENSU_LATO_REMAINDER = Pattern.compile(
+      "\\s+(s\\.\\s*l\\.?|s\\.\\s*lat\\.?|s\\.\\s*str\\.?|s\\.\\s*ampl\\.?)\\s+(\\S.*?)\\s*$");
+
+  // "s.s." / "s. s." = sensu stricto, at end of string or before trailing junk. Case-sensitive
+  // (lower-case) so uppercase author initials ("S.S.Ying") are never taken as the marker.
+  private static final Pattern SENSU_STRICTO_SS = Pattern.compile(
+      "\\s+s\\.\\s*s\\.?(\\s+\\S.*?)?\\s*$");
 
   // Parenthesised "(nec ..., YYYY)" / "(non ..., YYYY)" / "(not ..., YYYY)" at end —
   // homonym citation, captured as taxonomic note.
@@ -90,6 +117,23 @@ public final class StripAndStash {
   private static final Pattern SYNONYM_BRACKET = Pattern.compile(
       "\\s*\\[\\s*=\\s*[^\\]]+\\]\\s*\\.?\\s*$");
 
+  // Trailing square-bracket comment introduced by a taxonomic-concept keyword, e.g.
+  // "Eunoa [auctt. misspelling for Eunoe]" — the whole bracket content becomes the
+  // taxonomic note. Handled separately from the "[= synonym]" and "[sic]" brackets.
+  private static final Pattern BRACKETED_TAX_NOTE = Pattern.compile(
+      "\\s*\\[\\s*((?:auctt?|sensu|sec|non|nec|misspelling|misapplied|misident)\\b[^\\]]*)\\]\\s*\\.?\\s*$",
+      Pattern.CASE_INSENSITIVE);
+
+  // Informal letter-based species subdivision from old floras: a species (optionally
+  // followed by its abbreviated author) then a lowercase letter marker ("a.", "b.",
+  // "a.b.") then an epithet — "Graphis scripta L. a.b pulverulenta". The marker is
+  // replaced by a synthetic rank marker so downstream parsing maps it to Rank.OTHER.
+  private static final Pattern LETTER_SUBDIVISION_MARKER = Pattern.compile(
+      "^(\\p{Lu}[\\p{Ll}-]+\\s+[\\p{Ll}][\\p{Ll}-]+(?:\\s+\\p{Lu}[\\p{Ll}]*\\.?)*)"
+          + "\\s+((?:[a-z]\\.){1,3}[a-z]?)"
+          + "\\s+([\\p{Ll}][\\p{Ll}-]{2,})\\s*$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+
   // ---- Aggregate markers (suffix forms) ----
   private static final Pattern AGGREGATE = Pattern.compile(
       "(?:\\s+(?:agg\\.?|aggregate|species\\s+group|species\\s+complex|group|complex)" +
@@ -103,16 +147,220 @@ public final class StripAndStash {
   // "Small apud Britton & Wilson".
   private static final Pattern IN_AUTHOR = Pattern.compile(
       "\\s+(?:in|apud)\\s+([\\p{Lu}][^\\s].*)$");
+  // "(Basionym in PubAuthor, year)" — an "in <publication>" citation INSIDE the parenthesised
+  // basionym. group(1) = basionym author span, group(2) = publication reference.
+  private static final Pattern IN_AUTHOR_IN_PARENS = Pattern.compile(
+      "\\(([^()]*?)\\s+(?:in|apud)\\s+(\\p{Lu}[^()]*?)\\)",
+      Pattern.UNICODE_CHARACTER_CLASS);
 
   // Trailing page reference: " : 377" / ": 12-18" — pulled into publishedInPage.
   private static final Pattern PUBLISHED_PAGE = Pattern.compile(
       "\\s*:\\s*(\\d+(?:[-\\u2013]\\d+)?)\\s*$");
 
+  // ---------- Precompiled in-method Pattern.compile literals ----------
+  private static final Pattern YEAR_4DIGIT = Pattern.compile("\\b\\d{4}\\b");
+  private static final Pattern QUOTED_MONOMIAL = Pattern.compile(
+      "^(['\"])\\s*([\\p{Lu}][\\p{L}-]+)\\s*\\1(\\s+.+)?$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern TRAILING_STRAIN_CODE = Pattern.compile(
+      "^([\\p{Lu}][\\p{Ll}]+\\s+[\\p{Ll}]+)\\s+"
+          + "([dr]?RNA[a-zA-Z0-9_\\-]*|[\\p{Lu}][\\p{L}\\d]*\\d[\\p{L}\\d_\\-]*)"
+          + "\\s*$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  // A quoted strain designation introduced by one or more "str"/"strain" markers, at end of
+  // input: "… str .'Aph K2'", "… str. 'Aph K2'", "… strain str .'Aph K2'",
+  // "… str .'Heaney 1986/Camb140 1/1'". The marker's abbreviation dot may be spaced ("str .")
+  // and the quote may be glued to it (".'Aph"). group(2) is the designation text. The designation
+  // is kept as the phrase (not mangled into authorship or reinterpreted as a cultivar epithet).
+  private static final Pattern STRAIN_DESIGNATION = Pattern.compile(
+      "\\s+(?:str|strain)\\b\\s*\\.?"
+          + "(?:\\s+(?:str|strain)\\b\\s*\\.?)*"
+          + "\\s*(['\"])(.+?)\\1\\s*$",
+      Pattern.CASE_INSENSITIVE);
+  private static final Pattern IMPRINT_YEAR_QUOTED = Pattern.compile(
+      "\\s*[\\[\\(]\\s*\"(\\d{4}(?:[-\\u2013]\\d{4})?)\"\\s*[\\]\\)]\\s*\\.?\\s*$");
+  private static final Pattern IMPRINT_YEAR_KEYWORD = Pattern.compile(
+      "\\s*\\(\\s*(?:imprint|not)\\s+(\\d{4}(?:[-\\u2013]\\d{4})?)\\s*\\)\\s*\\.?\\s*$",
+      Pattern.CASE_INSENSITIVE);
+  private static final Pattern IMPRINT_YEAR_ALT = Pattern.compile(
+      "\\s+&\\s+(\\d{4})\\s*\\.?\\s*$");
+  private static final Pattern TRAILING_OTU_CODE = Pattern.compile(
+      "\\s+([A-Z0-9]{3,}_\\d{3,})$");
+  private static final Pattern SEROVAR_PAREN = Pattern.compile(
+      "\\s*\\(\\s*(?:serotype|serovar)\\s+[^)]+\\)\\s*\\.?\\s*$",
+      Pattern.CASE_INSENSITIVE);
+  private static final Pattern SEROVAR_BARE = Pattern.compile(
+      "\\s+(?:serotype|serovar)\\s+\\S+(?:\\s+(?:str\\.?|strain)\\s+\\S+)?\\s*\\.?\\s*$",
+      Pattern.CASE_INSENSITIVE);
+  private static final Pattern ANGLE_BRACKET_AUTHORSHIP = Pattern.compile(
+      "\\s+<\\s*(\\p{Lu}[^>]*\\s[^>]*)>\\s*$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern CANDIDATUS_PREFIX = Pattern.compile(
+      "^[\"']?(?:Candidatus|Ca\\.)\\s+", Pattern.CASE_INSENSITIVE);
+  private static final Pattern CULTIVAR_GROUP_GREX = Pattern.compile(
+      "\\s+([\\p{Lu}][\\p{L}]+(?:\\s+[\\p{Lu}][\\p{L}]+)*)\\s+(Group|grex|gx)\\s*$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern QUOTED_CULTIVAR_END = Pattern.compile(
+      "\\s+(cv\\.?\\s+)?(['\"])([^'\"]+)\\2\\s*$");
+  private static final Pattern QUOTED_CULTIVAR_MID = Pattern.compile(
+      "\\s+(?:cv\\.?\\s+)?(['\"])([^'\"]+)\\1(\\s+[\\p{Lu}].*)$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  // "Cordia (Adans.) Kuntze sect. Salimori" — authorship placed BEFORE the infrageneric
+  // rank marker. group(1)=genus, group(2)=author span (optional parenthesised basionym +
+  // combination author words), group(3)=marker + sectional epithet.
+  private static final Pattern INFRAGEN_AUTHOR_BEFORE_MARKER = Pattern.compile(
+      "^(\\p{Lu}[\\p{Ll}]+)\\s+"
+          + "((?:\\(\\s*[^()]*\\)\\s*)?\\p{Lu}[\\p{L}.'\\-]*(?:\\s+\\p{Lu}[\\p{L}.'\\-]*)*)"
+          + "\\s+((?:subg|subgen|subgenus|sect|subsect|supersect|ser|subser|superser|divisio|div)"
+          + "\\.?\\s+\\p{Lu}[\\p{Ll}]+)$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern QUOTED_CULTIVAR_OPEN = Pattern.compile(
+      "\\s+(cv\\.?\\s+)?(['\"])(\\p{Ll}[\\p{Ll} ]*)\\s*$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern DOUBTFUL_GENUS_BRACKET = Pattern.compile(
+      "^\\[\\s*([\\p{Lu}][\\p{L}\\-]+)\\s*\\](\\s|$)",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern NOM_NOTE_RANK_HINT = Pattern.compile(
+      "^(gen|fam|var|form|sp|spec)\\b\\.?",
+      Pattern.CASE_INSENSITIVE);
+  private static final Pattern AUTHORSHIP_PLACEHOLDER = Pattern.compile(
+      "\\s+Not\\s+(?:applicable|given|known|recorded|found)\\s*$",
+      Pattern.CASE_INSENSITIVE);
+  private static final Pattern PRO_PARTE = Pattern.compile(
+      "\\s*,\\s*(?:pro\\s+parte|p\\.\\s*p\\.[A-Z]?)\\s*$",
+      Pattern.CASE_INSENSITIVE);
+  private static final Pattern PRO_SP_ANNOTATION = Pattern.compile(
+      "\\s+\\(\\s*pro\\s+(?:sp|spec|syn|hyb)\\b\\.?\\s*\\)\\s*\\.?\\s*$",
+      Pattern.CASE_INSENSITIVE);
+  private static final Pattern APPROVED_LISTS = Pattern.compile(
+      "\\s*\\(\\s*Approved\\s+Lists\\s+\\d{4}\\s*\\)\\s*\\.?\\s*$",
+      Pattern.CASE_INSENSITIVE);
+  private static final Pattern COLON_CONCEPT_REFERENCE = Pattern.compile(
+      "\\s*:\\s+(\\p{Lu}[^:]*,\\s*\\d{3,4})\\s*\\.?\\s*$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern IN_AUTHOR_YEAR = Pattern.compile(
+      ",?\\s*(\\d{3,4})\\s*\\.?\\s*$");
+  private static final Pattern IN_AUTHOR_PAREN_YEAR = Pattern.compile("\\((\\d{4})\\)");
+  private static final Pattern IPNI_CITATION = Pattern.compile(
+      "(?<=\\s)[\\p{Lu}][\\p{L}.]+,\\s+(.+\\(\\d{4}\\))\\.?\\s*$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern IPNI_EMBEDDED_NOM_NOTE = Pattern.compile(
+      "\\s+((?:in\\s+obs\\b\\.?,?\\s*)?pro\\s+syn\\b\\.?|nom\\b\\.?(?:\\s+[a-zA-Z][a-zA-Z.]*)*"
+          + "|comb\\b\\.?(?:\\s+[a-zA-Z][a-zA-Z.]*)*"
+          + "|orth\\b\\.?(?:\\s+[a-zA-Z][a-zA-Z.]*)*)\\s*(?=\\(\\d{4}\\))",
+      Pattern.CASE_INSENSITIVE);
+  private static final Pattern IPNI_YEAR = Pattern.compile("\\((\\d{4})\\)\\s*\\.?\\s*$");
+  private static final Pattern PERIOD_SEPARATED_REFERENCE = Pattern.compile(
+      "\\s+[\\p{Lu}][\\p{L}]{2,}\\.\\s+"
+          // Filler words up to the FIRST connector. A negative lookahead keeps the
+          // connectors out of the filler and a possessive quantifier (*+) forbids
+          // backtracking, so this can't blow up on a long connector-free run. The
+          // captured span still runs from the first ref word to end-of-string, so the
+          // strip is identical to the old greedy form. (Literal connectors were dropped
+          // from the filler — they were already covered by [\p{Ll}][\p{L}]+.)
+          // The title must OPEN with a real word (uppercase + ≥2 lowercase, e.g. "Annals",
+          // "Journal", "Lingua") — not initials like "Z.W." — so an author list carrying a
+          // "de"/"et" name particle ("Yin, Z.W. de Beer & Wingf.") isn't mistaken for a ref.
+          + "([\\p{Lu}][\\p{Ll}]{2,}[\\p{L}.]*(?:\\s+(?!(?:of|in|de|et|the|und|für)\\b)(?:[\\p{Lu}][\\p{L}.]+|[\\p{Ll}][\\p{L}]+))*+"
+          + "\\s+(?:of|in|de|et|the|und|für)\\s+.*)$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern PERIOD_REF_YEAR = Pattern.compile("\\b(\\d{4})\\b");
+  private static final Pattern COMMA_PREFIXED_REFERENCE = Pattern.compile(
+      "\\s+[\\p{Lu}][\\p{L}.]+,\\s+"
+          // Filler = capitalised words plus the non-boundary lowercase words (on/and/for);
+          // the boundary connectors (of/in/de/et/the/und/für) are excluded from the filler
+          // and the quantifier is possessive (*+), so the first connector is an unambiguous
+          // stop with no backtracking. Captured span (first ref word → end) is unchanged.
+          + "([\\p{Lu}][\\p{Ll}]{2,}[\\p{L}.]*(?:\\s+(?:[\\p{Lu}][\\p{L}.]+|on|and|for))*+"
+          + "\\s+(?:of|in|de|et|the|und|für)\\s+.*)$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern MANUSCRIPT_MARKER = Pattern.compile(
+      "\\s*,?\\s+(ined\\.?|ms\\.?|msc\\.?|unpublished)\\s*$",
+      Pattern.CASE_INSENSITIVE);
+  private static final Pattern PHRASE_GENUS_SUBGENUS = Pattern.compile(
+      "^([\\p{Lu}][\\p{Ll}]+)\\s+\\(([\\p{Lu}][\\p{Ll}]+)\\)$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern AUTHOR_START = Pattern.compile(
+      "^([\\p{Lu}][\\p{Ll}]+(?:\\s+[\\p{Ll}]+)?)\\s+([\\p{Lu}][\\p{L}.]+.*)$",
+      Pattern.UNICODE_CHARACTER_CLASS);
+
+  // ---------- Precompiled in-method matches/replaceAll/replaceFirst literals ----------
+  private static final Pattern WHITESPACE = Pattern.compile("\\s+");
+  private static final Pattern MULTI_SPACE = Pattern.compile("\\s{2,}");
+  private static final Pattern ET_WORD = Pattern.compile("\\bet\\b");
+  private static final Pattern AND_WORD = Pattern.compile("\\band\\b");
+  private static final Pattern SPACE_AROUND_DOT = Pattern.compile("\\s*\\.\\s*");
+  private static final Pattern DOT_BEFORE_ALNUM = Pattern.compile("\\.(?=[\\p{L}\\d])");
+  private static final Pattern SPACE_AROUND_AMP = Pattern.compile("\\s*&\\s*");
+  private static final Pattern LETTER_QMARK_LETTER = Pattern.compile(".*\\p{L}\\?\\p{L}.*");
+  private static final Pattern QMARK_BETWEEN_LETTERS = Pattern.compile("(\\p{L})\\?(\\p{L})");
+  // Uncertainty markers used for the doubtful/uncertain-authorship flagging.
+  private static final Pattern TRAILING_QMARK = Pattern.compile("\\s\\?\\s*$");
+  // A "?" glued to a word only reads as uncertain authorship when it sits at the end of the
+  // string or right before an author separator (& or comma) — NOT when a lowercase epithet
+  // follows ("Ferganoconcha? oblonga"), which is an open-nomenclature identification qualifier.
+  private static final Pattern UNCERTAIN_AUTHOR_QMARK =
+      Pattern.compile("\\p{L}\\?(?=\\s*(?:$|[&,]))", Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern UNCERTAIN_AUTHOR_OR =
+      Pattern.compile("\\p{Lu}\\p{L}*\\s+or\\s+\\p{Lu}", Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern UNCERTAIN_AUTHOR_SLASH =
+      Pattern.compile("\\p{L}\\s*/\\s*\\p{L}", Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern HORT_EX = Pattern.compile("\\bHort\\.(?=\\s+ex\\s+)");
+  private static final Pattern HORTUS_EX = Pattern.compile("\\bhortus[a]?\\b(?=\\s+ex\\s+)");
+  private static final Pattern LEADING_AUCT = Pattern.compile("^(Auct)");
+  private static final Pattern LEADING_AUCTT = Pattern.compile("^(Auctt)");
+  private static final Pattern MANUSCRIPT_KEYWORD =
+      Pattern.compile("(?i).*\\b(?:ined|ms|msc|unpublished)\\b.*");
+  private static final Pattern INITIAL_DOT_SPACE =
+      Pattern.compile("\\b(\\p{Lu})\\.\\s+([\\p{Ll}][\\p{Ll}]{3,})");
+  private static final Pattern GREEK_MARKER_TEST =
+      Pattern.compile(".*[\\p{Ll}.]\\s*[\\u03B1-\\u03C9\\u237A](?:\\s+|\\.\\s*)\\p{Ll}.*");
+  private static final Pattern STAR_MARKER_TEST =
+      Pattern.compile(".*\\p{Ll}\\s+\\*+\\s+\\p{Ll}.*");
+  private static final Pattern GREEK_MARKER =
+      Pattern.compile("([\\p{Ll}.])\\s*[\\u03B1-\\u03C9\\u237A](?:\\s+|\\.\\s*)(?=[\\p{Ll}])");
+  private static final Pattern STAR_MARKER =
+      Pattern.compile("(?<=\\p{Ll})\\s+\\*+\\s+(?=\\p{Ll})");
+  private static final Pattern NULL_EPITHET_TEST =
+      Pattern.compile(".*[a-z]\\s+null\\s+[a-z]+.*");
+  private static final Pattern NULL_EPITHET_MID =
+      Pattern.compile("(?<=[a-z])\\s+null\\s+(?=[a-z])");
+  private static final Pattern DOUBLE_UNDERSCORE = Pattern.compile("_{2,}");
+  private static final Pattern HTML_TAG = Pattern.compile("<[^>]+>");
+  private static final Pattern DAGGER = Pattern.compile("[†✝]");
+  private static final Pattern TINFR_MARKER = Pattern.compile("\\b[tT]\\.?\\s*infr\\.?\\s+");
+  private static final Pattern CV_EX = Pattern.compile("\\bcv\\.(?=\\s+ex\\s+)");
+  private static final Pattern HT_MARKER = Pattern.compile("\\bht\\.");
+  private static final Pattern TRAILING_CV = Pattern.compile("\\s+cv\\.?\\s*$");
+  private static final Pattern CV_MARKER = Pattern.compile("\\s+cv\\.?(?=\\s|$)");
+  private static final Pattern RANK_MARKER_SUFFIX =
+      Pattern.compile(".*\\b(?:sp|spec|subsp|ssp|var|form|f)\\.?$");
+  private static final Pattern SP_NOV_PREFIX =
+      Pattern.compile("(?i)^(?:sp|spec)\\b\\.?\\s+nov.*");
+  private static final Pattern SINGLE_TITLE_WORD = Pattern.compile("^[\\p{Lu}][\\p{Ll}]+$");
+  private static final Pattern MISSING_GENUS_EPITHET =
+      Pattern.compile("^[a-z][a-z\\-]+\\s+\\p{Lu}.*");
+  private static final Pattern MISSING_GENUS_NOTE_KEYWORD =
+      Pattern.compile("^(?:non|nec|not|sensu|sec|auct|auctt|fide|emend|ss|s|cf|aff|hort)\\b.*");
+  private static final Pattern MIHI_TEST = Pattern.compile("(?i).*\\bmihi\\b.*");
+  private static final Pattern MIHI = Pattern.compile("(?i)\\s+mihi\\.?(?=\\s|$)");
+  private static final Pattern ANON_UPPER = Pattern.compile("(?<=\\s)Anon\\b\\.?");
+  private static final Pattern ANON_LOWER = Pattern.compile("(?<=\\s)anon\\b(?!\\.)");
+  private static final Pattern SEROVAR_TEST =
+      Pattern.compile("(?i).*\\b(?:serotype|serovar)\\b.*");
+  private static final Pattern PAGE_RANGE_TEST = Pattern.compile(".*\\b\\d{3,}-\\d{3,}\\b.*");
+  private static final Pattern GENUS_SUBGENUS_TEST =
+      Pattern.compile("^[\\p{Lu}][\\p{Ll}]+\\s+\\([\\p{Lu}][\\p{Ll}]+\\)$");
+  private static final Pattern TRAILING_SPECIES_WORD_TEST =
+      Pattern.compile("^[\\p{Lu}][\\p{Ll}]+\\s+species\\s*\\.?$");
+  private static final Pattern TRAILING_SPECIES_WORD = Pattern.compile("\\s+species\\s*\\.?$");
+  private static final Pattern DIGITS_ONLY = Pattern.compile("\\d+");
+
   private StripAndStash() {}
 
   /** True if a 4-digit year appears anywhere in s[0, end). */
   private static boolean hasEarlierYear(String s, int end) {
-    Matcher m = Pattern.compile("\\b\\d{4}\\b").matcher(s.substring(0, end));
+    Matcher m = YEAR_4DIGIT.matcher(s.substring(0, end));
     return m.find();
   }
 
@@ -123,17 +371,17 @@ public final class StripAndStash {
    * "nomen …" forms have any trailing dot stripped (the dot there is sentence punctuation).
    */
   private static String normaliseNomNote(String raw) {
-    String s = raw.replaceAll("\\s+", " ").trim();
+    String s = WHITESPACE.matcher(raw).replaceAll(" ").trim();
     // Normalise "et" / "and" connectives to "&" (with surrounding spaces).
-    s = s.replaceAll("\\bet\\b", "&").replaceAll("\\band\\b", "&");
+    s = AND_WORD.matcher(ET_WORD.matcher(s).replaceAll("&")).replaceAll("&");
     // Collapse weird spacing around dots, then re-insert a single space after each
     // interior period that is followed by a word character: "nom.illeg." → "nom. illeg.".
     // Periods followed by punctuation (",", ")") keep the abbreviation glued.
-    s = s.replaceAll("\\s*\\.\\s*", ".");
-    s = s.replaceAll("\\.(?=[\\p{L}\\d])", ". ");
+    s = SPACE_AROUND_DOT.matcher(s).replaceAll(".");
+    s = DOT_BEFORE_ALNUM.matcher(s).replaceAll(". ");
     // Add space around "&" if missing
-    s = s.replaceAll("\\s*&\\s*", " & ");
-    s = s.replaceAll("\\s{2,}", " ").trim();
+    s = SPACE_AROUND_AMP.matcher(s).replaceAll(" & ");
+    s = MULTI_SPACE.matcher(s).replaceAll(" ").trim();
     // Spelled-out "nomen …" forms drop any trailing dot (the dot in the input is
     // sentence punctuation, not part of the abbreviation).
     if (s.regionMatches(true, 0, "nomen", 0, 5)) {
@@ -166,6 +414,11 @@ public final class StripAndStash {
   static String stripAuthorshipMarkers(String authorship, ParsedName name) {
     String s = authorship.trim();
     if (s.isEmpty()) return s;
+    // A standalone manuscript marker as the whole authorship is a manuscript flag, not an author.
+    if (STANDALONE_MS.matcher(s).matches()) {
+      name.setManuscript(true);
+      return "";
+    }
     Matcher m = SIC_WITH_COMMENT.matcher(s);
     if (m.find()) {
       name.setOriginalSpelling(Boolean.TRUE);
@@ -179,29 +432,27 @@ public final class StripAndStash {
     m = CORRIG.matcher(" " + s);
     if (m.find()) {
       name.setOriginalSpelling(Boolean.FALSE);
-      s = s.replaceAll("(?<=\\s)corrig\\.?(?=\\s|$)", "").replaceAll("\\s+", " ").trim();
+      // prepend a space so a leading "corrig." (e.g. a standalone authorship) also matches
+      s = WHITESPACE.matcher(CORRIG.matcher(" " + s).replaceAll("")).replaceAll(" ").trim();
     }
     // "?" inside a word — transcription artefact for a missing letter ("Istv?nffi").
     // Strip the ? and glue the surrounding word parts; flag doubtful + warning.
-    if (s.indexOf('?') >= 0 && s.matches(".*\\p{L}\\?\\p{L}.*")) {
-      s = s.replaceAll("(\\p{L})\\?(\\p{L})", "$1$2");
+    if (s.indexOf('?') >= 0 && LETTER_QMARK_LETTER.matcher(s).matches()) {
+      s = QMARK_BETWEEN_LETTERS.matcher(s).replaceAll("$1$2");
       name.setDoubtful(true);
       name.addWarning(Warnings.QUESTION_MARKS_REMOVED);
     }
     // Win-1252 → UTF-8 artefacts inside an aux authorship ("Plesn¡k" should read
-    // as "Plesnik"). Map a small set of high-bit characters to their Latin look-alikes.
-    if (s.indexOf('¡') >= 0 || s.indexOf('¢') >= 0 || s.indexOf('£') >= 0) {
-      s = s.replace('¡', 'i').replace('¢', 'c').replace('£', 'L');
-      name.addWarning(Warnings.HOMOGLYHPS);
-    }
+    // as "Plesnik"), repaired with the same shared mapping as the main pipeline.
+    s = repairWin1252Artefacts(name, s);
     // "Hort." / "hortus(a)" horticultural placeholder is by convention written
     // lower-case "hort.".
-    s = s.replaceAll("\\bHort\\.(?=\\s+ex\\s+)", "hort.");
-    s = s.replaceAll("\\bhortus[a]?\\b(?=\\s+ex\\s+)", "hort.");
+    s = HORT_EX.matcher(s).replaceAll("hort.");
+    s = HORTUS_EX.matcher(s).replaceAll("hort.");
     // A leading parenthesised homonym citation "(non/nec/not ...)" makes the whole authorship a
     // misapplied/taxonomic note rather than a basionym — capture it verbatim, no author left.
     if (LEADING_HOMONYM_PAREN.matcher(s).find()) {
-      String norm = s.replaceAll("\\s+", " ").trim();
+      String norm = WHITESPACE.matcher(s).replaceAll(" ").trim();
       String existing = name.getTaxonomicNote();
       name.setTaxonomicNote(existing == null ? norm : existing + " " + norm);
       return "";
@@ -212,8 +463,8 @@ public final class StripAndStash {
     // "(sensu X, 1878) Y, 1992" → author Y, 1992 + note "sensu X, 1878".
     m = PAREN_NOTE.matcher(s);
     if (m.find()) {
-      String norm = m.group(1).trim().replaceAll("\\s+", " ");
-      norm = norm.replaceAll("^(Auct)", "auct").replaceAll("^(Auctt)", "auctt");
+      String norm = WHITESPACE.matcher(m.group(1).trim()).replaceAll(" ");
+      norm = LEADING_AUCTT.matcher(LEADING_AUCT.matcher(norm).replaceAll("auct")).replaceAll("auctt");
       String existing = name.getTaxonomicNote();
       name.setTaxonomicNote(existing == null ? norm : existing + " " + norm);
       s = (s.substring(0, m.start()) + s.substring(m.end())).trim();
@@ -244,7 +495,7 @@ public final class StripAndStash {
         String after = paddedNom.substring(m.end());
         s = (before + (after.isEmpty() ? "" : " " + after)).trim();
         while (s.endsWith(",")) s = s.substring(0, s.length() - 1).trim();
-        if (raw.matches("(?i).*\\b(?:ined|ms|msc|unpublished)\\b.*")) {
+        if (MANUSCRIPT_KEYWORD.matcher(raw).matches()) {
           name.setManuscript(true);
         }
       }
@@ -261,8 +512,8 @@ public final class StripAndStash {
     if (m.find()) {
       String raw = m.group(1).trim();
       if (!raw.isEmpty()) {
-        String norm = raw.replaceAll("\\b(\\p{Lu})\\.\\s+([\\p{Ll}][\\p{Ll}]{3,})", "$1.$2");
-        norm = norm.replaceAll("^(Auct)", "auct").replaceAll("^(Auctt)", "auctt");
+        String norm = INITIAL_DOT_SPACE.matcher(raw).replaceAll("$1.$2");
+        norm = LEADING_AUCTT.matcher(LEADING_AUCT.matcher(norm).replaceAll("auct")).replaceAll("auctt");
         String existing = name.getTaxonomicNote();
         name.setTaxonomicNote(existing == null ? norm
             : existing.equals(norm) ? existing : existing + " " + norm);
@@ -277,18 +528,59 @@ public final class StripAndStash {
    * Ordered list of strip/stash steps applied to the working string before tokenisation.
    * Each step is named for what it removes; the order is load-bearing (see class doc).
    */
+  /**
+   * Flags open-nomenclature uncertainty before any of it is normalised away. A trailing
+   * standalone "?" ("… (Author, 1886) ?") is dropped but marks the name doubtful. A "?"
+   * glued to an author word ("Sess?", "Smith?") or alternative authors joined by "or" / "/"
+   * ("Jarocki or Schinz", "Smith/Jones") mark the authorship uncertain. Internal "letter?letter"
+   * transcription artefacts ("Istv?nffi") are left to {@link #repairQuestionMarkInWord}.
+   */
+  private static String flagUncertainAuthorship(ParseContext ctx, String s) {
+    if (TRAILING_QMARK.matcher(s).find()) {
+      ctx.name.setDoubtful(true);
+      ctx.name.addWarning(Warnings.QUESTION_MARKS_REMOVED);
+      s = TRAILING_QMARK.matcher(s).replaceAll("").trim();
+    }
+    if (UNCERTAIN_AUTHOR_QMARK.matcher(s).find()
+        || UNCERTAIN_AUTHOR_OR.matcher(s).find()
+        || UNCERTAIN_AUTHOR_SLASH.matcher(s).find()) {
+      ctx.name.setDoubtful(true);
+      ctx.name.addWarning(Warnings.UNCERTAIN_AUTHORSHIP);
+    }
+    return s;
+  }
+
+  /**
+   * Splits off an authorship placed before an infrageneric rank marker as the genus author.
+   * "Cordia (Adans.) Kuntze sect. Salimori" leaves "Cordia sect. Salimori" for the pipeline
+   * (the sectional epithet is not read as an author) and stashes "(Adans.) Kuntze" as the
+   * generic authorship, applied by {@link Pipeline} — the section itself is unauthored.
+   */
+  private static String extractGenericAuthor(ParseContext ctx, String s) {
+    Matcher m = INFRAGEN_AUTHOR_BEFORE_MARKER.matcher(s);
+    if (m.matches()) {
+      ctx.pendingGenericAuthor = m.group(2).trim();
+      s = m.group(1) + " " + m.group(3);
+    }
+    return s;
+  }
+
   static void run(ParseContext ctx) {
     String s = ctx.working;
+    s = flagUncertainAuthorship(ctx, s);
+    s = extractGenericAuthor(ctx, s);
     s = stripQuotedMonomial(ctx, s);
     s = applyMissingGenusPlaceholder(ctx, s);
     s = stripInfraRankLetters(ctx, s);
+    s = normaliseLetterSubdivisionMarker(ctx, s);
     s = repairQuestionMarkInWord(ctx, s);
+    s = stripStrainDesignation(ctx, s);
     s = stashTrailingStrainCode(ctx, s);
     s = stripImprintYears(ctx, s);
     s = stripNullBetweenEpithets(ctx, s);
     s = normaliseHyphens(ctx, s);
     s = replaceHomoglyphs(ctx, s);
-    s = repairWin1252Artefacts(ctx, s);
+    s = repairWin1252Artefacts(ctx.name, s);
     s = normaliseDoubleUnderscores(ctx, s);
     s = stashTrailingOtuCode(ctx, s);
     s = stripSerovarSerotype(ctx, s);
@@ -313,11 +605,15 @@ public final class StripAndStash {
     s = stripMihi(ctx, s);
     s = normaliseAnon(ctx, s);
     s = stripColonConceptReference(ctx, s);
+    s = stripBracketedTaxNote(ctx, s);
     s = stripParenTaxNote(ctx, s);
+    s = stripSensuLatoRemainder(ctx, s);
+    s = stripSensuStrictoSS(ctx, s);
     s = stripTaxNote(ctx, s);
     s = stripAggregateSuffix(ctx, s);
     s = stripPublishedPage(ctx, s);
     s = stripInPress(ctx, s);
+    s = stripInAuthorInParens(ctx, s);
     s = stripInAuthorCitation(ctx, s);
     s = stripIpniCitation(ctx, s);
     s = stripPeriodSeparatedReference(ctx, s);
@@ -329,12 +625,38 @@ public final class StripAndStash {
     ctx.working = s;
   }
 
+  private static String stripStrainDesignation(ParseContext ctx, String s) {
+    // A quoted strain designation after a "str"/"strain" marker ("Aphanizomenon flos-aquae
+    // str .'Aph K2'") is kept intact as the phrase of an informal STRAIN name. Without this the
+    // messy "str ." spacing and the glued ".'Aph" quote let the designation leak into the
+    // authorship parser (mangled to "K.2.'Aph & '") or, with clean spacing, get reinterpreted as
+    // a cultivar epithet — losing the requested STRAIN rank. The remaining "Genus species str."
+    // is left for NameTokens, which resolves the trailing "str" marker to Rank.STRAIN; the stashed
+    // phrase then makes it a phrase name.
+    Matcher m = STRAIN_DESIGNATION.matcher(s);
+    if (m.find()) {
+      String prefix = s.substring(0, m.start()).trim();
+      // Only when a plausible name precedes the marker (a capitalised genus), never on junk.
+      if (!prefix.isEmpty() && Character.isUpperCase(prefix.codePointAt(0))) {
+        ctx.name.setPhrase(m.group(2).trim());
+        ctx.name.setType(NameType.INFORMAL);
+        return prefix + " str.";
+      }
+    }
+    return s;
+  }
+
+  private static String firstWord(String s) {
+    int sp = 0;
+    while (sp < s.length() && !Character.isWhitespace(s.charAt(sp))) sp++;
+    return s.substring(0, sp);
+  }
+
   private static String stripQuotedMonomial(ParseContext ctx, String s) {
     // A leading monomial wrapped in quotes ("'Prosthète' Hesse, 1861" / "\"Foo\" Bar, 2000")
     // marks a word that is not an available scientific name. Strip the quotes for parsing,
     // remember the quote char so Assemble can re-wrap the parsed uninomial, and flag doubtful.
-    Matcher qm = Pattern.compile("^(['\"])\\s*([\\p{Lu}][\\p{L}-]+)\\s*\\1(\\s+.+)?$",
-            Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+    Matcher qm = QUOTED_MONOMIAL.matcher(s);
     if (qm.find()) {
       ctx.quotedMonomial = qm.group(1);
       ctx.name.setDoubtful(true);
@@ -357,13 +679,16 @@ public final class StripAndStash {
     } else if (s.startsWith("Missing ") && s.length() > 8 && Character.isLowerCase(s.charAt(8))) {
       missing = "? " + s.substring(8);
     } else if (s.length() > 1 && Character.isLowerCase(s.codePointAt(0))
-        && s.matches("^[a-z][a-z\\-]+\\s+\\p{Lu}.*")
-        && !s.matches("^(?:non|nec|not|sensu|sec|auct|auctt|fide|emend|ss|s|cf|aff|hort)\\b.*")) {
+        && MISSING_GENUS_EPITHET.matcher(s).matches()
+        && !MISSING_GENUS_NOTE_KEYWORD.matcher(s).matches()
+        && !AuthorParticles.isParticle(firstWord(s))) {
       // Lowercase-starting epithet followed by a capitalised author/year — assume
       // the genus is missing and prepend the placeholder. This is the only form
       // that emits MISSING_GENUS (the others have an explicit "?" or "Missing"
       // marker that the user wrote on purpose). Skip when the first word is a
-      // known taxonomic-note keyword that's NOT a real epithet.
+      // known taxonomic-note keyword that's NOT a real epithet, or a surname particle
+      // ("van Berg", "del Rosario Author") — a particle-led input is an author name,
+      // not an epithet whose genus went missing.
       missing = "? " + s;
       emitWarning = true;
     }
@@ -383,10 +708,30 @@ public final class StripAndStash {
     // or dot) so we don't strip an inline glyph in epithets like "βrigida".
     // Forms covered: " δ ", " δ. ", ".δ.", ".δ ".
     if (s.indexOf('⍺') >= 0
-        || s.matches(".*[\\p{Ll}.]\\s*[\\u03B1-\\u03C9\\u237A](?:\\s+|\\.\\s*)\\p{Ll}.*")
-        || s.matches(".*\\p{Ll}\\s+\\*+\\s+\\p{Ll}.*")) {
-      s = s.replaceAll("([\\p{Ll}.])\\s*[\\u03B1-\\u03C9\\u237A](?:\\s+|\\.\\s*)(?=[\\p{Ll}])", "$1 ");
-      s = s.replaceAll("(?<=\\p{Ll})\\s+\\*+\\s+(?=\\p{Ll})", " ");
+        || GREEK_MARKER_TEST.matcher(s).matches()
+        || STAR_MARKER_TEST.matcher(s).matches()) {
+      s = GREEK_MARKER.matcher(s).replaceAll("$1 ");
+      s = STAR_MARKER.matcher(s).replaceAll(" ");
+    }
+    return s;
+  }
+
+  private static String normaliseLetterSubdivisionMarker(ParseContext ctx, String s) {
+    // Old floras subdivide a species informally with letters ("a.", "b.", "a.b.").
+    // Rewrite such a marker to the synthetic RankMarkers.LETTER_SUBDIVISION token so
+    // the normal rank-marker path treats the trailing epithet as an infraspecific of
+    // rank OTHER. Any abbreviated author before the marker is left in place and dropped
+    // by the mid-name-author logic, exactly as it would be before a "var." marker.
+    Matcher m = LETTER_SUBDIVISION_MARKER.matcher(s);
+    if (m.find()) {
+      // A single-letter marker that is itself a real rank marker ("f." = forma) must be
+      // left for the normal machinery; only genuine subdivision letters are rewritten.
+      String[] segments = m.group(2).split("[^a-z]+");
+      boolean realMarker = segments.length == 1
+          && RankMarkers.matchInfraspecific(segments[0]) != null;
+      if (!realMarker) {
+        s = m.group(1) + " " + RankMarkers.LETTER_SUBDIVISION + " " + m.group(3);
+      }
     }
     return s;
   }
@@ -394,8 +739,8 @@ public final class StripAndStash {
   private static String repairQuestionMarkInWord(ParseContext ctx, String s) {
     // "?" inside a word — transcription artefact for a missing letter ("Istv?nffi").
     // Strip the ? and glue the surrounding word parts; flag doubtful + warning.
-    if (s.indexOf('?') >= 0 && s.matches(".*\\p{L}\\?\\p{L}.*")) {
-      s = s.replaceAll("(\\p{L})\\?(\\p{L})", "$1$2");
+    if (s.indexOf('?') >= 0 && LETTER_QMARK_LETTER.matcher(s).matches()) {
+      s = QMARK_BETWEEN_LETTERS.matcher(s).replaceAll("$1$2");
       ctx.name.setDoubtful(true);
       ctx.name.addWarning(Warnings.QUESTION_MARKS_REMOVED);
     }
@@ -408,16 +753,12 @@ public final class StripAndStash {
     // as an informal phrase and reduce the working string to "Genus species". The
     // code is recognised by an uppercase prefix that contains at least one digit OR
     // starts with "RNA"/"DNA" with letters/digits/underscores/hyphens following.
-    Matcher pm = Pattern.compile(
-        "^([\\p{Lu}][\\p{Ll}]+\\s+[\\p{Ll}]+)\\s+"
-            + "([dr]?RNA[a-zA-Z0-9_\\-]*|[\\p{Lu}][\\p{L}\\d]*\\d[\\p{L}\\d_\\-]*)"
-            + "\\s*$",
-        Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+    Matcher pm = TRAILING_STRAIN_CODE.matcher(s);
     if (pm.find()) {
       String code = pm.group(2);
       // Don't consume a single trailing year ("Genus species 1842") — those are
       // numeric-only and handled by authorship parsing.
-      if (!code.matches("\\d+")) {
+      if (!DIGITS_ONLY.matcher(code).matches()) {
         ctx.name.setPhrase(code);
         ctx.name.setType(NameType.INFORMAL);
         s = pm.group(1);
@@ -440,28 +781,26 @@ public final class StripAndStash {
       // Quoted year in brackets / parens always strips ("…1970 [\"1969\"]" /
       // "…1887 (\"1886-1888\")"); unquoted bracketed year strips only with another
       // 4-digit year present elsewhere.
-      Matcher m1 = Pattern.compile("\\s*[\\[\\(]\\s*\"(\\d{4}(?:[-\\u2013]\\d{4})?)\"\\s*[\\]\\)]\\s*\\.?\\s*$").matcher(s);
+      Matcher m1 = IMPRINT_YEAR_QUOTED.matcher(s);
       if (m1.find()) {
-        ctx.name.setImprintYear(m1.group(1));
+        ctx.setPendingImprintYear(m1.group(1));
         s = s.substring(0, m1.start()).trim();
       }
     }
     {
       // "(imprint YYYY)" / "(not YYYY)" — explicit ICZN forms (Article 22), always strip.
-      Matcher m1 = Pattern.compile(
-          "\\s*\\(\\s*(?:imprint|not)\\s+(\\d{4}(?:[-\\u2013]\\d{4})?)\\s*\\)\\s*\\.?\\s*$",
-          Pattern.CASE_INSENSITIVE).matcher(s);
+      Matcher m1 = IMPRINT_YEAR_KEYWORD.matcher(s);
       if (m1.find()) {
-        ctx.name.setImprintYear(m1.group(1));
+        ctx.setPendingImprintYear(m1.group(1));
         s = s.substring(0, m1.start()).trim();
       }
     }
     {
       // " & YYYY" trailing alternate year — only strips when there's another year
       // earlier in the string.
-      Matcher m1 = Pattern.compile("\\s+&\\s+(\\d{4})\\s*\\.?\\s*$").matcher(s);
+      Matcher m1 = IMPRINT_YEAR_ALT.matcher(s);
       if (m1.find() && hasEarlierYear(s, m1.start())) {
-        ctx.name.setImprintYear(m1.group(1));
+        ctx.setPendingImprintYear(m1.group(1));
         s = s.substring(0, m1.start()).trim();
       }
     }
@@ -473,8 +812,8 @@ public final class StripAndStash {
     // is a data-quality artefact — drop the token and flag doubtful + NULL_EPITHET. Don't
     // touch "Abies null Hood" (a single "null" epithet followed by an author span); that
     // case is kept and flagged downstream by Assemble.flagBlacklistedEpithets.
-    if (s.matches(".*[a-z]\\s+null\\s+[a-z]+.*")) {
-      s = s.replaceAll("(?<=[a-z])\\s+null\\s+(?=[a-z])", " ");
+    if (NULL_EPITHET_TEST.matcher(s).matches()) {
+      s = NULL_EPITHET_MID.matcher(s).replaceAll(" ");
       ctx.name.setDoubtful(true);
       ctx.name.addWarning(Warnings.NULL_EPITHET);
     }
@@ -514,10 +853,12 @@ public final class StripAndStash {
     return s;
   }
 
-  private static String repairWin1252Artefacts(ParseContext ctx, String s) {
+  private static String repairWin1252Artefacts(ParsedName name, String s) {
     // Win-1252 → UTF-8 transcription artefacts that the homoglyph table doesn't cover
     // (e.g. "Plesn¡k" should read as "Plesnik"). Map a small set of high-bit punctuation
-    // characters to their Latin look-alikes when they sit between letters.
+    // characters to their Latin look-alikes when they sit between letters. Shared by the
+    // main strip pipeline and the separately-supplied-authorship path so the two never
+    // repair different character sets.
     if (s.indexOf('¡') >= 0 || s.indexOf('¢') >= 0 || s.indexOf('£') >= 0
         || s.indexOf('‚') >= 0 || s.indexOf('„') >= 0 || s.indexOf('‰') >= 0) {
       String before = s;
@@ -528,7 +869,7 @@ public final class StripAndStash {
            .replace('„', 'a')
            .replace('‰', 'e');
       if (!s.equals(before)) {
-        ctx.name.addWarning(Warnings.HOMOGLYHPS);
+        name.addWarning(Warnings.HOMOGLYHPS);
       }
     }
     return s;
@@ -538,7 +879,7 @@ public final class StripAndStash {
     // Normalize double (or more) underscores between letters to a single space
     // (e.g. "Pseudocercospora__dendrobii" → "Pseudocercospora dendrobii").
     if (s.indexOf("__") >= 0) {
-      s = s.replaceAll("_{2,}", " ").trim();
+      s = DOUBLE_UNDERSCORE.matcher(s).replaceAll(" ").trim();
     }
     return s;
   }
@@ -547,9 +888,9 @@ public final class StripAndStash {
     // Strip trailing OTU-code identifiers (e.g. "Oxalis barrelieri XXZ_21243") — store
     // as pendingUnparsed so the name portion is still parsed normally.
     if (s.contains(" ") && ctx.pendingUnparsed == null) {
-      Matcher otuM = Pattern.compile("\\s+([A-Z0-9]{3,}_\\d{3,})$").matcher(s);
+      Matcher otuM = TRAILING_OTU_CODE.matcher(s);
       if (otuM.find()) {
-        ctx.pendingUnparsed = otuM.group(1);
+        ctx.setPendingUnparsed(otuM.group(1));
         s = s.substring(0, otuM.start()).trim();
       }
     }
@@ -564,18 +905,14 @@ public final class StripAndStash {
     //   "Streptococcus pyogenes (serotype M18)"
     //   "Actinobacillus pleuropneumoniae serovar 2 strain S1536"
     //   "Leptospira interrogans serovar Fugis"
-    if (s.matches("(?i).*\\b(?:serotype|serovar)\\b.*")) {
+    if (SEROVAR_TEST.matcher(s).matches()) {
       // Parenthesised "(serotype X)" / "(serovar X)" suffix
-      Matcher pm = Pattern.compile(
-          "\\s*\\(\\s*(?:serotype|serovar)\\s+[^)]+\\)\\s*\\.?\\s*$",
-          Pattern.CASE_INSENSITIVE).matcher(s);
+      Matcher pm = SEROVAR_PAREN.matcher(s);
       if (pm.find()) {
         s = s.substring(0, pm.start()).trim();
       }
       // Bare " serovar/serotype X [strain/str. Y]" suffix
-      Matcher pm2 = Pattern.compile(
-          "\\s+(?:serotype|serovar)\\s+\\S+(?:\\s+(?:str\\.?|strain)\\s+\\S+)?\\s*\\.?\\s*$",
-          Pattern.CASE_INSENSITIVE).matcher(s);
+      Matcher pm2 = SEROVAR_BARE.matcher(s);
       if (pm2.find()) {
         s = s.substring(0, pm2.start()).trim();
       }
@@ -589,8 +926,7 @@ public final class StripAndStash {
     // HTML tag). Flag the strip with AUTHORSHIP_REMOVED + UNUSUAL_CHARACTERS warnings
     // and mark the name doubtful so callers know the authorship couldn't be parsed.
     if (s.indexOf('<') >= 0) {
-      Matcher br = Pattern.compile("\\s+<\\s*(\\p{Lu}[^>]*\\s[^>]*)>\\s*$",
-          Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+      Matcher br = ANGLE_BRACKET_AUTHORSHIP.matcher(s);
       if (br.find()) {
         ctx.name.addWarning(Warnings.AUTHORSHIP_REMOVED);
         ctx.name.addWarning(Warnings.UNUSUAL_CHARACTERS);
@@ -604,23 +940,29 @@ public final class StripAndStash {
   private static String stripHtml(ParseContext ctx, String s) {
     // Strip HTML tags and decode HTML entities (e.g. "<i>sensu</i> Author" or "&amp;").
     if (s.indexOf('<') >= 0 || s.indexOf('&') >= 0) {
-      // Strip HTML-tagged taxonomic connectors entirely (tag + content), e.g. <i>sensu</i>
-      s = s.replaceAll("<[^>]+>(?:sensu|auct\\.?|s\\.l\\.?|s\\.str\\.?|sec\\.?)</[^>]+>", "");
-      // Strip remaining HTML tags but keep their text content
-      s = s.replaceAll("<[^>]+>", "");
+      // Strip HTML tags but keep their text content, so a tagged connector like
+      // "<i>sensu</i> Fabricius, 1780" becomes "sensu Fabricius, 1780" and is picked up
+      // as a taxonomic note by the normal note handling downstream.
+      String beforeTags = s;
+      s = HTML_TAG.matcher(s).replaceAll("");
+      if (!s.equals(beforeTags)) {
+        ctx.name.addWarning(Warnings.XML_TAGS);
+      }
       // Decode basic HTML entities
+      String beforeEntities = s;
       s = s.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&nbsp;", " ");
+      if (!s.equals(beforeEntities)) {
+        ctx.name.addWarning(Warnings.HTML_ENTITIES);
+      }
       // Clean up any extra whitespace introduced by tag removal
-      s = s.replaceAll("\\s{2,}", " ").trim();
+      s = MULTI_SPACE.matcher(s).replaceAll(" ").trim();
     }
     return s;
   }
 
   private static String stripCandidatus(ParseContext ctx, String s) {
     // Candidatus prefix — quoted "Candidatus …" or bare "Candidatus …" / "Ca. …".
-    Matcher cm = Pattern
-        .compile("^[\"']?(?:Candidatus|Ca\\.)\\s+", Pattern.CASE_INSENSITIVE)
-        .matcher(s);
+    Matcher cm = CANDIDATUS_PREFIX.matcher(s);
     if (cm.find()) {
       ctx.name.setCandidatus(true);
       ctx.name.setCode(NomCode.BACTERIAL);
@@ -634,9 +976,14 @@ public final class StripAndStash {
     // "cv. ex Author" / "Hort. ex Author" / "hortus(a) ex Author" — all variants of
     // the horticultural placeholder for the unknown gardener-author. Normalise to
     // canonical lower-case "hort.".
-    s = s.replaceAll("\\bcv\\.(?=\\s+ex\\s+)", "hort.");
-    s = s.replaceAll("\\bHort\\.(?=\\s+ex\\s+)", "hort.");
-    s = s.replaceAll("\\bhortus[a]?\\b(?=\\s+ex\\s+)", "hort.");
+    s = CV_EX.matcher(s).replaceAll("hort.");
+    s = HORT_EX.matcher(s).replaceAll("hort.");
+    s = HORTUS_EX.matcher(s).replaceAll("hort.");
+    // "ht." is an occasional abbreviation of the horticultural marker "hort." used
+    // directly on the author span ("Gymnogramma alstoni ht.Birkenh.; Gard."). Normalise
+    // it so it parses like its spelled-out twin instead of leaking "ht" in as a bogus
+    // infraspecific epithet. A lowercase standalone "ht." is not a real epithet or author.
+    s = HT_MARKER.matcher(s).replaceAll("hort.");
     return s;
   }
 
@@ -644,9 +991,7 @@ public final class StripAndStash {
     // Cultivar Group / grex names: "Genus [species] CapWord(s) (Group|grex|gx)" at end.
     // Capture the capitalised epithet sequence as the cultivarEpithet and pin the rank
     // accordingly. Trailing word is stripped from the working string.
-    Matcher gm = Pattern.compile(
-        "\\s+([\\p{Lu}][\\p{L}]+(?:\\s+[\\p{Lu}][\\p{L}]+)*)\\s+(Group|grex|gx)\\s*$",
-        Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+    Matcher gm = CULTIVAR_GROUP_GREX.matcher(s);
     if (gm.find()) {
       ctx.name.setCultivarEpithet(gm.group(1).trim());
       ctx.name.setCode(NomCode.CULTIVARS);
@@ -661,31 +1006,62 @@ public final class StripAndStash {
     // Two positions: at end of input, OR in the middle followed by an author span.
     // Skip when the quote is immediately preceded by a rank marker (sp./ssp./var./...)
     // without an explicit cv. — that is a phrase-name form, not a cultivar.
-    Matcher cm = Pattern.compile("\\s+(cv\\.?\\s+)?(['\"])([^'\"]+)\\2\\s*$").matcher(s);
+    Matcher cm = QUOTED_CULTIVAR_END.matcher(s);
     boolean cmFound = cm.find();
     boolean hasCvMarker = cmFound && cm.group(1) != null;
     String preceding = cmFound ? s.substring(0, cm.start()).trim() : null;
     boolean isRankMarkerPrefix = !hasCvMarker && preceding != null
-        && preceding.matches(".*\\b(?:sp|spec|subsp|ssp|var|form|f)\\.?$");
+        && RANK_MARKER_SUFFIX.matcher(preceding).matches();
     if (cmFound && !isRankMarkerPrefix) {
       ctx.name.setCultivarEpithet(cm.group(3).trim());
       ctx.name.setCode(NomCode.CULTIVARS);
       ctx.name.setRank(Rank.CULTIVAR);
       s = s.substring(0, cm.start()).trim();
       // strip a trailing " cv." marker if it survived
-      s = s.replaceAll("\\s+cv\\.?\\s*$", "").trim();
+      s = TRAILING_CV.matcher(s).replaceAll("").trim();
     } else {
       // Mid-string quoted epithet followed by an author span
       // ("Verpericola megasoma \"Dall\" Pils.").
-      Matcher cmMid = Pattern.compile(
-          "\\s+(?:cv\\.?\\s+)?(['\"])([^'\"]+)\\1(\\s+[\\p{Lu}].*)$",
-          Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+      Matcher cmMid = QUOTED_CULTIVAR_MID.matcher(s);
       if (cmMid.find()) {
         ctx.name.setCultivarEpithet(cmMid.group(2).trim());
         ctx.name.setCode(NomCode.CULTIVARS);
         ctx.name.setRank(Rank.CULTIVAR);
-        s = (s.substring(0, cmMid.start()) + cmMid.group(3)).trim();
-        s = s.replaceAll("\\s+cv\\.?(?=\\s|$)", "").trim();
+        // The cultivar's own authorship is the cultivar author (group 3). Split off any
+        // species author that precedes the cultivar epithet and stash it as the specific
+        // authorship ("Acer campestre L. cv. 'Elsrijk' Broerse" → combination author
+        // "Broerse", specific author "L."), leaving the binomial + cultivar author.
+        String prefix = s.substring(0, cmMid.start()).trim();
+        int authorStart = findAuthorStart(prefix);
+        String namePart;
+        if (authorStart > 0) {
+          namePart = prefix.substring(0, authorStart).trim();
+          ctx.pendingSpecificAuthor = prefix.substring(authorStart).trim();
+        } else {
+          namePart = prefix;
+        }
+        s = (namePart + cmMid.group(3)).trim();
+        s = CV_MARKER.matcher(s).replaceAll("").trim();
+      } else {
+        // Unclosed trailing cultivar quote: " 'albino" / " \"albino" (opening quote,
+        // no closing one) — common in aquarium/horticultural trade lists. Treat it like
+        // the closed form. The content is restricted to lowercase letters and spaces so
+        // this never swallows an apostrophe-particle author ("… 't Veld & Visser, 1993)")
+        // nor a capitalised bogus apostrophe author ("Nereidavus kulkovi 'Kulkov"), both
+        // of which start upper-case or carry punctuation. Same rank-marker guard as above.
+        Matcher cmOpen = QUOTED_CULTIVAR_OPEN.matcher(s);
+        boolean openFound = cmOpen.find();
+        boolean openHasCv = openFound && cmOpen.group(1) != null;
+        String openPreceding = openFound ? s.substring(0, cmOpen.start()).trim() : null;
+        boolean openRankPrefix = !openHasCv && openPreceding != null
+            && RANK_MARKER_SUFFIX.matcher(openPreceding).matches();
+        if (openFound && !openRankPrefix) {
+          ctx.name.setCultivarEpithet(cmOpen.group(3).trim());
+          ctx.name.setCode(NomCode.CULTIVARS);
+          ctx.name.setRank(Rank.CULTIVAR);
+          s = s.substring(0, cmOpen.start()).trim();
+          s = TRAILING_CV.matcher(s).replaceAll("").trim();
+        }
       }
     }
     return s;
@@ -695,7 +1071,7 @@ public final class StripAndStash {
     // Extinct dagger(s) anywhere — strip all occurrences
     if (s.indexOf('†') >= 0 || s.indexOf('✝') >= 0) {
       ctx.name.setExtinct(true);
-      s = s.replaceAll("[†✝]", " ").replaceAll("\\s+", " ").trim();
+      s = WHITESPACE.matcher(DAGGER.matcher(s).replaceAll(" ")).replaceAll(" ").trim();
     }
     return s;
   }
@@ -705,7 +1081,7 @@ public final class StripAndStash {
     // notation). Strip the marker so the trailing epithet is parsed normally; the
     // resulting binomial+infra structure already maps to INFRASPECIFIC_NAME rank.
     if (s.indexOf("infr") >= 0) {
-      s = s.replaceAll("\\b[tT]\\.?\\s*infr\\.?\\s+", "");
+      s = TINFR_MARKER.matcher(s).replaceAll("");
     }
     return s;
   }
@@ -713,9 +1089,7 @@ public final class StripAndStash {
   private static String stripDoubtfulGenusBrackets(ParseContext ctx, String s) {
     // Doubtful genus in square brackets at the start: "[Acontia] chia ..." or just "[Dexia]".
     // Strip the brackets, mark the name doubtful and emit the DOUBTFUL_GENUS warning.
-    Matcher dg = Pattern.compile("^\\[\\s*([\\p{Lu}][\\p{L}\\-]+)\\s*\\](\\s|$)",
-            Pattern.UNICODE_CHARACTER_CLASS)
-        .matcher(s);
+    Matcher dg = DOUBTFUL_GENUS_BRACKET.matcher(s);
     if (dg.find()) {
       ctx.name.setDoubtful(true);
       ctx.name.addWarning(Warnings.DOUBTFUL_GENUS);
@@ -732,7 +1106,7 @@ public final class StripAndStash {
       ctx.name.setOriginalSpelling(Boolean.TRUE);
       String inner = m.group(1).trim();
       // Park the parenthetical comment as unparsed; canonical drops it.
-      ctx.pendingUnparsed = "(sic," + inner.replaceAll("\\s+", "") + ")";
+      ctx.setPendingUnparsed("(sic," + WHITESPACE.matcher(inner).replaceAll("") + ")");
       s = m.replaceFirst("");
     }
     m = SIC.matcher(s);
@@ -743,8 +1117,8 @@ public final class StripAndStash {
     m = CORRIG.matcher(" " + s);
     if (m.find()) {
       ctx.name.setOriginalSpelling(Boolean.FALSE);
-      // remove "corrig." token from working string
-      s = s.replaceAll("(?<=\\s)corrig\\.?(?=\\s|$)", "").replaceAll("\\s+", " ").trim();
+      // remove the "corrig." marker (bare or bracketed); prepend a space so a leading marker matches too
+      s = WHITESPACE.matcher(CORRIG.matcher(" " + s).replaceAll("")).replaceAll(" ").trim();
     }
     return s;
   }
@@ -755,7 +1129,7 @@ public final class StripAndStash {
     Matcher m = SYNONYM_BRACKET.matcher(s);
     if (m.find()) {
       String tail = s.substring(m.start()).trim();
-      ctx.pendingUnparsed = tail;
+      ctx.setPendingUnparsed(tail);
       ctx.name.setDoubtful(true);
       s = s.substring(0, m.start()).trim();
       while (s.endsWith(",")) s = s.substring(0, s.length() - 1).trim();
@@ -791,22 +1165,21 @@ public final class StripAndStash {
       while (s.endsWith(",")) s = s.substring(0, s.length() - 1).trim();
       // "sp. nov." or "spec. nov." on a bare monomial — keep the species indet marker
       // in the working string so the regular indet/INFORMAL handling fires later.
-      if (raw.matches("(?i)^(?:sp|spec)\\b\\.?\\s+nov.*")
-          && before.matches("^[\\p{Lu}][\\p{Ll}]+$")) {
+      if (SP_NOV_PREFIX.matcher(raw).matches()
+          && SINGLE_TITLE_WORD.matcher(before).matches()) {
         s = before + " sp.";
       }
       // Captured notes containing the manuscript markers "ined." / "ms." set the
       // manuscript flag (the standalone manuscript-marker block doesn't see them
       // anymore because NOM_NOTE already consumed the keyword).
-      if (raw.matches("(?i).*\\b(?:ined|ms|msc|unpublished)\\b.*")) {
+      if (MANUSCRIPT_KEYWORD.matcher(raw).matches()) {
         ctx.name.setManuscript(true);
       }
       // Rank hint from the captured nom-note prefix: "Gen. nov." → GENUS, "Fam. nov."
       // → FAMILY, etc. Only fires when the parsed name doesn't already carry a rank
       // and the note really starts with one of these markers.
       if (ctx.name.getRank() == null || ctx.name.getRank() == Rank.UNRANKED) {
-        Matcher rm = Pattern.compile("^(gen|fam|var|form|sp|spec)\\b\\.?",
-                Pattern.CASE_INSENSITIVE).matcher(raw);
+        Matcher rm = NOM_NOTE_RANK_HINT.matcher(raw);
         if (rm.find()) {
           switch (rm.group(1).toLowerCase()) {
             case "gen": ctx.name.setRank(Rank.GENUS); break;
@@ -822,11 +1195,11 @@ public final class StripAndStash {
   }
 
   private static String stripAuthorshipPlaceholders(ParseContext ctx, String s) {
-    // Authorship placeholders: "Not applicable", "Not given", "<Unspecified Agent>" etc.
+    // Authorship placeholders: "Not applicable", "Not given", "Not known" etc.
     // Stripped silently with an AUTHORSHIP_REMOVED warning so the bare name still parses.
-    Matcher pm = Pattern.compile(
-        "\\s+(?:Not\\s+(?:applicable|given|known|recorded|found)|<[^>]+>)\\s*$",
-        Pattern.CASE_INSENSITIVE).matcher(s);
+    // (Angle-bracket placeholders like "<Unspecified Agent>" are handled earlier by
+    // stripAngleBracketAuthorship / stripHtml, so no <...> reaches this step.)
+    Matcher pm = AUTHORSHIP_PLACEHOLDER.matcher(s);
     if (pm.find()) {
       ctx.name.addWarning(Warnings.AUTHORSHIP_REMOVED);
       s = s.substring(0, pm.start()).trim();
@@ -838,8 +1211,8 @@ public final class StripAndStash {
     // Trailing " species" on a bare uninomial — drop the word and produce a monomial
     // (no rank, no INFORMAL marker). Only fires when the rest is a single Title-cased
     // word so we don't mangle real binomials like "Genus species" + author.
-    if (s.matches("^[\\p{Lu}][\\p{Ll}]+\\s+species\\s*\\.?$")) {
-      s = s.replaceFirst("\\s+species\\s*\\.?$", "").trim();
+    if (TRAILING_SPECIES_WORD_TEST.matcher(s).matches()) {
+      s = TRAILING_SPECIES_WORD.matcher(s).replaceFirst("").trim();
     }
     return s;
   }
@@ -847,9 +1220,7 @@ public final class StripAndStash {
   private static String stripProParte(ParseContext ctx, String s) {
     // ", pro parte" / ", p.p." — botanical/zoological "in part" qualifier on a
     // taxonomic-concept author. Stripped silently with the doubtful flag.
-    Matcher pm = Pattern.compile(
-        "\\s*,\\s*(?:pro\\s+parte|p\\.\\s*p\\.[A-Z]?)\\s*$",
-        Pattern.CASE_INSENSITIVE).matcher(s);
+    Matcher pm = PRO_PARTE.matcher(s);
     if (pm.find()) {
       ctx.name.setDoubtful(true);
       s = s.substring(0, pm.start()).trim();
@@ -860,9 +1231,7 @@ public final class StripAndStash {
   private static String stripProSpAnnotation(ParseContext ctx, String s) {
     // " (pro sp.)" — botanical "given as a species" annotation following a hybrid
     // name. Strip silently so the inner name parses cleanly.
-    Matcher pm = Pattern.compile(
-        "\\s+\\(\\s*pro\\s+(?:sp|spec|syn|hyb)\\b\\.?\\s*\\)\\s*\\.?\\s*$",
-        Pattern.CASE_INSENSITIVE).matcher(s);
+    Matcher pm = PRO_SP_ANNOTATION.matcher(s);
     if (pm.find()) {
       s = s.substring(0, pm.start()).trim();
     }
@@ -872,9 +1241,7 @@ public final class StripAndStash {
   private static String stripApprovedLists(ParseContext ctx, String s) {
     // " (Approved Lists YYYY)" — bacterial code annotation marking the name's
     // inclusion in the Approved Lists of Bacterial Names. Strip silently.
-    Matcher pm = Pattern.compile(
-        "\\s*\\(\\s*Approved\\s+Lists\\s+\\d{4}\\s*\\)\\s*\\.?\\s*$",
-        Pattern.CASE_INSENSITIVE).matcher(s);
+    Matcher pm = APPROVED_LISTS.matcher(s);
     if (pm.find()) {
       s = s.substring(0, pm.start()).trim();
     }
@@ -888,9 +1255,9 @@ public final class StripAndStash {
     //   "Genus species mihi"             → strip trailing
     //   "Genus species mihi. Author …"   → strip middle (between species and author)
     //   "Genus species mihi var. epithet mihi" → strip both occurrences
-    if (s.matches("(?i).*\\bmihi\\b.*")) {
+    if (MIHI_TEST.matcher(s).matches()) {
       String before = s;
-      s = s.replaceAll("(?i)\\s+mihi\\.?(?=\\s|$)", "").trim();
+      s = MIHI.matcher(s).replaceAll("").trim();
       if (!s.equals(before)) {
         ctx.name.addWarning(Warnings.AUTHORSHIP_REMOVED);
       }
@@ -901,8 +1268,8 @@ public final class StripAndStash {
   private static String normaliseAnon(ParseContext ctx, String s) {
     // "Anon."/"Anon"/"anon" — anonymous-author placeholder. Normalise to lowercase
     // "anon." so the downstream parser captures it as a real (anonymous) authorship.
-    s = s.replaceAll("(?<=\\s)Anon\\b\\.?", "anon.");
-    s = s.replaceAll("(?<=\\s)anon\\b(?!\\.)", "anon.");
+    s = ANON_UPPER.matcher(s).replaceAll("anon.");
+    s = ANON_LOWER.matcher(s).replaceAll("anon.");
     return s;
   }
 
@@ -912,14 +1279,54 @@ public final class StripAndStash {
     // Linnaeus year is the original publication; Fabricius is the sensu author. The
     // explicit ", YYYY" requirement keeps the simpler ": SanctAuthor" sanctioning-
     // author form (e.g. "Boletus versicolor L. : Fr.") out of this strip.
-    Matcher pm = Pattern.compile(
-        "\\s*:\\s+(\\p{Lu}[^:]*,\\s*\\d{3,4})\\s*\\.?\\s*$",
-        Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+    Matcher pm = COLON_CONCEPT_REFERENCE.matcher(s);
     if (pm.find()) {
       String note = pm.group(1).trim();
       String existing = ctx.name.getTaxonomicNote();
       ctx.name.setTaxonomicNote(existing == null ? note : existing + " " + note);
       s = s.substring(0, pm.start()).trim();
+    }
+    return s;
+  }
+
+  private static String stripBracketedTaxNote(ParseContext ctx, String s) {
+    // Trailing "[auctt. misspelling for Eunoe]" style bracket introduced by a
+    // taxonomic-concept keyword → the whole bracket content becomes the taxonomic note.
+    Matcher m = BRACKETED_TAX_NOTE.matcher(s);
+    if (m.find()) {
+      String note = WHITESPACE.matcher(m.group(1).trim()).replaceAll(" ");
+      note = LEADING_AUCTT.matcher(LEADING_AUCT.matcher(note).replaceAll("auct")).replaceAll("auctt");
+      String existing = ctx.name.getTaxonomicNote();
+      ctx.name.setTaxonomicNote(existing == null ? note : existing + " " + note);
+      s = s.substring(0, m.start()).trim();
+    }
+    return s;
+  }
+
+  private static String stripSensuLatoRemainder(ParseContext ctx, String s) {
+    // "s.lat." / "s.str." etc. mid-string, followed by trailing junk → note + unparsed.
+    Matcher m = SENSU_LATO_REMAINDER.matcher(s);
+    if (m.find()) {
+      String note = WHITESPACE.matcher(m.group(1)).replaceAll("").toLowerCase();
+      String remainder = m.group(2).trim();
+      String existing = ctx.name.getTaxonomicNote();
+      ctx.name.setTaxonomicNote(existing == null ? note : existing + " " + note);
+      ctx.setPendingUnparsed(remainder);
+      s = s.substring(0, m.start()).trim();
+    }
+    return s;
+  }
+
+  private static String stripSensuStrictoSS(ParseContext ctx, String s) {
+    // "s.s." (sensu stricto) at end, optionally before trailing junk → note + unparsed.
+    Matcher m = SENSU_STRICTO_SS.matcher(s);
+    if (m.find()) {
+      String existing = ctx.name.getTaxonomicNote();
+      ctx.name.setTaxonomicNote(existing == null ? "s.s." : existing + " s.s.");
+      if (m.group(1) != null) {
+        ctx.setPendingUnparsed(m.group(1).trim());
+      }
+      s = s.substring(0, m.start()).trim();
     }
     return s;
   }
@@ -947,10 +1354,10 @@ public final class StripAndStash {
         // Only collapse when the left side of the dot is a single capital letter — a
         // genuine author initial. "ss." or "auct." (multi-letter abbreviations) must
         // keep the trailing space.
-        String norm = raw.replaceAll("\\b(\\p{Lu})\\.\\s+([\\p{Ll}][\\p{Ll}]{3,})", "$1.$2");
+        String norm = INITIAL_DOT_SPACE.matcher(raw).replaceAll("$1.$2");
         // Lowercase a leading "Auct." / "Auctt." — the keyword is by convention
         // rendered in lower case regardless of how it appeared in the input.
-        norm = norm.replaceAll("^(Auct)", "auct").replaceAll("^(Auctt)", "auctt");
+        norm = LEADING_AUCTT.matcher(LEADING_AUCT.matcher(norm).replaceAll("auct")).replaceAll("auctt");
         ctx.name.setTaxonomicNote(norm);
         s = s.substring(0, m.start()).trim();
         while (s.endsWith(",")) s = s.substring(0, s.length() - 1).trim();
@@ -992,6 +1399,34 @@ public final class StripAndStash {
     return s;
   }
 
+  private static String stripInAuthorInParens(ParseContext ctx, String s) {
+    // An "in <publication>" citation INSIDE the parenthesised basionym, e.g.
+    // "Hypsicera femoralis (Geoffroy in Fourcroy, 1785)". The year is the basionym's (the name
+    // was published in that work), and the "in …" tail is the publishedIn reference. Rewrite the
+    // parens to "(Geoffroy, 1785)" — keeping the year on the basionym so it still infers
+    // ZOOLOGICAL — and capture "Fourcroy, 1785" as publishedIn. Without this the end-anchored
+    // IN_AUTHOR strip below swallows the closing paren and the basionym is lost.
+    Matcher m = IN_AUTHOR_IN_PARENS.matcher(s);
+    if (m.find()) {
+      String basPart = m.group(1).trim();   // "Geoffroy"
+      String ref = m.group(2).trim();       // "Fourcroy, 1785"
+      if (!basPart.isEmpty() && ref.length() >= 2) {
+        String existing = ctx.name.getPublishedIn();
+        ctx.name.setPublishedIn(existing == null ? ref : existing + " " + ref);
+        Matcher ym = IN_AUTHOR_YEAR.matcher(ref);
+        String newParens;
+        if (ym.find() && !YEAR_4DIGIT.matcher(basPart).find()) {
+          // Move the publication year onto the basionym so "(Geoffroy, 1785)" survives.
+          newParens = "(" + basPart + ", " + ym.group(1) + ")";
+        } else {
+          newParens = "(" + basPart + ")";
+        }
+        s = s.substring(0, m.start()) + newParens + s.substring(m.end());
+      }
+    }
+    return s;
+  }
+
   private static String stripInAuthorCitation(ParseContext ctx, String s) {
     // " in <Author>" trailing tail — runs first so an "Author in Source, Title (Year)"
     // tail doesn't get partially consumed by the IPNI / period-separator patterns that
@@ -1010,16 +1445,15 @@ public final class StripAndStash {
       if (ref.length() >= 2) {
         String existing = ctx.name.getPublishedIn();
         ctx.name.setPublishedIn(existing == null ? ref : existing + " " + ref);
-        ctx.inAuthorCitation = true;
-        Matcher ym = Pattern.compile(",?\\s*(\\d{3,4})\\s*\\.?\\s*$").matcher(ref);
-        if (ym.find()) {
-          ctx.pendingYear = ym.group(1);
-          ctx.pendingYearFromPublication = true;
-        }
-        Matcher pyear = Pattern.compile("\\((\\d{4})\\)").matcher(ref);
+        // A parenthesised year takes precedence over a bare trailing year when both are
+        // present, so try it first (setPendingPublicationYear is first-writer-wins).
+        Matcher pyear = IN_AUTHOR_PAREN_YEAR.matcher(ref);
         if (pyear.find()) {
-          ctx.pendingYear = pyear.group(1);
-          ctx.pendingYearFromPublication = true;
+          ctx.setPendingPublicationYear(pyear.group(1));
+        }
+        Matcher ym = IN_AUTHOR_YEAR.matcher(ref);
+        if (ym.find()) {
+          ctx.setPendingPublicationYear(ym.group(1));
         }
         s = s.substring(0, m.start()).trim();
       }
@@ -1031,30 +1465,23 @@ public final class StripAndStash {
     // IPNI-style citation: "Author., Title (Year)." — comma after the author then
     // a publication title ending with the year in parentheses. Pull the reference
     // (and year) out so the leading author span is what's parsed downstream.
-    Matcher pm = Pattern.compile(
-        "(?<=\\s)[\\p{Lu}][\\p{L}.]+,\\s+(.+\\(\\d{4}\\))\\.?\\s*$",
-        Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+    Matcher pm = IPNI_CITATION.matcher(s);
     if (pm.find()) {
       String ref = pm.group(1).trim();
       // Embedded nomNote ("in obs., pro syn.") that sits before the year parens —
       // pull it out into the nomenclaturalNote and drop from the ref text.
-      Matcher nm = Pattern.compile(
-          "\\s+((?:in\\s+obs\\b\\.?,?\\s*)?pro\\s+syn\\b\\.?|nom\\b\\.?(?:\\s+[a-zA-Z][a-zA-Z.]*)*"
-              + "|comb\\b\\.?(?:\\s+[a-zA-Z][a-zA-Z.]*)*"
-              + "|orth\\b\\.?(?:\\s+[a-zA-Z][a-zA-Z.]*)*)\\s*(?=\\(\\d{4}\\))",
-          Pattern.CASE_INSENSITIVE).matcher(ref);
+      Matcher nm = IPNI_EMBEDDED_NOM_NOTE.matcher(ref);
       if (nm.find()) {
         String note = nm.group(1).trim();
         String existing = ctx.name.getNomenclaturalNote();
         ctx.name.setNomenclaturalNote(existing == null ? note : existing + " " + note);
-        ref = (ref.substring(0, nm.start()) + " " + ref.substring(nm.end()))
-            .replaceAll("\\s{2,}", " ").trim();
+        ref = MULTI_SPACE.matcher(ref.substring(0, nm.start()) + " " + ref.substring(nm.end()))
+            .replaceAll(" ").trim();
       }
       ctx.name.setPublishedIn(ref);
-      Matcher ym = Pattern.compile("\\((\\d{4})\\)\\s*\\.?\\s*$").matcher(ref);
+      Matcher ym = IPNI_YEAR.matcher(ref);
       if (ym.find()) {
-        ctx.pendingYear = ym.group(1);
-        ctx.pendingYearFromPublication = true;
+        ctx.setPendingPublicationYear(ym.group(1));
       }
       s = s.substring(0, pm.start(1)).trim();
       if (s.endsWith(",")) s = s.substring(0, s.length() - 1).trim();
@@ -1068,11 +1495,7 @@ public final class StripAndStash {
     // reference by an English/Latin preposition ("Annals of the …", "Journal of
     // the …") inside it, which is rare inside author names. The leading surname must
     // be at least three letters so we don't truncate at an initial.
-    Matcher pm = Pattern.compile(
-        "\\s+[\\p{Lu}][\\p{L}]{2,}\\.\\s+"
-            + "([\\p{Lu}][\\p{L}.]+(?:\\s+(?:[\\p{Lu}][\\p{L}.]+|[\\p{Ll}][\\p{L}]+|of|in|de|et|the|und|für))*"
-            + "\\s+(?:of|in|de|et|the|und|für)\\s+.*)$",
-        Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+    Matcher pm = PERIOD_SEPARATED_REFERENCE.matcher(s);
     if (pm.find()) {
       String ref = pm.group(1).trim();
       if (ref.endsWith(".")) ref = ref.substring(0, ref.length() - 1);
@@ -1082,14 +1505,13 @@ public final class StripAndStash {
       // so we don't propagate it onto the combination authorship, and we flag the
       // strip with NOMENCLATURAL_REFERENCE. Refs without a range are author-year
       // style with a clean trailing year — propagate the year, no warning.
-      boolean hasPageRange = ref.matches(".*\\b\\d{3,}-\\d{3,}\\b.*");
+      boolean hasPageRange = PAGE_RANGE_TEST.matcher(ref).matches();
       if (hasPageRange) {
         ctx.name.addWarning(org.gbif.nameparser.api.Warnings.NOMENCLATURAL_REFERENCE);
       } else {
-        Matcher ym = Pattern.compile("\\b(\\d{4})\\b").matcher(ref);
+        Matcher ym = PERIOD_REF_YEAR.matcher(ref);
         if (ym.find()) {
-          ctx.pendingYear = ym.group(1);
-          ctx.pendingYearFromPublication = true;
+          ctx.setPendingPublicationYear(ym.group(1));
         }
       }
       s = s.substring(0, pm.start(1)).trim();
@@ -1103,11 +1525,7 @@ public final class StripAndStash {
     // after the author span). The title must contain a recognisable connector ("of",
     // "in", "the", "und", "für") so we don't accidentally swallow a comma-separated
     // co-author. The capture extends to end of input and includes pages / years / figs.
-    Matcher pm = Pattern.compile(
-        "\\s+[\\p{Lu}][\\p{L}.]+,\\s+"
-            + "([\\p{Lu}][\\p{L}.]+(?:\\s+(?:[\\p{Lu}][\\p{L}.]+|of|in|de|et|the|und|für|on|and|for))*"
-            + "\\s+(?:of|in|de|et|the|und|für)\\s+.*)$",
-        Pattern.UNICODE_CHARACTER_CLASS).matcher(s);
+    Matcher pm = COMMA_PREFIXED_REFERENCE.matcher(s);
     if (pm.find()) {
       String ref = pm.group(1).trim();
       ctx.name.setPublishedIn(ref);
@@ -1124,9 +1542,7 @@ public final class StripAndStash {
   private static String stripManuscriptMarker(ParseContext ctx, String s) {
     // Manuscript marker "ined." / "ms." / "msc." / "unpublished" at end → manuscript flag.
     // Runs AFTER in-author so a trailing "Busk ms in Chimonides, 1987" cleanly strips both.
-    Matcher mm = Pattern.compile("\\s*,?\\s+(ined\\.?|ms\\.?|msc\\.?|unpublished)\\s*$",
-            Pattern.CASE_INSENSITIVE)
-        .matcher(s);
+    Matcher mm = MANUSCRIPT_MARKER.matcher(s);
     if (mm.find()) {
       ctx.name.setManuscript(true);
       // Preserve trailing dot from input ("ined." stays, "ms" stays).
@@ -1184,9 +1600,9 @@ public final class StripAndStash {
     // NameTokens sees an indet name and (if present) the species author at the end.
     Matcher pm = PHRASE_NAME.matcher(s);
     if (pm.find()) {
-      String prefix = pm.group(1).trim().replaceAll("\\s+", " ");
+      String prefix = WHITESPACE.matcher(pm.group(1).trim()).replaceAll(" ");
       String marker = pm.group(2);
-      String phrase = pm.group(3).trim().replaceAll("\\s+", " ");
+      String phrase = WHITESPACE.matcher(pm.group(3).trim()).replaceAll(" ");
       Rank rank = PHRASE_RANK_MARKERS.get(marker.toLowerCase());
       if (rank != null) {
         ctx.name.setPhrase(phrase);
@@ -1198,8 +1614,7 @@ public final class StripAndStash {
         // Genus + (Subgenus) has no species: subgenus parens already suggest
         // INFRAGENERIC_NAME, but the sp. marker is the stronger signal and pins
         // SPECIES. Set rank explicitly here as well.
-        boolean prefixIsGenusPlusSubgenus = prefix.trim().matches(
-            "^[\\p{Lu}][\\p{Ll}]+\\s+\\([\\p{Lu}][\\p{Ll}]+\\)$");
+        boolean prefixIsGenusPlusSubgenus = GENUS_SUBGENUS_TEST.matcher(prefix.trim()).matches();
         if (authorStart > 0) {
           // Place the marker BEFORE the author so the author span trails as the
           // species author for AuthorshipParser to pick up.
@@ -1213,9 +1628,7 @@ public final class StripAndStash {
           // Extract subgenus directly from the prefix; drop the parens so the simpler
           // "Genus" working string is left for AuthorshipSplit (which now defaults a
           // no-trailing "(Subgenus)" to basionym authorship).
-          Matcher gm = Pattern.compile(
-              "^([\\p{Lu}][\\p{Ll}]+)\\s+\\(([\\p{Lu}][\\p{Ll}]+)\\)$",
-              Pattern.UNICODE_CHARACTER_CLASS).matcher(prefix.trim());
+          Matcher gm = PHRASE_GENUS_SUBGENUS.matcher(prefix.trim());
           if (gm.matches()) {
             ctx.name.setInfragenericEpithet(gm.group(2));
             s = gm.group(1);
@@ -1236,9 +1649,7 @@ public final class StripAndStash {
    */
   private static int findAuthorStart(String prefix) {
     // Pattern: <Genus>(\s+<species>)?(\s+<Author...>)
-    Matcher m = Pattern.compile(
-        "^([\\p{Lu}][\\p{Ll}]+(?:\\s+[\\p{Ll}]+)?)\\s+([\\p{Lu}][\\p{L}.]+.*)$",
-        Pattern.UNICODE_CHARACTER_CLASS).matcher(prefix);
+    Matcher m = AUTHOR_START.matcher(prefix);
     if (m.matches()) {
       return m.start(2);
     }
@@ -1267,8 +1678,11 @@ public final class StripAndStash {
       "^([\\p{Lu}][\\p{Ll}]+(?:\\s+\\([\\p{Lu}][\\p{Ll}]+\\))?(?:\\s+[\\p{Ll}]+)?(?:\\s+[\\p{Lu}][\\p{L}.]+)*)"
           + "\\s+(sp|spec|subsp|ssp|var|form|f)\\.?"
           + "\\s+("
-          // phrase with parens, may start with capital, digit, or quote
-          + "[\\p{Lu}A-Z\\d'\"][^$]*\\(.+\\)[^$]*?"
+          // phrase with parens, may start with capital, digit, or quote.
+          // [^(]*+ locks the FIRST '(' possessively instead of a greedy [^$]* that
+          // backtracks over every split point when no balanced parens follow. The
+          // captured phrase (group 3) is anchored start..end so its text is unchanged.
+          + "[\\p{Lu}A-Z\\d'\"][^(]*+\\(.+\\)[^$]*?"
           // OR fully quoted phrase without parens
           + "|['\"][^'\"]+['\"]"
           + ")\\s*$",

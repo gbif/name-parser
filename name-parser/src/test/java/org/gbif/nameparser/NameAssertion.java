@@ -33,6 +33,8 @@ public class NameAssertion {
     EXAUTH,
     BAS,
     EXBAS,
+    GENERIC,
+    SPECIFIC,
     SANCT,
     RANK,
     TAXNOTE,
@@ -112,6 +114,12 @@ public class NameAssertion {
               assertFalse(n.getBasionymAuthorship().hasExAuthors());
             }
             break;
+          case GENERIC:
+            assertFalse(n.hasGenericAuthorship());
+            break;
+          case SPECIFIC:
+            assertFalse(n.hasSpecificAuthorship());
+            break;
           case SANCT:
             assertNull(n.getSanctioningAuthor());
             break;
@@ -131,7 +139,7 @@ public class NameAssertion {
             assertNull(n.getPublishedInPage());
             break;
           case IMPRINTYEAR:
-            assertNull(n.getImprintYear());
+            assertNull(imprintYearOf());
             break;
           case DOUBTFUL:
             assertFalse(n.isDoubtful());
@@ -243,6 +251,27 @@ public class NameAssertion {
     assertEquals(year, n.getCombinationAuthorship().getYear());
     assertEquals(Lists.newArrayList(authors), n.getCombinationAuthorship().getAuthors());
     return add(NP.AUTH);
+  }
+
+  /** Combination authors of the genus author (infrageneric names, e.g. Kuntze of "(Adans.) Kuntze"). */
+  NameAssertion genericAuthors(String year, String... authors) {
+    assertEquals(year, n.getGenericAuthorship().getCombinationAuthorship().getYear());
+    assertEquals(Lists.newArrayList(authors), n.getGenericAuthorship().getCombinationAuthorship().getAuthors());
+    return add(NP.GENERIC);
+  }
+
+  /** Basionym authors of the genus author (e.g. Adans. of "(Adans.) Kuntze"). */
+  NameAssertion genericBasAuthors(String year, String... authors) {
+    assertEquals(year, n.getGenericAuthorship().getBasionymAuthorship().getYear());
+    assertEquals(Lists.newArrayList(authors), n.getGenericAuthorship().getBasionymAuthorship().getAuthors());
+    return add(NP.GENERIC);
+  }
+
+  /** Combination authors of the species author (below-species names, e.g. L. before a cultivar). */
+  NameAssertion specificAuthors(String year, String... authors) {
+    assertEquals(year, n.getSpecificAuthorship().getCombinationAuthorship().getYear());
+    assertEquals(Lists.newArrayList(authors), n.getSpecificAuthorship().getCombinationAuthorship().getAuthors());
+    return add(NP.SPECIFIC);
   }
   
   NameAssertion autonym() {
@@ -383,9 +412,25 @@ public class NameAssertion {
     return add(NP.PUBLISHEDINPAGE);
   }
 
+  NameAssertion publishedInYear(Integer publishedInYear) {
+    assertEquals(publishedInYear, n.getPublishedInYear());
+    return this;
+  }
+
   NameAssertion imprintYear(String imprintYear) {
-    assertEquals(imprintYear, n.getImprintYear());
+    assertEquals(imprintYear, imprintYearOf());
     return add(NP.IMPRINTYEAR);
+  }
+
+  /** Imprint year now lives on the Authorship — read it from combination or basionym. */
+  private String imprintYearOf() {
+    if (n.getCombinationAuthorship() != null && n.getCombinationAuthorship().getImprintYear() != null) {
+      return n.getCombinationAuthorship().getImprintYear();
+    }
+    if (n.getBasionymAuthorship() != null && n.getBasionymAuthorship().getImprintYear() != null) {
+      return n.getBasionymAuthorship().getImprintYear();
+    }
+    return null;
   }
 
   NameAssertion nomNote(String nomNote) {

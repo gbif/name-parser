@@ -1,5 +1,6 @@
 package org.gbif.nameparser.pipeline;
 
+import org.gbif.nameparser.api.CombinedAuthorship;
 import org.gbif.nameparser.api.NameType;
 import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
@@ -65,7 +66,7 @@ public final class Pipeline {
       ctx.name.addWarning(Warnings.LONG_NAME);
     }
     splitGluedPhraseName(ctx);
-    Preflight.run(scientificName, ctx.working);
+    Preflight.run(scientificName, ctx);
     StripAndStash.run(ctx);
     if (!hasLetter(ctx.working)) {
       throw new UnparsableNameException(NameType.OTHER, scientificName);
@@ -121,13 +122,17 @@ public final class Pipeline {
 
     // Code inference uses the main scientific name's authState by default. When the
     // main name had no authorship of its own, fall back to the auxiliary authorship
-    // state only when it has a basionym citation (parens) with a year — that's the
-    // "(Author, YYYY)" zoological pattern. Year-only or plain "Author, year" supplied
-    // as separate authorship is parsed for authors but doesn't tip the code on its own.
+    // state when it carries a basionym citation (parens) that tips the code:
+    //  - "(Author, YYYY)" — the zoological recombination pattern (year inside the parens);
+    //  - "(Basionym) Combination" — the botanical recombination pattern (a combination
+    //    author follows the parenthesised basionym, no year needed).
+    // A bare "(Author)" or plain "Author, year" supplied as separate authorship is parsed
+    // for authors but doesn't tip the code on its own.
     AuthorshipParser.AuthState codeState = authState;
     if ((codeState == null || (!codeState.combination.exists() && !codeState.basionymPresent))
         && extraState != null
-        && extraState.basionymPresent && extraState.basionym.getYear() != null) {
+        && extraState.basionymPresent
+        && (extraState.basionym.getYear() != null || extraState.combination.exists())) {
       codeState = extraState;
     }
     // An autonym's species author (captured mid-name) drives code inference when the name
@@ -158,6 +163,25 @@ public final class Pipeline {
         && ctx.name.hasCombinationAuthorship()
         && ctx.name.getCombinationAuthorship().getYear() == null) {
       ctx.name.getCombinationAuthorship().setYear(ctx.pendingYear);
+    }
+
+    // An imprint year stripped before authorship parsing belongs to the name's combination
+    // authorship (sitting next to its publication year).
+    if (ctx.pendingImprintYear != null
+        && ctx.name.getCombinationAuthorship().getImprintYear() == null) {
+      ctx.name.getCombinationAuthorship().setImprintYear(ctx.pendingImprintYear);
+    }
+
+    // Irregular authorships split off during stripping: the species author of a below-species
+    // name ("…L. cv. 'Elsrijk' Broerse") and the genus author of an infrageneric name
+    // ("Cordia (Adans.) Kuntze sect. …"). Parse and attach to their dedicated slots.
+    if (ctx.pendingSpecificAuthor != null && !ctx.name.hasSpecificAuthorship()) {
+      CombinedAuthorship ca = parseCombinedAuthorship(ctx.pendingSpecificAuthor);
+      if (ca != null) ctx.name.setSpecificAuthorship(ca);
+    }
+    if (ctx.pendingGenericAuthor != null && !ctx.name.hasGenericAuthorship()) {
+      CombinedAuthorship ca = parseCombinedAuthorship(ctx.pendingGenericAuthor);
+      if (ca != null) ctx.name.setGenericAuthorship(ca);
     }
 
     return ctx.name;
@@ -199,9 +223,21 @@ public final class Pipeline {
     if (st.basionym.exists()) {
       name.setBasionymAuthorship(st.basionym);
     }
-    if (st.imprintYear != null && name.getImprintYear() == null) {
-      name.setImprintYear(st.imprintYear);
-    }
+    // Imprint years now travel on the basionym/combination Authorship objects themselves,
+    // so setting the authorship above carries them along — nothing extra to apply here.
+  }
+
+  /**
+   * Parses a bare author string (e.g. "L." or "(Adans.) Kuntze") into a
+   * {@link CombinedAuthorship} for the generic/specific authorship slots. Returns null when
+   * nothing parsable was found.
+   */
+  private static CombinedAuthorship parseCombinedAuthorship(String authors) {
+    AuthorshipParser.AuthState st = AuthorshipParser.parse(Tokenizer.tokenize(authors), 0);
+    CombinedAuthorship ca = new CombinedAuthorship();
+    if (st.combination.exists()) ca.setCombinationAuthorship(st.combination);
+    if (st.basionym.exists()) ca.setBasionymAuthorship(st.basionym);
+    return ca.hasAuthorship() ? ca : null;
   }
 
   private static boolean hasLetter(String s) {

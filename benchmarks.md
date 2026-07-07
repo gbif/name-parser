@@ -2,6 +2,27 @@
 
 results from a macbook pro M4 Pro with Liberica JDK17 and the shaded jar
 
+## 4.2.0-SNAPSHOT (2026-07-05)
+
+> benchmark --warmup --input=data/benchmark-data.txt
+
+```
+Parsed names: 8017 (3345 unparsable)
+Total:   226.47 ms
+Average: 28.25 µs
+Min:     1.00 µs
+p50:     24.96 µs
+p95:     74.50 µs
+Max:     3.30 ms
+
+Breakdown by name type:
+  SCIENTIFIC           4532
+  OTHER                3258
+  INFORMAL             143
+  FORMULA              42
+  PLACEHOLDER          42
+```
+
 ## V4 (2026-05-16)
 All classic and GNA tests pass now
 More features than dev, still 3-4x faster and no additional threads!

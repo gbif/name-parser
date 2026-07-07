@@ -412,6 +412,11 @@ public class RankUtils {
    */
   public static Rank bestCodeCompliantRank(Rank rank, NomCode code) {
     switch (rank) {
+      case DIVISION_BOTANY:
+        return selectRank(rank, code, DIVISION_ZOOLOGY, NomCode.ZOOLOGICAL);
+      case DIVISION_ZOOLOGY:
+        return selectRank(rank, code, DIVISION_BOTANY, NomCode.BOTANICAL, NomCode.BACTERIAL, NomCode.CULTIVARS);
+
       case SUPERSECTION_BOTANY:
         return selectRank(rank, code, SUPERSECTION_ZOOLOGY, NomCode.ZOOLOGICAL);
       case SECTION_BOTANY:
@@ -445,6 +450,11 @@ public class RankUtils {
 
   public static Rank otherAmbiguousRank(Rank rank) {
     switch (rank) {
+      case DIVISION_BOTANY:
+        return DIVISION_ZOOLOGY;
+      case DIVISION_ZOOLOGY:
+        return DIVISION_BOTANY;
+
       case SUPERSECTION_BOTANY:
         return SUPERSECTION_ZOOLOGY;
       case SECTION_BOTANY:

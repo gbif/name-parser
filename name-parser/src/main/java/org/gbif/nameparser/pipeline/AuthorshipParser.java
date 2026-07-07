@@ -23,6 +23,14 @@ public final class AuthorshipParser {
       "ms", "ined", "Bis", "bis"
   );
 
+  /**
+   * Roman-numeral generational suffixes on a surname ("Loeblich III" = Loeblich the third).
+   * Kept verbatim (upper-case) behind the surname, never read as the initials "I.I.I.". Single
+   * letters (I/V/X) are deliberately excluded — those are author initials, not suffixes.
+   */
+  private static final Set<String> GENERATIONAL_SUFFIXES = Set.of(
+      "II", "III", "IV", "VI", "VII", "VIII", "IX");
+
   private AuthorshipParser() {}
 
   static class AuthState {
@@ -35,8 +43,6 @@ public final class AuthorshipParser {
     String sanctioningAuthor;
     int unparsedFrom = -1;
     String unparsedText;
-    /** Secondary 4-digit year encountered after the publication year — imprint year. */
-    String imprintYear;
   }
 
   static AuthState parse(List<Token> tokens, int from) {
@@ -129,9 +135,9 @@ public final class AuthorshipParser {
 
   /**
    * Parses author list within [from, to), populating {@code into}. Handles "ex"
-   * splitting (ex authors come before main authors). When a second 4-digit year is
-   * encountered after the first, it's recorded into {@code state.imprintYear} (if
-   * non-null) so callers can surface it on the parsed name.
+   * splitting (ex authors come before main authors). A second 4-digit year encountered
+   * after the first (or a bracketed year) becomes {@code into}'s imprint year, sitting
+   * next to its publication year on the {@link Authorship}.
    * @return true if a year range was detected (e.g. "1845-1847", "1987-92")
    */
   private static boolean parseAuthors(List<Token> tokens, int from, int to, Authorship into, AuthState state) {
@@ -166,20 +172,20 @@ public final class AuthorshipParser {
           }
         }
         if (inBrackets) {
-          // Imprint year always goes to state.imprintYear; never overrides into.year.
-          if (state != null && state.imprintYear == null) {
-            state.imprintYear = year;
+          // A bracketed year is the imprint year of THIS authorship (basionym or
+          // combination), sitting next to its publication year; never its main year.
+          if (into.getImprintYear() == null) {
+            into.setImprintYear(year);
           }
           i++; // skip CLOSE_BRACKET
           continue;
         }
         // First year wins — imprint dates ("Linnaeus, 1898, 1897") keep the first
-        // (the actual publication year); the second is recorded into state.imprintYear
-        // so the caller can surface it on the parsed name.
+        // (the actual publication year); the second becomes this authorship's imprint year.
         if (into.getYear() == null) {
           into.setYear(year);
-        } else if (state != null && state.imprintYear == null) {
-          state.imprintYear = year;
+        } else if (into.getImprintYear() == null) {
+          into.setImprintYear(year);
         }
         // Detect year range: NUMBER + OTHER("-" or "/") + NUMBER → keep first year only
         if (i + 1 < to) {
@@ -192,11 +198,12 @@ public final class AuthorshipParser {
             }
           }
         }
-        // Drop a single trailing lowercase-letter year disambiguator ("1935h" / "1935 h")
-        // so it isn't picked up as a phantom author.
+        // Drop a single trailing lowercase-letter year disambiguator ("1935h" / "1935 h",
+        // or "193k7" where the k is an OCR/typo artifact followed by digits).
+        // Matches: a single lowercase letter, optionally followed by digits only (e.g. "k7").
         if (i < to) {
           Token nx = tokens.get(i);
-          if (nx.kind == TokenKind.WORD && nx.text.length() == 1 && nx.startsLower()) {
+          if (nx.kind == TokenKind.WORD && nx.startsLower() && isYearDisambiguator(nx.text)) {
             i++;
           }
         }
@@ -271,6 +278,19 @@ public final class AuthorshipParser {
 
       // surname token
       if (t.kind == TokenKind.WORD && t.startsUpper()) {
+        // A roman-numeral generational suffix directly after a complete surname
+        // ("Loeblich III" = Loeblich the third) stays behind the surname as a suffix, rendered
+        // upper-case ("Iii" → "III") — it is NOT the initials "I.I.I." that the all-caps
+        // inversion below would otherwise produce.
+        if (cur.length() > 0 && containsLower(cur)
+            && cur.charAt(cur.length() - 1) != '.'
+            && !endsWithParticleOnly(cur)
+            && GENERATIONAL_SUFFIXES.contains(t.text.toUpperCase())) {
+          appendSpace(cur);
+          cur.append(t.text.toUpperCase());
+          i++;
+          continue;
+        }
         // No-comma "<Surname> <Initials>" inversion pattern: if cur already holds a Latin
         // surname AND the incoming token is a short all-caps word, treat it as the
         // initials trailing the surname and flush as a single inverted author.
@@ -310,11 +330,24 @@ public final class AuthorshipParser {
               }
             }
           }
-          String surname = cur.toString().trim();
-          cur.setLength(0);
-          authors.add(formatInitials(initials.toString()) + surname);
-          i = k;
-          continue;
+          // "Forename M. Surname": a DOTTED middle initial followed by a capitalised
+          // surname-shaped word (glued "John M.Mill." or spaced "Roy L. Taylor") means the
+          // all-caps token is a middle initial of a single author whose forename was spelled
+          // out — ONE author ("John M.Mill." / "Roy L.Taylor"), not the inversion
+          // "M.John" + "Mill.". Skip the flip and let the normal surname handling below build
+          // the full author. Only dotted initials qualify; an undotted run-on
+          // ("Balsamo M Fregni") still flips to end the current author.
+          boolean middleInitialSurnameFollows = j > i + 1 && k < to
+              && tokens.get(k).kind == TokenKind.WORD
+              && tokens.get(k).startsUpper()
+              && containsLower(tokens.get(k).text);
+          if (!middleInitialSurnameFollows) {
+            String surname = cur.toString().trim();
+            cur.setLength(0);
+            authors.add(formatInitials(initials.toString()) + surname);
+            i = k;
+            continue;
+          }
         }
         // If full ALL-CAPS author name (e.g. FISCHER) length > 1, normalise to title case
         String text = normaliseAuthorCase(t.text);
@@ -450,6 +483,15 @@ public final class AuthorshipParser {
         i++;
         continue;
       }
+      // "/" between two author words ("Smith/Jones") marks alternative authorship. Keep the
+      // slash glued (no surrounding spaces) so the ambiguity stays visible in the output; the
+      // name is already flagged UNCERTAIN_AUTHORSHIP upstream.
+      if (t.kind == TokenKind.OTHER && t.text.equals("/")
+          && cur.length() > 0 && i + 1 < to && tokens.get(i + 1).kind == TokenKind.WORD) {
+        cur.append('/').append(tokens.get(i + 1).text);
+        i += 2;
+        continue;
+      }
       // Unknown punctuation in an author run — skip silently
       i++;
     }
@@ -539,34 +581,53 @@ public final class AuthorshipParser {
 
   private static boolean looksLikeInitials(String s) {
     if (s.isEmpty()) return false;
-    String stripped = s.replace(".", "").replace("-", "").replace(" ", "");
-    if (stripped.isEmpty() || stripped.length() > 4) return false;
-    // All characters must be UPPER-case letters (true initials, not a short surname
-    // like "Liu"/"Fr."/"Sacc." which would have lower-case follow-up letters).
-    for (int i = 0; i < stripped.length(); ) {
-      int cp = stripped.codePointAt(i);
-      if (!Character.isLetter(cp) || !Character.isUpperCase(cp)) return false;
-      i += Character.charCount(cp);
+    // Initials are ≤4 single letters, the first upper-case. A lower-case letter is only
+    // allowed immediately after a hyphen — that is a hyphenated given-name initial
+    // ("Y.-j.", "C.-K."). This still rejects abbreviated surnames ("Fr.", "Liu", "Sacc.")
+    // whose lower-case follow-up letters are NOT preceded by a hyphen.
+    int letters = 0;
+    boolean firstLetterSeen = false;
+    boolean prevHyphen = false;
+    for (int i = 0; i < s.length(); ) {
+      int cp = s.codePointAt(i);
+      int cc = Character.charCount(cp);
+      if (cp == '.' || cp == ' ') { i += cc; continue; }
+      if (cp == '-') { prevHyphen = true; i += cc; continue; }
+      if (!Character.isLetter(cp)) return false;
+      if (++letters > 4) return false;
+      boolean upper = Character.isUpperCase(cp);
+      if (!firstLetterSeen) {
+        if (!upper) return false;
+        firstLetterSeen = true;
+      } else if (!upper && !prevHyphen) {
+        return false;
+      }
+      prevHyphen = false;
+      i += cc;
     }
-    return true;
+    return letters > 0;
   }
 
   private static String formatInitials(String s) {
+    boolean hadDots = s.indexOf('.') >= 0;
     String cleaned = s.replace(".", "").replace(" ", "");
-    // Hyphenated CJK-style initials ("Z-X", "Y-H") keep the hyphen and get a single
-    // trailing dot: "Z-X" → "Z-X.". Non-hyphenated initials emit one dot per letter.
     if (cleaned.contains("-")) {
+      // Dotted hyphenated initials ("C.-K.", "Y.-j.") get a dot after each letter and keep
+      // the input case of a single-letter follow-up (so "Y.-j." stays "Y.-j.", not "Y.-J.").
+      // Dot-less CJK-style hyphenated initials ("Z-X") get a single trailing dot, upper-cased.
       StringBuilder b = new StringBuilder();
       for (int i = 0; i < cleaned.length(); ) {
         int cp = cleaned.codePointAt(i);
         if (cp == '-') {
           b.append('-');
+        } else if (hadDots) {
+          b.appendCodePoint(cp).append('.');
         } else {
           b.appendCodePoint(Character.toUpperCase(cp));
         }
         i += Character.charCount(cp);
       }
-      b.append('.');
+      if (!hadDots) b.append('.');
       return b.toString();
     }
     StringBuilder b = new StringBuilder();
@@ -576,6 +637,21 @@ public final class AuthorshipParser {
       i += Character.charCount(cp);
     }
     return b.toString();
+  }
+
+  /**
+   * True when the token text looks like a year-disambiguator suffix that should be
+   * dropped after a year token. Matches a single lowercase letter optionally followed by
+   * all-digit characters — e.g. "h" (from "1935h"), "k7" (OCR-garbled year-suffix artifact in "193k7").
+   */
+  private static boolean isYearDisambiguator(String s) {
+    if (s.isEmpty() || !Character.isLowerCase(s.codePointAt(0))) return false;
+    for (int i = Character.charCount(s.codePointAt(0)); i < s.length(); ) {
+      int cp = s.codePointAt(i);
+      if (!Character.isDigit(cp)) return false;
+      i += Character.charCount(cp);
+    }
+    return true;
   }
 
   private static boolean isAllUpper(String s) {
@@ -606,9 +682,9 @@ public final class AuthorshipParser {
     return AuthorParticles.isParticle(last);
   }
 
-  private static boolean containsLower(StringBuilder cur) {
+  private static boolean containsLower(CharSequence cur) {
     for (int i = 0; i < cur.length(); ) {
-      int cp = cur.codePointAt(i);
+      int cp = Character.codePointAt(cur, i);
       if (Character.isLowerCase(cp)) return true;
       i += Character.charCount(cp);
     }

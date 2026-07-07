@@ -25,6 +25,7 @@ public final class AuthorshipSplit {
     boolean haveEpithet = false;
     boolean genusAllCaps = false;
     boolean genusFamilyShape = false;
+    String genusText = null;
 
     while (i < n) {
       Token t = tokens.get(i);
@@ -54,6 +55,7 @@ public final class AuthorshipSplit {
             afterGenus = true;
             genusAllCaps = t.text.length() > 1 && isAllUpper(t.text);
             genusFamilyShape = isFamilyShape(t.text);
+            genusText = t.text;
             i++;
             // Abbreviated genus: 1-letter ("M.") always; 2-4 letters ("Mo.", "Phl.")
             // only when the next non-dot token is a lowercase epithet — so we don't
@@ -174,6 +176,13 @@ public final class AuthorshipSplit {
           i++;
           continue;
         }
+        if (afterGenus && t.startsDigitEpithet()) {
+          nameWords++;
+          haveEpithet = true;
+          afterSubgenus = false;
+          i++;
+          continue;
+        }
         // Mid-name author span: an Author abbreviation between the genus (or
         // species epithet) and a following rank marker. e.g. "Centaurea L. subg.
         // Jacea" or "Festuca ovina L. subvar. gracilis Hackel". The author tokens
@@ -184,18 +193,12 @@ public final class AuthorshipSplit {
           continue;
         }
         // All-caps multi-letter word in epithet position only counts as an upper-cased
-        // epithet when the genus itself was all-caps (so the whole input is shouted),
-        // AND the word contains no non-ASCII letter (ELEVÄTA → author surname) and
-        // isn't followed by an abbreviation dot (ELEV. → author).
+        // epithet when the genus itself was all-caps (so the whole input is shouted) and it
+        // isn't followed by an abbreviation dot (ELEV. → author). A diacritic no longer
+        // disqualifies it: "CHIONE ELEVÄTA" is read like "CHIONE ELEVATA".
         if (genusAllCaps && afterGenus && t.text.length() > 1 && isAllUpper(t.text)) {
-          boolean hasNonAscii = false;
-          for (int j = 0; j < t.text.length(); ) {
-            int cp = t.text.codePointAt(j);
-            if (cp > 0x7F) { hasNonAscii = true; break; }
-            j += Character.charCount(cp);
-          }
           boolean isAbbrev = i + 1 < n && tokens.get(i + 1).kind == TokenKind.DOT;
-          if (!hasNonAscii && !isAbbrev) {
+          if (!isAbbrev) {
             nameWords++;
             haveEpithet = true;
             afterSubgenus = false;
@@ -210,27 +213,62 @@ public final class AuthorshipSplit {
       if (t.kind == TokenKind.OPEN_PAREN) {
         if (afterGenus && !haveEpithet && !afterSubgenus && !genusFamilyShape) {
           int j = i + 1;
-          if (j < n && tokens.get(j).kind == TokenKind.WORD && tokens.get(j).startsUpper()) {
+          // The subgenus word is normally Title-cased; a lower-case word ("(acanthoderes)")
+          // is a malformed subgenus that NameTokens capitalises and flags doubtful.
+          if (j < n && tokens.get(j).kind == TokenKind.WORD
+              && (tokens.get(j).startsUpper() || tokens.get(j).startsLower())) {
+            // A single parenthesised word — plain "(Word)" or abbreviated "(Word.)".
             int k = j + 1;
-            // Abbreviated subgenus "(Tin.)" — Title-cased word + DOT + close paren.
-            if (k + 1 < n
+            int afterParen = -1;
+            boolean abbreviated = false;
+            if (k < n && tokens.get(k).kind == TokenKind.CLOSE_PAREN) {
+              afterParen = k + 1;
+            } else if (tokens.get(j).startsUpper() && k + 1 < n
                 && tokens.get(k).kind == TokenKind.DOT
                 && tokens.get(k + 1).kind == TokenKind.CLOSE_PAREN) {
-              i = k + 2;
-              afterSubgenus = true;
-              continue;
+              afterParen = k + 2;
+              abbreviated = true;
             }
-            if (k < n && tokens.get(k).kind == TokenKind.CLOSE_PAREN) {
-              // Paren-subgenus interpretation only when more name/author material
-              // follows the close paren, OR the caller explicitly requested an
-              // infrageneric rank. Otherwise "Genus (Word)" alone is a monomial +
-              // basionym citation ("Arrhoges (Antarctohoges)").
-              boolean trailingMaterial = k + 1 < n && tokens.get(k + 1).kind == TokenKind.WORD;
-              boolean rankRequestsInfragen = ctx != null
-                  && ctx.requestedRank != null
+            if (afterParen >= 0) {
+              // Subgenus vs. parenthesised basionym author. A genus CAN carry a basionym, so
+              // decide in this order:
+              //  1. a species epithet (lower-case, non-particle) follows → subgenus, the name
+              //     continues below it ("Amnicola (Amnicola) dubrueilliana",
+              //     "Phalaena (Tin.) guttella Fab.") — a basionym author cannot sit before a
+              //     species epithet, so even an abbreviated "(Tin.)" is the subgenus here;
+              //  2. otherwise an abbreviated / initialled word ("(Griseb.)", "(Grev.)") is a
+              //     basionym author — subgenera are always a single UNabbreviated capitalised
+              //     word, never initials ("Thliphthisa (Griseb.) P.Caputo & Del Guacchio",
+              //     "Genus (Grev.) Kütz. 1849");
+              //  3. nothing follows ("Arrhoges (Antarctohoges)") → subgenus;
+              //  4. the word repeats the genus — a nominotypical subgenus ("Morea (Morea) …");
+              //  5. the caller asked for an infrageneric rank → subgenus;
+              //  6. the trailing authorship carries a year OUTSIDE the parens — the zoological
+              //     "Genus (Subgenus) Author, year" form ("Dicromita (Pterodicromita) Fowler,
+              //     1925") → subgenus;
+              //  7. otherwise a trailing author with no year makes "(Word)" the basionym author
+              //     of a botanical genus recombination ("Kyphocarpa (Fenzl) Lopr.").
+              // (A "(Author, year)" with the year INSIDE the parens is a multi-token paren that
+              // never reaches this single-word branch and is treated as a basionym below.)
+              boolean hasTrailing = afterParen < n;
+              Token next = hasTrailing ? tokens.get(afterParen) : null;
+              boolean trailingIsEpithet = next != null && next.kind == TokenKind.WORD
+                  && next.startsLower() && !AuthorParticles.isParticle(next.text);
+              boolean nominotypical = genusText != null
+                  && genusText.equalsIgnoreCase(tokens.get(j).text);
+              boolean rankRequestsInfragen = ctx != null && ctx.requestedRank != null
                   && ctx.requestedRank.isInfragenericStrictly();
-              if (trailingMaterial || rankRequestsInfragen) {
-                i = k + 1;
+              boolean subgenus;
+              if (trailingIsEpithet) {
+                subgenus = true;
+              } else if (abbreviated) {
+                subgenus = false;
+              } else {
+                subgenus = !hasTrailing || nominotypical || rankRequestsInfragen
+                    || hasYearToken(tokens, afterParen, n);
+              }
+              if (subgenus) {
+                i = afterParen;
                 afterSubgenus = true;
                 continue;
               }
@@ -349,6 +387,18 @@ public final class AuthorshipSplit {
    * If a "(...) Author. ranklabel." span sits between the species and an infraspecific
    * epithet, returns the index of the rank-marker word. Otherwise returns -1.
    */
+  /** True when tokens[from, to) contain a 4-digit year-shaped number (1xxx / 2xxx). */
+  private static boolean hasYearToken(List<Token> tokens, int from, int to) {
+    for (int i = from; i < to; i++) {
+      Token t = tokens.get(i);
+      if (t.kind == TokenKind.NUMBER && t.text.length() == 4
+          && (t.text.charAt(0) == '1' || t.text.charAt(0) == '2')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private static int skipParenAuthorBlock(List<Token> tokens, int openIdx, int n) {
     // Match the closing paren.
     int depth = 1;

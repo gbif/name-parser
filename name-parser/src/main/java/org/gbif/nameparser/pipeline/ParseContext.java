@@ -25,12 +25,11 @@ public final class ParseContext {
   /** Set by StripAndStash when an aggregate marker was stripped from the input. */
   public boolean aggregate;
   /**
-   * True when {@link NameTokens} consumed an explicit infraspecific rank marker
-   * (subsp./var./f./…). The marker itself is the botanical convention — zoological
-   * trinomials simply stack epithets — so its presence is a soft botanical signal
-   * used by code inference when no other authorship cue is available.
+   * Set by {@link Preflight} when the input is a clean uni/binomial whose genus (or
+   * monomial) carries an ICTV viral rank suffix. {@link Assemble} turns this into
+   * {@link NomCode#VIRUS} when the caller supplied no code.
    */
-  public boolean explicitInfraMarker;
+  public boolean viralShape;
   /** Year extracted from a stripped publishedIn tail (e.g. "in Author, 1987"). */
   public String pendingYear;
   /**
@@ -42,13 +41,6 @@ public final class ParseContext {
    * botanical, or bacteriological names alike.)
    */
   public boolean pendingYearFromPublication;
-  /**
-   * True when an {@code in <Author>} or {@code apud <Author>} tail was stripped. A name
-   * with both that citation form AND a year (the typical "Author in Editor, YYYY"
-   * pattern) is the zoological convention; we use this as a code hint when nothing
-   * else has settled the code.
-   */
-  public boolean inAuthorCitation;
   /**
    * Quote char ("'" or '"') a leading monomial was wrapped in (e.g. "'Prosthète' Hesse, 1861").
    * Such quotes mark a name that is not an available scientific name; the quotes are stripped
@@ -68,6 +60,59 @@ public final class ParseContext {
    */
   public int midAuthorFrom = -1;
   public int midAuthorTo = -1;
+
+  /**
+   * Imprint year stripped from the input before authorship parsing (e.g. the "1969" in
+   * {@code "Storr, 1970 [\"1969\"]"} / {@code "(imprint 1969)"}). Applied onto the name's
+   * combination authorship once it exists — imprint years now live on {@link org.gbif.nameparser.api.Authorship}.
+   */
+  public String pendingImprintYear;
+
+  /** Records a stripped imprint year on a first-writer-wins basis. */
+  public void setPendingImprintYear(String year) {
+    if (pendingImprintYear == null && year != null) {
+      pendingImprintYear = year;
+    }
+  }
+
+  /**
+   * Species author extracted from a below-species name where it sits before the terminal
+   * epithet (e.g. the "L." in "Acer campestre L. cv. 'Elsrijk' Broerse"). Parsed and set as
+   * {@link ParsedName#setSpecificAuthorship} by {@link Pipeline}.
+   */
+  public String pendingSpecificAuthor;
+  /**
+   * Genus author of an infrageneric name where it sits before the rank marker (e.g. the
+   * "(Adans.) Kuntze" in "Cordia (Adans.) Kuntze sect. Salimori"). Parsed and set as
+   * {@link ParsedName#setGenericAuthorship} by {@link Pipeline}.
+   */
+  public String pendingGenericAuthor;
+
+  /**
+   * Records an unparsed remainder on a first-writer-wins basis. {@link #pendingUnparsed}
+   * is a single slot written by several strip steps; routing every write through here
+   * makes precedence deterministic (the earliest strip step in {@code StripAndStash.run}
+   * wins) instead of depending on whether an individual writer remembered to null-check.
+   * Empty/blank remainders are ignored.
+   */
+  public void setPendingUnparsed(String remainder) {
+    if (pendingUnparsed == null && remainder != null && !remainder.isBlank()) {
+      pendingUnparsed = remainder;
+    }
+  }
+
+  /**
+   * Records a publication-derived year on a first-writer-wins basis and marks it
+   * code-neutral (see {@link #pendingYearFromPublication}). Every current writer of
+   * {@link #pendingYear} sets it from a stripped publishedIn reference, so the two
+   * fields are always set together — bundling them here keeps them in lock-step.
+   */
+  public void setPendingPublicationYear(String year) {
+    if (pendingYear == null && year != null) {
+      pendingYear = year;
+      pendingYearFromPublication = true;
+    }
+  }
 
   public ParseContext(String scientificName, String authorship, Rank rank, NomCode code) {
     this.original = scientificName;

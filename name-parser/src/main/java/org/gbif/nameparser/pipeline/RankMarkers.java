@@ -12,10 +12,19 @@ import java.util.Map;
  */
 public final class RankMarkers {
 
+  /**
+   * Synthetic single-token marker that {@link StripAndStash} substitutes for informal
+   * letter-based species subdivisions ("a.", "b.", "a.b." — old floras) so the normal
+   * rank-marker machinery treats the following epithet as an infraspecific of the
+   * unmappable rank {@link Rank#OTHER}. Never appears in user input.
+   */
+  public static final String LETTER_SUBDIVISION = "infrasubdivision";
+
   private static final Map<String, Rank> INFRASPECIFIC = new HashMap<>();
   private static final Map<String, Rank> INFRAGENERIC = new HashMap<>();
 
   static {
+    INFRASPECIFIC.put(LETTER_SUBDIVISION, Rank.OTHER);
     // infraspecific
     INFRASPECIFIC.put("subsp", Rank.SUBSPECIES);
     INFRASPECIFIC.put("ssp", Rank.SUBSPECIES);
@@ -65,6 +74,10 @@ public final class RankMarkers {
     INFRASPECIFIC.put("*", Rank.INFRASPECIFIC_NAME);
 
     // infrageneric
+    // "div." between a genus and an infrageneric epithet is the botanical divisio rank
+    // (Lindley's "Rosa div. Caninae"), not the zoological suprageneric division.
+    INFRAGENERIC.put("div", Rank.DIVISION_BOTANY);
+    INFRAGENERIC.put("divisio", Rank.DIVISION_BOTANY);
     INFRAGENERIC.put("subg", Rank.SUBGENUS);
     INFRAGENERIC.put("subgen", Rank.SUBGENUS);
     INFRAGENERIC.put("sect", Rank.SECTION_BOTANY);

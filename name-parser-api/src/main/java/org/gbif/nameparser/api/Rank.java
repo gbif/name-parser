@@ -57,7 +57,7 @@ public enum Rank {
   PARVCLASS(NomCode.ZOOLOGICAL,"parvcl.", "parvclasses"),
 
   SUPERDIVISION(NomCode.ZOOLOGICAL,"superdiv."),
-  DIVISION(NomCode.ZOOLOGICAL,"div."),
+  DIVISION_ZOOLOGY(NomCode.ZOOLOGICAL,"div."),
   SUBDIVISION(NomCode.ZOOLOGICAL,"subdiv."),
   INFRADIVISION(NomCode.ZOOLOGICAL,"infradiv."),
 
@@ -118,7 +118,14 @@ public enum Rank {
   GENUS("gen.", "genera"),
   SUBGENUS("subgen.", "subgenera"),
   INFRAGENUS("infrag.", "infragenera"),
-  
+
+  /**
+   * Botanical divisio used by some authors as an informal infrageneric subdivision of a
+   * genus (e.g. Lindley's "Rosa div. Caninae"). Distinct from the zoological
+   * {@link #DIVISION_ZOOLOGY}, which is a suprageneric rank near phylum or the official botanical Divisio for {@link #PHYLUM}.
+   */
+  DIVISION_BOTANY(NomCode.BOTANICAL, "div.", "divisions"),
+
   SUPERSECTION_BOTANY(NomCode.BOTANICAL, "supersect."),
   SECTION_BOTANY(NomCode.BOTANICAL, "sect."),
   SUBSECTION_BOTANY(NomCode.BOTANICAL, "subsect."),
@@ -271,13 +278,12 @@ public enum Rank {
   CHEMOFORM(NomCode.BACTERIAL, "chemoform"),
   
   /**
-   * Microbial infrasubspecific rank.
-   * A parasitic, symbiotic, or commensal microorganism distinguished primarily by adaptation to a particular host or habitat.
+   * A rank applied to a parasite (most frequently a fungus) which is adapted to a specific host.
    * Named preferably by the scientific name of the host in the genitive.
-   * See <a href="http://www.ncbi.nlm.nih.gov/books/NBK8812/table/A844/?report=objectonly">Bacteriological Code</a>
+   * See <a href="https://en.wikipedia.org/wiki/Forma_specialis">Forma specialis</a>.
    * For example Puccinia graminis f. sp. avenae
    */
-  FORMA_SPECIALIS(NomCode.BACTERIAL, "f.sp."),
+  FORMA_SPECIALIS(NomCode.BOTANICAL, "f.sp."),
 
   /**
    * Botanical rank
@@ -394,6 +400,11 @@ public enum Rank {
     map.put(Rank.NANORDER, Rank.ORDER);
     map.put(Rank.SPECIES_AGGREGATE, Rank.SPECIES);
     map.put(Rank.INFRAGENERIC_NAME, Rank.GENUS);
+    // the zoological division ranks were renamed to DIVISION_ZOOLOGY, so the SUPER/SUB/INFRA
+    // variants can no longer strip their prefix to a plain "DIVISION" — map them explicitly.
+    map.put(Rank.SUPERDIVISION, Rank.DIVISION_ZOOLOGY);
+    map.put(Rank.SUBDIVISION, Rank.DIVISION_ZOOLOGY);
+    map.put(Rank.INFRADIVISION, Rank.DIVISION_ZOOLOGY);
     MAJOR_RANKS = Map.copyOf(map);
     AMBIGUOUS_MARKER = Set.copyOf(ambiguous);
   }

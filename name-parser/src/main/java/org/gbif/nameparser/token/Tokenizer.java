@@ -40,17 +40,17 @@ public final class Tokenizer {
         while (i < n) {
           int c = input.codePointAt(i);
           int cl = Character.charCount(c);
-          if (Character.isLetter(c)) {
+          if (Character.isLetter(c) || Character.isDigit(c)) {
             i += cl;
             continue;
           }
           // allow internal hyphen, apostrophe or a stray "!" (OCR/typo artefact, e.g.
-          // "pu!chra") if the next char is a letter, so the word is kept intact
+          // "pu!chra") if the next char is a letter or digit, so the word is kept intact
           if ((c == '-' || c == '\'' || c == '’' || c == '_' || c == '!'
               || c == '‐' || c == '‑' || c == '‒' || c == '–' || c == '—')
               && i + cl < n) {
             int next = input.codePointAt(i + cl);
-            if (Character.isLetter(next)) {
+            if (Character.isLetter(next) || Character.isDigit(next)) {
               i += cl;
               continue;
             }
@@ -85,6 +85,23 @@ public final class Tokenizer {
         i += charLen;
         while (i < n && Character.isDigit(input.codePointAt(i))) {
           i++;
+        }
+        // "11-punctata" / "2-pustulata": a number glued to a hyphen + letter is the
+        // leading-numeral epithet form, not a bare number.
+        if (i + 1 < n && input.charAt(i) == '-' && Character.isLetter(input.codePointAt(i + 1))) {
+          i++; // consume hyphen
+          while (i < n) {
+            int c = input.codePointAt(i);
+            int cl = Character.charCount(c);
+            if (Character.isLetter(c) || Character.isDigit(c)) { i += cl; continue; }
+            if (c == '-' && i + cl < n) {
+              int next = input.codePointAt(i + cl);
+              if (Character.isLetter(next) || Character.isDigit(next)) { i += cl; continue; }
+            }
+            break;
+          }
+          out.add(new Token(TokenKind.WORD, input.substring(numStart, i), numStart, i));
+          continue;
         }
         out.add(new Token(TokenKind.NUMBER, input.substring(numStart, i), numStart, i));
         continue;

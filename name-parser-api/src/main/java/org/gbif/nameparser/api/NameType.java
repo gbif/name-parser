@@ -6,23 +6,18 @@ package org.gbif.nameparser.api;
 public enum NameType {
   
   /**
-   * A parsable scientific latin name that might contain authorship but is not any of the other name types below (virus, hybrid, cultivar, etc).
+   * A parsable scientific latin name that might contain authorship but is not any of the other name types below (hybrid, cultivar, etc).
    */
   SCIENTIFIC,
-  
+
   /**
-   * An unparsable virus name.
-   */
-  VIRUS,
-  
-  /**
-   * An unparsable hybrid or graft-chimera <b>formula</b> (not a hybrid name).
+   * An unparsable hybrid or graft-chimera <b>formula</b> (not a named hybrid).
    */
   FORMULA,
 
   /**
    * A variation of a scientific name that either adds additional notes or has some shortcomings to be classified as
-   * regular scientific names. Frequent reasons are:
+   * regular scientific names. Semi parseable. Frequent reasons are:
    * - informal addition like "cf."
    * - indetermined like "Abies spec."
    * - abbreviated genus "A. alba Mill"

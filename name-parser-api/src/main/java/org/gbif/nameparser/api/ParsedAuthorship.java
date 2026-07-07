@@ -10,29 +10,12 @@ import java.util.Set;
 /**
  *
  */
-public class ParsedAuthorship {
+public class ParsedAuthorship extends CombinedAuthorship {
 
   /**
    * Extinct dagger symbol found
    */
   protected boolean extinct;
-
-  /**
-   * Authorship with years of the name, but excluding any basionym authorship.
-   * For binomials the combination authors.
-   */
-  private Authorship combinationAuthorship = new Authorship();
-  
-  /**
-   * Basionym authorship with years of the name
-   */
-  private Authorship basionymAuthorship = new Authorship();
-  
-  /**
-   * The sanctioning author for sanctioned fungal names.
-   * Fr. or Pers.
-   */
-  private String sanctioningAuthor;
 
   /**
    * Taxonomic concept remarks of the name.
@@ -51,23 +34,15 @@ public class ParsedAuthorship {
   private String publishedIn;
 
   /**
+   * The publication year extracted from {@link #publishedIn}, if the reference carries one.
+   * The year is left in {@link #publishedIn} verbatim; this is only an additional structured copy.
+   */
+  private Integer publishedInYear;
+
+  /**
    * The exact page of the in reference stripped from the authorship
    */
   private String publishedInPage;
-
-  /**
-   * The imprint or printing date — the year actually printed on the work, which
-   * may differ from the nominal publication year. By convention a year wrapped in
-   * square brackets is always an imprint year, even when it is the only year cited
-   * (e.g. {@code "Cabanis [1851]"} → year=null, imprintYear="1851"). When both the
-   * nominal year and the imprint year are given, the nominal year stays on the
-   * authorship and the imprint year is captured here
-   * (e.g. {@code "Storr, 1970 [\"1969\"]"} → year=1970, imprintYear="1969").
-   *
-   * <p>See ICZN Article 22 for the citation conventions:
-   * <a href="https://code.iczn.org/date-of-publication/article-22-citation-of-date/">code.iczn.org/date-of-publication/article-22-citation-of-date</a>.
-   */
-  private String imprintYear;
 
   /**
    * Any additional unparsed string found at the end of the name.
@@ -102,49 +77,20 @@ public class ParsedAuthorship {
    * Copies all values from the given parsed authorship
    */
   public void copy(ParsedAuthorship pa) {
-    combinationAuthorship = pa.combinationAuthorship;
-    basionymAuthorship = pa.basionymAuthorship;
-    sanctioningAuthor = pa.sanctioningAuthor;
-    taxonomicNote = pa.taxonomicNote;
-    nomenclaturalNote = pa.nomenclaturalNote;
-    unparsed = pa.unparsed;
+    setCombinationAuthorship(pa.getCombinationAuthorship());
+    setBasionymAuthorship(pa.getBasionymAuthorship());
+    setSanctioningAuthor(pa.getSanctioningAuthor());
+    taxonomicNote = pa.getTaxonomicNote();
+    nomenclaturalNote = pa.getNomenclaturalNote();
+    publishedIn = pa.getPublishedIn();
+    publishedInYear = pa.getPublishedInYear();
+    publishedInPage = pa.getPublishedInPage();
+    unparsed = pa.getUnparsed();
     doubtful = pa.doubtful;
     manuscript = pa.manuscript;
     state = pa.state;
     warnings = pa.warnings;
     extinct = pa.extinct;
-  }
-
-  public boolean hasCombinationAuthorship() {
-    return combinationAuthorship != null && !combinationAuthorship.isEmpty();
-  }
-
-  public Authorship getCombinationAuthorship() {
-    return combinationAuthorship;
-  }
-  
-  public void setCombinationAuthorship(Authorship combinationAuthorship) {
-    this.combinationAuthorship = combinationAuthorship;
-  }
-
-  public boolean hasBasionymAuthorship() {
-    return basionymAuthorship != null && !basionymAuthorship.isEmpty();
-  }
-
-  public Authorship getBasionymAuthorship() {
-    return basionymAuthorship;
-  }
-  
-  public void setBasionymAuthorship(Authorship basionymAuthorship) {
-    this.basionymAuthorship = basionymAuthorship;
-  }
-  
-  public String getSanctioningAuthor() {
-    return sanctioningAuthor;
-  }
-  
-  public void setSanctioningAuthor(String sanctioningAuthor) {
-    this.sanctioningAuthor = sanctioningAuthor;
   }
 
   public String getNomenclaturalNote() {
@@ -165,8 +111,37 @@ public class ParsedAuthorship {
     return publishedIn;
   }
 
+  /**
+   * Sets the publishedIn reference and, in addition, extracts its publication year into
+   * {@link #publishedInYear} (the year stays in the reference string verbatim). When several
+   * year-shaped numbers are present the last one is taken — publication references list page
+   * numbers (which can look like years) before the trailing year.
+   */
   public void setPublishedIn(String publishedIn) {
     this.publishedIn = publishedIn;
+    this.publishedInYear = extractYear(publishedIn);
+  }
+
+  public Integer getPublishedInYear() {
+    return publishedInYear;
+  }
+
+  public void setPublishedInYear(Integer publishedInYear) {
+    this.publishedInYear = publishedInYear;
+  }
+
+  /** 4-digit year in the range 1500–2100, standing as its own token. */
+  private static final java.util.regex.Pattern PUBLISHED_IN_YEAR =
+      java.util.regex.Pattern.compile("\\b(1[5-9]\\d{2}|20\\d{2}|2100)\\b");
+
+  private static Integer extractYear(String publishedIn) {
+    if (publishedIn == null) return null;
+    java.util.regex.Matcher m = PUBLISHED_IN_YEAR.matcher(publishedIn);
+    Integer year = null;
+    while (m.find()) {
+      year = Integer.valueOf(m.group(1)); // keep the last match — the trailing year
+    }
+    return year;
   }
 
   public String getPublishedInPage() {
@@ -175,14 +150,6 @@ public class ParsedAuthorship {
 
   public void setPublishedInPage(String publishedInPage) {
     this.publishedInPage = publishedInPage;
-  }
-
-  public String getImprintYear() {
-    return imprintYear;
-  }
-
-  public void setImprintYear(String imprintYear) {
-    this.imprintYear = imprintYear;
   }
 
   public String getTaxonomicNote() {
@@ -241,13 +208,6 @@ public class ParsedAuthorship {
     }
   }
 
-  /**
-   * @return true if any kind of authorship exists
-   */
-  public boolean hasAuthorship() {
-    return (combinationAuthorship != null && combinationAuthorship.exists()) || (basionymAuthorship != null && basionymAuthorship.exists());
-  }
-
   public boolean isExtinct() {
     return extinct;
   }
@@ -265,20 +225,16 @@ public class ParsedAuthorship {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof ParsedAuthorship)) return false;
-    ParsedAuthorship that = (ParsedAuthorship) o;
+    if (!(o instanceof ParsedAuthorship that)) return false;
+
     return extinct == that.extinct &&
         doubtful == that.doubtful &&
         manuscript == that.manuscript &&
-        Objects.equals(combinationAuthorship, that.combinationAuthorship) &&
-        Objects.equals(basionymAuthorship, that.basionymAuthorship) &&
-        Objects.equals(sanctioningAuthor, that.sanctioningAuthor) &&
         Objects.equals(taxonomicNote, that.taxonomicNote) &&
         Objects.equals(nomenclaturalNote, that.nomenclaturalNote) &&
         Objects.equals(publishedIn, that.publishedIn) &&
+        Objects.equals(publishedInYear, that.publishedInYear) &&
         Objects.equals(publishedInPage, that.publishedInPage) &&
-        Objects.equals(imprintYear, that.imprintYear) &&
         Objects.equals(unparsed, that.unparsed) &&
         state == that.state &&
         Objects.equals(warnings, that.warnings);
@@ -286,7 +242,7 @@ public class ParsedAuthorship {
 
   @Override
   public int hashCode() {
-    return Objects.hash(extinct, combinationAuthorship, basionymAuthorship, sanctioningAuthor, taxonomicNote, nomenclaturalNote, publishedIn, publishedInPage, imprintYear, unparsed, doubtful, manuscript, state, warnings);
+    return Objects.hash(extinct, taxonomicNote, nomenclaturalNote, publishedIn, publishedInYear, publishedInPage, unparsed, doubtful, manuscript, state, warnings);
   }
 
   @Override
