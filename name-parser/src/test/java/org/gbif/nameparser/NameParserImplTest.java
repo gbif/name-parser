@@ -201,6 +201,16 @@ public class NameParserImplTest {
             .doubtful()
             .warning(Warnings.DOUBTFUL_GENUS)
             .nothingElse();
+
+    // bracketed genus with a parenthesised basionym — brackets stripped, name kept SCIENTIFIC
+    // but flagged doubtful because of them.
+    assertName("[Ablabesmyia] aurea (Johannsen, 1907)", "Ablabesmyia aurea")
+            .species("Ablabesmyia", "aurea")
+            .basAuthors("1907", "Johannsen")
+            .code(ZOOLOGICAL)
+            .doubtful()
+            .warning(Warnings.DOUBTFUL_GENUS)
+            .nothingElse();
   }
 
   @Test
