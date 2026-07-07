@@ -130,6 +130,11 @@ public final class Preflight {
   private static final Pattern PLACEHOLDER_PREFIX = Pattern.compile(
       "^(?:Unident|Undescribed|IncertaeSedis|Undet)(?:[-\\s]|$)", Pattern.CASE_INSENSITIVE);
   private static final Pattern QUESTION_PREFIX = Pattern.compile("^\\?\\s+\\p{Ll}");
+  // Two or more leading question marks ("?? not a name", "? ? foo"). A single leading "?" is a
+  // valid missing-genus placeholder ("? gryphoidis"), but a run of them is junk — the tokeniser
+  // would otherwise emit one "?" placeholder per mark and coerce the input into a nonsensical
+  // "? ? …" INFORMAL name. Reject as OTHER instead.
+  private static final Pattern MULTI_QUESTION_PREFIX = Pattern.compile("^\\?\\s*\\?");
   private static final Pattern NN_PLACEHOLDER = Pattern.compile(
       "^N\\.\\s*[Nn]\\.?(?:\\s*\\(.*\\))?\\s*$");
   // "Genus indet." / "Genus indet" patterns are INFORMAL, not PLACEHOLDER
@@ -244,6 +249,12 @@ public final class Preflight {
     // "NC12A-lineage" and "he2-lineage" are flagged INFORMAL rather than OTHER.
     if (LINEAGE_LABEL.matcher(s).matches()) {
       throw new UnparsableNameException(NameType.INFORMAL, original);
+    }
+
+    // Leading "?? …" — a run of two or more question marks is junk, not a missing-genus
+    // placeholder (that is a single "?"). Reject before the single-"?" handling below.
+    if (MULTI_QUESTION_PREFIX.matcher(s).find()) {
+      throw new UnparsableNameException(NameType.OTHER, original);
     }
 
     // Leading "? <epithet>" — placeholder for missing genus. Only fully unparsable

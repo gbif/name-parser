@@ -1200,6 +1200,12 @@ public class NameParserImplTest {
             .type(PLACEHOLDER)
             .code(ZOOLOGICAL)
             .nothingElse();
+
+    // A leading double question mark is not a "? epithet" missing-genus placeholder — the
+    // whole thing is junk, not a name. It must be fully unparsable (OTHER), not coerced into
+    // a doubtful "? ? not a name" INFORMAL result.
+    assertUnparsable("?? not a name 12345 ##", NameType.OTHER);
+    assertUnparsable("?? not a name", NameType.OTHER);
   }
   @Test
   public void sanctioned() throws Exception {
