@@ -305,6 +305,21 @@ public class NameFormatterTest {
   }
 
   @Test
+  public void testInformalToParsedName() throws Exception {
+    // a genus anchor lands in the genus slot, with rank/phrase/code and INFORMAL type
+    ParsedName g = new ParseResult.Informal("Rhizobium", Rank.GENUS, Rank.SPECIES, "RMCC TR1811", null).toParsedName();
+    assertEquals("Rhizobium", g.getGenus());
+    assertNull(g.getUninomial());
+    assertEquals(Rank.SPECIES, g.getRank());
+    assertEquals("RMCC TR1811", g.getPhrase());
+    assertEquals(NameType.INFORMAL, g.getType());
+    // a non-genus (here family) anchor lands in the uninomial slot instead
+    ParsedName f = new ParseResult.Informal("Ichneumonidae", Rank.FAMILY, Rank.SPECIES, null, null).toParsedName();
+    assertEquals("Ichneumonidae", f.getUninomial());
+    assertNull(f.getGenus());
+  }
+
+  @Test
   public void testAuthorship() throws Exception {
     pn.setBasionymAuthorship(Authorship.yearAuthors("1999", "Carl."));
     assertEquals("(Carl., 1999)", NameFormatter.authorshipComplete(pn));

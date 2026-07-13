@@ -131,6 +131,28 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Info
     public ParsedName orElseThrow() throws UnparsableNameException {
       throw new UnparsableNameException(NameType.INFORMAL, code, taxon);
     }
+
+    /**
+     * Rebuilds the {@code type = INFORMAL} {@link ParsedName} this informal name is a flattened view
+     * of — the {@link #taxon()} in the genus slot (or the uninomial slot for a non-genus anchor),
+     * plus its {@link #rank()}, {@link #phrase()} and {@link #code()}. The inverse of the parser's
+     * flattening, for callers (the {@link org.gbif.nameparser.util.NameFormatter}, downstream models)
+     * that need the structured form back. Note {@link #parsed()} still returns empty — this is a
+     * lossy, best-guess anchor, not a validated {@link Parsed} result.
+     */
+    public ParsedName toParsedName() {
+      ParsedName pn = new ParsedName();
+      pn.setType(NameType.INFORMAL);
+      pn.setRank(rank);
+      pn.setCode(code);
+      pn.setPhrase(phrase);
+      if (taxonRank == Rank.GENUS) {
+        pn.setGenus(taxon);
+      } else {
+        pn.setUninomial(taxon);
+      }
+      return pn;
+    }
   }
 
   /**

@@ -77,22 +77,12 @@ public class NameFormatter {
    * {@code "Ichneumonidae sp."} or {@code "Bartonella group"}.
    * <p/>
    * The flat {@link ParseResult.Informal} is rebuilt into the equivalent {@code INFORMAL}
-   * {@link ParsedName} — its {@link ParseResult.Informal#taxon() taxon} in the genus slot, or the
-   * uninomial slot for a non-genus anchor — and rendered through {@link #canonicalWithoutAuthorship},
-   * so the synthetic {@code sp.} marker and the phrase land exactly as the parser would place them.
+   * {@link ParsedName} (via {@link ParseResult.Informal#toParsedName()}) and rendered through
+   * {@link #canonicalWithoutAuthorship}, so the synthetic {@code sp.} marker and the phrase land
+   * exactly as the parser would place them.
    */
   public static String canonical(ParseResult.Informal informal) {
-    ParsedName pn = new ParsedName();
-    pn.setType(NameType.INFORMAL);
-    pn.setRank(informal.rank());
-    pn.setCode(informal.code());
-    pn.setPhrase(informal.phrase());
-    if (informal.taxonRank() == Rank.GENUS) {
-      pn.setGenus(informal.taxon());
-    } else {
-      pn.setUninomial(informal.taxon());
-    }
-    return canonicalWithoutAuthorship(pn);
+    return canonicalWithoutAuthorship(informal.toParsedName());
   }
 
   /**
