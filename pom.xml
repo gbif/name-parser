@@ -8,13 +8,12 @@
         <version>61</version>
     </parent>
 
-    <artifactId>name-parser-motherpom</artifactId>
+    <artifactId>name-parser-api</artifactId>
     <version>5.0.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
 
-    <name>GBIF Name Parser Project</name>
-    <description>GBIF Name Parser</description>
-    <url>https://github.org/gbif/name-parser</url>
+    <name>GBIF Name Parser API</name>
+    <description>The GBIF Name Parser model classes, formatter and the NameParser/ParseResult contract.</description>
+    <url>https://github.com/gbif/name-parser</url>
 
     <scm>
         <connection>scm:git:git@github.com:gbif/name-parser.git</connection>
@@ -22,10 +21,6 @@
         <developerConnection>scm:git:git@github.com:gbif/name-parser.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
-
-    <modules>
-        <module>name-parser-api</module>
-    </modules>
 
     <properties>
         <java.version>17</java.version>
@@ -35,14 +30,10 @@
         <main.basedir>${project.basedir}</main.basedir>
 
         <!-- Dependency versions -->
-        <coldp.version>1.1.0</coldp.version>
         <commons-io.version>2.22.0</commons-io.version>
         <commons-lang.version>3.20.0</commons-lang.version>
         <fastutil.version>8.5.18</fastutil.version>
         <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
-        <gbif-api.version>2.4.4</gbif-api.version>
-        <gson.version>2.14.0</gson.version>
-        <guava.version>33.6.0-jre</guava.version>
         <junit.version>4.13.2</junit.version>
         <!-- last logback version to support the SLF4J 1.7 series -->
         <logback.version>1.2.13</logback.version>
@@ -67,101 +58,58 @@
         </repository>
     </repositories>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.google.code.gson</groupId>
-                <artifactId>gson</artifactId>
-                <version>${gson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.catalogueoflife</groupId>
-                <artifactId>coldp</artifactId>
-                <version>${coldp.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.code.findbugs</groupId>
-                <artifactId>jsr305</artifactId>
-                <version>${findbugs-jsr305.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.gbif</groupId>
-                <artifactId>name-parser-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- GBIF -->
-            <dependency>
-                <groupId>org.gbif</groupId>
-                <artifactId>gbif-api</artifactId>
-                <version>${gbif-api.version}</version>
-            </dependency>
-
-            <!-- Logging -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-
-            <!-- Other -->
-            <dependency>
-                <groupId>it.unimi.dsi</groupId>
-                <artifactId>fastutil</artifactId>
-                <version>${fastutil.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-io</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>${commons-io.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-lang3</artifactId>
-                <version>${commons-lang.version}</version>
-            </dependency>
-
-            <!-- Test -->
-            <dependency>
-                <groupId>org.gbif</groupId>
-                <artifactId>name-parser-api</artifactId>
-                <version>${project.version}</version>
-                <classifier>tests</classifier>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>${logback.version}</version>
-                <scope>test</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <!--
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
-                <configuration>
-                    <release>${java.version}</release>
-                    <showWarnings>true</showWarnings>
-                </configuration>
-            </plugin>
-        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
     </build>
-    -->
+
+    <dependencies>
+        <!-- Other -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>${findbugs-jsr305.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.unimi.dsi</groupId>
+            <artifactId>fastutil</artifactId>
+            <version>${fastutil.version}</version>
+        </dependency>
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons-io.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
 </project>
