@@ -70,7 +70,47 @@ public class NameFormatter {
   public static String canonicalCompleteHtml(ParsedName n) {
     return buildName(n, true, true, true, true, true, true, false, true, true, true,  true, true, true, true, true, true);
   }
-  
+
+  /**
+   * The canonical form of an informal, semistructured name — a supraspecific taxon carrying a
+   * provisional, non-code designation, e.g. {@code "Rhizobium sp. RMCC TR1811"}, {@code "Allium sp. 1"},
+   * {@code "Ichneumonidae sp."} or {@code "Bartonella group"}.
+   * <p/>
+   * The flat {@link ParseResult.Informal} is rebuilt into the equivalent {@code INFORMAL}
+   * {@link ParsedName} — its {@link ParseResult.Informal#taxon() taxon} in the genus slot, or the
+   * uninomial slot for a non-genus anchor — and rendered through {@link #canonicalWithoutAuthorship},
+   * so the synthetic {@code sp.} marker and the phrase land exactly as the parser would place them.
+   */
+  public static String canonical(ParseResult.Informal informal) {
+    ParsedName pn = new ParsedName();
+    pn.setType(NameType.INFORMAL);
+    pn.setRank(informal.rank());
+    pn.setCode(informal.code());
+    pn.setPhrase(informal.phrase());
+    if (informal.taxonRank() == Rank.GENUS) {
+      pn.setGenus(informal.taxon());
+    } else {
+      pn.setUninomial(informal.taxon());
+    }
+    return canonicalWithoutAuthorship(pn);
+  }
+
+  /**
+   * The canonical form of any {@link ParseResult}: the {@link ParsedName} for a
+   * {@link ParseResult.Parsed}, the informal name for a {@link ParseResult.Informal}, and the
+   * verbatim input for an {@link ParseResult.Unparsable} (which has no structured form to render).
+   */
+  public static String canonical(ParseResult result) {
+    if (result instanceof ParseResult.Parsed parsed) {
+      return canonical(parsed.name());
+    } else if (result instanceof ParseResult.Informal informal) {
+      return canonical(informal);
+    } else if (result instanceof ParseResult.Unparsable unparsable) {
+      return unparsable.name();
+    }
+    throw new IllegalArgumentException("Unknown ParseResult variant: " + result);
+  }
+
   /**
    * The full concatenated authorship for parsed names including the sanctioning author.
    */

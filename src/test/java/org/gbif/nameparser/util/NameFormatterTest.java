@@ -272,7 +272,38 @@ public class NameFormatterTest {
     pn.setSpecificEpithet("alba");
     assertEquals("Abies alba", pn.canonicalName());
   }
-  
+
+  @Test
+  public void testInformal() throws Exception {
+    // molecular provisional species with a captured phrase tag
+    assertEquals("Rhizobium sp. RMCC TR1811",
+        NameFormatter.canonical(new ParseResult.Informal("Rhizobium", Rank.GENUS, Rank.SPECIES, "RMCC TR1811", null)));
+    // numbered placeholder
+    assertEquals("Allium sp. 1",
+        NameFormatter.canonical(new ParseResult.Informal("Allium", Rank.GENUS, Rank.SPECIES, "1", null)));
+    // bare "Genus sp." — no phrase; a higher-taxon anchor still sits in the genus slot
+    assertEquals("Ichneumonidae sp.",
+        NameFormatter.canonical(new ParseResult.Informal("Ichneumonidae", Rank.GENUS, Rank.SPECIES, null, null)));
+    // informal group — UNRANKED, the phrase carries the designation (no synthetic sp.)
+    assertEquals("Bartonella group",
+        NameFormatter.canonical(new ParseResult.Informal("Bartonella", Rank.GENUS, Rank.UNRANKED, "group", null)));
+  }
+
+  @Test
+  public void testCanonicalParseResult() throws Exception {
+    // Parsed -> the ParsedName's canonical form
+    pn.setGenus("Abies");
+    pn.setSpecificEpithet("alba");
+    pn.setRank(Rank.SPECIES);
+    assertEquals("Abies alba", NameFormatter.canonical(new ParseResult.Parsed(pn)));
+    // Informal -> the informal name
+    assertEquals("Serratia sp. RE1-2a",
+        NameFormatter.canonical(new ParseResult.Informal("Serratia", Rank.GENUS, Rank.SPECIES, "RE1-2a", null)));
+    // Unparsable -> the verbatim input, unchanged
+    assertEquals("Tobacco mosaic virus",
+        NameFormatter.canonical(new ParseResult.Unparsable(NameType.OTHER, "Tobacco mosaic virus")));
+  }
+
   @Test
   public void testAuthorship() throws Exception {
     pn.setBasionymAuthorship(Authorship.yearAuthors("1999", "Carl."));

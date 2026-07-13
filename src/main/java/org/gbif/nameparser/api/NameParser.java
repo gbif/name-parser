@@ -20,10 +20,11 @@ import javax.annotation.Nullable;
 /**
  * The basic name parser contract.
  * <p>
- * Parsing never throws for an unparsable name — it returns a {@link ParseResult} that is either a
- * {@link ParseResult.Parsed} name or an {@link ParseResult.Unparsable} classification (virus, hybrid
- * formula, placeholder, ...). Call {@link ParseResult#orElseThrow()} at the call sites that want a
- * fail-fast style.
+ * Parsing never throws for an unparsable name — it returns a {@link ParseResult}, one of three
+ * variants: a {@link ParseResult.Parsed} name, an {@link ParseResult.Informal} name (a taxon anchor
+ * carrying a provisional, non-code designation, e.g. {@code "Rhizobium sp. RMCC TR1811"}), or an
+ * {@link ParseResult.Unparsable} classification (virus, hybrid formula, placeholder, ...). Call
+ * {@link ParseResult#orElseThrow()} at the call sites that want a fail-fast style.
  */
 public interface NameParser {
 
