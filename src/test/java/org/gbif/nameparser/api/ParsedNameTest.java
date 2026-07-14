@@ -126,6 +126,39 @@ public class ParsedNameTest {
   }
   
   @Test
+  public void testEqualsIncludesAuthorship() {
+    ParsedName a = new ParsedName();
+    a.setGenus("Abies");
+    a.setSpecificEpithet("alba");
+
+    ParsedName b = new ParsedName();
+    b.setGenus("Abies");
+    b.setSpecificEpithet("alba");
+    assertEquals(a, b);
+    assertEquals(a.hashCode(), b.hashCode());
+
+    // names that differ only in authorship must not be equal
+    b.getCombinationAuthorship().setAuthors(List.of("Mill."));
+    assertNotEquals(a, b);
+  }
+
+  @Test
+  public void testCopyDoesNotShareCollections() {
+    ParsedName a = new ParsedName();
+    a.addWarning("w1");
+    a.setEpithetQualifier(NamePart.SPECIFIC, "cf.");
+
+    ParsedName b = new ParsedName();
+    b.copy(a);
+    // mutating the copy must not leak back into the source
+    b.addWarning("w2");
+    b.setEpithetQualifier(NamePart.GENERIC, "aff.");
+
+    assertEquals(1, a.getWarnings().size());
+    assertFalse(a.hasEpithetQualifier(NamePart.GENERIC));
+  }
+
+  @Test
   public void testIncomplete() throws Exception {
     ParsedName pn = new ParsedName();
     assertFalse(pn.isIncomplete());

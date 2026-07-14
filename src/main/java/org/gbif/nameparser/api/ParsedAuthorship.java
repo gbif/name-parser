@@ -8,7 +8,9 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- *
+ * The parsed authorship of a name — the combination, basionym and sanctioning authors inherited from
+ * {@link CombinedAuthorship} — together with the name-level notes (taxonomic / nomenclatural / published-in),
+ * flags (doubtful, manuscript, extinct) and the parse {@link ParsedName.State}. Extended by {@link ParsedName}.
  */
 public class ParsedAuthorship extends CombinedAuthorship {
 
@@ -74,7 +76,11 @@ public class ParsedAuthorship extends CombinedAuthorship {
   }
 
   /**
-   * Copies all values from the given parsed authorship
+   * Copies all values from the given parsed authorship.
+   * <p>
+   * The mutable collection {@code warnings} is deep-copied, so the copy and the source do not share it.
+   * The {@link Authorship} objects (combination / basionym) are shared by reference, however: a copy and
+   * its source point at the same authorship instances, so mutating one authorship is visible from both.
    */
   public void copy(ParsedAuthorship pa) {
     setCombinationAuthorship(pa.getCombinationAuthorship());
@@ -89,7 +95,7 @@ public class ParsedAuthorship extends CombinedAuthorship {
     doubtful = pa.doubtful;
     manuscript = pa.manuscript;
     state = pa.state;
-    warnings = pa.warnings;
+    warnings = pa.warnings == null ? new HashSet<>() : new HashSet<>(pa.warnings);
     extinct = pa.extinct;
   }
 
@@ -217,7 +223,7 @@ public class ParsedAuthorship extends CombinedAuthorship {
   }
 
   /**
-   * @See NameFormatter.authorshipComplete()
+   * @see NameFormatter#authorshipComplete(ParsedAuthorship, NomCode)
    */
   public String authorshipComplete(NomCode code) {
     return NameFormatter.authorshipComplete(this, code);
@@ -225,7 +231,9 @@ public class ParsedAuthorship extends CombinedAuthorship {
 
   @Override
   public boolean equals(Object o) {
+    if (this == o) return true;
     if (!(o instanceof ParsedAuthorship that)) return false;
+    if (!super.equals(o)) return false;
 
     return extinct == that.extinct &&
         doubtful == that.doubtful &&
@@ -242,7 +250,7 @@ public class ParsedAuthorship extends CombinedAuthorship {
 
   @Override
   public int hashCode() {
-    return Objects.hash(extinct, taxonomicNote, nomenclaturalNote, publishedIn, publishedInYear, publishedInPage, unparsed, doubtful, manuscript, state, warnings);
+    return Objects.hash(super.hashCode(), extinct, taxonomicNote, nomenclaturalNote, publishedIn, publishedInYear, publishedInPage, unparsed, doubtful, manuscript, state, warnings);
   }
 
   @Override

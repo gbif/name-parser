@@ -1,5 +1,7 @@
 package org.gbif.nameparser.api;
 
+import java.util.Objects;
+
 public class CombinedAuthorship implements CombinedAuthorshipIF {
 
   /**
@@ -63,5 +65,19 @@ public class CombinedAuthorship implements CombinedAuthorshipIF {
   @Override
   public boolean hasAuthorship() {
     return (combinationAuthorship != null && combinationAuthorship.exists()) || (basionymAuthorship != null && basionymAuthorship.exists());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof CombinedAuthorship that)) return false;
+    return Objects.equals(combinationAuthorship, that.combinationAuthorship)
+        && Objects.equals(basionymAuthorship, that.basionymAuthorship)
+        && Objects.equals(sanctioningAuthor, that.sanctioningAuthor);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor);
   }
 }

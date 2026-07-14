@@ -91,7 +91,7 @@ public class Authorship {
   }
 
   public void addAuthor(String author) {
-    if (StringUtils.isBlank(author)) {
+    if (StringUtils.isNotBlank(author)) {
       if (authors == null) authors = new ArrayList<>();
       authors.add(author);
     }
@@ -113,7 +113,7 @@ public class Authorship {
   }
 
   public void addExAuthor(String author) {
-    if (StringUtils.isBlank(author)) {
+    if (StringUtils.isNotBlank(author)) {
       if (exAuthors == null) exAuthors = new ArrayList<>();
       exAuthors.add(author);
     }

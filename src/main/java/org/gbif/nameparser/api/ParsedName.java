@@ -9,7 +9,9 @@ import java.util.*;
 import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
 
 /**
- *
+ * The structured form of a parsed scientific name: the Linnean name parts (uninomial / genus /
+ * subgenus / epithets), its {@link Rank}, {@link NomCode} and {@link NameType}, the hybrid, cultivar
+ * and phrase details, plus the authorship and parse {@link State} inherited from {@link ParsedAuthorship}.
  */
 public class ParsedName extends ParsedAuthorship implements LinneanName {
   /**
@@ -128,7 +130,11 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   private NameType type;
 
   /**
-   * Copies all values from the given parsed authorship
+   * Copies all values from the given parsed name.
+   * <p>
+   * The mutable collections {@code notho} and {@code epithetQualifier} (and {@code warnings}, via
+   * {@link ParsedAuthorship#copy}) are deep-copied. The {@link Authorship} objects are shared by
+   * reference — see {@link ParsedAuthorship#copy(ParsedAuthorship)}.
    */
   public void copy(ParsedName pn) {
     super.copy(pn);
@@ -146,7 +152,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     candidatus = pn.candidatus;
     notho = pn.notho != null ? EnumSet.copyOf(pn.notho) : null;
     originalSpelling = pn.originalSpelling;
-    epithetQualifier = pn.epithetQualifier;
+    epithetQualifier = pn.epithetQualifier == null ? null : new EnumMap<>(pn.epithetQualifier);
     type = pn.type;
   }
 
@@ -451,35 +457,35 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   }
   
   /**
-   * @See NameFormatter.canonical()
+   * @see NameFormatter#canonical(ParsedName)
    */
   public String canonicalName() {
     return NameFormatter.canonical(this);
   }
-  
+
   /**
-   * @See NameFormatter.canonicalNameWithoutAuthorship()
+   * @see NameFormatter#canonicalWithoutAuthorship(ParsedName)
    */
   public String canonicalNameWithoutAuthorship() {
     return NameFormatter.canonicalWithoutAuthorship(this);
   }
-  
+
   /**
-   * @See NameFormatter.canonicalMinimal()
+   * @see NameFormatter#canonicalMinimal(ParsedName)
    */
   public String canonicalNameMinimal() {
     return NameFormatter.canonicalMinimal(this);
   }
-  
+
   /**
-   * @See NameFormatter.canonicalComplete()
+   * @see NameFormatter#canonicalComplete(ParsedName)
    */
   public String canonicalNameComplete() {
     return NameFormatter.canonicalComplete(this);
   }
-  
+
   /**
-   * @See NameFormatter.authorshipComplete()
+   * @see NameFormatter#authorshipComplete(ParsedAuthorship, NomCode)
    */
   public String authorshipComplete() {
     return NameFormatter.authorshipComplete(this, getCode());
@@ -492,7 +498,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     if (!super.equals(o)) return false;
     ParsedName that = (ParsedName) o;
     return candidatus == that.candidatus
-           && originalSpelling == that.originalSpelling
+           && Objects.equals(originalSpelling, that.originalSpelling)
            && rank == that.rank
            && code == that.code
            && Objects.equals(uninomial, that.uninomial)

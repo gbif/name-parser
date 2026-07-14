@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -34,5 +35,30 @@ public class AuthorshipTest {
     
     auth.setExAuthors(List.of("Bassier"));
     assertEquals("Bassier ex L. & Rohe, 1878", auth.toString());
+  }
+
+  @Test
+  public void testAddAuthor() {
+    Authorship auth = new Authorship();
+
+    // real authors are added, blank/null ones are ignored
+    auth.addAuthor("L.");
+    auth.addAuthor("Rohe");
+    auth.addAuthor("  ");
+    auth.addAuthor(null);
+    assertEquals(List.of("L.", "Rohe"), auth.getAuthors());
+
+    auth.addExAuthor("Bassier");
+    auth.addExAuthor("");
+    assertEquals(List.of("Bassier"), auth.getExAuthors());
+  }
+
+  @Test
+  public void testEqualsIncludesAuthors() {
+    Authorship a = Authorship.yearAuthors("1878", "L.");
+    Authorship b = Authorship.yearAuthors("1878", "L.");
+    Authorship c = Authorship.yearAuthors("1878", "Mill.");
+    assertEquals(a, b);
+    assertNotEquals(a, c);
   }
 }
