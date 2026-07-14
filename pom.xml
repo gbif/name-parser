@@ -29,6 +29,10 @@
         <release.tagNameBase>name-parser</release.tagNameBase>
         <main.basedir>${project.basedir}</main.basedir>
 
+        <!-- No per-file license headers: we rely on the repository LICENSE, so disable the
+             motherpom Spotless header check (which would otherwise re-add the Apache header). -->
+        <spotless.check.skip>true</spotless.check.skip>
+
         <!-- Dependency versions -->
         <commons-io.version>2.22.0</commons-io.version>
         <commons-lang.version>3.20.0</commons-lang.version>

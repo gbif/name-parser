@@ -155,13 +155,13 @@ public class NameFormatter {
    * @param infrageneric         include the infrageneric name in brackets for species or infraspecies
    * @param decomposition        decompose unicode ligatures into their corresponding ascii ones, e.g. æ beomes ae
    * @param asciiOnly            transform unicode letters into their corresponding ascii ones, e.g. ø beomes o and ü u
-   * @param showIndet            if true include the rank marker for incomplete determinations, for example Puma spec.
    * @param showQualifier        if true include the epithet qualifiers
+   * @param showIndet            if true include the rank marker for incomplete determinations, for example Puma spec.
    * @param nomNote              include nomenclatural notes
-   * @param showSensu
-   * @param showStrain
-   * @param showCultivar
-   * @param showPhrase           Show phrase
+   * @param showSensu            include the taxonomic (sensu / sec.) note
+   * @param showCultivar         include the cultivar epithet, group or grex
+   * @param showPhrase           include the phrase-name designation
+   * @param showStrain           include the strain / phrase suffix for non phrase names
    * @param showExtraAuthorship  render the genus author of an infrageneric name and the
    *                             species author of a below-species name (e.g.
    *                             {@code Cordia (Adans.) Kuntze sect. Salimori},

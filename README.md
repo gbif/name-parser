@@ -56,7 +56,7 @@ NameParser parser = new NameParserRust(); // the native (Rust-backed) implementa
 switch (parser.parse("Rhizobium sp. RMCC TR1811", null, null, null)) {
   case ParseResult.Parsed p     -> index(p.name());                     // a full ParsedName
   case ParseResult.Informal i   -> indexInformal(i.taxon(), i.phrase()); // "Rhizobium" + "RMCC TR1811"
-  case ParseResult.Unparsable u -> record(u.type(), u.code());          // e.g. FORMULA / VIRUS
+  case ParseResult.Unparsable u -> record(u.type(), u.code());          // type FORMULA/PLACEHOLDER/IDENTIFIER/OTHER, code e.g. VIRUS
 }
 ```
 
