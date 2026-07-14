@@ -305,6 +305,23 @@ public class NameFormatterTest {
   }
 
   @Test
+  public void testCanonicalNameOnParseResult() throws Exception {
+    // the ParseResult.canonicalName() instance method delegates to NameFormatter.canonical(ParseResult)
+    // and is available on all three variants
+    pn.setGenus("Abies");
+    pn.setSpecificEpithet("alba");
+    pn.setRank(Rank.SPECIES);
+    ParseResult parsed = new ParseResult.Parsed(pn);
+    assertEquals("Abies alba", parsed.canonicalName());
+
+    ParseResult informal = new ParseResult.Informal("Serratia", Rank.GENUS, Rank.SPECIES, "RE1-2a", null);
+    assertEquals("Serratia sp. RE1-2a", informal.canonicalName());
+
+    ParseResult unparsable = new ParseResult.Unparsable(NameType.OTHER, "Tobacco mosaic virus");
+    assertEquals("Tobacco mosaic virus", unparsable.canonicalName());
+  }
+
+  @Test
   public void testInformalToParsedName() throws Exception {
     // a genus anchor lands in the genus slot, with rank/phrase/code and INFORMAL type
     ParsedName g = new ParseResult.Informal("Rhizobium", Rank.GENUS, Rank.SPECIES, "RMCC TR1811", null).toParsedName();

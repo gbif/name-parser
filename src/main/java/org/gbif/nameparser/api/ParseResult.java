@@ -13,6 +13,8 @@
  */
 package org.gbif.nameparser.api;
 
+import org.gbif.nameparser.util.NameFormatter;
+
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -48,6 +50,21 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Info
   /** @return true if this carries a structured {@link ParsedName} (i.e. is a {@link Parsed} result). */
   default boolean isParsable() {
     return parsed().isPresent();
+  }
+
+  /**
+   * The canonical string form of this result, available on every variant.
+   * <p>
+   * The three variants do not yield the same <em>kind</em> of string: a {@link Parsed} result renders
+   * a genuinely normalised scientific name (its {@link ParsedName#canonicalName()}), an {@link Informal}
+   * result renders its rebuilt supraspecific-taxon-plus-designation form (e.g. {@code "Rhizobium sp. RMCC TR1811"}),
+   * but an {@link Unparsable} result has no structured form and simply echoes the verbatim input. Callers
+   * must therefore not treat the {@link Unparsable} value as a cleaned or normalised name.
+   *
+   * @see NameFormatter#canonical(ParseResult)
+   */
+  default String canonicalName() {
+    return NameFormatter.canonical(this);
   }
 
   /**
