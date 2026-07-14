@@ -47,15 +47,21 @@ Everything is in `org.gbif.nameparser.api` (model + contract) and
   `imprintYear`, sanctioning author, `publishedIn` (+ structured `publishedInYear`).
 - **`Rank`**, **`NomCode`**, **`NameType`**, **`NamePart`** — the controlled vocabularies.
   `NameType.isParsable()` is `SCIENTIFIC || INFORMAL`; the rest (`FORMULA`, `PLACEHOLDER`,
-  `OTHER`) are the unparsable classifications.
+  `IDENTIFIER`, `OTHER`) are the unparsable classifications. `IDENTIFIER` is an anchorless
+  machine identifier that is not a name — a BOLD BIN, a UNITE SH, an OTU/ASV/MAG unit, or a
+  standalone culture-collection accession (`DSM 10`) — a more specific label than the catch-all
+  `OTHER`.
 - **`NameParser`** — the contract. `parse(name, authorship, rank, code)` returns a
   **`ParseResult`** and never throws for an unparsable name. `parseAuthorship(...)` returns
   `Optional<ParsedAuthorship>`.
-- **`ParseResult`** — a sealed interface, `Parsed(ParsedName)` | `Unparsable(type, code, name)`.
-  `type()` and `code()` are on **both** variants (so a failure can be classified without a
-  cast or a catch); `parsed()` returns `Optional<ParsedName>`; `orElseThrow()` is the opt-in
-  fail-fast path. This mirrors the Rust parser's `Result<ParsedName, Unparsable>` so both
-  implementations share one contract.
+- **`ParseResult`** — a sealed interface, three-way: `Parsed(ParsedName)` |
+  `Informal(taxon, taxonRank, rank, phrase, code)` | `Unparsable(type, code, name)`. `Informal`
+  is a semistructured name — a supraspecific `taxon` carrying a provisional designation with no
+  species epithet (`Rhizobium sp. RMCC TR1811`), the tail kept verbatim in `phrase`. `type()` and
+  `code()` are on **all three** variants (so any result can be classified without a cast or a
+  catch); `parsed()` returns `Optional<ParsedName>` (present only for `Parsed`); `orElseThrow()`
+  is the opt-in fail-fast path (throws for `Informal` + `Unparsable`). This mirrors the Rust
+  parser's own three-way outcome so both implementations share one contract.
 - **`UnparsableNameException`** — **unchecked** (`extends RuntimeException`); only raised by
   `ParseResult.orElseThrow()`, and bridges to/from `ParseResult.Unparsable`.
 - **`NameFormatter`** — renders a `ParsedName` (or any `CombinedAuthorshipIF`) back to a

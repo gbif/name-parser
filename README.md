@@ -43,7 +43,9 @@ maintenance; see [Migrating from 4.x to 5.0](#migrating-from-4x-to-50).
   **no** `ParsedName` — the anchor is unvalidated, so it is never mislabelled as a determined genus.
   Names that keep a species epithet — including cf./aff. and infraspecific-indeterminate ones —
   stay `Parsed`, so their `specificAuthorship` (which a flat anchor could not hold) survives.
-* **`Unparsable`** — not a scientific name at all (virus, hybrid formula, placeholder, BOLD BIN, …).
+* **`Unparsable`** — not a scientific name at all: a virus, a hybrid formula, a placeholder, or a
+  machine identifier such as a BOLD BIN / UNITE SH / OTU / culture-collection accession. `type()`
+  classifies it — `FORMULA`, `PLACEHOLDER`, `IDENTIFIER`, or `OTHER`.
 
 `type()` and `code()` are available on all three variants, so you can classify without catching
 anything:
