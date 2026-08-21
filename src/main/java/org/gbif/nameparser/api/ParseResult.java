@@ -107,7 +107,15 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Info
    *                  the parser's best guess, NOT validated against a taxonomic backbone
    * @param taxonRank that taxon's rank (GENUS, FAMILY, ...)
    * @param rank      the rank the informal name purports to be (SPECIES for {@code "sp."}, UNRANKED for a group)
-   * @param phrase    the distinguishing designator ({@code "RMCC TR1811"}, {@code "1"}, {@code "group"}); null for a bare {@code "Genus sp."}
+   * @param phrase    the VERBATIM tail, from the rank marker to the end of the input
+   *                  ({@code "sp. RMCC TR1811"}, {@code "sp. 1"}, {@code "group"}); null only when there is no
+   *                  tail at all. An informal name is not fully parsable by definition, so the tail is captured
+   *                  whole and nothing in it is interpreted — it may therefore contain what looks like an
+   *                  <em>author citation</em> ({@code "sp. Forster, 1968"}), which is NOT separately parsed.
+   *                  That is deliberate: the parser cannot reliably tell a citation from a specimen or culture
+   *                  code, and on the genuinely authored minority the citation belongs to the {@code taxon}
+   *                  anchor rather than to the undetermined species. {@code taxon + " " + phrase} reproduces
+   *                  the input exactly.
    * @param code      the nomenclatural code when known, else null
    */
   record Informal(String taxon, Rank taxonRank, Rank rank, @Nullable String phrase, @Nullable NomCode code)
