@@ -81,6 +81,46 @@ public class NameFormatterTest {
     assertEquals("Anomalopus truncatus (Peters, 1876 [1877])", NameFormatter.canonical(bn));
   }
 
+  @Test
+  public void anonymousAuthorship() throws Exception {
+    Authorship anon = new Authorship();
+    anon.setAnonymous(true);
+    anon.setYear("1830");
+    assertEquals("Anon., 1830", NameFormatter.authorString(anon, true, NomCode.ZOOLOGICAL));
+    assertEquals("Anon., 1830", NameFormatter.authorString(anon, true, null));
+    assertEquals("anon., 1830", NameFormatter.authorString(anon, true, NomCode.BOTANICAL));
+    assertEquals("anon.", NameFormatter.authorString(anon, false, NomCode.CULTIVARS));
+    assertEquals("Anon. 1830", NameFormatter.authorString(anon, true, NomCode.BACTERIAL));
+
+    // ex author of an anonymous publication: "Sw. ex anon."
+    Authorship ex = new Authorship();
+    ex.setAnonymous(true);
+    ex.setExAuthors(List.of("Sw."));
+    assertEquals("Sw. ex anon.", NameFormatter.authorString(ex, true, NomCode.BOTANICAL));
+
+    // attributed authors in square brackets, inside the basionym parentheses too
+    pn.setGenus("Agrotis");
+    pn.setSpecificEpithet("segetum");
+    pn.setRank(Rank.SPECIES);
+    pn.setCode(NomCode.ZOOLOGICAL);
+    Authorship bas = Authorship.yearAuthors("1775", "Denis", "Schiffermüller");
+    bas.setAnonymous(true);
+    pn.setBasionymAuthorship(bas);
+    assertEquals("Agrotis segetum ([Denis & Schiffermüller], 1775)", NameFormatter.canonicalComplete(pn));
+
+    // a botanical anonymous combination after a basionym: "(Fr.) anon."
+    ParsedName bn = new ParsedName();
+    bn.setGenus("Acetabula");
+    bn.setSpecificEpithet("acetabulum");
+    bn.setRank(Rank.SPECIES);
+    bn.setCode(NomCode.BOTANICAL);
+    bn.setBasionymAuthorship(Authorship.authors("L."));
+    Authorship comb = new Authorship();
+    comb.setAnonymous(true);
+    bn.setCombinationAuthorship(comb);
+    assertEquals("Acetabula acetabulum (L.) anon.", NameFormatter.canonicalComplete(bn));
+  }
+
   /** The genus author of an infrageneric name renders in canonicalComplete but not canonical. */
   @Test
   public void genericAuthorshipRendering() throws Exception {

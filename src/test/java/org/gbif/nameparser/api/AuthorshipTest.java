@@ -38,6 +38,27 @@ public class AuthorshipTest {
   }
 
   @Test
+  public void testAnonymous() {
+    Authorship auth = new Authorship();
+    auth.setAnonymous(true);
+    // an anonymous authorship exists even without an author string
+    assertEquals(false, auth.isEmpty());
+    assertEquals("Anon.", auth.toString());
+    auth.setYear("1830");
+    assertEquals("Anon., 1830", auth.toString());
+    // attributed from external evidence: square brackets (ICZN Recommendation 51D)
+    auth.setAuthors(new ArrayList<>(List.of("Denis", "Schiffermüller")));
+    assertEquals("[Denis & Schiffermüller], 1830", auth.toString());
+
+    // the flag is part of equality
+    Authorship plain = Authorship.yearAuthors("1830", "Denis", "Schiffermüller");
+    assertNotEquals(plain, auth);
+    plain.setAnonymous(true);
+    assertEquals(plain, auth);
+    assertEquals(plain.hashCode(), auth.hashCode());
+  }
+
+  @Test
   public void testAddAuthor() {
     Authorship auth = new Authorship();
 

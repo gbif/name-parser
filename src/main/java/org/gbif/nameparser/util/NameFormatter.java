@@ -547,6 +547,14 @@ public class NameFormatter {
   }
 
   /**
+   * The author citation of an anonymous work without attributed authors: "anon." in the botanical codes, "Anon."
+   * (ICZN Recommendation 51D) in all others and when the code is unknown.
+   */
+  public static String anonymousAuthor(NomCode code) {
+    return code == NomCode.BOTANICAL || code == NomCode.CULTIVARS || code == NomCode.PHYTO ? "anon." : "Anon.";
+  }
+
+  /**
    * Renders the authorship with ex authors and year
    *
    * @param sb StringBuilder to append to
@@ -563,7 +571,17 @@ public class NameFormatter {
         sb.append(" ex ");
         authorsAppended = true;
       }
-      if (auth.hasAuthors()) {
+      if (auth.isAnonymous()) {
+        // attributed authors of an anonymous work go in square brackets (ICZN Recommendation 51D)
+        if (auth.hasAuthors()) {
+          sb.append('[');
+          sb.append(joinAuthors(auth.getAuthors(), NomCode.BACTERIAL == code ? 2 : null));
+          sb.append(']');
+        } else {
+          sb.append(anonymousAuthor(code));
+        }
+        authorsAppended = true;
+      } else if (auth.hasAuthors()) {
         sb.append(joinAuthors(auth.getAuthors(), NomCode.BACTERIAL == code ? 2 : null));
         authorsAppended = true;
       }

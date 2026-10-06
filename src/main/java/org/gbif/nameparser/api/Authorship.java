@@ -51,6 +51,17 @@ public class Authorship {
    */
   private String imprintYear;
 
+  /**
+   * The name or nomenclatural act was published anonymously. Any {@link #getAuthors() authors} are then attributed
+   * from external evidence, not given in the work itself.
+   * <p>
+   * Rendered by {@link NameFormatter} per code: without authors as "Anon." (zoology, ICZN Recommendation 51D) or
+   * "anon." (botany), with attributed authors in square brackets as ICZN Recommendation 51D asks for
+   * (e.g. {@code "[Denis & Schiffermüller], 1775"}).
+   * See <a href="https://code.iczn.org/authorship/article-51-citation-of-names-of-authors/">ICZN Article 51</a>.
+   */
+  private boolean anonymous;
+
   public static Authorship authors(String... authors) {
     return yearAuthors(null, authors);
   }
@@ -142,8 +153,23 @@ public class Authorship {
     return imprintYear != null;
   }
 
+  /**
+   * @return true if the work was published anonymously, see {@link #setAnonymous(boolean)}
+   */
+  public boolean isAnonymous() {
+    return anonymous;
+  }
+
+  /**
+   * @param anonymous true if the work was published anonymously; any authors are then attributed from external
+   *                  evidence, e.g. {@code "[Lightfoot], 1786"}
+   */
+  public void setAnonymous(boolean anonymous) {
+    this.anonymous = anonymous;
+  }
+
   public boolean isEmpty() {
-    return (authors == null || authors.isEmpty()) && year == null;
+    return !anonymous && (authors == null || authors.isEmpty()) && year == null;
   }
   
   public boolean exists() {
@@ -158,12 +184,13 @@ public class Authorship {
     return Objects.equals(authors, that.authors) &&
         Objects.equals(exAuthors, that.exAuthors) &&
         Objects.equals(year, that.year) &&
-        Objects.equals(imprintYear, that.imprintYear);
+        Objects.equals(imprintYear, that.imprintYear) &&
+        anonymous == that.anonymous;
   }
   
   @Override
   public int hashCode() {
-    return Objects.hash(authors, exAuthors, year, imprintYear);
+    return Objects.hash(authors, exAuthors, year, imprintYear, anonymous);
   }
   
   /**
