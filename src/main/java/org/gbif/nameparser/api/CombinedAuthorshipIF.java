@@ -1,7 +1,7 @@
 package org.gbif.nameparser.api;
 
 /**
- * A name's combined authorship — its basionym and combination {@link Authorship}s plus any
+ * A name's combined authorship — its basionym and combination {@link Authorship}s, each with any
  * sanctioning author — as consumed by {@link org.gbif.nameparser.util.NameFormatter}.
  *
  * <p>Implemented by {@link CombinedAuthorship} (and therefore by {@link ParsedAuthorship} and
@@ -18,11 +18,6 @@ public interface CombinedAuthorshipIF {
    * @return the basionym authorship.
    */
   Authorship getBasionymAuthorship();
-
-  /**
-   * @return the sanctioning author for sanctioned fungal names (Fr. / Pers.), or null.
-   */
-  String getSanctioningAuthor();
 
   default boolean hasCombinationAuthorship() {
     Authorship a = getCombinationAuthorship();

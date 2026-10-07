@@ -39,14 +39,15 @@ public class NameFormatterTest {
     assertEquals("(Bassier) L. & Rohe", pn.authorshipComplete());
     assertEquals("(Bassier) L. & Rohe", pn.authorshipComplete());
     
-    pn.setSanctioningAuthor("Fr.");
+    pn.getCombinationAuthorship().setSanctioningAuthor("Fr.");
     assertEquals("(Bassier) L. & Rohe : Fr.", pn.authorshipComplete());
   }
   
   @Test
   public void testFullAuthorshipSanctioning() throws Exception {
-    pn.setCombinationAuthorship(Authorship.authors("L."));
-    pn.setSanctioningAuthor("Pers.");
+    Authorship comb = Authorship.authors("L.");
+    comb.setSanctioningAuthor("Pers.");
+    pn.setCombinationAuthorship(comb);
     assertEquals("L. : Pers.", pn.authorshipComplete());
   }
 
@@ -119,6 +120,32 @@ public class NameFormatterTest {
     comb.setAnonymous(true);
     bn.setCombinationAuthorship(comb);
     assertEquals("Acetabula acetabulum (L.) anon.", NameFormatter.canonicalComplete(bn));
+  }
+
+  @Test
+  public void sanctioningAuthor() throws Exception {
+    // a sanctioned basionym keeps its sanctioning author inside the brackets (ICN Art. 15, Rec. 50E)
+    ParsedName pn = new ParsedName();
+    pn.setGenus("Merulius");
+    pn.setSpecificEpithet("lacrimans");
+    pn.setRank(Rank.SPECIES);
+    pn.setCode(NomCode.BOTANICAL);
+    Authorship bas = Authorship.authors("Wulfen");
+    bas.setSanctioningAuthor("Fr.");
+    pn.setBasionymAuthorship(bas);
+    pn.setCombinationAuthorship(Authorship.authors("Schum."));
+    assertEquals("Merulius lacrimans (Wulfen : Fr.) Schum.", NameFormatter.canonicalComplete(pn));
+
+    // a sanctioned combination, after its year as before
+    ParsedName bn = new ParsedName();
+    bn.setGenus("Boletus");
+    bn.setSpecificEpithet("edulis");
+    bn.setRank(Rank.SPECIES);
+    bn.setCode(NomCode.BOTANICAL);
+    Authorship comb = Authorship.yearAuthors("1821", "Bull.");
+    comb.setSanctioningAuthor("Fr.");
+    bn.setCombinationAuthorship(comb);
+    assertEquals("Boletus edulis Bull., 1821 : Fr.", NameFormatter.canonicalComplete(bn));
   }
 
   /** The genus author of an infrageneric name renders in canonicalComplete but not canonical. */

@@ -14,7 +14,7 @@ import java.util.Objects;
  * but no in authors which are regarded as part of the publishedIn citation.
  * <p>
  * The parsed authorship for basionyms does not include brackets.
- * Note that the sanctioning author for fungi is part of the ParsedName class.
+ * A sanctioned fungal name or basionym carries its sanctioning author, e.g. {@code "(Wulfen : Fr.) Schum."}.
  */
 public class Authorship {
 
@@ -38,13 +38,11 @@ public class Authorship {
   private String year;
 
   /**
-   * The imprint or printing date — the year actually printed on the work, which
-   * may differ from the nominal publication year. By convention a year wrapped in
-   * square brackets is always an imprint year, even when it is the only year cited
-   * (e.g. {@code "Cabanis [1851]"} → year=null, imprintYear="1851"). When both the
-   * nominal year and the imprint year are given, the nominal year stays on the
-   * authorship and the imprint year is captured here
-   * (e.g. {@code "Storr, 1970 [\"1969\"]"} → year=1970, imprintYear="1969").
+   * The imprint or printing date — the year actually printed on the work, when it differs from the
+   * actual publication year. It is cited after the actual year, which stays in {@link #getYear() year}
+   * (e.g. {@code "Storr, 1970 [\"1969\"]"} or {@code "Storr, 1970 [1969]"} → year=1970, imprintYear="1969").
+   * A bracketed year on its own is no imprint year: it is the actual year established from external
+   * evidence (ICZN Recommendation 22A.2.3), so {@code "Cabanis [1851]"} → year=1851, imprintYear=null.
    *
    * <p>See ICZN Article 22 for the citation conventions:
    * <a href="https://code.iczn.org/date-of-publication/article-22-citation-of-date/">code.iczn.org/date-of-publication/article-22-citation-of-date</a>.
@@ -61,6 +59,14 @@ public class Authorship {
    * See <a href="https://code.iczn.org/authorship/article-51-citation-of-names-of-authors/">ICZN Article 51</a>.
    */
   private boolean anonymous;
+
+  /**
+   * The sanctioning author of a sanctioned fungal name (ICN Art. 15), Fries ("Fr.") or Persoon ("Pers."), cited
+   * after a colon: {@code "Boletus edulis Bull. : Fr."}, and for a sanctioned basionym inside its brackets:
+   * {@code "Merulius lacrimans (Wulfen : Fr.) Schum."}.
+   * See <a href="https://www.iapt-taxon.org/nomen/pages/main/art_15.html">ICN Article 15</a> and Recommendation 50E.
+   */
+  private String sanctioningAuthor;
 
   public static Authorship authors(String... authors) {
     return yearAuthors(null, authors);
@@ -168,6 +174,21 @@ public class Authorship {
     this.anonymous = anonymous;
   }
 
+  /**
+   * @return the sanctioning author (Fr. / Pers.) of a sanctioned fungal name, or null
+   */
+  public String getSanctioningAuthor() {
+    return sanctioningAuthor;
+  }
+
+  public void setSanctioningAuthor(String sanctioningAuthor) {
+    this.sanctioningAuthor = sanctioningAuthor;
+  }
+
+  public boolean hasSanctioningAuthor() {
+    return sanctioningAuthor != null;
+  }
+
   public boolean isEmpty() {
     return !anonymous && (authors == null || authors.isEmpty()) && year == null;
   }
@@ -185,12 +206,13 @@ public class Authorship {
         Objects.equals(exAuthors, that.exAuthors) &&
         Objects.equals(year, that.year) &&
         Objects.equals(imprintYear, that.imprintYear) &&
-        anonymous == that.anonymous;
+        anonymous == that.anonymous &&
+        Objects.equals(sanctioningAuthor, that.sanctioningAuthor);
   }
   
   @Override
   public int hashCode() {
-    return Objects.hash(authors, exAuthors, year, imprintYear, anonymous);
+    return Objects.hash(authors, exAuthors, year, imprintYear, anonymous, sanctioningAuthor);
   }
   
   /**

@@ -85,7 +85,6 @@ public class ParsedAuthorship extends CombinedAuthorship {
   public void copy(ParsedAuthorship pa) {
     setCombinationAuthorship(pa.getCombinationAuthorship());
     setBasionymAuthorship(pa.getBasionymAuthorship());
-    setSanctioningAuthor(pa.getSanctioningAuthor());
     taxonomicNote = pa.getTaxonomicNote();
     nomenclaturalNote = pa.getNomenclaturalNote();
     publishedIn = pa.getPublishedIn();

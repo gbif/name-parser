@@ -601,6 +601,12 @@ public class NameFormatter {
       if (includeYear && auth.hasImprintYear()) {
         sb.append(" [").append(auth.getImprintYear()).append(']');
       }
+      // Render sanctioning author via colon, inside the brackets of a basionym:
+      // https://www.iapt-taxon.org/nomen/pages/main/art_15.html, Recommendation 50E
+      if (auth.hasSanctioningAuthor()) {
+        sb.append(" : ");
+        sb.append(auth.getSanctioningAuthor());
+      }
     }
   }
   
@@ -622,12 +628,6 @@ public class NameFormatter {
         sb.append(" ");
       }
       appendAuthorship(sb, a.getCombinationAuthorship(), includeYear, code);
-      // Render sanctioning author via colon:
-      // http://www.iapt-taxon.org/nomen/main.php?page=r50E
-      if (a.getSanctioningAuthor() != null) {
-        sb.append(" : ");
-        sb.append(a.getSanctioningAuthor());
-      }
     }
   }
   

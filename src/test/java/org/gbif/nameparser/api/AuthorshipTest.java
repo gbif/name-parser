@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -54,6 +56,22 @@ public class AuthorshipTest {
     Authorship plain = Authorship.yearAuthors("1830", "Denis", "Schiffermüller");
     assertNotEquals(plain, auth);
     plain.setAnonymous(true);
+    assertEquals(plain, auth);
+    assertEquals(plain.hashCode(), auth.hashCode());
+  }
+
+  @Test
+  public void testSanctioningAuthor() {
+    Authorship auth = Authorship.authors("Wulfen");
+    assertFalse(auth.hasSanctioningAuthor());
+    auth.setSanctioningAuthor("Fr.");
+    assertTrue(auth.hasSanctioningAuthor());
+    assertEquals("Wulfen : Fr.", auth.toString());
+
+    // the sanctioning author is part of equality
+    Authorship plain = Authorship.authors("Wulfen");
+    assertNotEquals(plain, auth);
+    plain.setSanctioningAuthor("Fr.");
     assertEquals(plain, auth);
     assertEquals(plain.hashCode(), auth.hashCode());
   }

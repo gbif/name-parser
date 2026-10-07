@@ -15,12 +15,6 @@ public class CombinedAuthorship implements CombinedAuthorshipIF {
    */
   private Authorship basionymAuthorship = new Authorship();
 
-  /**
-   * The sanctioning author for sanctioned fungal names.
-   * Fr. or Pers.
-   */
-  private String sanctioningAuthor;
-
 
   @Override
   public boolean hasCombinationAuthorship() {
@@ -50,15 +44,6 @@ public class CombinedAuthorship implements CombinedAuthorshipIF {
     this.basionymAuthorship = basionymAuthorship;
   }
 
-  @Override
-  public String getSanctioningAuthor() {
-    return sanctioningAuthor;
-  }
-
-  public void setSanctioningAuthor(String sanctioningAuthor) {
-    this.sanctioningAuthor = sanctioningAuthor;
-  }
-
   /**
    * @return true if any kind of authorship exists
    */
@@ -72,12 +57,11 @@ public class CombinedAuthorship implements CombinedAuthorshipIF {
     if (this == o) return true;
     if (!(o instanceof CombinedAuthorship that)) return false;
     return Objects.equals(combinationAuthorship, that.combinationAuthorship)
-        && Objects.equals(basionymAuthorship, that.basionymAuthorship)
-        && Objects.equals(sanctioningAuthor, that.sanctioningAuthor);
+        && Objects.equals(basionymAuthorship, that.basionymAuthorship);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(combinationAuthorship, basionymAuthorship, sanctioningAuthor);
+    return Objects.hash(combinationAuthorship, basionymAuthorship);
   }
 }
