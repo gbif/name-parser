@@ -30,8 +30,6 @@ public class NameFormatter {
    * Subspecies use the subsp rank marker unless a name is assigned to the zoological code.
    */
   public static String canonical(ParsedName n) {
-    // TODO: how can we best remove subsp from zoological names?
-    // https://github.com/gbif/portal-feedback/issues/640
     return buildName(n, true, true, true, true, false, false, false, true, true, false,  false, true, true, true, false, false);
   }
 
