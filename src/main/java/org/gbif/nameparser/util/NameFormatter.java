@@ -100,6 +100,30 @@ public class NameFormatter {
   }
 
   /**
+   * The complete canonical form of an informal, semistructured name, built like
+   * {@link #canonical(ParseResult.Informal)} but rendered through {@link #canonicalComplete(ParsedName)}.
+   */
+  public static String canonicalComplete(ParseResult.Informal informal) {
+    return canonicalComplete(informal.toParsedName());
+  }
+
+  /**
+   * The complete canonical form of any {@link ParseResult}: {@link #canonicalComplete(ParsedName)} for a
+   * {@link ParseResult.Parsed}, the complete informal name for a {@link ParseResult.Informal}, and the
+   * verbatim input for an {@link ParseResult.Unparsable} (which has no structured form to render).
+   */
+  public static String canonicalComplete(ParseResult result) {
+    if (result instanceof ParseResult.Parsed parsed) {
+      return canonicalComplete(parsed.name());
+    } else if (result instanceof ParseResult.Informal informal) {
+      return canonicalComplete(informal);
+    } else if (result instanceof ParseResult.Unparsable unparsable) {
+      return unparsable.name();
+    }
+    throw new IllegalArgumentException("Unknown ParseResult variant: " + result);
+  }
+
+  /**
    * The full concatenated authorship for parsed names including the sanctioning author.
    */
   public static String authorshipComplete(ParsedAuthorship n, NomCode code) {

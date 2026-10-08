@@ -389,6 +389,25 @@ public class NameFormatterTest {
   }
 
   @Test
+  public void testCanonicalNameCompleteOnParseResult() throws Exception {
+    // the ParseResult.canonicalNameComplete() instance method delegates to NameFormatter.canonicalComplete(ParseResult)
+    pn.setGenus("Abies");
+    pn.setSpecificEpithet("alba");
+    pn.setRank(Rank.SPECIES);
+    pn.setCombinationAuthorship(Authorship.yearAuthors("1768", "Mill."));
+    pn.setTaxonomicNote("sensu lato");
+    ParseResult parsed = new ParseResult.Parsed(pn);
+    assertEquals(NameFormatter.canonicalComplete(pn), parsed.canonicalNameComplete());
+    assertEquals("Abies alba Mill., 1768 sensu lato", parsed.canonicalNameComplete());
+
+    ParseResult informal = new ParseResult.Informal("Serratia", Rank.GENUS, Rank.SPECIES, "RE1-2a", null);
+    assertEquals("Serratia sp. RE1-2a", informal.canonicalNameComplete());
+
+    ParseResult unparsable = new ParseResult.Unparsable(NameType.OTHER, "Tobacco mosaic virus");
+    assertEquals("Tobacco mosaic virus", unparsable.canonicalNameComplete());
+  }
+
+  @Test
   public void testInformalToParsedName() throws Exception {
     // a genus anchor lands in the genus slot, with rank/phrase/code and INFORMAL type
     ParsedName g = new ParseResult.Informal("Rhizobium", Rank.GENUS, Rank.SPECIES, "RMCC TR1811", null).toParsedName();

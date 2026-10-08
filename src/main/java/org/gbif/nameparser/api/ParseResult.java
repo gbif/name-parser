@@ -55,6 +55,19 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Info
   }
 
   /**
+   * The complete canonical string form of this result, available on every variant, including all
+   * details such as non code compliant, informal remarks.
+   * <p>
+   * As with {@link #canonicalName()}, an {@link Unparsable} result simply echoes the verbatim input and
+   * must not be treated as a cleaned or normalised name.
+   *
+   * @see NameFormatter#canonicalComplete(ParseResult)
+   */
+  default String canonicalNameComplete() {
+    return NameFormatter.canonicalComplete(this);
+  }
+
+  /**
    * @return the parsed name (only a {@link Parsed} result carries one)
    * @throws UnparsableNameException if this is an {@link Informal} or {@link Unparsable} result
    */
