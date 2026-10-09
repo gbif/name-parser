@@ -354,6 +354,21 @@ public class NameFormatterTest {
     // informal group — UNRANKED, the phrase carries the designation (no synthetic sp.)
     assertEquals("Bartonella group",
         NameFormatter.canonical(new ParseResult.Informal("Bartonella", Rank.GENUS, Rank.UNRANKED, "group", null)));
+    // a phrase opening with an organism label, a qualifier or an underscore designation spells
+    // out the indetermination itself: no synthetic sp. (gbif/name-parser-rust#77)
+    assertEquals("Holophagaceae bacterium UBA692",
+        NameFormatter.canonical(new ParseResult.Informal("Holophagaceae", Rank.FAMILY, Rank.SPECIES, "bacterium UBA692", null)));
+    assertEquals("Wolbachia endosymbiont of Aprostocetus sp.",
+        NameFormatter.canonical(new ParseResult.Informal("Wolbachia", Rank.GENUS, Rank.SPECIES, "endosymbiont of Aprostocetus sp.", null)));
+    assertEquals("Bathyarchaeota archaeon A05DMB-11",
+        NameFormatter.canonical(new ParseResult.Informal("Bathyarchaeota", Rank.PHYLUM, Rank.SPECIES, "archaeon A05DMB-11", null)));
+    assertEquals("Formicidae cf.",
+        NameFormatter.canonical(new ParseResult.Informal("Formicidae", Rank.FAMILY, Rank.SPECIES, "cf.", null)));
+    assertEquals("Aulocalyx n_sp_NIWA_SO254",
+        NameFormatter.canonical(new ParseResult.Informal("Aulocalyx", Rank.GENUS, Rank.SPECIES, "n_sp_NIWA_SO254", null)));
+    // a label inside a word is no label
+    assertEquals("Bacteroides sp. bacteriophage-free",
+        NameFormatter.canonical(new ParseResult.Informal("Bacteroides", Rank.GENUS, Rank.SPECIES, "bacteriophage-free", null)));
   }
 
   @Test

@@ -490,8 +490,15 @@ public class NameFormatter {
   // Informal phrase that already spells out the species marker as a leading word
   // ("species 1") — the verbatim phrase carries the marker, so the formatter must not
   // also synthesise an "sp." marker (which would yield "Genus sp. species 1").
-  private static final Pattern PHRASE_SPECIES_MARKER =
-      Pattern.compile("^(?:species|spec|sp)\\b.*", Pattern.CASE_INSENSITIVE);
+  // Also the underscore-glued designations ("n_sp_NIWA_SO254", "sp_JAVA", "n_gen n_sp_…"),
+  // the open-nomenclature qualifiers standing for the marker ("Formicidae cf.",
+  // "Acroceridae aff. Terphis sp. SLW-2002") and the generic organism labels opening the
+  // phrase of an unnamed species ("Holophagaceae bacterium UBA692", "Wolbachia endosymbiont
+  // of Leptogenys gracilis"), as the Rust engine's formatter reads them.
+  private static final Pattern PHRASE_SPECIES_MARKER = Pattern.compile(
+      "^(?:(?:species|spec|spp|sp|cf|aff|nr|near|[a-z]*(?:bacteri(?:um|a)|archae(?:on|a|ote)|symbionts?))\\b"
+          + "|(?:n_)?sp_|n_gen\\b).*",
+      Pattern.CASE_INSENSITIVE);
 
   private static boolean phraseLeadsWithSpeciesMarker(ParsedName n) {
     return n.isPhraseName() && PHRASE_SPECIES_MARKER.matcher(n.getPhrase().trim()).matches();
