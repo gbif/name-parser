@@ -42,12 +42,21 @@ public class Authorship {
    * actual publication year. It is cited after the actual year, which stays in {@link #getYear() year}
    * (e.g. {@code "Storr, 1970 [\"1969\"]"} or {@code "Storr, 1970 [1969]"} → year=1970, imprintYear="1969").
    * A bracketed year on its own is no imprint year: it is the actual year established from external
-   * evidence (ICZN Recommendation 22A.2.3), so {@code "Cabanis [1851]"} → year=1851, imprintYear=null.
+   * evidence (ICZN Recommendation 22A.2.3), so {@code "Cabanis [1851]"} → year=1851, imprintYear=null,
+   * {@link #isBracketedYear() bracketedYear}=true.
    *
    * <p>See ICZN Article 22 for the citation conventions:
    * <a href="https://code.iczn.org/date-of-publication/article-22-citation-of-date/">code.iczn.org/date-of-publication/article-22-citation-of-date</a>.
    */
   private String imprintYear;
+
+  /**
+   * The {@link #getYear() year} is not given in the work itself but established from external evidence,
+   * and is therefore cited in square brackets (ICZN Recommendation 22A.2.3): {@code "Westwood, [1851]"}
+   * → year=1851, bracketedYear=true. Rendered by {@link NameFormatter} in square brackets again.
+   * See <a href="https://code.iczn.org/date-of-publication/article-22-citation-of-date/">ICZN Article 22</a>.
+   */
+  private boolean bracketedYear;
 
   /**
    * The name or nomenclatural act was published anonymously. Any {@link #getAuthors() authors} are then attributed
@@ -160,6 +169,22 @@ public class Authorship {
   }
 
   /**
+   * @return true if the year was established from external evidence and is cited in square brackets,
+   *         see {@link #setBracketedYear(boolean)}
+   */
+  public boolean isBracketedYear() {
+    return bracketedYear;
+  }
+
+  /**
+   * @param bracketedYear true if the year is not given in the work itself but established from external
+   *                      evidence, e.g. {@code "Westwood, [1851]"} (ICZN Recommendation 22A.2.3)
+   */
+  public void setBracketedYear(boolean bracketedYear) {
+    this.bracketedYear = bracketedYear;
+  }
+
+  /**
    * @return true if the work was published anonymously, see {@link #setAnonymous(boolean)}
    */
   public boolean isAnonymous() {
@@ -206,13 +231,14 @@ public class Authorship {
         Objects.equals(exAuthors, that.exAuthors) &&
         Objects.equals(year, that.year) &&
         Objects.equals(imprintYear, that.imprintYear) &&
+        bracketedYear == that.bracketedYear &&
         anonymous == that.anonymous &&
         Objects.equals(sanctioningAuthor, that.sanctioningAuthor);
   }
   
   @Override
   public int hashCode() {
-    return Objects.hash(authors, exAuthors, year, imprintYear, anonymous, sanctioningAuthor);
+    return Objects.hash(authors, exAuthors, year, imprintYear, bracketedYear, anonymous, sanctioningAuthor);
   }
   
   /**

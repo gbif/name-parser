@@ -614,7 +614,12 @@ public class NameFormatter {
           }
           sb.append(' ');
         }
-        sb.append(auth.getYear());
+        // a year established from external evidence is cited in square brackets (ICZN Rec. 22A.2.3)
+        if (auth.isBracketedYear()) {
+          sb.append('[').append(auth.getYear()).append(']');
+        } else {
+          sb.append(auth.getYear());
+        }
       }
       // Imprint year (ICZN Article 22) is part of the year rendering: it follows the nominal
       // year ("Storr, 1970 [1969]"), or the authors when there is no nominal year

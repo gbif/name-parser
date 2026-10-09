@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -80,6 +81,29 @@ public class NameFormatterTest {
     bn.setBasionymAuthorship(bas);
     assertEquals("Anomalopus truncatus (Peters, 1876 [1877])", NameFormatter.canonicalComplete(bn));
     assertEquals("Anomalopus truncatus (Peters, 1876 [1877])", NameFormatter.canonical(bn));
+  }
+
+  /** A year established from external evidence is cited in square brackets (ICZN Rec. 22A.2.3). */
+  @Test
+  public void bracketedYearRendering() throws Exception {
+    Authorship comb = Authorship.yearAuthors("1851", "Westwood");
+    comb.setBracketedYear(true);
+    assertEquals("Westwood, [1851]", NameFormatter.authorString(comb, true, NomCode.ZOOLOGICAL));
+    assertEquals("Westwood", NameFormatter.authorString(comb, false, NomCode.ZOOLOGICAL));
+
+    // inside the basionym brackets: "(Hübner, [1819])"
+    pn.setGenus("Acleris");
+    pn.setSpecificEpithet("aspersana");
+    pn.setRank(Rank.SPECIES);
+    pn.setCode(NomCode.ZOOLOGICAL);
+    Authorship bas = Authorship.yearAuthors("1819", "Hübner");
+    bas.setBracketedYear(true);
+    pn.setBasionymAuthorship(bas);
+    assertEquals("Acleris aspersana (Hübner, [1819])", NameFormatter.canonicalComplete(pn));
+
+    // it is part of what makes two authorships equal
+    Authorship plain = Authorship.yearAuthors("1851", "Westwood");
+    assertNotEquals(plain, comb);
   }
 
   @Test
