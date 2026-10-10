@@ -130,8 +130,13 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Info
    *                  anchor rather than to the undetermined species. {@code taxon + " " + phrase} reproduces
    *                  the input exactly.
    * @param code      the nomenclatural code when known, else null
+   * @param candidatus true for a provisional prokaryote name with Candidatus status
+   *                   ({@code "Candidatus Pelagibacter sp. HTCC7211"}); the word itself is in neither
+   *                   {@code taxon} nor {@code phrase}, as {@link ParsedName#isCandidatus()} keeps it out of
+   *                   the name parts
    */
-  record Informal(String taxon, Rank taxonRank, Rank rank, @Nullable String phrase, @Nullable NomCode code)
+  record Informal(String taxon, Rank taxonRank, Rank rank, @Nullable String phrase, @Nullable NomCode code,
+                  boolean candidatus)
       implements ParseResult {
     public Informal {
       if (taxon == null) {
@@ -140,6 +145,11 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Info
       if (taxonRank == null || rank == null) {
         throw new NullPointerException("taxonRank and rank required");
       }
+    }
+
+    /** An informal name without Candidatus status. */
+    public Informal(String taxon, Rank taxonRank, Rank rank, @Nullable String phrase, @Nullable NomCode code) {
+      this(taxon, taxonRank, rank, phrase, code, false);
     }
 
     @Override
@@ -160,7 +170,7 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Info
     /**
      * Rebuilds the {@code type = INFORMAL} {@link ParsedName} this informal name is a flattened view
      * of — the {@link #taxon()} in the genus slot (or the uninomial slot for a non-genus anchor),
-     * plus its {@link #rank()}, {@link #phrase()} and {@link #code()}. The inverse of the parser's
+     * plus its {@link #rank()}, {@link #phrase()}, {@link #code()} and {@link #candidatus()}. The inverse of the parser's
      * flattening, for callers (the {@link org.gbif.nameparser.util.NameFormatter}, downstream models)
      * that need the structured form back. Note {@link #parsed()} still returns empty — this is a
      * lossy, best-guess anchor, not a validated {@link Parsed} result.
@@ -171,6 +181,7 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Info
       pn.setRank(rank);
       pn.setCode(code);
       pn.setPhrase(phrase);
+      pn.setCandidatus(candidatus);
       if (taxonRank == Rank.GENUS) {
         pn.setGenus(taxon);
       } else {

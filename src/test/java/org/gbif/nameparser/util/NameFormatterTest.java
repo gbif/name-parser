@@ -10,8 +10,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -459,6 +461,15 @@ public class NameFormatterTest {
     ParsedName f = new ParseResult.Informal("Ichneumonidae", Rank.FAMILY, Rank.SPECIES, null, null).toParsedName();
     assertEquals("Ichneumonidae", f.getUninomial());
     assertNull(f.getGenus());
+  }
+
+  @Test
+  public void testInformalCandidatus() throws Exception {
+    ParseResult.Informal informal =
+        new ParseResult.Informal("Pelagibacter", Rank.GENUS, Rank.SPECIES, "sp. HTCC7211", NomCode.BACTERIAL, true);
+    assertTrue(informal.toParsedName().isCandidatus());
+    assertEquals("\"Candidatus Pelagibacter\" sp. HTCC7211", NameFormatter.canonical(informal));
+    assertFalse(new ParseResult.Informal("Pelagibacter", Rank.GENUS, Rank.SPECIES, "sp. HTCC7211", null).candidatus());
   }
 
   @Test
