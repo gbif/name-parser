@@ -343,4 +343,111 @@ public class RankTest {
     }
     assertEquals(8, counter);
   }
+
+  @Test
+  public void groups() {
+    for (Rank r : Rank.values()) {
+      RankGroup g = r.getGroup();
+      assertEquals(r.name(), r.isSuprafamilial(), g == RankGroup.SUPRAFAMILIAL);
+      assertEquals(r.name(), r.isFamilyGroup(), g == RankGroup.FAMILY);
+      assertEquals(r.name(), r.isGenusGroup(), g == RankGroup.GENUS);
+      assertEquals(r.name(), r == Rank.SPECIES_AGGREGATE || r == Rank.SPECIES, g == RankGroup.SPECIES);
+      assertEquals(r.name(), r.isInfraspecific(), g == RankGroup.INFRASPECIFIC);
+      assertEquals(r.name(), r == Rank.SUPRAGENERIC_NAME || r.otherOrUnranked(), g == null);
+    }
+    assertTrue(Rank.FALANX.isSuprafamilial());
+    assertTrue(Rank.SUBSERIES_ZOOLOGY.isSuprafamilial());
+    assertFalse(Rank.SUPERFAMILY.isSuprafamilial());
+    assertFalse(Rank.SUPRAGENERIC_NAME.isSuprafamilial());
+    assertFalse(Rank.UNRANKED.isSuprafamilial());
+    assertEquals(RankGroup.FAMILY, Rank.SUPERFAMILY.getGroup());
+    assertEquals(RankGroup.GENUS, Rank.SUPERGENUS.getGroup());
+    assertEquals(RankGroup.GENUS, Rank.SECTION_BOTANY.getGroup());
+    assertEquals(RankGroup.SPECIES, Rank.SPECIES_AGGREGATE.getGroup());
+    assertEquals(RankGroup.INFRASPECIFIC, Rank.SUBSPECIES.getGroup());
+  }
+
+  @Test
+  public void groupOrder() {
+    RankGroup prev = null;
+    for (Rank r : Rank.values()) {
+      RankGroup g = r.getGroup();
+      if (g != null) {
+        if (prev != null) {
+          assertTrue(r.name(), prev.compareTo(g) <= 0);
+        }
+        prev = g;
+      }
+    }
+  }
+
+  @Test
+  public void sameGroup() {
+    assertTrue(Rank.ORDER.sameGroup(Rank.CLASS));
+    assertTrue(Rank.KINGDOM.sameGroup(Rank.DOMAIN));
+    assertTrue(Rank.FAMILY.sameGroup(Rank.TRIBE));
+    assertTrue(Rank.SUBGENUS.sameGroup(Rank.INFRAGENERIC_NAME));
+    assertTrue(Rank.SUBSPECIES.sameGroup(Rank.VARIETY));
+
+    assertFalse(Rank.ORDER.sameGroup(Rank.FAMILY));
+    assertFalse(Rank.SUPERFAMILY.sameGroup(Rank.ORDER));
+    assertFalse(Rank.SUPERGENUS.sameGroup(Rank.ORDER));
+    assertFalse(Rank.GENUS.sameGroup(Rank.SPECIES_AGGREGATE));
+    assertFalse(Rank.SPECIES.sameGroup(Rank.SUBSPECIES));
+    // no group, not even with themselves
+    assertFalse(Rank.SUPRAGENERIC_NAME.sameGroup(Rank.FAMILY));
+    assertFalse(Rank.SUPRAGENERIC_NAME.sameGroup(Rank.SUPRAGENERIC_NAME));
+    assertFalse(Rank.UNRANKED.sameGroup(Rank.UNRANKED));
+    assertFalse(Rank.OTHER.sameGroup(Rank.OTHER));
+    assertFalse(Rank.SPECIES.sameGroup(null));
+  }
+
+  @Test
+  public void concrete() {
+    for (Rank r : Rank.values()) {
+      assertEquals(r.name(), !r.isUncomparable(), r.isConcrete());
+    }
+    assertTrue(Rank.SPECIES.isConcrete());
+    assertFalse(Rank.INFRAGENERIC_NAME.isConcrete());
+    assertFalse(Rank.UNRANKED.isConcrete());
+  }
+
+  @Test
+  public void covers() {
+    for (Rank r : Rank.values()) {
+      assertTrue(r.name(), r.covers(r));
+      assertFalse(r.name(), r.covers(null));
+      if (r.isConcrete() || r.otherOrUnranked()) {
+        for (Rank r2 : Rank.values()) {
+          assertEquals(r + " covers " + r2, r == r2, r.covers(r2));
+        }
+      }
+    }
+    assertTrue(Rank.SUPRAGENERIC_NAME.covers(Rank.KINGDOM));
+    assertTrue(Rank.SUPRAGENERIC_NAME.covers(Rank.FALANX));
+    assertTrue(Rank.SUPRAGENERIC_NAME.covers(Rank.SUPERFAMILY));
+    assertTrue(Rank.SUPRAGENERIC_NAME.covers(Rank.INFRATRIBE));
+    assertFalse(Rank.SUPRAGENERIC_NAME.covers(Rank.SUPERGENUS));
+    assertFalse(Rank.SUPRAGENERIC_NAME.covers(Rank.GENUS));
+    assertFalse(Rank.SUPRAGENERIC_NAME.covers(Rank.UNRANKED));
+
+    assertTrue(Rank.INFRAGENERIC_NAME.covers(Rank.SUBGENUS));
+    assertTrue(Rank.INFRAGENERIC_NAME.covers(Rank.SECTION_BOTANY));
+    assertFalse(Rank.INFRAGENERIC_NAME.covers(Rank.SUPERGENUS));
+    assertFalse(Rank.INFRAGENERIC_NAME.covers(Rank.GENUS));
+    assertFalse(Rank.INFRAGENERIC_NAME.covers(Rank.SPECIES_AGGREGATE));
+
+    assertTrue(Rank.INFRASPECIFIC_NAME.covers(Rank.SUBSPECIES));
+    assertTrue(Rank.INFRASPECIFIC_NAME.covers(Rank.STRAIN));
+    assertTrue(Rank.INFRASPECIFIC_NAME.covers(Rank.INFRASUBSPECIFIC_NAME));
+    assertFalse(Rank.INFRASPECIFIC_NAME.covers(Rank.SPECIES));
+
+    assertTrue(Rank.INFRASUBSPECIFIC_NAME.covers(Rank.VARIETY));
+    assertFalse(Rank.INFRASUBSPECIFIC_NAME.covers(Rank.SUBSPECIES));
+    assertFalse(Rank.INFRASUBSPECIFIC_NAME.covers(Rank.INFRASPECIFIC_NAME));
+
+    assertFalse(Rank.SUPRAGENERIC_NAME.covers(Rank.INFRAGENERIC_NAME));
+    assertFalse(Rank.UNRANKED.covers(Rank.SPECIES));
+    assertFalse(Rank.OTHER.covers(Rank.UNRANKED));
+  }
 }

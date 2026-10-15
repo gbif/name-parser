@@ -2,6 +2,8 @@ package org.gbif.nameparser.api;
 
 import java.util.*;
 import java.util.regex.Matcher;
+
+import javax.annotation.Nullable;
 import java.util.regex.Pattern;
 
 /**
@@ -365,6 +367,7 @@ public enum Rank {
 
   private static final Set<Rank> AMBIGUOUS_MARKER;
   private static final Map<Rank, Rank> MAJOR_RANKS;
+  private static final Map<Rank, RankGroup> GROUPS;
   static {
     Set<Rank> ambiguous = EnumSet.noneOf(Rank.class);
     Map<String, Rank> ambiguousMarker = new HashMap<>();
@@ -406,6 +409,22 @@ public enum Rank {
     map.put(Rank.SUBDIVISION, Rank.DIVISION_ZOOLOGY);
     map.put(Rank.INFRADIVISION, Rank.DIVISION_ZOOLOGY);
     MAJOR_RANKS = Map.copyOf(map);
+
+    Map<Rank, RankGroup> groups = new EnumMap<>(Rank.class);
+    for (Rank r : Rank.values()) {
+      if (r.isSuprafamilial()) {
+        groups.put(r, RankGroup.SUPRAFAMILIAL);
+      } else if (r.isFamilyGroup()) {
+        groups.put(r, RankGroup.FAMILY);
+      } else if (r.isGenusGroup()) {
+        groups.put(r, RankGroup.GENUS);
+      } else if (r == SPECIES_AGGREGATE || r == SPECIES) {
+        groups.put(r, RankGroup.SPECIES);
+      } else if (r.isInfraspecific()) {
+        groups.put(r, RankGroup.INFRASPECIFIC);
+      }
+    }
+    GROUPS = Map.copyOf(groups);
     AMBIGUOUS_MARKER = Set.copyOf(ambiguous);
   }
 
@@ -535,7 +554,7 @@ public enum Rank {
   }
   
   /**
-   * @return true if the rank is for family group names, i.e. between family (inclusive) and genus (exclusive).
+   * @return true if the rank is for family group names, i.e. between gigafamily and infratribe, both inclusive.
    */
   public boolean isFamilyGroup() {
     return GIGAFAMILY.ordinal() <= ordinal() && ordinal() < SUPRAGENERIC_NAME.ordinal();
@@ -556,12 +575,73 @@ public enum Rank {
   }
   
   /**
-   * @return true if the rank is above genus.
+   * @return true if the rank is genus or above.
    */
   public boolean isGenusOrSuprageneric() {
     return ordinal() <= GENUS.ordinal();
   }
   
+  /**
+   * Unlike {@link #isSuprageneric()} this excludes the family group, so the rank superfamily is not suprafamilial.
+   * @return true if the rank is above the family group, i.e. above gigafamily.
+   */
+  public boolean isSuprafamilial() {
+    return ordinal() < GIGAFAMILY.ordinal();
+  }
+
+  /**
+   * @return the group of ranks this rank belongs to,
+   *         or null for SUPRAGENERIC_NAME, which spans two groups, and for OTHER and UNRANKED
+   */
+  @Nullable
+  public RankGroup getGroup() {
+    return GROUPS.get(this);
+  }
+
+  /**
+   * @return true if both ranks belong to the same group of ranks, see {@link #getGroup()}.
+   *         Ranks without a group are not in the same group as any rank, not even themselves.
+   */
+  public boolean sameGroup(@Nullable Rank other) {
+    return other != null && getGroup() != null && getGroup() == other.getGroup();
+  }
+
+  /**
+   * @return true for a real rank, i.e. neither a vague rank range like INFRASPECIFIC_NAME nor OTHER or UNRANKED.
+   */
+  public boolean isConcrete() {
+    return !isUncomparable();
+  }
+
+  /**
+   * Checks whether this rank covers the other rank, which is true for the same rank or if this is a vague rank
+   * whose range includes the other one:
+   * SUPRAGENERIC_NAME covers the suprafamilial and the family group ranks,
+   * INFRAGENERIC_NAME the ranks below genus and above species aggregate,
+   * INFRASPECIFIC_NAME all infraspecific ranks and INFRASUBSPECIFIC_NAME all ranks below subspecies.
+   * OTHER and UNRANKED only cover themselves.
+   */
+  public boolean covers(@Nullable Rank other) {
+    if (other == null) {
+      return false;
+    }
+    if (this == other) {
+      return true;
+    }
+    switch (this) {
+      case SUPRAGENERIC_NAME:
+        return other.isSuprafamilial() || other.isFamilyGroup();
+      case INFRAGENERIC_NAME:
+        return other.isInfragenericStrictly();
+      case INFRASPECIFIC_NAME:
+        return other.isInfraspecific();
+      case INFRASUBSPECIFIC_NAME:
+        return other.isInfrasubspecific();
+      default:
+        return false;
+    }
+  }
+
   /**
    * @return true if the rank is above the rank species aggregate.
    */
