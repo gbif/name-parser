@@ -3,6 +3,7 @@ package org.gbif.nameparser.api;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -90,6 +91,51 @@ public class AuthorshipTest {
     auth.addExAuthor("Bassier");
     auth.addExAuthor("");
     assertEquals(List.of("Bassier"), auth.getExAuthors());
+  }
+
+  @Test
+  public void testListsNullUntilSet() {
+    Authorship auth = new Authorship();
+    assertNull(auth.getAuthors());
+    assertNull(auth.getExAuthors());
+    assertNull(auth.getInAuthors());
+    assertFalse(auth.hasAuthors());
+    assertFalse(auth.hasExAuthors());
+    assertFalse(auth.hasInAuthors());
+    assertTrue(auth.isEmpty());
+
+    // adding nothing creates no list
+    auth.addAuthors(null);
+    auth.addExAuthors(List.of(" "));
+    auth.addInAuthors(new ArrayList<>());
+    assertNull(auth.getAuthors());
+    assertNull(auth.getExAuthors());
+    assertNull(auth.getInAuthors());
+
+    // the bulk add methods create a missing list and append to an existing one
+    auth.addAuthors(List.of("Lam.", "", "DC."));
+    auth.addAuthors(List.of("Poir."));
+    auth.addExAuthors(List.of("Boucher"));
+    auth.addInAuthors(Arrays.asList("Lam.", null, "DC."));
+    assertEquals(List.of("Lam.", "DC.", "Poir."), auth.getAuthors());
+    assertEquals(List.of("Boucher"), auth.getExAuthors());
+    assertEquals(List.of("Lam.", "DC."), auth.getInAuthors());
+  }
+
+  @Test
+  public void testUnsetEqualsEmptyLists() {
+    Authorship unset = new Authorship();
+    unset.setYear("1817");
+    Authorship empty = new Authorship(new ArrayList<>(), new ArrayList<>(), "1817");
+    empty.setInAuthors(new ArrayList<>());
+    assertEquals(unset, empty);
+    assertEquals(unset.hashCode(), empty.hashCode());
+
+    unset.addAuthor("Kuhl");
+    assertNotEquals(unset, empty);
+    empty.addAuthor("Kuhl");
+    assertEquals(unset, empty);
+    assertEquals(unset.hashCode(), empty.hashCode());
   }
 
   @Test

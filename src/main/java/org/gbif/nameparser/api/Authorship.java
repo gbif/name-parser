@@ -5,6 +5,7 @@ import org.gbif.nameparser.util.NameFormatter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,16 +20,18 @@ public class Authorship {
 
   /**
    * list of authors.
+   * Null until set, so an empty authorship allocates no list.
    */
-  private List<String> authors = new ArrayList<>();
+  private List<String> authors;
   
   /**
    * list of ex-authors excluding ex itself
    * Author A ex Author B
    *   A = proposed the name (not validly published) → the ex-author
    *   B = validly published the name → the publishing/validating author
+   * Null until set, as few names have ex-authors.
    */
-  private List<String> exAuthors = new ArrayList<>();
+  private List<String> exAuthors;
 
   /**
    * list of in-authors excluding in itself, the authors of the work that contains the publication of the name
@@ -125,14 +128,29 @@ public class Authorship {
     return authors != null && !authors.isEmpty();
   }
 
+  /**
+   * @return the authors or null if there are none, see {@link #hasAuthors()}
+   */
   public List<String> getAuthors() {
     return authors;
   }
 
+  /**
+   * Adds a non blank author, creating the author list if it does not exist yet.
+   */
   public void addAuthor(String author) {
     if (StringUtils.isNotBlank(author)) {
       if (authors == null) authors = new ArrayList<>();
       authors.add(author);
+    }
+  }
+
+  /**
+   * Adds all non blank authors, creating the author list if it does not exist yet.
+   */
+  public void addAuthors(Collection<String> authors) {
+    if (authors != null) {
+      authors.forEach(this::addAuthor);
     }
   }
 
@@ -147,16 +165,32 @@ public class Authorship {
     return exAuthors != null && !exAuthors.isEmpty();
   }
 
+  /**
+   * @return the ex-authors or null if there are none, see {@link #hasExAuthors()}
+   */
   public List<String> getExAuthors() {
     return exAuthors;
   }
 
+  /**
+   * Adds a non blank ex-author, creating the ex-author list if it does not exist yet.
+   */
   public void addExAuthor(String author) {
     if (StringUtils.isNotBlank(author)) {
       if (exAuthors == null) exAuthors = new ArrayList<>();
       exAuthors.add(author);
     }
   }
+
+  /**
+   * Adds all non blank ex-authors, creating the ex-author list if it does not exist yet.
+   */
+  public void addExAuthors(Collection<String> authors) {
+    if (authors != null) {
+      authors.forEach(this::addExAuthor);
+    }
+  }
+
   public void setExAuthors(List<String> exAuthors) {
     this.exAuthors = exAuthors;
   }
@@ -175,10 +209,22 @@ public class Authorship {
     return inAuthors;
   }
 
+  /**
+   * Adds a non blank in-author, creating the in-author list if it does not exist yet.
+   */
   public void addInAuthor(String author) {
     if (StringUtils.isNotBlank(author)) {
       if (inAuthors == null) inAuthors = new ArrayList<>();
       inAuthors.add(author);
+    }
+  }
+
+  /**
+   * Adds all non blank in-authors, creating the in-author list if it does not exist yet.
+   */
+  public void addInAuthors(Collection<String> authors) {
+    if (authors != null) {
+      authors.forEach(this::addInAuthor);
     }
   }
 
@@ -265,9 +311,9 @@ public class Authorship {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Authorship that = (Authorship) o;
-    return Objects.equals(authors, that.authors) &&
-        Objects.equals(exAuthors, that.exAuthors) &&
-        Objects.equals(inAuthorsOrEmpty(), that.inAuthorsOrEmpty()) &&
+    return Objects.equals(orEmpty(authors), orEmpty(that.authors)) &&
+        Objects.equals(orEmpty(exAuthors), orEmpty(that.exAuthors)) &&
+        Objects.equals(orEmpty(inAuthors), orEmpty(that.inAuthors)) &&
         Objects.equals(year, that.year) &&
         Objects.equals(imprintYear, that.imprintYear) &&
         bracketedYear == that.bracketedYear &&
@@ -277,14 +323,14 @@ public class Authorship {
   
   @Override
   public int hashCode() {
-    return Objects.hash(authors, exAuthors, inAuthorsOrEmpty(), year, imprintYear, bracketedYear, anonymous, sanctioningAuthor);
+    return Objects.hash(orEmpty(authors), orEmpty(exAuthors), orEmpty(inAuthors), year, imprintYear, bracketedYear, anonymous, sanctioningAuthor);
   }
 
   /**
-   * In-authors are null until set, so unset and empty ones must not tell two authorships apart.
+   * Author lists are null until set, so unset and empty ones must not tell two authorships apart.
    */
-  private List<String> inAuthorsOrEmpty() {
-    return inAuthors == null ? List.of() : inAuthors;
+  private static List<String> orEmpty(List<String> list) {
+    return list == null ? List.of() : list;
   }
   
   /**
