@@ -37,10 +37,11 @@ public enum NameType {
    * and the unique specimen number they assigned — and "WA Herbarium" the nominating party.
    * See https://florabase.dpaw.wa.gov.au/help/names#phrase
    *
-   * <p>Informal names are semi parsable and start at least with a genus or uninomial. A supraspecific
-   * anchor carrying such a designation with <em>no</em> species epithet is surfaced as the dedicated
-   * {@link ParseResult.Informal} result variant (a flat taxon + rank + phrase); a name with a species
-   * epithet (a binomial core) stays a {@link ParseResult.Parsed} whose {@code type} is INFORMAL.
+   * <p>Informal names are semi parsable and start at least with a genus or uninomial. They are
+   * {@link ParseResult.Parsed} names like any other: {@link ParsedName#anchor()} is the real taxon an
+   * informal name hangs off, e.g. the genus <em>Rhizobium</em> of "Rhizobium sp. RE1-2a" or the species
+   * <em>Acacia mutabilis</em> of "Acacia mutabilis Maslin subsp. Young River (G.F. Craig 2052)", and
+   * {@link ParsedName#isIndetermined()} tells whether that anchor falls short of the name's rank.
    */
   INFORMAL,
 

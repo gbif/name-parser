@@ -69,29 +69,13 @@ public class NameFormatter {
   }
 
   /**
-   * The canonical form of an informal, semistructured name — a supraspecific taxon carrying a
-   * provisional, non-code designation, e.g. {@code "Rhizobium sp. RMCC TR1811"}, {@code "Allium sp. 1"},
-   * {@code "Ichneumonidae sp."} or {@code "Bartonella group"}.
-   * <p/>
-   * The flat {@link ParseResult.Informal} is rebuilt into the equivalent {@code INFORMAL}
-   * {@link ParsedName} (via {@link ParseResult.Informal#toParsedName()}) and rendered through
-   * {@link #canonicalWithoutAuthorship}, so the synthetic {@code sp.} marker and the phrase land
-   * exactly as the parser would place them.
-   */
-  public static String canonical(ParseResult.Informal informal) {
-    return canonicalWithoutAuthorship(informal.toParsedName());
-  }
-
-  /**
    * The canonical form of any {@link ParseResult}: the {@link ParsedName} for a
-   * {@link ParseResult.Parsed}, the informal name for a {@link ParseResult.Informal}, and the
-   * verbatim input for an {@link ParseResult.Unparsable} (which has no structured form to render).
+   * {@link ParseResult.Parsed} and the verbatim input for an {@link ParseResult.Unparsable} (which has no
+   * structured form to render).
    */
   public static String canonical(ParseResult result) {
     if (result instanceof ParseResult.Parsed parsed) {
       return canonical(parsed.name());
-    } else if (result instanceof ParseResult.Informal informal) {
-      return canonical(informal);
     } else if (result instanceof ParseResult.Unparsable unparsable) {
       return unparsable.name();
     }
@@ -99,23 +83,13 @@ public class NameFormatter {
   }
 
   /**
-   * The complete canonical form of an informal, semistructured name, built like
-   * {@link #canonical(ParseResult.Informal)} but rendered through {@link #canonicalComplete(ParsedName)}.
-   */
-  public static String canonicalComplete(ParseResult.Informal informal) {
-    return canonicalComplete(informal.toParsedName());
-  }
-
-  /**
    * The complete canonical form of any {@link ParseResult}: {@link #canonicalComplete(ParsedName)} for a
-   * {@link ParseResult.Parsed}, the complete informal name for a {@link ParseResult.Informal}, and the
-   * verbatim input for an {@link ParseResult.Unparsable} (which has no structured form to render).
+   * {@link ParseResult.Parsed} and the verbatim input for an {@link ParseResult.Unparsable} (which has no
+   * structured form to render).
    */
   public static String canonicalComplete(ParseResult result) {
     if (result instanceof ParseResult.Parsed parsed) {
       return canonicalComplete(parsed.name());
-    } else if (result instanceof ParseResult.Informal informal) {
-      return canonicalComplete(informal);
     } else if (result instanceof ParseResult.Unparsable unparsable) {
       return unparsable.name();
     }

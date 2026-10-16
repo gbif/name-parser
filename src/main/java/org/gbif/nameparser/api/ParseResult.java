@@ -7,30 +7,33 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
- * The outcome of a parse, one of three variants: a structurally {@link Parsed} name, an
- * {@link Informal} name (a real taxon anchor carrying a provisional, non-code designation — e.g.
- * {@code "Rhizobium sp. RMCC TR1811"} or {@code "Bartonella group"}), or an {@link Unparsable}
+ * The outcome of a parse, one of two variants: a structurally {@link Parsed} name or an {@link Unparsable}
  * classification (virus, hybrid formula, placeholder, BOLD BIN, ...).
+ * <p>
+ * Informal names — provisional, open-nomenclature and indetermined names such as
+ * {@code "Rhizobium sp. RMCC TR1811"}, {@code "Abies cf. alba"} or {@code "Bartonella group"} — are
+ * {@link Parsed} names of type {@link NameType#INFORMAL}; {@link ParsedName#anchor()} gives the real
+ * taxon they hang off and {@link ParsedName#getPhrase()} their provisional designation.
  * <p>
  * This mirrors the shape a {@code Result}-like value takes in the Rust implementation, so both
  * parsers expose one contract. Prefer it over catching exceptions: it composes in streams
- * ({@code flatMap(ParseResult::parsed)}) and pattern-matches exhaustively over the three variants.
+ * ({@code flatMap(ParseResult::parsed)}) and pattern-matches exhaustively over the two variants.
  * <p>
  * {@link #type()} and {@link #code()} are available on <em>all</em> variants, so callers can classify
  * a name without pattern-matching or taking the exception path.
  */
-public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Informal, ParseResult.Unparsable {
+public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Unparsable {
 
   /** The name type, available whether or not the name was parsable. */
   NameType type();
 
-  /** The nomenclatural code when known, else null. Available on all three variants. */
+  /** The nomenclatural code when known, else null. Available on both variants. */
   @Nullable
   NomCode code();
 
   /**
-   * The parsed name if this is a {@link Parsed} result, else empty ({@link Informal} and
-   * {@link Unparsable} carry no {@link ParsedName}). Stream-friendly: {@code flatMap(ParseResult::parsed)}.
+   * The parsed name if this is a {@link Parsed} result, else empty ({@link Unparsable} carries no
+   * {@link ParsedName}). Stream-friendly: {@code flatMap(ParseResult::parsed)}.
    */
   Optional<ParsedName> parsed();
 
@@ -42,10 +45,9 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Info
   /**
    * The canonical string form of this result, available on every variant.
    * <p>
-   * The three variants do not yield the same <em>kind</em> of string: a {@link Parsed} result renders
-   * a genuinely normalised scientific name with authorship (its {@link ParsedName#canonicalName()}), an {@link Informal}
-   * result renders its rebuilt supraspecific-taxon-plus-designation form (e.g. {@code "Rhizobium sp. RMCC TR1811"}),
-   * but an {@link Unparsable} result has no structured form and simply echoes the verbatim input. Callers
+   * The two variants do not yield the same <em>kind</em> of string: a {@link Parsed} result renders
+   * a genuinely normalised name with authorship (its {@link ParsedName#canonicalName()}), but an
+   * {@link Unparsable} result has no structured form and simply echoes the verbatim input. Callers
    * must therefore not treat the {@link Unparsable} value as a cleaned or normalised name.
    *
    * @see NameFormatter#canonical(ParseResult)
@@ -69,7 +71,7 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Info
 
   /**
    * @return the parsed name (only a {@link Parsed} result carries one)
-   * @throws UnparsableNameException if this is an {@link Informal} or {@link Unparsable} result
+   * @throws UnparsableNameException if this is an {@link Unparsable} result
    */
   ParsedName orElseThrow() throws UnparsableNameException;
 
@@ -102,92 +104,6 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Info
     @Override
     public ParsedName orElseThrow() {
       return name;
-    }
-  }
-
-  /**
-   * An informal / semistructured name: a real taxon {@link #taxon() anchor} (a genus or higher
-   * uninomial) carrying a provisional, non-code designation instead of a determined species epithet —
-   * e.g. a molecular provisional species ({@code "Rhizobium sp. RMCC TR1811"}), a numbered placeholder
-   * ({@code "Allium sp. 1"}), or an informal group ({@code "Bartonella group"}).
-   * <p>
-   * Distinct from {@link Parsed}, which keeps every name with a species epithet (including cf./aff. and
-   * infraspecific-indeterminate names, so their {@code specificAuthorship} is preserved), and from
-   * {@link Unparsable}, which is not a name at all. Carries no {@link ParsedName} — its structure is the
-   * flat {@code taxon} + {@code taxonRank} + {@code rank} + {@code phrase}.
-   *
-   * @param taxon     the supraspecific taxon it hangs off ({@code "Rhizobium"}, {@code "Ichneumonidae"}) —
-   *                  the parser's best guess, NOT validated against a taxonomic backbone
-   * @param taxonRank that taxon's rank (GENUS, FAMILY, ...)
-   * @param rank      the rank the informal name purports to be (SPECIES for {@code "sp."}, UNRANKED for a group)
-   * @param phrase    the VERBATIM tail, from the rank marker to the end of the input
-   *                  ({@code "sp. RMCC TR1811"}, {@code "sp. 1"}, {@code "group"}); null only when there is no
-   *                  tail at all. An informal name is not fully parsable by definition, so the tail is captured
-   *                  whole and nothing in it is interpreted — it may therefore contain what looks like an
-   *                  <em>author citation</em> ({@code "sp. Forster, 1968"}), which is NOT separately parsed.
-   *                  That is deliberate: the parser cannot reliably tell a citation from a specimen or culture
-   *                  code, and on the genuinely authored minority the citation belongs to the {@code taxon}
-   *                  anchor rather than to the undetermined species. {@code taxon + " " + phrase} reproduces
-   *                  the input exactly.
-   * @param code      the nomenclatural code when known, else null
-   * @param candidatus true for a provisional prokaryote name with Candidatus status
-   *                   ({@code "Candidatus Pelagibacter sp. HTCC7211"}); the word itself is in neither
-   *                   {@code taxon} nor {@code phrase}, as {@link ParsedName#isCandidatus()} keeps it out of
-   *                   the name parts
-   */
-  record Informal(String taxon, Rank taxonRank, Rank rank, @Nullable String phrase, @Nullable NomCode code,
-                  boolean candidatus)
-      implements ParseResult {
-    public Informal {
-      if (taxon == null) {
-        throw new NullPointerException("taxon required");
-      }
-      if (taxonRank == null || rank == null) {
-        throw new NullPointerException("taxonRank and rank required");
-      }
-    }
-
-    /** An informal name without Candidatus status. */
-    public Informal(String taxon, Rank taxonRank, Rank rank, @Nullable String phrase, @Nullable NomCode code) {
-      this(taxon, taxonRank, rank, phrase, code, false);
-    }
-
-    @Override
-    public NameType type() {
-      return NameType.INFORMAL;
-    }
-
-    @Override
-    public Optional<ParsedName> parsed() {
-      return Optional.empty();
-    }
-
-    @Override
-    public ParsedName orElseThrow() throws UnparsableNameException {
-      throw new UnparsableNameException(NameType.INFORMAL, code, taxon);
-    }
-
-    /**
-     * Rebuilds the {@code type = INFORMAL} {@link ParsedName} this informal name is a flattened view
-     * of — the {@link #taxon()} in the genus slot (or the uninomial slot for a non-genus anchor),
-     * plus its {@link #rank()}, {@link #phrase()}, {@link #code()} and {@link #candidatus()}. The inverse of the parser's
-     * flattening, for callers (the {@link org.gbif.nameparser.util.NameFormatter}, downstream models)
-     * that need the structured form back. Note {@link #parsed()} still returns empty — this is a
-     * lossy, best-guess anchor, not a validated {@link Parsed} result.
-     */
-    public ParsedName toParsedName() {
-      ParsedName pn = new ParsedName();
-      pn.setType(NameType.INFORMAL);
-      pn.setRank(rank);
-      pn.setCode(code);
-      pn.setPhrase(phrase);
-      pn.setCandidatus(candidatus);
-      if (taxonRank == Rank.GENUS) {
-        pn.setGenus(taxon);
-      } else {
-        pn.setUninomial(taxon);
-      }
-      return pn;
     }
   }
 

@@ -7,11 +7,10 @@ import javax.annotation.Nullable;
 /**
  * The basic name parser contract.
  * <p>
- * Parsing never throws for an unparsable name — it returns a {@link ParseResult}, one of three
- * variants: a {@link ParseResult.Parsed} name, an {@link ParseResult.Informal} name (a taxon anchor
- * carrying a provisional, non-code designation, e.g. {@code "Rhizobium sp. RMCC TR1811"}), or an
- * {@link ParseResult.Unparsable} classification (virus, hybrid formula, placeholder, ...). Call
- * {@link ParseResult#orElseThrow()} at the call sites that want a fail-fast style.
+ * Parsing never throws for an unparsable name — it returns a {@link ParseResult}, one of two
+ * variants: a {@link ParseResult.Parsed} name, informal names like {@code "Rhizobium sp. RMCC TR1811"}
+ * included, or an {@link ParseResult.Unparsable} classification (virus, hybrid formula, placeholder, ...).
+ * Call {@link ParseResult#orElseThrow()} at the call sites that want a fail-fast style.
  */
 public interface NameParser {
 
@@ -24,11 +23,10 @@ public interface NameParser {
    * @param rank           the rank of the name if it is known externally. Helps identifying infrageneric names vs bracket authors
    * @param code           the nomenclatural code the name falls into. Null if unknown
    *
-   * @return one of the three {@link ParseResult} variants: a {@link ParseResult.Parsed} name, an
-   *         {@link ParseResult.Informal} name (a taxon anchor with a provisional, non-code designation),
-   *         or an {@link ParseResult.Unparsable} classification for strings that are no scientific names
-   *         or cannot be expressed by the {@link ParsedName} class (all virus names, BOLD BIN numbers
-   *         and proper hybrid formulas)
+   * @return one of the two {@link ParseResult} variants: a {@link ParseResult.Parsed} name, scientific or
+   *         {@link NameType#INFORMAL informal}, or an {@link ParseResult.Unparsable} classification for strings
+   *         that are no scientific names or cannot be expressed by the {@link ParsedName} class (all virus
+   *         names, BOLD BIN numbers and proper hybrid formulas)
    */
   ParseResult parse(String scientificName, @Nullable String authorship, @Nullable Rank rank, @Nullable NomCode code);
 

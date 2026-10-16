@@ -124,6 +124,147 @@ public class ParsedNameTest {
     pn.setInfragenericEpithet("Trematostoma");
     assertFalse(pn.isIndetermined());
   }
+
+  @Test
+  public void testIndetPhraseName() throws Exception {
+    // a phrase does not stand in for the missing epithet
+    ParsedName pn = informal("Rhizobium", Rank.SPECIES, "sp.");
+    assertTrue(pn.isIndetermined());
+    pn.setPhrase("sp. RE1-2a");
+    assertTrue(pn.isIndetermined());
+
+    pn = informal("Grevillea", Rank.SUBSPECIES, "Busselton (G.J.Keighery s.n. 28/8/1985)");
+    pn.setSpecificEpithet("brachystylis");
+    assertTrue(pn.isIndetermined());
+
+    // a strain designation of a determined species
+    pn = informal("Escherichia", Rank.SPECIES, "MV4242");
+    pn.setSpecificEpithet("coli");
+    assertFalse(pn.isIndetermined());
+
+    // a qualified epithet is still there
+    pn = informal("Abies", Rank.SPECIES, null);
+    pn.setSpecificEpithet("alba");
+    pn.setEpithetQualifier(NamePart.SPECIFIC, "cf.");
+    assertFalse(pn.isIndetermined());
+
+    // a convariety has an infraspecific epithet, a grex a cultivar one
+    pn = informal("Prunus", Rank.CONVARIETY, null);
+    pn.setSpecificEpithet("armeniaca");
+    assertTrue(pn.isIndetermined());
+    pn.setInfraspecificEpithet("budae");
+    assertFalse(pn.isIndetermined());
+    pn = informal("Paphiopedilum", Rank.GREX, null);
+    assertTrue(pn.isIndetermined());
+    pn.setCultivarEpithet("Sorel");
+    assertFalse(pn.isIndetermined());
+  }
+
+  @Test
+  public void testAnchor() throws Exception {
+    ParsedName pn = informal("Rhizobium", Rank.SPECIES, "sp. RMCC TR1811");
+    ParsedName a = pn.anchor().orElseThrow();
+    assertEquals("Rhizobium", a.getUninomial());
+    assertNull(a.getGenus());
+    assertEquals(Rank.GENUS, a.getRank());
+    assertEquals(NameType.SCIENTIFIC, a.getType());
+    assertNull(a.getPhrase());
+    assertFalse(a.isIndetermined());
+
+    // a subgenus
+    pn = informal("Lasioglossum", Rank.SPECIES, "sp. 1");
+    pn.setInfragenericEpithet("Dialictus");
+    assertAnchor("Lasioglossum subgen. Dialictus", Rank.SUBGENUS, pn);
+    pn.setCode(NomCode.ZOOLOGICAL);
+    assertAnchor("Lasioglossum (Dialictus)", Rank.SUBGENUS, pn);
+    // or the infrageneric rank the name was given
+    pn = informal("Abies", Rank.SECTION_BOTANY, "sp. 1");
+    pn.setInfragenericEpithet("Grandes");
+    assertAnchor("Abies sect. Grandes", Rank.SECTION_BOTANY, pn);
+
+    // a species, with the specific authorship of the infraspecific name
+    pn = informal("Acacia", Rank.SUBSPECIES, "Young River (G.F.Craig 2052)");
+    pn.setSpecificEpithet("mutabilis");
+    assertAnchor("Acacia mutabilis", Rank.SPECIES, pn);
+    CombinedAuthorship maslin = new CombinedAuthorship();
+    maslin.setCombinationAuthorship(Authorship.authors("Maslin"));
+    pn.setSpecificAuthorship(maslin);
+    assertAnchor("Acacia mutabilis Maslin", Rank.SPECIES, pn);
+
+    // a strain of a determined species
+    pn = informal("Escherichia", Rank.SPECIES, "MV4242");
+    pn.setSpecificEpithet("coli");
+    assertAnchor("Escherichia coli", Rank.SPECIES, pn);
+
+    // a qualified epithet is cut, and its authorship with it
+    pn = informal("Abies", Rank.SPECIES, null);
+    pn.setSpecificEpithet("alba");
+    pn.setEpithetQualifier(NamePart.SPECIFIC, "cf.");
+    pn.setCombinationAuthorship(Authorship.authors("Mill."));
+    assertAnchor("Abies", Rank.GENUS, pn);
+    // a qualified genus leaves nothing
+    pn.setEpithetQualifier(NamePart.GENERIC, "?");
+    assertTrue(pn.anchor().isEmpty());
+
+    // an infraspecific epithet whose species is missing hangs off the genus
+    pn = informal("Navicula", Rank.VARIETY, null);
+    pn.setInfraspecificEpithet("fasciata");
+    pn.setCombinationAuthorship(Authorship.authors("Grunow"));
+    assertAnchor("Navicula", Rank.GENUS, pn);
+
+    // an indetermined infraspecific name keeps the authorship of its species
+    pn = informal("Tylotropidius", Rank.SUBSPECIES, null);
+    pn.setSpecificEpithet("didymus");
+    pn.setCombinationAuthorship(Authorship.yearAuthors("1907", "Karny"));
+    assertAnchor("Tylotropidius didymus Karny, 1907", Rank.SPECIES, pn);
+
+    // a higher taxon keeps its own rank
+    pn = new ParsedName();
+    pn.setType(NameType.INFORMAL);
+    pn.setUninomial("Ichneumonidae");
+    pn.setRank(Rank.FAMILY);
+    pn.setPhrase("sp. 3");
+    assertAnchor("Ichneumonidae", Rank.FAMILY, pn);
+
+    // a complete name is its own anchor, at its own rank, with its authorship but without the details
+    pn = new ParsedName();
+    pn.setType(NameType.SCIENTIFIC);
+    pn.setGenus("Taraxacum");
+    pn.setSpecificEpithet("officinale");
+    pn.setRank(Rank.SPECIES_AGGREGATE);
+    assertAnchor("Taraxacum officinale", Rank.SPECIES_AGGREGATE, pn);
+    pn.setGenus("Abies");
+    pn.setSpecificEpithet("alba");
+    pn.setInfraspecificEpithet("alpina");
+    pn.setRank(Rank.SUBSPECIES);
+    pn.setSpecificAuthorship(maslin);
+    pn.setCombinationAuthorship(Authorship.authors("Smith"));
+    pn.setTaxonomicNote("sensu lato");
+    a = pn.anchor().orElseThrow();
+    assertEquals("Abies alba subsp. alpina Smith", a.canonicalName());
+    assertEquals(maslin, a.getSpecificAuthorship());
+    assertNull(a.getTaxonomicNote());
+
+    // an unparsable type has none
+    pn.setType(NameType.IDENTIFIER);
+    assertTrue(pn.anchor().isEmpty());
+  }
+
+  private static void assertAnchor(String canonical, Rank rank, ParsedName pn) {
+    ParsedName a = pn.anchor().orElseThrow();
+    assertEquals(canonical, a.canonicalName());
+    assertEquals(rank, a.getRank());
+    assertEquals(NameType.SCIENTIFIC, a.getType());
+  }
+
+  private static ParsedName informal(String genus, Rank rank, String phrase) {
+    ParsedName pn = new ParsedName();
+    pn.setType(NameType.INFORMAL);
+    pn.setGenus(genus);
+    pn.setRank(rank);
+    pn.setPhrase(phrase);
+    return pn;
+  }
   
   @Test
   public void testEqualsIncludesAuthorship() {

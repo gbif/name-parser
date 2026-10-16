@@ -403,31 +403,31 @@ public class NameFormatterTest {
   public void testInformal() throws Exception {
     // molecular provisional species with a captured phrase tag
     assertEquals("Rhizobium sp. RMCC TR1811",
-        NameFormatter.canonical(new ParseResult.Informal("Rhizobium", Rank.GENUS, Rank.SPECIES, "RMCC TR1811", null)));
+        NameFormatter.canonical(informal("Rhizobium", Rank.GENUS, Rank.SPECIES, "RMCC TR1811")));
     // numbered placeholder
     assertEquals("Allium sp. 1",
-        NameFormatter.canonical(new ParseResult.Informal("Allium", Rank.GENUS, Rank.SPECIES, "1", null)));
+        NameFormatter.canonical(informal("Allium", Rank.GENUS, Rank.SPECIES, "1")));
     // bare "Genus sp." — no phrase; a higher-taxon anchor still sits in the genus slot
     assertEquals("Ichneumonidae sp.",
-        NameFormatter.canonical(new ParseResult.Informal("Ichneumonidae", Rank.GENUS, Rank.SPECIES, null, null)));
+        NameFormatter.canonical(informal("Ichneumonidae", Rank.GENUS, Rank.SPECIES, null)));
     // informal group — UNRANKED, the phrase carries the designation (no synthetic sp.)
     assertEquals("Bartonella group",
-        NameFormatter.canonical(new ParseResult.Informal("Bartonella", Rank.GENUS, Rank.UNRANKED, "group", null)));
+        NameFormatter.canonical(informal("Bartonella", Rank.GENUS, Rank.UNRANKED, "group")));
     // a phrase opening with an organism label, a qualifier or an underscore designation spells
     // out the indetermination itself: no synthetic sp. (gbif/name-parser-rust#77)
     assertEquals("Holophagaceae bacterium UBA692",
-        NameFormatter.canonical(new ParseResult.Informal("Holophagaceae", Rank.FAMILY, Rank.SPECIES, "bacterium UBA692", null)));
+        NameFormatter.canonical(informal("Holophagaceae", Rank.FAMILY, Rank.SPECIES, "bacterium UBA692")));
     assertEquals("Wolbachia endosymbiont of Aprostocetus sp.",
-        NameFormatter.canonical(new ParseResult.Informal("Wolbachia", Rank.GENUS, Rank.SPECIES, "endosymbiont of Aprostocetus sp.", null)));
+        NameFormatter.canonical(informal("Wolbachia", Rank.GENUS, Rank.SPECIES, "endosymbiont of Aprostocetus sp.")));
     assertEquals("Bathyarchaeota archaeon A05DMB-11",
-        NameFormatter.canonical(new ParseResult.Informal("Bathyarchaeota", Rank.PHYLUM, Rank.SPECIES, "archaeon A05DMB-11", null)));
+        NameFormatter.canonical(informal("Bathyarchaeota", Rank.PHYLUM, Rank.SPECIES, "archaeon A05DMB-11")));
     assertEquals("Formicidae cf.",
-        NameFormatter.canonical(new ParseResult.Informal("Formicidae", Rank.FAMILY, Rank.SPECIES, "cf.", null)));
+        NameFormatter.canonical(informal("Formicidae", Rank.FAMILY, Rank.SPECIES, "cf.")));
     assertEquals("Aulocalyx n_sp_NIWA_SO254",
-        NameFormatter.canonical(new ParseResult.Informal("Aulocalyx", Rank.GENUS, Rank.SPECIES, "n_sp_NIWA_SO254", null)));
+        NameFormatter.canonical(informal("Aulocalyx", Rank.GENUS, Rank.SPECIES, "n_sp_NIWA_SO254")));
     // a label inside a word is no label
     assertEquals("Bacteroides sp. bacteriophage-free",
-        NameFormatter.canonical(new ParseResult.Informal("Bacteroides", Rank.GENUS, Rank.SPECIES, "bacteriophage-free", null)));
+        NameFormatter.canonical(informal("Bacteroides", Rank.GENUS, Rank.SPECIES, "bacteriophage-free")));
   }
 
   @Test
@@ -437,9 +437,9 @@ public class NameFormatterTest {
     pn.setSpecificEpithet("alba");
     pn.setRank(Rank.SPECIES);
     assertEquals("Abies alba", NameFormatter.canonical(new ParseResult.Parsed(pn)));
-    // Informal -> the informal name
+    // an informal name is a parsed name too
     assertEquals("Serratia sp. RE1-2a",
-        NameFormatter.canonical(new ParseResult.Informal("Serratia", Rank.GENUS, Rank.SPECIES, "RE1-2a", null)));
+        NameFormatter.canonical(new ParseResult.Parsed(informal("Serratia", Rank.GENUS, Rank.SPECIES, "RE1-2a"))));
     // Unparsable -> the verbatim input, unchanged
     assertEquals("Tobacco mosaic virus",
         NameFormatter.canonical(new ParseResult.Unparsable(NameType.OTHER, "Tobacco mosaic virus")));
@@ -448,14 +448,14 @@ public class NameFormatterTest {
   @Test
   public void testCanonicalNameOnParseResult() throws Exception {
     // the ParseResult.canonicalName() instance method delegates to NameFormatter.canonical(ParseResult)
-    // and is available on all three variants
+    // and is available on both variants
     pn.setGenus("Abies");
     pn.setSpecificEpithet("alba");
     pn.setRank(Rank.SPECIES);
     ParseResult parsed = new ParseResult.Parsed(pn);
     assertEquals("Abies alba", parsed.canonicalName());
 
-    ParseResult informal = new ParseResult.Informal("Serratia", Rank.GENUS, Rank.SPECIES, "RE1-2a", null);
+    ParseResult informal = new ParseResult.Parsed(informal("Serratia", Rank.GENUS, Rank.SPECIES, "RE1-2a"));
     assertEquals("Serratia sp. RE1-2a", informal.canonicalName());
 
     ParseResult unparsable = new ParseResult.Unparsable(NameType.OTHER, "Tobacco mosaic virus");
@@ -474,7 +474,7 @@ public class NameFormatterTest {
     assertEquals(NameFormatter.canonicalComplete(pn), parsed.canonicalNameComplete());
     assertEquals("Abies alba Mill., 1768 sensu lato", parsed.canonicalNameComplete());
 
-    ParseResult informal = new ParseResult.Informal("Serratia", Rank.GENUS, Rank.SPECIES, "RE1-2a", null);
+    ParseResult informal = new ParseResult.Parsed(informal("Serratia", Rank.GENUS, Rank.SPECIES, "RE1-2a"));
     assertEquals("Serratia sp. RE1-2a", informal.canonicalNameComplete());
 
     ParseResult unparsable = new ParseResult.Unparsable(NameType.OTHER, "Tobacco mosaic virus");
@@ -482,27 +482,28 @@ public class NameFormatterTest {
   }
 
   @Test
-  public void testInformalToParsedName() throws Exception {
-    // a genus anchor lands in the genus slot, with rank/phrase/code and INFORMAL type
-    ParsedName g = new ParseResult.Informal("Rhizobium", Rank.GENUS, Rank.SPECIES, "RMCC TR1811", null).toParsedName();
-    assertEquals("Rhizobium", g.getGenus());
-    assertNull(g.getUninomial());
-    assertEquals(Rank.SPECIES, g.getRank());
-    assertEquals("RMCC TR1811", g.getPhrase());
-    assertEquals(NameType.INFORMAL, g.getType());
-    // a non-genus (here family) anchor lands in the uninomial slot instead
-    ParsedName f = new ParseResult.Informal("Ichneumonidae", Rank.FAMILY, Rank.SPECIES, null, null).toParsedName();
-    assertEquals("Ichneumonidae", f.getUninomial());
-    assertNull(f.getGenus());
+  public void testInformalCandidatus() throws Exception {
+    ParsedName informal = informal("Pelagibacter", Rank.GENUS, Rank.SPECIES, "sp. HTCC7211");
+    informal.setCode(NomCode.BACTERIAL);
+    informal.setCandidatus(true);
+    assertEquals("\"Candidatus Pelagibacter\" sp. HTCC7211", NameFormatter.canonical(informal));
   }
 
-  @Test
-  public void testInformalCandidatus() throws Exception {
-    ParseResult.Informal informal =
-        new ParseResult.Informal("Pelagibacter", Rank.GENUS, Rank.SPECIES, "sp. HTCC7211", NomCode.BACTERIAL, true);
-    assertTrue(informal.toParsedName().isCandidatus());
-    assertEquals("\"Candidatus Pelagibacter\" sp. HTCC7211", NameFormatter.canonical(informal));
-    assertFalse(new ParseResult.Informal("Pelagibacter", Rank.GENUS, Rank.SPECIES, "sp. HTCC7211", null).candidatus());
+  /**
+   * An informal name as the parser returns it: a genus anchor in the genus slot, a higher one in the
+   * uninomial slot, the provisional designation in the phrase.
+   */
+  private static ParsedName informal(String taxon, Rank taxonRank, Rank rank, String phrase) {
+    ParsedName pn = new ParsedName();
+    pn.setType(NameType.INFORMAL);
+    pn.setRank(rank);
+    pn.setPhrase(phrase);
+    if (taxonRank == Rank.GENUS) {
+      pn.setGenus(taxon);
+    } else {
+      pn.setUninomial(taxon);
+    }
+    return pn;
   }
 
   @Test

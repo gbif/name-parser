@@ -420,16 +420,18 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   
   /**
    * Checks if a parsed name is missing final epithets compared to what is indicated by its rank.
+   * A phrase does not stand in for the missing epithet: {@code Rhizobium sp.} and
+   * {@code Serratia sp. RE1-2a} are both indetermined species, as their {@link #anchor()} is only a genus.
    *
    * @return true if the name is not fully determined
    */
   public boolean isIndetermined() {
-    if (isPhraseName())
-      return false;
+    // a convariety's epithet is an infraspecific one, not a cultivar epithet
+    boolean cultivarRank = rank.isCultivarRank() && rank != Rank.CONVARIETY;
     return rank.isInfragenericStrictly() && uninomial == null && infragenericEpithet == null && specificEpithet == null
-        || rank.isSpeciesOrBelow() && !rank.isCultivarRank() && specificEpithet == null
-        || rank.isInfraspecific() && !rank.isCultivarRank() && infraspecificEpithet == null
-        || rank.isCultivarRank() && cultivarEpithet == null;
+        || rank.isSpeciesOrBelow() && !cultivarRank && specificEpithet == null
+        || rank.isInfraspecific() && !cultivarRank && infraspecificEpithet == null
+        || cultivarRank && cultivarEpithet == null;
   }
   
   /**
@@ -454,6 +456,141 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    */
   public boolean isPhraseName() {
     return phrase != null && !this.phrase.isEmpty();
+  }
+
+  /**
+   * The determined part of this name as a name of its own: the real taxon an informal name hangs off.
+   * <p>
+   * {@code Rhizobium sp. RMCC TR1811} is anchored on the genus <i>Rhizobium</i>, {@code Lasioglossum (Dialictus) sp. 1}
+   * on <i>Lasioglossum (Dialictus)</i>, {@code Grevillea brachystylis subsp. Busselton (G.J.Keighery s.n. 28/8/1985)}
+   * on the species <i>Grevillea brachystylis</i> and {@code Abies cf. alba} on the genus <i>Abies</i>.
+   * <p>
+   * The anchor keeps the name parts down to the deepest one that is present and not qualified (cf., aff., ?, ...).
+   * It takes the rank of that part and the authorship that belongs to it: the specific authorship for a species
+   * anchor of an infraspecific name, the generic one for a genus, the name's own when nothing below the anchor is
+   * given. The phrase, qualifiers, notes, publication, warnings and flags other than {@link #isCandidatus()} and
+   * {@link #isExtinct()} are left out. A complete scientific name is its own anchor, without those details.
+   * <p>
+   * The anchor is derived on every call, never stored.
+   *
+   * @return the anchor, a {@link NameType#SCIENTIFIC} name, or empty if no part of the name is determined or the
+   * name type is not parsable
+   */
+  public Optional<ParsedName> anchor() {
+    if (type != null && !type.isParsable()) {
+      return Optional.empty();
+    }
+    ParsedName a = new ParsedName();
+    a.setType(NameType.SCIENTIFIC);
+    a.setState(State.COMPLETE);
+    a.setCode(code);
+    a.setCandidatus(candidatus);
+    a.setExtinct(extinct);
+    // the deepest name part given, phrase and cultivar epithet aside
+    NamePart deepest = infraspecificEpithet != null ? NamePart.INFRASPECIFIC
+        : specificEpithet != null ? NamePart.SPECIFIC
+        : infragenericEpithet != null ? NamePart.INFRAGENERIC
+        : NamePart.GENERIC;
+
+    if (genus == null && uninomial == null) {
+      // an infrageneric name without its genus, "subgen. Trematostoma"
+      if (infragenericEpithet == null || hasEpithetQualifier(NamePart.INFRAGENERIC)) {
+        return Optional.empty();
+      }
+      a.setInfragenericEpithet(infragenericEpithet);
+      a.setRank(rank.isInfragenericStrictly() ? rank : Rank.INFRAGENERIC_NAME);
+      keepNotho(a, NamePart.INFRAGENERIC);
+      if (deepest == NamePart.INFRAGENERIC) {
+        a.setCombinationAuthorship(getCombinationAuthorship());
+        a.setBasionymAuthorship(getBasionymAuthorship());
+      }
+      return Optional.of(a);
+    }
+    if (genus == null) {
+      if (hasEpithetQualifier(NamePart.GENERIC)) {
+        return Optional.empty();
+      }
+      a.setUninomial(uninomial);
+      a.setRank(rank.isSupraspecific() && !rank.isInfragenericStrictly() ? rank : Rank.UNRANKED);
+      keepNotho(a, NamePart.GENERIC);
+      if (deepest == NamePart.GENERIC) {
+        a.setCombinationAuthorship(getCombinationAuthorship());
+        a.setBasionymAuthorship(getBasionymAuthorship());
+      }
+      return Optional.of(a);
+    }
+
+    if (hasEpithetQualifier(NamePart.GENERIC)) {
+      return Optional.empty();
+    }
+    NamePart kept = NamePart.GENERIC;
+    if (infragenericEpithet != null && !hasEpithetQualifier(NamePart.INFRAGENERIC)) {
+      kept = NamePart.INFRAGENERIC;
+    }
+    boolean cut = infragenericEpithet != null && kept == NamePart.GENERIC;
+    if (!cut && specificEpithet != null && !hasEpithetQualifier(NamePart.SPECIFIC)) {
+      kept = NamePart.SPECIFIC;
+      if (infraspecificEpithet != null && !hasEpithetQualifier(NamePart.INFRASPECIFIC)) {
+        kept = NamePart.INFRASPECIFIC;
+      }
+    }
+    // nothing cut and nothing missing: the name is its own anchor, at its own rank
+    boolean complete = kept == deepest && !isIndetermined();
+
+    switch (kept) {
+      case GENERIC:
+        a.setUninomial(genus);
+        a.setRank(Rank.GENUS);
+        break;
+      case INFRAGENERIC:
+        a.setGenus(genus);
+        a.setInfragenericEpithet(infragenericEpithet);
+        // a bracketed name between genus and species is a subgenus
+        a.setRank(rank.isInfragenericStrictly() ? rank : Rank.SUBGENUS);
+        break;
+      default:
+        a.setGenus(genus);
+        a.setInfragenericEpithet(infragenericEpithet);
+        a.setSpecificEpithet(specificEpithet);
+        if (kept == NamePart.INFRASPECIFIC) {
+          a.setInfraspecificEpithet(infraspecificEpithet);
+          a.setRank(rank.isInfraspecific() ? rank : Rank.INFRASPECIFIC_NAME);
+        } else {
+          a.setRank(complete && rank.isSpeciesOrBelow() ? rank : Rank.SPECIES);
+        }
+    }
+    if (complete && cultivarEpithet != null) {
+      a.setCultivarEpithet(cultivarEpithet);
+    }
+    for (NamePart p : NamePart.values()) {
+      if (p.ordinal() <= kept.ordinal()) {
+        keepNotho(a, p);
+      }
+    }
+    if (kept != NamePart.GENERIC) {
+      a.setGenericAuthorship(genericAuthorship);
+    }
+    if (kept == NamePart.INFRASPECIFIC) {
+      a.setSpecificAuthorship(specificAuthorship);
+    }
+    // the authorship of the anchor's own deepest part
+    if (kept == NamePart.SPECIFIC && hasSpecificAuthorship()) {
+      a.setCombinationAuthorship(specificAuthorship.getCombinationAuthorship());
+      a.setBasionymAuthorship(specificAuthorship.getBasionymAuthorship());
+    } else if (kept == NamePart.GENERIC && hasGenericAuthorship()) {
+      a.setCombinationAuthorship(genericAuthorship.getCombinationAuthorship());
+      a.setBasionymAuthorship(genericAuthorship.getBasionymAuthorship());
+    } else if (kept == deepest) {
+      a.setCombinationAuthorship(getCombinationAuthorship());
+      a.setBasionymAuthorship(getBasionymAuthorship());
+    }
+    return Optional.of(a);
+  }
+
+  private void keepNotho(ParsedName anchor, NamePart part) {
+    if (notho != null && notho.contains(part)) {
+      anchor.addNotho(part);
+    }
   }
   
   /**

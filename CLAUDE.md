@@ -54,14 +54,14 @@ Everything is in `org.gbif.nameparser.api` (model + contract) and
 - **`NameParser`** — the contract. `parse(name, authorship, rank, code)` returns a
   **`ParseResult`** and never throws for an unparsable name. `parseAuthorship(...)` returns
   `Optional<ParsedAuthorship>`.
-- **`ParseResult`** — a sealed interface, three-way: `Parsed(ParsedName)` |
-  `Informal(taxon, taxonRank, rank, phrase, code)` | `Unparsable(type, code, name)`. `Informal`
-  is a semistructured name — a supraspecific `taxon` carrying a provisional designation with no
-  species epithet (`Rhizobium sp. RMCC TR1811`), the tail kept verbatim in `phrase`. `type()` and
-  `code()` are on **all three** variants (so any result can be classified without a cast or a
-  catch); `parsed()` returns `Optional<ParsedName>` (present only for `Parsed`); `orElseThrow()`
-  is the opt-in fail-fast path (throws for `Informal` + `Unparsable`). This mirrors the Rust
-  parser's own three-way outcome so both implementations share one contract.
+- **`ParseResult`** — a sealed interface, two-way: `Parsed(ParsedName)` |
+  `Unparsable(type, code, name)`. Informal names (`Rhizobium sp. RMCC TR1811`, `Abies cf. alba`)
+  are `Parsed` with `type = INFORMAL`; `ParsedName.anchor()` derives the real taxon they hang off
+  and `getPhrase()` holds the provisional designation. (5.x had a third, flat `Informal` variant;
+  6.0 removed it.) `type()` and `code()` are on both variants (so any result can be classified
+  without a cast or a catch); `parsed()` returns `Optional<ParsedName>` (present only for
+  `Parsed`); `orElseThrow()` is the opt-in fail-fast path (throws for `Unparsable`). This mirrors
+  the Rust parser's own outcome so both implementations share one contract.
 - **`UnparsableNameException`** — **unchecked** (`extends RuntimeException`); only raised by
   `ParseResult.orElseThrow()`, and bridges to/from `ParseResult.Unparsable`.
 - **`NameFormatter`** — renders a `ParsedName` (or any `CombinedAuthorshipIF`) back to a
