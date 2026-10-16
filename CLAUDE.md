@@ -81,3 +81,6 @@ is verified in the Rust repo.
 - `var` is used freely; no enforcement either way.
 - Logging is SLF4J; tests pull in `logback-classic` (`src/test/resources/logback-test.xml`).
 - Apache 2.0 license header on every source file.
+- Commit messages and PR titles/descriptions must never mention Claude or Claude sessions:
+  no `Co-Authored-By: Claude …` or `Claude-Session: …` trailers, no session links, no
+  "generated with Claude" lines. Write them as plain human-authored messages.
