@@ -31,7 +31,8 @@ public class ParsedAuthorship extends CombinedAuthorship {
   private String nomenclaturalNote;
 
   /**
-   * In reference stripped from the authorship
+   * In reference stripped from the authorship.
+   * If it is an author team its authors are also given as the {@link Authorship#getInAuthors() in-authors}.
    */
   private String publishedIn;
 

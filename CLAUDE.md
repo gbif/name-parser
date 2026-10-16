@@ -43,7 +43,7 @@ Everything is in `org.gbif.nameparser.api` (model + contract) and
 - **`ParsedName`** (extends `ParsedAuthorship`) — the structured name: uninomial/genus/
   subgenus/epithets, `rank`, `code`, `type` (`NameType`), authorships, notes/flags, and a
   `State` (`COMPLETE` / `PARTIAL` / `NONE`).
-- **`ParsedAuthorship`** / **`Authorship`** — combination & basionym authors, ex-authors, year,
+- **`ParsedAuthorship`** / **`Authorship`** — combination & basionym authors, ex-authors, in-authors, year,
   `imprintYear`, sanctioning author, `publishedIn` (+ structured `publishedInYear`).
 - **`Rank`**, **`NomCode`**, **`NameType`**, **`NamePart`** — the controlled vocabularies.
   `NameType.isParsable()` is `SCIENTIFIC || INFORMAL`; the rest (`FORMULA`, `PLACEHOLDER`,

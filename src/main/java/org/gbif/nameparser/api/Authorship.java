@@ -10,8 +10,7 @@ import java.util.Objects;
 
 /**
  * Authorship of the name (recombination) or basionym
- * including authors, ex authors and the year
- * but no in authors which are regarded as part of the publishedIn citation.
+ * including authors, ex authors, in authors and the year.
  * <p>
  * The parsed authorship for basionyms does not include brackets.
  * A sanctioned fungal name or basionym carries its sanctioning author, e.g. {@code "(Wulfen : Fr.) Schum."}.
@@ -30,6 +29,20 @@ public class Authorship {
    *   B = validly published the name → the publishing/validating author
    */
   private List<String> exAuthors = new ArrayList<>();
+
+  /**
+   * list of in-authors excluding in itself, the authors of the work that contains the publication of the name
+   * Author A in Author B
+   *   A = the author(s) of the name
+   *   B = the author(s) of the work that A contributed the name to, e.g. "Natterer in Kuhl, 1817" or
+   *       "Boucher ex DC. in Lam. &amp; DC."
+   * A name is cited by A or by B depending on the code and on the source, so both refer to the same name.
+   * The in-authors stay part of the {@link ParsedAuthorship#getPublishedIn() publishedIn} citation as well,
+   * this is only an additional structured copy. A citation that is no author team, e.g. "Mill. in Gard. Dict. ed. 8",
+   * has no in-authors.
+   * Null until set, as almost no name has in-authors.
+   */
+  private List<String> inAuthors;
 
   /**
    * The year the combination or basionym was first published, usually the same as the publishedIn reference.
@@ -147,6 +160,31 @@ public class Authorship {
   public void setExAuthors(List<String> exAuthors) {
     this.exAuthors = exAuthors;
   }
+
+  /**
+   * Returns {@code true} if the in authorship is null or an empty list, false otherwise
+   */
+  public boolean hasInAuthors() {
+    return inAuthors != null && !inAuthors.isEmpty();
+  }
+
+  /**
+   * @return the in-authors or null if there are none, see {@link #hasInAuthors()}
+   */
+  public List<String> getInAuthors() {
+    return inAuthors;
+  }
+
+  public void addInAuthor(String author) {
+    if (StringUtils.isNotBlank(author)) {
+      if (inAuthors == null) inAuthors = new ArrayList<>();
+      inAuthors.add(author);
+    }
+  }
+
+  public void setInAuthors(List<String> inAuthors) {
+    this.inAuthors = inAuthors;
+  }
   
   public String getYear() {
     return year;
@@ -229,6 +267,7 @@ public class Authorship {
     Authorship that = (Authorship) o;
     return Objects.equals(authors, that.authors) &&
         Objects.equals(exAuthors, that.exAuthors) &&
+        Objects.equals(inAuthorsOrEmpty(), that.inAuthorsOrEmpty()) &&
         Objects.equals(year, that.year) &&
         Objects.equals(imprintYear, that.imprintYear) &&
         bracketedYear == that.bracketedYear &&
@@ -238,11 +277,18 @@ public class Authorship {
   
   @Override
   public int hashCode() {
-    return Objects.hash(authors, exAuthors, year, imprintYear, bracketedYear, anonymous, sanctioningAuthor);
+    return Objects.hash(authors, exAuthors, inAuthorsOrEmpty(), year, imprintYear, bracketedYear, anonymous, sanctioningAuthor);
+  }
+
+  /**
+   * In-authors are null until set, so unset and empty ones must not tell two authorships apart.
+   */
+  private List<String> inAuthorsOrEmpty() {
+    return inAuthors == null ? List.of() : inAuthors;
   }
   
   /**
-   * @return the full authorship string with ex authors and year
+   * @return the full authorship string with ex authors, in authors and year
    */
   @Override
   public String toString() {

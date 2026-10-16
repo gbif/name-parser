@@ -108,6 +108,39 @@ public class NameFormatterTest {
     assertNotEquals(plain, comb);
   }
 
+  /** The authors of the work a name was published in follow "in" (ICN Art. 46.2, ICZN Rec. 51E). */
+  @Test
+  public void inAuthorRendering() throws Exception {
+    Authorship comb = Authorship.yearAuthors("1817", "Natterer");
+    comb.setInAuthors(List.of("Kuhl"));
+    assertEquals("Natterer in Kuhl, 1817", NameFormatter.authorString(comb, true, NomCode.ZOOLOGICAL));
+    assertEquals("Natterer in Kuhl", NameFormatter.authorString(comb, false, NomCode.ZOOLOGICAL));
+
+    // with ex authors and an in team
+    Authorship bot = Authorship.authors("DC.");
+    bot.setExAuthors(List.of("Boucher"));
+    bot.setInAuthors(List.of("Lam.", "DC."));
+    assertEquals("Boucher ex DC. in Lam. & DC.", NameFormatter.authorString(bot, true, NomCode.BOTANICAL));
+
+    // inside the basionym brackets and in the combination
+    pn.setGenus("Aus");
+    pn.setSpecificEpithet("bus");
+    pn.setRank(Rank.SPECIES);
+    pn.setCode(NomCode.ZOOLOGICAL);
+    Authorship bas = Authorship.yearAuthors("1900", "Smith");
+    bas.addInAuthor("Jones");
+    pn.setBasionymAuthorship(bas);
+    Authorship comb2 = Authorship.yearAuthors("1920", "Brown");
+    comb2.addInAuthor("Miller");
+    pn.setCombinationAuthorship(comb2);
+    assertEquals("Aus bus (Smith in Jones, 1900) Brown in Miller, 1920", NameFormatter.canonicalComplete(pn));
+
+    // in authors without authors are not rendered
+    Authorship orphan = Authorship.yearAuthors("1817");
+    orphan.addInAuthor("Kuhl");
+    assertEquals("1817", NameFormatter.authorString(orphan, true, NomCode.ZOOLOGICAL));
+  }
+
   @Test
   public void anonymousAuthorship() throws Exception {
     Authorship anon = new Authorship();

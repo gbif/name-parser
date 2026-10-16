@@ -584,7 +584,7 @@ public class NameFormatter {
   }
 
   /**
-   * Renders the authorship with ex authors and year
+   * Renders the authorship with ex authors, in authors and year
    *
    * @param sb StringBuilder to append to
    */
@@ -613,6 +613,12 @@ public class NameFormatter {
       } else if (auth.hasAuthors()) {
         sb.append(joinAuthors(auth.getAuthors(), NomCode.BACTERIAL == code ? 2 : null));
         authorsAppended = true;
+      }
+      // the authors of the work the name was published in follow the authors and precede the year,
+      // "Natterer in Kuhl, 1817" (ICN Art. 46.2, ICZN Recommendation 51E)
+      if (authorsAppended && auth.hasInAuthors()) {
+        sb.append(" in ");
+        sb.append(joinAuthors(auth.getInAuthors(), NomCode.BACTERIAL == code ? 2 : null));
       }
       if (auth.getYear() != null && includeYear) {
         if (authorsAppended) {

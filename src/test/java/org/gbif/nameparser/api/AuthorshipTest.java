@@ -93,6 +93,33 @@ public class AuthorshipTest {
   }
 
   @Test
+  public void testInAuthors() {
+    Authorship auth = Authorship.yearAuthors("1817", "Natterer");
+    assertFalse(auth.hasInAuthors());
+    assertNull(auth.getInAuthors());
+
+    auth.addInAuthor("Kuhl");
+    auth.addInAuthor(" ");
+    assertTrue(auth.hasInAuthors());
+    assertEquals(List.of("Kuhl"), auth.getInAuthors());
+    assertEquals("Natterer in Kuhl, 1817", auth.toString());
+
+    // in authors are part of equality
+    Authorship plain = Authorship.yearAuthors("1817", "Natterer");
+    assertNotEquals(plain, auth);
+    plain.setInAuthors(List.of("Kuhl"));
+    assertEquals(plain, auth);
+    assertEquals(plain.hashCode(), auth.hashCode());
+
+    // but unset and empty in authors are the same
+    Authorship unset = Authorship.yearAuthors("1817", "Natterer");
+    Authorship empty = Authorship.yearAuthors("1817", "Natterer");
+    empty.setInAuthors(new ArrayList<>());
+    assertEquals(unset, empty);
+    assertEquals(unset.hashCode(), empty.hashCode());
+  }
+
+  @Test
   public void testEqualsIncludesAuthors() {
     Authorship a = Authorship.yearAuthors("1878", "L.");
     Authorship b = Authorship.yearAuthors("1878", "L.");
