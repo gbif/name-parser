@@ -1,6 +1,5 @@
 package org.gbif.nameparser.api;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
 import javax.annotation.Nonnull;
@@ -393,7 +392,8 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * @return true if the parsed name has non null name properties or a scientific name. Remarks will not count as a name
    */
   public boolean hasName() {
-    return ObjectUtils.firstNonNull(uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, phrase, cultivarEpithet) != null;
+    return uninomial != null || genus != null || infragenericEpithet != null || specificEpithet != null
+        || infraspecificEpithet != null || phrase != null || cultivarEpithet != null;
   }
 
   public boolean isHybridName() {

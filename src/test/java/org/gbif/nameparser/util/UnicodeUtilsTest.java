@@ -1,6 +1,5 @@
 package org.gbif.nameparser.util;
 
-import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
 
 import static org.gbif.nameparser.util.UnicodeUtils.foldToAscii;
@@ -94,12 +93,11 @@ public class UnicodeUtilsTest {
 
   @Test
   public void containsHomoglyphsPerformance() {
-    StopWatch watch = StopWatch.createStarted();
+    long start = System.nanoTime();
     for (int x=0; x<iterations; x++) {
       UnicodeUtils.containsHomoglyphs(input2 + x);
     }
-    watch.stop();
-    System.out.println(watch);
+    System.out.println((System.nanoTime() - start) / 1_000_000 + " ms");
   }
 
   @Test

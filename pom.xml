@@ -34,14 +34,8 @@
         <spotless.check.skip>true</spotless.check.skip>
 
         <!-- Dependency versions -->
-        <commons-io.version>2.22.0</commons-io.version>
-        <commons-lang.version>3.20.0</commons-lang.version>
-        <fastutil.version>8.5.18</fastutil.version>
         <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
         <junit.version>4.13.2</junit.version>
-        <!-- last logback version to support the SLF4J 1.7 series -->
-        <logback.version>1.2.13</logback.version>
-        <slf4j.version>1.7.36</slf4j.version>
     </properties>
 
     <developers>
@@ -72,27 +66,12 @@
     </build>
 
     <dependencies>
-        <!-- Other -->
+        <!-- Nullability annotations only, not needed at runtime -->
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
             <version>${findbugs-jsr305.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${commons-lang.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>it.unimi.dsi</groupId>
-            <artifactId>fastutil</artifactId>
-            <version>${fastutil.version}</version>
-        </dependency>
-        <!-- Logging -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- Test -->
@@ -100,18 +79,6 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>${commons-io.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

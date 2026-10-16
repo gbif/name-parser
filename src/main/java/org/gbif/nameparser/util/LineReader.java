@@ -1,6 +1,5 @@
 package org.gbif.nameparser.util;
 
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -76,7 +75,7 @@ public class LineReader implements Iterable<String>, AutoCloseable {
         while (row == 0 || next != null) {
           next = br.readLine();
           row++;
-          if (skipBlank && StringUtils.isBlank(next)) {
+          if (skipBlank && next.isBlank()) {
             continue;
           }
           if (skipComments && next.startsWith("#")) {

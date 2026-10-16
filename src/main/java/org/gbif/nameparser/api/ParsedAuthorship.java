@@ -1,6 +1,5 @@
 package org.gbif.nameparser.api;
 
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
 import java.util.HashSet;
@@ -108,7 +107,7 @@ public class ParsedAuthorship extends CombinedAuthorship {
   }
   
   public void addNomenclaturalNote(String note) {
-    if (!StringUtils.isBlank(note)) {
+    if (note != null && !note.isBlank()) {
       this.nomenclaturalNote = nomenclaturalNote == null ? note.trim() : nomenclaturalNote + " " + note.trim();
     }
   }
@@ -183,7 +182,7 @@ public class ParsedAuthorship extends CombinedAuthorship {
   }
   
   public void addUnparsed(String unparsed) {
-    if (!StringUtils.isBlank(unparsed)) {
+    if (unparsed != null && !unparsed.isBlank()) {
       this.unparsed = this.unparsed == null ? unparsed : this.unparsed + unparsed;
     }
   }

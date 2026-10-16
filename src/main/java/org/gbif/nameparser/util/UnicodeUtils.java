@@ -1,42 +1,33 @@
 package org.gbif.nameparser.util;
 
-import it.unimi.dsi.fastutil.chars.CharArraySet;
-import it.unimi.dsi.fastutil.chars.CharSet;
-import it.unimi.dsi.fastutil.ints.*;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.PrimitiveIterator;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Utilities dealing with unicode strings
  */
 public class UnicodeUtils {
-  private static final Logger LOG = LoggerFactory.getLogger(UnicodeUtils.class);
   private static final boolean DEBUG = false;
   private static Pattern MARKER = Pattern.compile("\\p{M}");
   private static final Pattern OCT = Pattern.compile("^[0-7]+$");
   private static final Pattern HEX = Pattern.compile("^[0-9abcdefABCDEF]+$");
-  private static final IntSet DIACRITICS; // unicode codepoints as keys to avoid dealing with chars & surrogate pairs
+  // Codepoint lookups are hot paths, so all tables are primitive: a BitSet indexed by codepoint
+  // for membership, guarded by a lowest/highest codepoint range check that rejects plain ASCII early.
+  private static final BitSet DIACRITICS;
   private static final int DIACRITICS_LOWEST_CP;
   private static final int DIACRITICS_HIGHEST_CP;
   static {
-    IntSet diacritics = new IntOpenHashSet();
-    final AtomicInteger minCP = new AtomicInteger(Integer.MAX_VALUE);
-    final AtomicInteger maxCP = new AtomicInteger(Integer.MIN_VALUE);
+    BitSet diacritics = new BitSet();
     "´˝` ̏ˆˇ˘ ̑¸¨· ̡ ̢ ̉ ̛ˉ˛ ˚˳῾᾿".codePoints()
                                   .filter(cp -> cp != 32) // ignore whitespace - this is hard to remove from the input
                                   .forEach(cp -> {
@@ -46,17 +37,18 @@ public class UnicodeUtils {
         System.out.print(cp);
         System.out.println("  " + Character.getName(cp));
       }
-      diacritics.add(cp);
-      minCP.set( Math.min(minCP.get(), cp) );
-      maxCP.set( Math.max(maxCP.get(), cp) );
+      diacritics.set(cp);
     });
-    DIACRITICS = IntSets.unmodifiable(diacritics);
-    DIACRITICS_LOWEST_CP = minCP.get();
-    DIACRITICS_HIGHEST_CP = maxCP.get();
+    DIACRITICS = diacritics;
+    DIACRITICS_LOWEST_CP = diacritics.nextSetBit(0);
+    DIACRITICS_HIGHEST_CP = diacritics.length() - 1;
   }
 
   // loads homoglyphs from resources taken from https://raw.githubusercontent.com/codebox/homoglyph/master/raw_data/chars.txt
-  private static final Int2CharMap HOMOGLYHPS; // unicode codepoints as keys to avoid dealing with chars & surrogate pairs
+  // membership is a BitSet, the canonical char is looked up by binary search in the sorted codepoint array on a hit only
+  private static final BitSet HOMOGLYHPS;
+  private static final int[] HOMOGLYHPS_CPS; // sorted unicode codepoints to avoid dealing with chars & surrogate pairs
+  private static final char[] HOMOGLYHPS_CANONICALS; // canonical char for the codepoint at the same index
   private static final int HOMOGLYHPS_LOWEST_CP;
   private static final int HOMOGLYHPS_HIGHEST_CP;
   private static int toCodePoint(char c) {
@@ -64,20 +56,21 @@ public class UnicodeUtils {
   }
   static {
     // canonicals to be ignored from the homoglyph list
-    final CharSet ignoredCanonicals = new CharArraySet(new char[]{' ', '\'', '-', '﹘'});
+    final String ignoredCanonicals = " '-﹘";
+    // ignore some frequently found quotation marks
+    // https://www.cl.cam.ac.uk/~mgk25/ucs/quotes.html
+    final String ignoredQuotes = "‘’“”";
     try (LineReader lr = new LineReader(UnicodeUtils.class.getResourceAsStream("/unicode/homoglyphs.txt"))) {
       // we manage some codepoints differently from the official homoglyph list
-      Int2CharMap homoglyphs = new Int2CharOpenHashMap();
+      Map<Integer, Character> homoglyphs = new TreeMap<>();
       homoglyphs.put(toCodePoint('ſ'), 's');
 
-      final AtomicInteger minCP = new AtomicInteger(Integer.MAX_VALUE);
-      final AtomicInteger maxCP = new AtomicInteger(Integer.MIN_VALUE);
       StringBuilder canonicals = new StringBuilder();
       for (String line : lr) {
         // the canonical is never a surrogate pair
         char canonical = line.charAt(0);
         // ignore all whitespace codepoints
-        if (ignoredCanonicals.contains(canonical)) {
+        if (ignoredCanonicals.indexOf(canonical) >= 0) {
           continue;
         }
         if (DEBUG) {
@@ -88,26 +81,13 @@ public class UnicodeUtils {
 
         // ignore all ASCII chars from homoglyphs
         final AtomicInteger counter = new AtomicInteger();
-        // ignore some frequently found quotation marks
-        // https://www.cl.cam.ac.uk/~mgk25/ucs/quotes.html
-        final IntSet ignore = new IntOpenHashSet();
-        "\u2018\u2019\u201C\u201D".codePoints().forEach(cp -> {
-          if (DEBUG) {
-            System.out.print("IGNORE ");
-            System.out.print(Character.toChars(cp));
-            System.out.print(" ");
-            System.out.print(cp);
-            System.out.println("  " + Character.getName(cp));
-          }
-          ignore.add(cp);
-        });
         line.substring(1).codePoints()
             // remove hybrid marker which we use often and treat separately
             .filter(cp -> cp > 128
                           && cp != NameFormatter.HYBRID_MARKER
-                          && !DIACRITICS.contains(cp)
+                          && !DIACRITICS.get(cp)
                           && !homoglyphs.containsKey(cp)
-                          && !ignore.contains(cp)
+                          && ignoredQuotes.indexOf(cp) < 0
             )
             .forEach(
               cp -> {
@@ -119,8 +99,6 @@ public class UnicodeUtils {
                   System.out.println("  " + Character.getName(cp));
                 }
                 homoglyphs.put(cp, canonical);
-                minCP.set( Math.min(minCP.get(), cp) );
-                maxCP.set( Math.max(maxCP.get(), cp) );
                 counter.incrementAndGet();
               }
             );
@@ -130,40 +108,49 @@ public class UnicodeUtils {
           break;
         }
       }
-      HOMOGLYHPS = Int2CharMaps.unmodifiable(homoglyphs);
-      HOMOGLYHPS_LOWEST_CP = minCP.get();
-      HOMOGLYHPS_HIGHEST_CP = maxCP.get();
-      LOG.info("Loaded known homoglyphs for: {}", canonicals);
-      LOG.debug("Min/max homoglyph codepoint: {} / {}", minCP, maxCP);
+      HOMOGLYHPS = new BitSet();
+      HOMOGLYHPS_CPS = new int[homoglyphs.size()];
+      HOMOGLYHPS_CANONICALS = new char[homoglyphs.size()];
+      int idx = 0;
+      for (Map.Entry<Integer, Character> e : homoglyphs.entrySet()) {
+        HOMOGLYHPS.set(e.getKey());
+        HOMOGLYHPS_CPS[idx] = e.getKey();
+        HOMOGLYHPS_CANONICALS[idx++] = e.getValue();
+      }
+      HOMOGLYHPS_LOWEST_CP = HOMOGLYHPS_CPS[0];
+      HOMOGLYHPS_HIGHEST_CP = HOMOGLYHPS_CPS[HOMOGLYHPS_CPS.length - 1];
+      if (DEBUG) {
+        System.out.println("Loaded known homoglyphs for: " + canonicals);
+        System.out.println("Min/max homoglyph codepoint: " + HOMOGLYHPS_LOWEST_CP + " / " + HOMOGLYHPS_HIGHEST_CP);
+      }
     }
   }
   // unicode codepoints considered ASCII hyphens
   private static final int HYPHEN_HOMOGLYHPS_LOWEST_CP;
   private static final int HYPHEN_HOMOGLYHPS_HIGHEST_CP;
-  private static final IntSet HYPHEN_HOMOGLYHPS;
+  private static final BitSet HYPHEN_HOMOGLYHPS;
   static {
-    IntSet hyp = new IntOpenHashSet(
-        ("-˗۔‐‑‒–⁃−➖Ⲻ﹘‑").codePoints().boxed().collect(Collectors.toSet())
-    );
-    hyp.remove(45); // ignore canonical ascii hyphen - this yields a higher lower bound and better performance as we skip ascii char checks
+    BitSet hyp = new BitSet();
+    "-˗۔‐‑‒–⁃−➖Ⲻ﹘‑".codePoints().forEach(hyp::set);
+    hyp.clear(45); // ignore canonical ascii hyphen - this yields a higher lower bound and better performance as we skip ascii char checks
     if (DEBUG) {
-      List<Integer> hl = new ArrayList<>(hyp);
-      Collections.sort(hl);
       StringBuilder sb = new StringBuilder();
-      for (int cp : hl) {
+      hyp.stream().forEach(cp -> {
         sb.append(cp);
         sb.append(" -> ");
         sb.appendCodePoint(cp);
         sb.append("\n");
-      }
+      });
       System.out.println(sb);
     }
 
-    HYPHEN_HOMOGLYHPS = IntSets.unmodifiable(hyp);
-    HYPHEN_HOMOGLYHPS_LOWEST_CP = hyp.intStream().min().getAsInt();
-    HYPHEN_HOMOGLYHPS_HIGHEST_CP = hyp.intStream().max().getAsInt();
-    LOG.info("Loaded {} known hyphen homoglyphs", hyp.size());
-    LOG.debug("Min/max hyphen homoglyph codepoint: {} / {}", HYPHEN_HOMOGLYHPS_LOWEST_CP, HYPHEN_HOMOGLYHPS_HIGHEST_CP);
+    HYPHEN_HOMOGLYHPS = hyp;
+    HYPHEN_HOMOGLYHPS_LOWEST_CP = hyp.nextSetBit(0);
+    HYPHEN_HOMOGLYHPS_HIGHEST_CP = hyp.length() - 1;
+    if (DEBUG) {
+      System.out.println("Loaded " + hyp.cardinality() + " known hyphen homoglyphs");
+      System.out.println("Min/max hyphen homoglyph codepoint: " + HYPHEN_HOMOGLYHPS_LOWEST_CP + " / " + HYPHEN_HOMOGLYHPS_HIGHEST_CP);
+    }
   }
 
   /**
@@ -175,9 +162,38 @@ public class UnicodeUtils {
     if (x == null) {
       return null;
     }
-    return StringUtils.replaceEach(x,
-        new String[]{"æ", "Æ", "œ", "Œ", "Ĳ", "ĳ", "ǈ", "ǉ", "ȸ", "ȹ", "ß", "ﬆ", "ﬅ", "ﬀ", "ﬁ", "ﬂ", "ﬃ", "ﬄ"},
-        new String[]{"ae","Ae","oe","Oe","Ij","ij","Lj","lj","db","qp","ss","st","ft","ff","fi","fl","ffi","ffl"});
+    StringBuilder sb = null;
+    for (int i = 0, n = x.length(); i < n; i++) {
+      char c = x.charAt(i);
+      String repl = switch (c) {
+        case 'æ' -> "ae";
+        case 'Æ' -> "Ae";
+        case 'œ' -> "oe";
+        case 'Œ' -> "Oe";
+        case 'Ĳ' -> "Ij";
+        case 'ĳ' -> "ij";
+        case 'ǈ' -> "Lj";
+        case 'ǉ' -> "lj";
+        case 'ȸ' -> "db";
+        case 'ȹ' -> "qp";
+        case 'ß' -> "ss";
+        case 'ﬆ' -> "st";
+        case 'ﬅ' -> "ft";
+        case 'ﬀ' -> "ff";
+        case 'ﬁ' -> "fi";
+        case 'ﬂ' -> "fl";
+        case 'ﬃ' -> "ffi";
+        case 'ﬄ' -> "ffl";
+        default -> null;
+      };
+      if (repl != null) {
+        if (sb == null) sb = new StringBuilder(n + 8).append(x, 0, i);
+        sb.append(repl);
+      } else if (sb != null) {
+        sb.append(c);
+      }
+    }
+    return sb == null ? x : sb.toString();
   }
 
   /**
@@ -204,14 +220,22 @@ public class UnicodeUtils {
     if (cs == null) {
       return -1;
     }
-    PrimitiveIterator.OfInt iter = cs.codePoints().iterator();
-    while(iter.hasNext()) {
-      final int cp = iter.nextInt();
-      if (HOMOGLYHPS_LOWEST_CP <= cp && cp <= HOMOGLYHPS_HIGHEST_CP && HOMOGLYHPS.containsKey(cp)) {
+    for (int i = 0, n = cs.length(); i < n; ) {
+      final int cp = Character.codePointAt(cs, i);
+      if (isHomoglyph(cp)) {
         return cp;
       }
+      i += Character.charCount(cp);
     }
     return -1;
+  }
+
+  private static boolean isHomoglyph(int cp) {
+    return HOMOGLYHPS_LOWEST_CP <= cp && cp <= HOMOGLYHPS_HIGHEST_CP && HOMOGLYHPS.get(cp);
+  }
+
+  private static boolean isHyphenHomoglyph(int cp) {
+    return HYPHEN_HOMOGLYHPS_LOWEST_CP <= cp && cp <= HYPHEN_HOMOGLYHPS_HIGHEST_CP && HYPHEN_HOMOGLYHPS.get(cp);
   }
 
   /**
@@ -222,12 +246,12 @@ public class UnicodeUtils {
     if (cs == null) {
       return -1;
     }
-    PrimitiveIterator.OfInt iter = cs.codePoints().iterator();
-    while(iter.hasNext()) {
-      final int cp = iter.nextInt();
-      if (DIACRITICS_LOWEST_CP <= cp && cp <= DIACRITICS_HIGHEST_CP && DIACRITICS.contains(cp)) {
+    for (int i = 0, n = cs.length(); i < n; ) {
+      final int cp = Character.codePointAt(cs, i);
+      if (DIACRITICS_LOWEST_CP <= cp && cp <= DIACRITICS_HIGHEST_CP && DIACRITICS.get(cp)) {
         return cp;
       }
+      i += Character.charCount(cp);
     }
     return -1;
   }
@@ -249,30 +273,28 @@ public class UnicodeUtils {
     if (cs == null) {
       return null;
     }
-    IntSet keepCP = new IntOpenHashSet();
-    if (keep != null) {
-      keepCP.addAll(keep.codePoints().boxed().collect(Collectors.toSet()));
-    }
-    StringBuilder sb = new StringBuilder();
-    PrimitiveIterator.OfInt iter = cs.codePoints().iterator();
-    while(iter.hasNext()) {
-      final int cp = iter.nextInt();
-      if (keepCP.contains(cp)) {
-        sb.appendCodePoint(cp);
-        continue;
-      }
-
-      if (inclHyphens && HYPHEN_HOMOGLYHPS_LOWEST_CP <= cp && cp <= HYPHEN_HOMOGLYHPS_HIGHEST_CP && HYPHEN_HOMOGLYHPS.contains(cp)) {
-        sb.append("-");
-      } else {
-        if (HOMOGLYHPS_LOWEST_CP <= cp && cp <= HOMOGLYHPS_HIGHEST_CP && HOMOGLYHPS.containsKey(cp)) {
-          sb.append(HOMOGLYHPS.get(cp));
-        } else {
-          sb.appendCodePoint(cp);
+    final int n = cs.length();
+    StringBuilder sb = null; // only allocated once the first replacement is needed
+    for (int i = 0; i < n; ) {
+      final int cp = Character.codePointAt(cs, i);
+      final int len = Character.charCount(cp);
+      char repl = 0;
+      if (keep == null || keep.indexOf(cp) < 0) {
+        if (inclHyphens && isHyphenHomoglyph(cp)) {
+          repl = '-';
+        } else if (isHomoglyph(cp)) {
+          repl = HOMOGLYHPS_CANONICALS[Arrays.binarySearch(HOMOGLYHPS_CPS, cp)];
         }
       }
+      if (repl != 0) {
+        if (sb == null) sb = new StringBuilder(n).append(cs, 0, i);
+        sb.append(repl);
+      } else if (sb != null) {
+        sb.append(cs, i, i + len);
+      }
+      i += len;
     }
-    return sb.toString();
+    return sb == null ? cs.toString() : sb.toString();
   }
 
 

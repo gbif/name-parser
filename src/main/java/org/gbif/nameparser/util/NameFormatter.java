@@ -1,6 +1,5 @@
 package org.gbif.nameparser.util;
 
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.api.*;
 
 import java.util.List;
@@ -448,7 +447,8 @@ public class NameFormatter {
     if (asciiOnly) {
       name = UnicodeUtils.foldToAscii(name);
     }
-    return StringUtils.trimToNull(name);
+    name = name.trim();
+    return name.isEmpty() ? null : name;
   }
   
   private static StringBuilder appendInfraspecific(StringBuilder sb, ParsedName n, boolean hybridMarker, boolean showQualifier, boolean rankMarker, boolean forceRankMarker, boolean html) {

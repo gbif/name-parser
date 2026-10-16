@@ -1,6 +1,5 @@
 package org.gbif.nameparser.api;
 
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Enumeration to indicate a part of a canonical scientific name.
@@ -20,7 +19,7 @@ public enum NamePart {
    * @return the matching NamePart or null
    */
   public static NamePart fromString(String namePart) {
-    if (!StringUtils.isBlank(namePart)) {
+    if (namePart != null && !namePart.isBlank()) {
       try {
         return valueOf(namePart.toUpperCase().trim());
       } catch (IllegalArgumentException e) {

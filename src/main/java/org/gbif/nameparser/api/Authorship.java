@@ -1,6 +1,5 @@
 package org.gbif.nameparser.api;
 
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.nameparser.util.NameFormatter;
 
 import java.util.ArrayList;
@@ -139,7 +138,7 @@ public class Authorship {
    * Adds a non blank author, creating the author list if it does not exist yet.
    */
   public void addAuthor(String author) {
-    if (StringUtils.isNotBlank(author)) {
+    if (author != null && !author.isBlank()) {
       if (authors == null) authors = new ArrayList<>();
       authors.add(author);
     }
@@ -176,7 +175,7 @@ public class Authorship {
    * Adds a non blank ex-author, creating the ex-author list if it does not exist yet.
    */
   public void addExAuthor(String author) {
-    if (StringUtils.isNotBlank(author)) {
+    if (author != null && !author.isBlank()) {
       if (exAuthors == null) exAuthors = new ArrayList<>();
       exAuthors.add(author);
     }
@@ -213,7 +212,7 @@ public class Authorship {
    * Adds a non blank in-author, creating the in-author list if it does not exist yet.
    */
   public void addInAuthor(String author) {
-    if (StringUtils.isNotBlank(author)) {
+    if (author != null && !author.isBlank()) {
       if (inAuthors == null) inAuthors = new ArrayList<>();
       inAuthors.add(author);
     }
