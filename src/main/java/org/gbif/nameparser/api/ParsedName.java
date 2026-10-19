@@ -5,6 +5,7 @@ import org.gbif.nameparser.util.NameFormatter;
 import javax.annotation.Nonnull;
 import java.util.*;
 
+import static org.gbif.nameparser.util.NameFormatter.GRAFT_MARKER;
 import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
 
 /**
@@ -99,6 +100,14 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * and https://en.wikipedia.org/wiki/Candidatus
    */
   private boolean candidatus;
+
+  /**
+   * A graft-chimaera: tissue of two genera grown together at a graft, not a hybrid of them, named under the
+   * cultivated-plants code (ICNCP). Its genus is written with a plus sign, {@code +Crataegomespilus},
+   * {@code +Crataegomespilus 'Jules d'Asnières'}, and so are the species described while the botanical code still
+   * covered them, {@code +Laburnocytisus adamii}. A graft-chimaera carries no {@link #getNotho() notho}.
+   */
+  private boolean graftChimaera;
   
   /**
    * The name parts that carry a hybrid marker (×). More than one part can be
@@ -149,6 +158,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     cultivarEpithet = pn.cultivarEpithet;
     phrase = pn.phrase;
     candidatus = pn.candidatus;
+    graftChimaera = pn.graftChimaera;
     notho = pn.notho != null ? EnumSet.copyOf(pn.notho) : null;
     originalSpelling = pn.originalSpelling;
     epithetQualifier = pn.epithetQualifier == null ? null : new EnumMap<>(pn.epithetQualifier);
@@ -185,6 +195,9 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     if (uni != null && !uni.isEmpty() && uni.charAt(0) == HYBRID_MARKER) {
       this.uninomial = uni.substring(1);
       addNotho(NamePart.GENERIC);
+    } else if (uni != null && !uni.isEmpty() && uni.charAt(0) == GRAFT_MARKER) {
+      this.uninomial = uni.substring(1);
+      graftChimaera = true;
     } else {
       this.uninomial = uni;
     }
@@ -200,6 +213,9 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     if (genus != null && !genus.isEmpty() && genus.charAt(0) == HYBRID_MARKER) {
       this.genus = genus.substring(1);
       addNotho(NamePart.GENERIC);
+    } else if (genus != null && !genus.isEmpty() && genus.charAt(0) == GRAFT_MARKER) {
+      this.genus = genus.substring(1);
+      graftChimaera = true;
     } else {
       this.genus = genus;
     }
@@ -296,6 +312,14 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   
   public void setCandidatus(boolean candidatus) {
     this.candidatus = candidatus;
+  }
+
+  public boolean isGraftChimaera() {
+    return graftChimaera;
+  }
+
+  public void setGraftChimaera(boolean graftChimaera) {
+    this.graftChimaera = graftChimaera;
   }
   
   @Override
@@ -470,7 +494,8 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * anchored on that genus, as no part of the name is surer.
    * It takes the rank of that part and the authorship that belongs to it: the specific authorship for a species
    * anchor of an infraspecific name, the generic one for a genus, the name's own when nothing below the anchor is
-   * given. The phrase, qualifiers, notes, publication, warnings and flags other than {@link #isCandidatus()} and
+   * given. The phrase, qualifiers, notes, publication, warnings and flags other than {@link #isCandidatus()},
+   * {@link #isGraftChimaera()} and
    * {@link #isExtinct()} are left out. A complete scientific name is its own anchor, without those details.
    * <p>
    * The anchor is derived on every call, never stored.
@@ -487,6 +512,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     a.setState(State.COMPLETE);
     a.setCode(code);
     a.setCandidatus(candidatus);
+    a.setGraftChimaera(graftChimaera);
     a.setExtinct(extinct);
     // the deepest name part given, phrase and cultivar epithet aside
     NamePart deepest = infraspecificEpithet != null ? NamePart.INFRASPECIFIC
@@ -641,6 +667,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
     if (!super.equals(o)) return false;
     ParsedName that = (ParsedName) o;
     return candidatus == that.candidatus
+           && graftChimaera == that.graftChimaera
            && Objects.equals(originalSpelling, that.originalSpelling)
            && rank == that.rank
            && code == that.code
@@ -658,7 +685,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, phrase, candidatus, notho, originalSpelling, epithetQualifier, type);
+    return Objects.hash(super.hashCode(), rank, code, uninomial, genus, infragenericEpithet, specificEpithet, infraspecificEpithet, cultivarEpithet, phrase, candidatus, graftChimaera, notho, originalSpelling, epithetQualifier, type);
   }
 
   @Override

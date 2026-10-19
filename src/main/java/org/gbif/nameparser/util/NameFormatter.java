@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
  */
 public class NameFormatter {
   public static final char HYBRID_MARKER = '×';
+  /** The plus sign before the genus of a graft-chimaera, {@code + Crataegomespilus}. */
+  public static final char GRAFT_MARKER = '+';
   private static final String NOTHO_PREFIX = "notho";
   private static final String ET_AL = "et al.";
 
@@ -197,7 +199,10 @@ public class NameFormatter {
     
     if (n.getUninomial() != null) {
       // higher rank names being just a uninomial!
-      if (hybridMarker && hasNotho(n, NamePart.GENERIC)) {
+      if (hybridMarker && n.isGraftChimaera()) {
+        sb.append(GRAFT_MARKER)
+            .append(" ");
+      } else if (hybridMarker && hasNotho(n, NamePart.GENERIC)) {
         sb.append(HYBRID_MARKER)
             .append(" ");
       }
@@ -519,7 +524,10 @@ public class NameFormatter {
       sb.append(n.getEpithetQualifier().get(NamePart.GENERIC ))
         .append(" ");
     }
-    if (hybridMarker && hasNotho(n, NamePart.GENERIC)) {
+    if (hybridMarker && n.isGraftChimaera()) {
+      sb.append(GRAFT_MARKER)
+          .append(" ");
+    } else if (hybridMarker && hasNotho(n, NamePart.GENERIC)) {
       sb.append(HYBRID_MARKER)
           .append(" ");
     }

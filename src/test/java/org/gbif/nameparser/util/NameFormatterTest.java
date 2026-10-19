@@ -348,6 +348,22 @@ public class NameFormatterTest {
     pn.setNotho(NamePart.GENERIC);
     assertEquals("× Abies Mill., 1877", pn.canonicalName());
   }
+
+  @Test
+  public void testGraftChimaera() throws Exception {
+    pn.setUninomial("+Crataegomespilus");
+    assertTrue(pn.isGraftChimaera());
+    assertNull(pn.getNotho());
+    assertEquals("+ Crataegomespilus", pn.canonicalName());
+    assertEquals("Crataegomespilus", NameFormatter.canonicalMinimal(pn));
+
+    pn = new ParsedName();
+    pn.setGenus("Laburnocytisus");
+    pn.setCultivarEpithet("Adamii");
+    pn.setRank(Rank.CULTIVAR);
+    pn.setGraftChimaera(true);
+    assertEquals("+ Laburnocytisus 'Adamii'", pn.canonicalName());
+  }
   
   @Test
   public void testEtAl() throws Exception {
