@@ -17,7 +17,7 @@ public enum NomCode {
   
   BACTERIAL('P', "ICNP",
       "International Code of Nomenclature of Prokaryotes",
-      "https://doi.org/10.1099/ijsem.0.005585"),
+      "https://doi.org/10.1099/ijsem.0.006979"),
   BOTANICAL('B', "ICN",
       "International Code of Nomenclature for algae, fungi, and plants",
       "https://www.iapt-taxon.org/nomen/main.php"),
@@ -35,7 +35,7 @@ public enum NomCode {
       "https://www.iczn.org/the-code/the-code-online/"),
   PHYLO('Y', "ICPN",
           "International Code of Phylogenetic Nomenclature (PhyloCode)",
-          "http://phylonames.org/code/");
+          "https://doi.org/10.1201/9780429446320");
 
   private final String title;
   private final Character abbrev;
