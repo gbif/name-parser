@@ -20,7 +20,7 @@ public enum NomCode {
       "https://doi.org/10.1099/ijsem.0.006979"),
   BOTANICAL('B', "ICN",
       "International Code of Nomenclature for algae, fungi, and plants",
-      "https://www.iapt-taxon.org/nomen/main.php"),
+      "https://doi.org/10.7208/chicago/9780226839479.001.0001"),
   CULTIVARS('C', "ICNCP",
       "International Code of Nomenclature for Cultivated Plants",
       "https://www.ishs.org/scripta-horticulturae/international-code-nomenclature-cultivated-plants-ninth-edition"),

@@ -11,7 +11,7 @@ in [gbif/name-parser-rust](https://github.com/gbif/name-parser-rust), which has 
 - `Authorship.inAuthors` holds the authors of the work a name was published in (`L. in DC.`).
 - The author lists of an `Authorship` stay null until set.
 - The api has no runtime dependencies any more.
-- `NomCode` links the 2025 Prokaryotic Code and the PhyloCode by DOI.
+- `NomCode` links the Madrid Code, the 2025 Prokaryotic Code and the PhyloCode by DOI.
 
 ## 5.x (2026-07 to 2026-10): the api only
 
@@ -19,16 +19,16 @@ in [gbif/name-parser-rust](https://github.com/gbif/name-parser-rust), which has 
 the api module alone: the model (`ParsedName`, `Authorship`, `Rank`, `NomCode`, `NameType`, …), the
 `NameParser` interface and the `NameFormatter`.
 
+- 5.5.0 (2026-10-15): `RankGroup` and `Rank.getGroup`, `sameGroup`, `covers`, `isConcrete`,
+  `isSuprafamilial`.
+- 5.4.0 (2026-10-14): `Authorship.bracketedYear`, `ParseResult.Informal.candidatus`.
+- 5.3.0 (2026-10-08): `ParseResult.canonicalNameComplete()`.
+- 5.2.0 (2026-10-07): the sanctioning author is on `Authorship`, a sanctioned basionym's too.
+- 5.1.0 (2026-10-06): `Authorship.anonymous`, rendered per nomenclatural code.
+- 5.0.1 (2026-08-25): the informal phrase is the verbatim tail of a name, its authorship included.
 - 5.0.0 (2026-07-14): a return-based parse api. `NameParser.parse` returns a `ParseResult`
   (`Parsed`, `Informal` or `Unparsable`) and throws only an unchecked exception.
   `NameType.IDENTIFIER` for identifiers such as BOLD BINs or UNITE species hypotheses.
-- 5.0.1 (2026-08-25): the informal phrase is the verbatim tail of a name, its authorship included.
-- 5.1.0 (2026-10-06): `Authorship.anonymous`, rendered per nomenclatural code.
-- 5.2.0 (2026-10-07): the sanctioning author is on `Authorship`, a sanctioned basionym's too.
-- 5.3.0 (2026-10-08): `ParseResult.canonicalNameComplete()`.
-- 5.4.0 (2026-10-14): `Authorship.bracketedYear`, `ParseResult.Informal.candidatus`.
-- 5.5.0 (2026-10-15): `RankGroup` and `Rank.getGroup`, `sameGroup`, `covers`, `isConcrete`,
-  `isSuprafamilial`.
 
 ## 4.x (2026-06 to 2026-07): a new Java parser
 
