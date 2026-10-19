@@ -46,7 +46,10 @@ public enum NameType {
   INFORMAL,
 
   /**
-   * An unparsable placeholder name like "incertae sedis" or "unknown genus".
+   * A placeholder name like "incertae sedis" or "unknown genus". On its own it is unparsable, a
+   * {@link ParseResult.Unparsable}. Hanging off a real taxon, "Chromista incertae sedis" or "Cisticola unnamed",
+   * it is a {@link ParseResult.Parsed} name: {@link ParsedName#anchor()} gives that taxon and
+   * {@link ParsedName#getPhrase()} the placeholder.
    */
   PLACEHOLDER,
 
@@ -65,7 +68,8 @@ public enum NameType {
   OTHER;
   
   /**
-   * @return true if the GBIF name parser can parse such a name into a ParsedName instance
+   * @return true if the GBIF name parser can always parse such a name into a ParsedName instance. A
+   * {@link #PLACEHOLDER} is parsed only when it has an anchor.
    */
   public boolean isParsable() {
     return this == SCIENTIFIC || this == INFORMAL;

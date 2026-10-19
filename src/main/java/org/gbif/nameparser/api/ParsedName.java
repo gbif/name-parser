@@ -500,11 +500,17 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * <p>
    * The anchor is derived on every call, never stored.
    *
+   * A placeholder is anchored on the real taxon it hangs off: {@code Chromista incertae sedis} on <i>Chromista</i>.
+   *
    * @return the anchor, a {@link NameType#SCIENTIFIC} name, or empty if no part of the name is determined or the
    * name type is not parsable
    */
   public Optional<ParsedName> anchor() {
-    if (type != null && !type.isParsable()) {
+    // a placeholder hangs off a real taxon (Chromista incertae sedis), never off the ? of a missing genus
+    if (type != null && !type.isParsable() && type != NameType.PLACEHOLDER) {
+      return Optional.empty();
+    }
+    if ("?".equals(genus) || "?".equals(uninomial)) {
       return Optional.empty();
     }
     ParsedName a = new ParsedName();

@@ -208,6 +208,17 @@ public class ParsedNameTest {
     assertAnchor("Abies", Rank.GENUS, pn);
     pn.setEpithetQualifier(NamePart.GENERIC, "cf.");
     assertAnchor("Abies", Rank.GENUS, pn);
+    // a placeholder hangs off its real taxon, never off the ? of a missing genus
+    pn = new ParsedName();
+    pn.setType(NameType.PLACEHOLDER);
+    pn.setUninomial("Chromista");
+    pn.setPhrase("incertae sedis");
+    assertAnchor("Chromista", Rank.UNRANKED, pn);
+    pn = new ParsedName();
+    pn.setType(NameType.PLACEHOLDER);
+    pn.setGenus("?");
+    pn.setSpecificEpithet("alba");
+    assertTrue(pn.anchor().isEmpty());
     // a doubted uninomial is its own anchor
     pn = informal(null, Rank.ORDER, null);
     pn.setUninomial("Monotremata");

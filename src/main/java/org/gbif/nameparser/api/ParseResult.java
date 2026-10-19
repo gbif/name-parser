@@ -13,7 +13,9 @@ import javax.annotation.Nullable;
  * Informal names — provisional, open-nomenclature and indetermined names such as
  * {@code "Rhizobium sp. RMCC TR1811"}, {@code "Abies cf. alba"} or {@code "Bartonella group"} — are
  * {@link Parsed} names of type {@link NameType#INFORMAL}; {@link ParsedName#anchor()} gives the real
- * taxon they hang off and {@link ParsedName#getPhrase()} their provisional designation.
+ * taxon they hang off and {@link ParsedName#getPhrase()} their provisional designation. So are placeholders
+ * hanging off a real taxon, {@code "Chromista incertae sedis"}, of type {@link NameType#PLACEHOLDER}; a placeholder
+ * with nothing to anchor on, {@code "incertae sedis"}, is {@link Unparsable}.
  * <p>
  * This mirrors the shape a {@code Result}-like value takes in the Rust implementation, so both
  * parsers expose one contract. Prefer it over catching exceptions: it composes in streams
