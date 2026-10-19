@@ -466,6 +466,8 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * on the species <i>Grevillea brachystylis</i> and {@code Abies cf. alba} on the genus <i>Abies</i>.
    * <p>
    * The anchor keeps the name parts down to the deepest one that is present and not qualified (cf., aff., ?, ...).
+   * A genus doubted with {@code ?} is the exception: {@code ?Sydonia alba} and {@code Ferganoconcha? oblonga} are
+   * anchored on that genus, as no part of the name is surer.
    * It takes the rank of that part and the authorship that belongs to it: the specific authorship for a species
    * anchor of an infraspecific name, the generic one for a genus, the name's own when nothing below the anchor is
    * given. The phrase, qualifiers, notes, publication, warnings and flags other than {@link #isCandidatus()} and
@@ -506,8 +508,10 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
       }
       return Optional.of(a);
     }
+    // only doubted, the genus anchors the name all the same: ?Sydonia alba
+    boolean doubtedGenus = hasEpithetQualifier(NamePart.GENERIC) && "?".equals(epithetQualifier.get(NamePart.GENERIC));
     if (genus == null) {
-      if (hasEpithetQualifier(NamePart.GENERIC)) {
+      if (hasEpithetQualifier(NamePart.GENERIC) && !doubtedGenus) {
         return Optional.empty();
       }
       a.setUninomial(uninomial);
@@ -520,18 +524,20 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
       return Optional.of(a);
     }
 
-    if (hasEpithetQualifier(NamePart.GENERIC)) {
+    if (hasEpithetQualifier(NamePart.GENERIC) && !doubtedGenus) {
       return Optional.empty();
     }
     NamePart kept = NamePart.GENERIC;
-    if (infragenericEpithet != null && !hasEpithetQualifier(NamePart.INFRAGENERIC)) {
-      kept = NamePart.INFRAGENERIC;
-    }
-    boolean cut = infragenericEpithet != null && kept == NamePart.GENERIC;
-    if (!cut && specificEpithet != null && !hasEpithetQualifier(NamePart.SPECIFIC)) {
-      kept = NamePart.SPECIFIC;
-      if (infraspecificEpithet != null && !hasEpithetQualifier(NamePart.INFRASPECIFIC)) {
-        kept = NamePart.INFRASPECIFIC;
+    if (!doubtedGenus) {
+      if (infragenericEpithet != null && !hasEpithetQualifier(NamePart.INFRAGENERIC)) {
+        kept = NamePart.INFRAGENERIC;
+      }
+      boolean cut = infragenericEpithet != null && kept == NamePart.GENERIC;
+      if (!cut && specificEpithet != null && !hasEpithetQualifier(NamePart.SPECIFIC)) {
+        kept = NamePart.SPECIFIC;
+        if (infraspecificEpithet != null && !hasEpithetQualifier(NamePart.INFRASPECIFIC)) {
+          kept = NamePart.INFRASPECIFIC;
+        }
       }
     }
     // nothing cut and nothing missing: the name is its own anchor, at its own rank
