@@ -8,6 +8,10 @@ in [gbif/name-parser-rust](https://github.com/gbif/name-parser-rust), which has 
 
 - `ParseResult.Informal` is gone. A name in open nomenclature is a `Parsed` result of type
   `INFORMAL`, and `ParsedName.anchor()` gives the taxon it hangs off.
+- `ParsedName.graftChimaera`: a graft-chimaera (`+ Crataegomespilus`) is no hybrid.
+- `anchor()` anchors a name on its genus when the genus is qualified (`aff.`, `cf.`, `?`), and
+  anchors a placeholder hanging off a real taxon (`Chromista incertae sedis`), which is now
+  parsed.
 - `Authorship.inAuthors` holds the authors of the work a name was published in (`L. in DC.`).
 - The author lists of an `Authorship` stay null until set.
 - The api has no runtime dependencies any more.
