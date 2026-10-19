@@ -490,8 +490,8 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * on the species <i>Grevillea brachystylis</i> and {@code Abies cf. alba} on the genus <i>Abies</i>.
    * <p>
    * The anchor keeps the name parts down to the deepest one that is present and not qualified (cf., aff., ?, ...).
-   * A genus doubted with {@code ?} is the exception: {@code ?Sydonia alba} and {@code Ferganoconcha? oblonga} are
-   * anchored on that genus, as no part of the name is surer.
+   * A qualified genus is the exception: {@code ?Sydonia alba}, {@code Ferganoconcha? oblonga} and
+   * {@code cf. Craticula} are anchored on that genus, as no part of the name is surer.
    * It takes the rank of that part and the authorship that belongs to it: the specific authorship for a species
    * anchor of an infraspecific name, the generic one for a genus, the name's own when nothing below the anchor is
    * given. The phrase, qualifiers, notes, publication, warnings and flags other than {@link #isCandidatus()},
@@ -534,12 +534,9 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
       }
       return Optional.of(a);
     }
-    // only doubted, the genus anchors the name all the same: ?Sydonia alba
-    boolean doubtedGenus = hasEpithetQualifier(NamePart.GENERIC) && "?".equals(epithetQualifier.get(NamePart.GENERIC));
+    // qualified, the genus anchors the name all the same, but alone: ?Sydonia alba
+    boolean qualifiedGenus = hasEpithetQualifier(NamePart.GENERIC);
     if (genus == null) {
-      if (hasEpithetQualifier(NamePart.GENERIC) && !doubtedGenus) {
-        return Optional.empty();
-      }
       a.setUninomial(uninomial);
       a.setRank(rank.isSupraspecific() && !rank.isInfragenericStrictly() ? rank : Rank.UNRANKED);
       keepNotho(a, NamePart.GENERIC);
@@ -550,11 +547,8 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
       return Optional.of(a);
     }
 
-    if (hasEpithetQualifier(NamePart.GENERIC) && !doubtedGenus) {
-      return Optional.empty();
-    }
     NamePart kept = NamePart.GENERIC;
-    if (!doubtedGenus) {
+    if (!qualifiedGenus) {
       if (infragenericEpithet != null && !hasEpithetQualifier(NamePart.INFRAGENERIC)) {
         kept = NamePart.INFRAGENERIC;
       }

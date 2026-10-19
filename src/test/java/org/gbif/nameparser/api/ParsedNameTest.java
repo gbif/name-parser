@@ -202,13 +202,12 @@ public class ParsedNameTest {
     pn.setEpithetQualifier(NamePart.SPECIFIC, "cf.");
     pn.setCombinationAuthorship(Authorship.authors("Mill."));
     assertAnchor("Abies", Rank.GENUS, pn);
-    // a genus only doubted anchors the name all the same, without its epithets
+    // a qualified genus anchors the name all the same, without its epithets
     pn.setEpithetQualifier(NamePart.GENERIC, "?");
     pn.getEpithetQualifier().remove(NamePart.SPECIFIC);
     assertAnchor("Abies", Rank.GENUS, pn);
-    // a genus qualified otherwise leaves nothing
     pn.setEpithetQualifier(NamePart.GENERIC, "cf.");
-    assertTrue(pn.anchor().isEmpty());
+    assertAnchor("Abies", Rank.GENUS, pn);
     // a doubted uninomial is its own anchor
     pn = informal(null, Rank.ORDER, null);
     pn.setUninomial("Monotremata");
