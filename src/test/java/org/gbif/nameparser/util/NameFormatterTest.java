@@ -253,6 +253,10 @@ public class NameFormatterTest {
     pn.setSpecificAuthorship(specific);
     assertEquals("Acer campestre L. subsp. hebecarpum Bar", NameFormatter.canonicalComplete(pn));
     assertEquals("Acer campestre subsp. hebecarpum Bar", NameFormatter.canonical(pn));
+    // zoological subspecies without marker
+    pn.setCode(NomCode.ZOOLOGICAL);
+    assertEquals("Acer campestre L. hebecarpum Bar", NameFormatter.canonicalComplete(pn));
+    assertEquals("Acer campestre hebecarpum Bar", NameFormatter.canonical(pn));
   }
   
   @Test
