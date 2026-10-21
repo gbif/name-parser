@@ -1,5 +1,7 @@
 package org.gbif.nameparser.util;
 
+import java.text.Normalizer;
+
 import org.junit.Test;
 
 import static org.gbif.nameparser.util.UnicodeUtils.foldToAscii;
@@ -87,6 +89,50 @@ public class UnicodeUtilsTest {
         System.out.println(" " + Character.getName(cp));
         System.out.println(new StringBuilder().appendCodePoint(cp));
         fail("homoglyph wrongly detected");
+      }
+    }
+  }
+
+  /**
+   * Letters of their own are no homoglyphs, even if they look alike: czech, romanian, hungarian, turkish and pinyin authors.
+   */
+  @Test
+  public void distinctLettersAreNoHomoglyphs() {
+    for (String x : new String[]{
+        "Nábělek",
+        "Kirschner & Štěpánek",
+        "KIRSCHNER, J., ŠTĚPÁNEK, J.",
+        "Yıld. & Kılıç",
+        "Prodan & Țopa",
+        "Őry",
+        "Dum.-Tǎt.",
+        "Nguyen, Shuǐ & Chen, 2018",
+        "Pamukçuoǧlu",
+        "ŞAǦBAN",
+        "Jérǒme"
+    }) {
+      assertFalse(x, UnicodeUtils.containsHomoglyphs(x));
+      assertEquals(x, UnicodeUtils.replaceHomoglyphs(x, false));
+    }
+    // a cyrillic letter in a latin word still is one
+    assertTrue(UnicodeUtils.containsHomoglyphs("R.Т.Craig"));
+    assertEquals("R.T.Craig", UnicodeUtils.replaceHomoglyphs("R.Т.Craig", false));
+    assertTrue(UnicodeUtils.containsHomoglyphs("in Vеstn. Tiflissk. Bot. Sada 5: 12. 1931."));
+  }
+
+  /**
+   * A latin letter with a diacritic is never a homoglyph: two different diacritics on the same letter, a caron and a breve,
+   * a comma below and a cedilla, make two letters, not two forms of one.
+   */
+  @Test
+  public void noLatinLetterWithDiacriticIsHomoglyph() {
+    for (int cp = 0; cp <= Character.MAX_CODE_POINT; cp++) {
+      if (Character.isLetter(cp) && Character.UnicodeScript.of(cp) == Character.UnicodeScript.LATIN) {
+        String x = Character.toString(cp);
+        String decomposed = Normalizer.normalize(x, Normalizer.Form.NFD);
+        if (decomposed.codePointCount(0, decomposed.length()) > 1) {
+          assertFalse(String.format("%s U+%04X %s", x, cp, Character.getName(cp)), UnicodeUtils.containsHomoglyphs(x));
+        }
       }
     }
   }

@@ -60,6 +60,9 @@ public class UnicodeUtils {
     // ignore some frequently found quotation marks
     // https://www.cl.cam.ac.uk/~mgk25/ucs/quotes.html
     final String ignoredQuotes = "‘’“”";
+    // letters of their own the list has as look-alikes: the turkish dotless ı of Yıldırım.
+    // The list itself is kept identical to the copy of name-parser-rust, which folds ı inside a name itself
+    final String ignoredLetters = "ı";
     try (LineReader lr = new LineReader(UnicodeUtils.class.getResourceAsStream("/unicode/homoglyphs.txt"))) {
       // we manage some codepoints differently from the official homoglyph list
       Map<Integer, Character> homoglyphs = new TreeMap<>();
@@ -88,6 +91,7 @@ public class UnicodeUtils {
                           && !DIACRITICS.get(cp)
                           && !homoglyphs.containsKey(cp)
                           && ignoredQuotes.indexOf(cp) < 0
+                          && ignoredLetters.indexOf(cp) < 0
             )
             .forEach(
               cp -> {
