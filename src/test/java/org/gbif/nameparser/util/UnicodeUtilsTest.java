@@ -184,6 +184,11 @@ public class UnicodeUtilsTest {
 
     String test = "ŠŒŽšœžŸ¥µÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ";
     assertEquals("SOEZsoezY¥µAAAAAAAECEEEEIIIIDNOOOOOOUUUUYssaaaaaaaeceeeeiiiidnoooooouuuuyy", foldToAscii(test));
+
+    // pure ASCII comes back as is
+    for (String ascii : new String[]{"Abies alba Mill.", "Coccinella 2-pustulata", "(L.) DC., 1805", "\u007F"}) {
+      assertSame(ascii, foldToAscii(ascii));
+    }
   }
 
   @Test

@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  */
 public class UnicodeUtils {
   private static final boolean DEBUG = false;
-  private static Pattern MARKER = Pattern.compile("\\p{M}");
+  private static final Pattern MARKER =Pattern.compile("\\p{M}");
   private static final Pattern OCT = Pattern.compile("^[0-7]+$");
   private static final Pattern HEX = Pattern.compile("^[0-9abcdefABCDEF]+$");
   // Codepoint lookups are hot paths, so all tables are primitive: a BitSet indexed by codepoint
@@ -315,10 +315,23 @@ public class UnicodeUtils {
     if (x == null) {
       return null;
     }
+    // pure ASCII has nothing to fold, and most names are pure ASCII
+    if (isAscii(x)) {
+      return x;
+    }
     x = replaceSpecialCases(x);
     // use java unicode normalizer to remove accents
     x = Normalizer.normalize(x, Normalizer.Form.NFD);
     return MARKER.matcher(x).replaceAll("");
+  }
+
+  private static boolean isAscii(String x) {
+    for (int i = 0, n = x.length(); i < n; i++) {
+      if (x.charAt(i) > '\u007F') {
+        return false;
+      }
+    }
+    return true;
   }
 
   // Unicode apostrophe / single-quote variants that normalise to the ASCII apostrophe '
