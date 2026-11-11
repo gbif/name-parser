@@ -4,7 +4,7 @@ The major versions of the GBIF name parser and, since 5.0.0, of its api. The par
 in [gbif/name-parser-rust](https://github.com/gbif/name-parser-rust), which has its own
 `VERSIONS.md`.
 
-## 6.0.0 (unreleased, `dev`)
+## 6.0.0 (2026-11-11)
 
 - `ParseResult.Informal` is gone. A name in open nomenclature is a `Parsed` result of type
   `INFORMAL`, and `ParsedName.anchor()` gives the taxon it hangs off.
@@ -16,6 +16,7 @@ in [gbif/name-parser-rust](https://github.com/gbif/name-parser-rust), which has 
 - The author lists of an `Authorship` stay null until set.
 - The api has no runtime dependencies any more.
 - `NomCode` links the Madrid Code, the 2025 Prokaryotic Code and the PhyloCode by DOI.
+- The homoglyph table no longer folds two diacritic variants of one letter into each other.
 
 ## 5.x (2026-07 to 2026-10): the api only
 
