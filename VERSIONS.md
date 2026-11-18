@@ -4,6 +4,16 @@ The major versions of the GBIF name parser and, since 5.0.0, of its api. The par
 in [gbif/name-parser-rust](https://github.com/gbif/name-parser-rust), which has its own
 `VERSIONS.md`.
 
+## 6.0.1 (2026-11-18)
+
+- `NameFormatter` writes names as the Rust engine's formatter does. A phrase that spells out its
+  marker gets no second one (`Acalitus agg. brevitarsus/phyllereus`, `Dynestinae sp2`, `Sylvia
+  cantillans subsp. inornata/iberiae`), a subgenus is written with the botanical `subg.` and with
+  the Prokaryotic Code's `subgen.` for bacteria, also inside a species' brackets (`Bacillus (subgen.
+  Aerobacillus) polymyxa`), and an infraspecific epithet under a bare genus keeps its author
+  (`Navicula var. fasciata Grunow`).
+- `Rank.SUBGENUS` has the marker `subg.`, where it had `subgen.`; `RankUtils` still reads both.
+
 ## 6.0.0 (2026-11-11)
 
 - `ParseResult.Informal` is gone. A name in open nomenclature is a `Parsed` result of type
