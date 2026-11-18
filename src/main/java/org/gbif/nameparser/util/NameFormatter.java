@@ -14,6 +14,11 @@ public class NameFormatter {
   /** The plus sign before the genus of a graft-chimaera, {@code + Crataegomespilus}. */
   public static final char GRAFT_MARKER = '+';
   private static final String NOTHO_PREFIX = "notho";
+  /**
+   * The Prokaryotic Code abbreviates subgenus "subgen." (Rules 10c, 34c), where the rank's own marker
+   * is the botanical "subg.".
+   */
+  private static final String BACTERIAL_SUBGENUS_MARKER = "subgen.";
   private static final String ET_AL = "et al.";
 
   private static final String ITALICS_OPEN = "<i>";
@@ -240,7 +245,13 @@ public class NameFormatter {
             if (rankMarker) {
               // If we know the rank we use explicit rank markers
               // this is how botanical infrageneric names are formed, see http://www.iapt-taxon.org/nomen/main.php?page=art21
-              if (appendRankMarker(sb, n.getRank(), hybridMarker && hasNotho(n, NamePart.INFRAGENERIC))) {
+              boolean notho = hybridMarker && hasNotho(n, NamePart.INFRAGENERIC);
+              if (n.getRank() == Rank.SUBGENUS && n.getCode() == NomCode.BACTERIAL) {
+                if (notho) {
+                  sb.append(NOTHO_PREFIX);
+                }
+                sb.append(BACTERIAL_SUBGENUS_MARKER).append(' ');
+              } else if (appendRankMarker(sb, n.getRank(), notho)) {
                 sb.append(' ');
               }
             }
@@ -252,8 +263,12 @@ public class NameFormatter {
             appendGenus(sb, n, hybridMarker, showQualifier, html);
           }
           if (infrageneric) {
-            // additional subgenus shown for binomial. Always shown in brackets
+            // additional subgenus shown for binomial. Always shown in brackets, with its marker in
+            // bacteriology (Prokaryotic Code Rule 10c)
             sb.append(" (");
+            if (n.getCode() == NomCode.BACTERIAL) {
+              sb.append(BACTERIAL_SUBGENUS_MARKER).append(' ');
+            }
             appendInItalics(sb, n.getInfragenericEpithet(), html);
             sb.append(")");
           }
@@ -268,15 +283,22 @@ public class NameFormatter {
           if (n.getRank() != null && n.getRank().isSpeciesOrBelow()) {
             // no species epithet given, indetermined!
             if (n.getRank().isInfraspecific()) {
-              // maybe we have an infraspecific epithet? force to show the rank marker
-              appendInfraspecific(sb, n, hybridMarker, showQualifier, rankMarker, true, html);
+              // maybe we have an infraspecific epithet? force to show the rank marker - unless the
+              // phrase already spells that marker out ("strain T101"), which would double it
+              if (!phraseLeadsWithRankMarker(n)) {
+                appendInfraspecific(sb, n, hybridMarker, showQualifier, rankMarker, true, html);
+              }
             } else if (!phraseLeadsWithSpeciesMarker(n)) {
               // Skip the synthetic "sp." when an informal phrase already spells out the
               // species marker verbatim ("Allium species 1") — the phrase carries it.
               sb.append(" ");
               sb.append(n.getRank().getMarker());
             }
-            authorship = false;
+            // An infraspecific epithet under a bare genus ("Navicula var. fasciata Grunow") is no
+            // indetermined name: its author stays.
+            if (n.getInfraspecificEpithet() == null) {
+              authorship = false;
+            }
           }
         } else if (n.getInfraspecificEpithet() != null) {
           appendInfraspecific(sb, n, hybridMarker, showQualifier, rankMarker, false, html);
@@ -309,8 +331,11 @@ public class NameFormatter {
               && (NomCode.CULTIVARS != n.getRank().isRestrictedToCode() || n.getCultivarEpithet() == null)
           ) {
             // no infraspecific epitheton given, but rank below species. Indetermined!
-            // use ssp. for subspecies in case of indetermined names
-            if (n.getRank() == Rank.SUBSPECIES) {
+            // use ssp. for subspecies in case of indetermined names. Not when the phrase spells
+            // the marker out already, as alternatives do: "Sylvia cantillans subsp. inornata/iberiae"
+            if (phraseLeadsWithRankMarker(n)) {
+              // the phrase follows with its own spelling of the marker
+            } else if (n.getRank() == Rank.SUBSPECIES) {
               sb.append(" ssp.");
             } else {
               sb.append(' ');
@@ -473,14 +498,43 @@ public class NameFormatter {
   // the open-nomenclature qualifiers standing for the marker ("Formicidae cf.",
   // "Acroceridae aff. Terphis sp. SLW-2002") and the generic organism labels opening the
   // phrase of an unnamed species ("Holophagaceae bacterium UBA692", "Wolbachia endosymbiont
-  // of Leptogenys gracilis"), as the Rust engine's formatter reads them.
+  // of Leptogenys gracilis"), as the Rust engine's formatter reads them. Also the new-species
+  // markers "n. sp." and "nsp", the unnamed genus of "Carabidae gen. sp.", the aggregate marker of
+  // "Acalitus agg. brevitarsus/phyllereus" and a marker glued to its number, "Dynestinae sp2".
   private static final Pattern PHRASE_SPECIES_MARKER = Pattern.compile(
-      "^(?:(?:species|spec|spp|sp|cf|aff|nr|near|[a-z]*(?:bacteri(?:um|a)|archae(?:on|a|ote)|symbionts?))\\b"
-          + "|(?:n_)?sp_|n_gen\\b).*",
+      "^(?:(?:spp?|spec)\\d"
+          + "|(?:species|spec|spp|sp|nsp|agg|n\\.\\s*sp|cf|aff|nr|near|[a-z]*(?:bacteri(?:um|a)|archae(?:on|a|ote)|symbionts?))\\b"
+          + "|(?:n_)?sp(?:ec)?_|n_gen\\b|gen(?:\\.|\\s)).*",
       Pattern.CASE_INSENSITIVE);
+  // A "sp." or "spp." word further on in the phrase: the phrase of "Prionospio iberian canyons
+  // sp. c" holds the words before its marker, which rendered "Prionospio sp. iberian canyons sp. c".
+  private static final Pattern PHRASE_INNER_SPP_MARKER = Pattern.compile(
+      "(?:^|\\s)spp?\\.?(?:\\s|$)", Pattern.CASE_INSENSITIVE);
 
   private static boolean phraseLeadsWithSpeciesMarker(ParsedName n) {
-    return n.isPhraseName() && PHRASE_SPECIES_MARKER.matcher(n.getPhrase().trim()).matches();
+    if (!n.isPhraseName()) {
+      return false;
+    }
+    String phrase = n.getPhrase().trim();
+    return PHRASE_SPECIES_MARKER.matcher(phrase).matches() || PHRASE_INNER_SPP_MARKER.matcher(phrase).find();
+  }
+
+  /**
+   * True when an informal phrase already opens with this name's own rank marker, in any spelling of
+   * it: "sect. 1" on a section, "strain T101" on a strain, "var 3" on a variety, "ssp." or "subsp" on a
+   * subspecies. Synthesising the marker from the rank as well would double it ("Trachelomonas strain
+   * strain T101", "Sylvia cantillans ssp. subsp. inornata/iberiae"). Compared without trailing dots.
+   */
+  private static boolean phraseLeadsWithRankMarker(ParsedName n) {
+    Rank rank = n.getRank();
+    if (!n.isPhraseName() || rank == null || rank.getMarker() == null) {
+      return false;
+    }
+    String lead = n.getPhrase().trim().split("\\s+", 2)[0].replaceAll("\\.+$", "");
+    if (lead.equalsIgnoreCase(rank.getMarker().replaceAll("\\.+$", ""))) {
+      return true;
+    }
+    return rank.isInfraspecific() && RankUtils.RANK_MARKER_MAP_INFRASPECIFIC.get(lead.toLowerCase()) == rank;
   }
 
   private static boolean isUnknown(Rank r) {

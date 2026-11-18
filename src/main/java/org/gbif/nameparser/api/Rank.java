@@ -118,7 +118,11 @@ public enum Rank {
 
   SUPERGENUS("supergen.", "supergenera"),
   GENUS("gen.", "genera"),
-  SUBGENUS("subgen.", "subgenera"),
+  /**
+   * The botanical "subg." (ICN Art. 21); the Prokaryotic Code writes "subgen." (Rules 10c, 34c), which
+   * {@link org.gbif.nameparser.util.NameFormatter} uses for bacterial names.
+   */
+  SUBGENUS("subg.", "subgenera"),
   INFRAGENUS("infrag.", "infragenera"),
 
   /**

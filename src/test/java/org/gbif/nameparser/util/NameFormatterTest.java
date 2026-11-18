@@ -450,6 +450,45 @@ public class NameFormatterTest {
         NameFormatter.canonical(informal("Bacteroides", Rank.GENUS, Rank.SPECIES, "bacteriophage-free")));
   }
 
+  /**
+   * A phrase that spells out its marker itself gets no synthetic one, as the Rust engine's formatter
+   * writes it: an aggregate marker, a marker glued to its number, a sp. after the words before it,
+   * and an infraspecific rank's marker in any spelling (gbif/name-parser-rust#252, #242, #16).
+   */
+  @Test
+  public void testPhraseSpellsOutTheMarker() throws Exception {
+    assertEquals("Acalitus agg. brevitarsus/phyllereus",
+        NameFormatter.canonical(informal("Acalitus", Rank.GENUS, Rank.SPECIES_AGGREGATE, "agg. brevitarsus/phyllereus")));
+    assertEquals("Acalitus agg.",
+        NameFormatter.canonical(informal("Acalitus", Rank.GENUS, Rank.SPECIES_AGGREGATE, "agg.")));
+    assertEquals("Dynestinae sp2",
+        NameFormatter.canonical(informal("Dynestinae", Rank.GENUS, Rank.SPECIES, "sp2")));
+    assertEquals("Prionospio iberian canyons sp. c",
+        NameFormatter.canonical(informal("Prionospio", Rank.GENUS, Rank.SPECIES, "iberian canyons sp. c")));
+    assertEquals("Jardinella n. sp. keel",
+        NameFormatter.canonical(informal("Jardinella", Rank.GENUS, Rank.SPECIES, "n. sp. keel")));
+    // a phrase without a marker still gets one
+    assertEquals("Allium sp. 1",
+        NameFormatter.canonical(informal("Allium", Rank.GENUS, Rank.SPECIES, "1")));
+
+    // an infraspecific rank's own marker, in any spelling, on a species
+    ParsedName alternatives = informal("Sylvia", Rank.GENUS, Rank.SUBSPECIES, "subsp. inornata/iberiae");
+    alternatives.setSpecificEpithet("cantillans");
+    assertEquals("Sylvia cantillans subsp. inornata/iberiae", NameFormatter.canonical(alternatives));
+    alternatives.setPhrase("ssp. inornata/iberiae");
+    assertEquals("Sylvia cantillans ssp. inornata/iberiae", NameFormatter.canonical(alternatives));
+    alternatives.setRank(Rank.VARIETY);
+    alternatives.setPhrase("var. inornata/iberiae");
+    assertEquals("Sylvia cantillans var. inornata/iberiae", NameFormatter.canonical(alternatives));
+    // ... and on a genus
+    assertEquals("Trachelomonas strain T101",
+        NameFormatter.canonical(informal("Trachelomonas", Rank.GENUS, Rank.STRAIN, "strain T101")));
+    // a designation without the marker still gets it
+    ParsedName designation = informal("Grevillea", Rank.GENUS, Rank.SUBSPECIES, "Busselton (G.J.Keighery s.n. 28/8/1985)");
+    designation.setSpecificEpithet("brachystylis");
+    assertEquals("Grevillea brachystylis ssp. Busselton (G.J.Keighery s.n. 28/8/1985)", NameFormatter.canonical(designation));
+  }
+
   @Test
   public void testCanonicalParseResult() throws Exception {
     // Parsed -> the ParsedName's canonical form
@@ -649,7 +688,7 @@ public class NameFormatterTest {
     assertEquals("Abies infragen. Pinoideae Mill.", pn.canonicalName());
     
     pn.setRank(Rank.SUBGENUS);
-    assertEquals("Abies subgen. Pinoideae Mill.", pn.canonicalName());
+    assertEquals("Abies subg. Pinoideae Mill.", pn.canonicalName());
     
     pn.setCode(NomCode.ZOOLOGICAL);
     assertEquals("Abies (Pinoideae) Mill.", pn.canonicalName());
@@ -744,7 +783,7 @@ public class NameFormatterTest {
     pn.setRank(Rank.SUBGENUS);
     assertName(
         "Odontohypopomus",
-        "Brachyhypopomus subgen. Odontohypopomus Sullivan, Zuanon & Cox Fernandes, 2013"
+        "Brachyhypopomus subg. Odontohypopomus Sullivan, Zuanon & Cox Fernandes, 2013"
     );
     
     // but not for zoological names
@@ -782,9 +821,51 @@ public class NameFormatterTest {
     pn.setCode(NomCode.ZOOLOGICAL);
     assertName(
         "Ptarmica",
-        "subgen. Ptarmica (Mill.) W.D.J.Koch"
+        "subg. Ptarmica (Mill.) W.D.J.Koch"
     );
     
+  }
+
+  /**
+   * The Prokaryotic Code abbreviates subgenus "subgen." (Rules 10c, 34c) and writes it inside the
+   * brackets of a species name (Rule 10c); botany writes "subg." (ICN Art. 21).
+   */
+  @Test
+  public void testBacterialSubgenus() throws Exception {
+    ParsedName sub = new ParsedName();
+    sub.setGenus("Bacillus");
+    sub.setInfragenericEpithet("Aerobacillus");
+    sub.setRank(Rank.SUBGENUS);
+    assertEquals("Bacillus subg. Aerobacillus", NameFormatter.canonicalComplete(sub));
+    sub.setCode(NomCode.BACTERIAL);
+    assertEquals("Bacillus subgen. Aerobacillus", NameFormatter.canonicalComplete(sub));
+
+    ParsedName species = new ParsedName();
+    species.setGenus("Bacillus");
+    species.setInfragenericEpithet("Aerobacillus");
+    species.setSpecificEpithet("polymyxa");
+    species.setRank(Rank.SPECIES);
+    assertEquals("Bacillus (Aerobacillus) polymyxa", NameFormatter.canonicalComplete(species));
+    species.setCode(NomCode.BACTERIAL);
+    assertEquals("Bacillus (subgen. Aerobacillus) polymyxa", NameFormatter.canonicalComplete(species));
+  }
+
+  /**
+   * An infraspecific epithet under a bare genus ("Navicula var. fasciata Grunow") is no indetermined
+   * name: its author stays, as the Rust engine's formatter writes it.
+   */
+  @Test
+  public void testInfraspecificEpithetUnderAGenusKeepsItsAuthor() throws Exception {
+    ParsedName n = new ParsedName();
+    n.setType(NameType.INFORMAL);
+    n.setGenus("Navicula");
+    n.setInfraspecificEpithet("fasciata");
+    n.setRank(Rank.VARIETY);
+    n.setCombinationAuthorship(Authorship.authors("Grunow"));
+    assertEquals("Navicula var. fasciata Grunow", NameFormatter.canonicalComplete(n));
+    // an indetermined variety still drops it
+    n.setInfraspecificEpithet(null);
+    assertEquals("Navicula var.", NameFormatter.canonicalComplete(n));
   }
   
   @Test

@@ -174,7 +174,7 @@ public class ParsedNameTest {
     // a subgenus
     pn = informal("Lasioglossum", Rank.SPECIES, "sp. 1");
     pn.setInfragenericEpithet("Dialictus");
-    assertAnchor("Lasioglossum subgen. Dialictus", Rank.SUBGENUS, pn);
+    assertAnchor("Lasioglossum subg. Dialictus", Rank.SUBGENUS, pn);
     pn.setCode(NomCode.ZOOLOGICAL);
     assertAnchor("Lasioglossum (Dialictus)", Rank.SUBGENUS, pn);
     // or the infrageneric rank the name was given
