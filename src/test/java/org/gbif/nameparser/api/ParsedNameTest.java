@@ -269,6 +269,35 @@ public class ParsedNameTest {
     assertTrue(pn.anchor().isEmpty());
   }
 
+  /**
+   * A taxon GTDB split off hangs off the taxon it was split from (gbif/name-parser-rust#244).
+   */
+  @Test
+  public void anchorDropsGtdbSuffixes() {
+    ParsedName pn = new ParsedName();
+    pn.setType(NameType.INFORMAL);
+    pn.setGenus("Haemophilus_A");
+    pn.setSpecificEpithet("parahaemolyticus_B");
+    pn.setRank(Rank.SPECIES);
+    assertEquals("Haemophilus_A parahaemolyticus_B", pn.canonicalName());
+    assertAnchor("Haemophilus parahaemolyticus", Rank.SPECIES, pn);
+
+    assertAnchor("Pseudomonas", Rank.GENUS, informal("Pseudomonas_E", Rank.SPECIES, "sp002874965"));
+
+    pn = new ParsedName();
+    pn.setType(NameType.INFORMAL);
+    pn.setUninomial("Bacillaceae_B");
+    pn.setRank(Rank.FAMILY);
+    assertAnchor("Bacillaceae", Rank.FAMILY, pn);
+
+    // a lower-case label or one with digits is no GTDB suffix
+    pn = new ParsedName();
+    pn.setGenus("Nesomyrmex");
+    pn.setSpecificEpithet("madecassus_01m");
+    pn.setRank(Rank.SPECIES);
+    assertAnchor("Nesomyrmex madecassus_01m", Rank.SPECIES, pn);
+  }
+
   private static void assertAnchor(String canonical, Rank rank, ParsedName pn) {
     ParsedName a = pn.anchor().orElseThrow();
     assertEquals(canonical, a.canonicalName());

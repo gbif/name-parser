@@ -4,6 +4,8 @@ import org.gbif.nameparser.util.NameFormatter;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.gbif.nameparser.util.NameFormatter.GRAFT_MARKER;
 import static org.gbif.nameparser.util.NameFormatter.HYBRID_MARKER;
@@ -495,6 +497,8 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
    * The anchor keeps the name parts down to the deepest one that is present and not qualified (cf., aff., ?, ...).
    * A qualified genus is the exception: {@code ?Sydonia alba}, {@code Ferganoconcha? oblonga} and
    * {@code cf. Craticula} are anchored on that genus, as no part of the name is surer.
+   * The suffix GTDB gives a split taxon is dropped: {@code Pseudomonas_E putida} is anchored on
+   * <i>Pseudomonas putida</i>, {@code Bacillus_BF} on <i>Bacillus</i>.
    * It takes the rank of that part and the authorship that belongs to it: the specific authorship for a species
    * anchor of an infraspecific name, the generic one for a genus, the name's own when nothing below the anchor is
    * given. The phrase, qualifiers, notes, publication, warnings and flags other than {@link #isCandidatus()},
@@ -553,6 +557,7 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
         a.setCombinationAuthorship(getCombinationAuthorship());
         a.setBasionymAuthorship(getBasionymAuthorship());
       }
+      a.dropGtdbSuffixes();
       return Optional.of(a);
     }
 
@@ -619,7 +624,36 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
       a.setCombinationAuthorship(getCombinationAuthorship());
       a.setBasionymAuthorship(getBasionymAuthorship());
     }
+    a.dropGtdbSuffixes();
     return Optional.of(a);
+  }
+
+  /**
+   * The suffix GTDB gives a taxon it splits: an underscore and one to three capitals, as in Pseudomonas_E, Bacillus_BF
+   * or mitis_I. Not a lower-case label or one with digits: madecassus_01m, Stygiellidae_STYG2.
+   */
+  private static final Pattern GTDB_SUFFIX = Pattern.compile("^(\\p{L}[^_]*)_[A-Z]{1,3}$");
+
+  /**
+   * @return the word without its GTDB suffix, or the word itself if it has none
+   */
+  private static String dropGtdbSuffix(String word) {
+    if (word == null) {
+      return null;
+    }
+    Matcher m = GTDB_SUFFIX.matcher(word);
+    return m.matches() ? m.group(1) : word;
+  }
+
+  /**
+   * The anchor of a GTDB name is the taxon GTDB split it from: Pseudomonas_E putida hangs off Pseudomonas putida,
+   * Streptococcus mitis_I off Streptococcus mitis, Bacillus_BF off Bacillus.
+   */
+  private void dropGtdbSuffixes() {
+    uninomial = dropGtdbSuffix(uninomial);
+    genus = dropGtdbSuffix(genus);
+    specificEpithet = dropGtdbSuffix(specificEpithet);
+    infraspecificEpithet = dropGtdbSuffix(infraspecificEpithet);
   }
 
   private void keepNotho(ParsedName anchor, NamePart part) {
