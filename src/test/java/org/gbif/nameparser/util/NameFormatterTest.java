@@ -467,6 +467,10 @@ public class NameFormatterTest {
         NameFormatter.canonical(informal("Prionospio", Rank.GENUS, Rank.SPECIES, "iberian canyons sp. c")));
     assertEquals("Jardinella n. sp. keel",
         NameFormatter.canonical(informal("Jardinella", Rank.GENUS, Rank.SPECIES, "n. sp. keel")));
+    assertEquals("Forcipata n sp. ancantha",
+        NameFormatter.canonical(informal("Forcipata", Rank.GENUS, Rank.SPECIES, "n sp. ancantha")));
+    assertEquals("Emblyna n. sp1",
+        NameFormatter.canonical(informal("Emblyna", Rank.GENUS, Rank.SPECIES, "n. sp1")));
     // a phrase without a marker still gets one
     assertEquals("Allium sp. 1",
         NameFormatter.canonical(informal("Allium", Rank.GENUS, Rank.SPECIES, "1")));

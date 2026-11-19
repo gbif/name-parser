@@ -500,10 +500,11 @@ public class NameFormatter {
   // phrase of an unnamed species ("Holophagaceae bacterium UBA692", "Wolbachia endosymbiont
   // of Leptogenys gracilis"), as the Rust engine's formatter reads them. Also the new-species
   // markers "n. sp." and "nsp", the unnamed genus of "Carabidae gen. sp.", the aggregate marker of
-  // "Acalitus agg. brevitarsus/phyllereus" and a marker glued to its number, "Dynestinae sp2".
+  // "Acalitus agg. brevitarsus/phyllereus", a marker glued to its number, "Dynestinae sp2", and the
+  // dotless "n sp" of "Aus n sp 1".
   private static final Pattern PHRASE_SPECIES_MARKER = Pattern.compile(
       "^(?:(?:spp?|spec)\\d"
-          + "|(?:species|spec|spp|sp|nsp|agg|n\\.\\s*sp|cf|aff|nr|near|[a-z]*(?:bacteri(?:um|a)|archae(?:on|a|ote)|symbionts?))\\b"
+          + "|(?:species|spec|spp|sp|nsp|agg|n\\.?\\s*sp\\d*|cf|aff|nr|near|[a-z]*(?:bacteri(?:um|a)|archae(?:on|a|ote)|symbionts?))\\b"
           + "|(?:n_)?sp(?:ec)?_|n_gen\\b|gen(?:\\.|\\s)).*",
       Pattern.CASE_INSENSITIVE);
   // A "sp." or "spp." word further on in the phrase: the phrase of "Prionospio iberian canyons
