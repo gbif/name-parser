@@ -127,7 +127,10 @@ public class ParsedName extends ParsedAuthorship implements LinneanName {
   private Boolean originalSpelling;
 
   /**
-   * Optional qualifiers like cf. or aff. that can precede an epithet.
+   * Optional qualifiers like cf. or aff. that can precede an epithet. A doubted name part carries the
+   * qualifier "?", e.g. the species of "Metacnephia sommermanae ?" or the genus of "Ferganoconcha? oblonga";
+   * such a name is also {@link #isDoubtful() doubtful}. The {@link org.gbif.nameparser.util.NameFormatter}
+   * renders all qualifiers but the "?", which stays out of the name: "Metacnephia sommermanae".
    */
   private Map<NamePart, String> epithetQualifier;
   
