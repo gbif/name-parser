@@ -82,6 +82,11 @@ public class UnicodeUtils {
         }
         canonicals.append(canonical);
 
+        // a look-alike letter on the row of a digit ("0Oo…", "1Il…") is the ascii letter of its case on that row,
+        // not the digit: a cyrillic о in "оleiformis" is an o
+        final char upper = canonical >= '0' && canonical <= '9' ? asciiLetter(line, true) : 0;
+        final char lower = canonical >= '0' && canonical <= '9' ? asciiLetter(line, false) : 0;
+
         // ignore all ASCII chars from homoglyphs
         final AtomicInteger counter = new AtomicInteger();
         line.substring(1).codePoints()
@@ -102,7 +107,13 @@ public class UnicodeUtils {
                   System.out.print(cp);
                   System.out.println("  " + Character.getName(cp));
                 }
-                homoglyphs.put(cp, canonical);
+                char repl = canonical;
+                if (Character.isUpperCase(cp)) {
+                  if (upper != 0) repl = upper;
+                } else if (Character.isLowerCase(cp)) {
+                  if (lower != 0) repl = lower;
+                }
+                homoglyphs.put(cp, repl);
                 counter.incrementAndGet();
               }
             );
@@ -129,6 +140,19 @@ public class UnicodeUtils {
       }
     }
   }
+  /**
+   * The first ascii letter of the given case on a row of homoglyphs.txt after its canonical, or 0 if there is none.
+   */
+  private static char asciiLetter(String line, boolean upperCase) {
+    for (int i = 1; i < line.length(); i++) {
+      char c = line.charAt(i);
+      if ((upperCase && c >= 'A' && c <= 'Z') || (!upperCase && c >= 'a' && c <= 'z')) {
+        return c;
+      }
+    }
+    return 0;
+  }
+
   // unicode codepoints considered ASCII hyphens
   private static final int HYPHEN_HOMOGLYHPS_LOWEST_CP;
   private static final int HYPHEN_HOMOGLYHPS_HIGHEST_CP;
@@ -209,7 +233,8 @@ public class UnicodeUtils {
   }
 
   /**
-   * Returns true if there is at least on character which is a known homoglyph of a latin character.
+   * Returns true if there is at least on character which is a known homoglyph of a latin character,
+   * outside a word written in another script, i.e. if {@link #replaceHomoglyphs(CharSequence, boolean)} changes it.
    */
   public static boolean containsHomoglyphs(final CharSequence cs) {
     return findHomoglyph(cs) >= 0;
@@ -218,16 +243,24 @@ public class UnicodeUtils {
 
   /**
    * Returns the unicode codepoint of the first character which is a known homoglyph of a latin character
-   * or -1 if none could be found.
+   * outside a word written in another script, or -1 if none could be found.
    */
   public static int findHomoglyph(final CharSequence cs) {
     if (cs == null) {
       return -1;
     }
+    BitSet foreign = null;
+    boolean foreignChecked = false;
     for (int i = 0, n = cs.length(); i < n; ) {
       final int cp = Character.codePointAt(cs, i);
       if (isHomoglyph(cp)) {
-        return cp;
+        if (!foreignChecked) {
+          foreign = foreignWords(cs);
+          foreignChecked = true;
+        }
+        if (foreign == null || !foreign.get(i)) {
+          return cp;
+        }
       }
       i += Character.charCount(cp);
     }
@@ -236,6 +269,87 @@ public class UnicodeUtils {
 
   private static boolean isHomoglyph(int cp) {
     return HOMOGLYHPS_LOWEST_CP <= cp && cp <= HOMOGLYHPS_HIGHEST_CP && HOMOGLYHPS.get(cp);
+  }
+
+  /**
+   * The chars of the words written in another script, which keep their look-alikes, or null if there are none.
+   * A word is a run of letters, digits and marks. A word without latin letters is in another script if it
+   * has a letter with no latin look-alike, the cyrillic й of буйвол, or three letters or more, one of them lower case,
+   * that are all look-alikes (Москва). Once there is such a word, all words without latin letters are kept (ВВС Москва).
+   * Otherwise they are look-alikes slipped into latin text, as the cyrillic СЗ of "LINE СЗ – 80 B" or a greek α.
+   * Kept identical to name-parser-rust's nameparser::unicode::replace_homoglyphs.
+   */
+  @Nullable
+  private static BitSet foreignWords(final CharSequence cs) {
+    BitSet nonLatin = null;
+    boolean foreign = false;
+    final int n = cs.length();
+    int i = 0;
+    while (i < n) {
+      int cp = Character.codePointAt(cs, i);
+      if (!isWordChar(cp)) {
+        i += Character.charCount(cp);
+        continue;
+      }
+      final int start = i;
+      boolean latin = false;
+      boolean unmatched = false;
+      boolean lower = false;
+      int letters = 0;
+      while (i < n && isWordChar(cp = Character.codePointAt(cs, i))) {
+        if (Character.isAlphabetic(cp)) {
+          letters++;
+          if (isLatin(cp)) {
+            latin = true;
+          } else if (!isHomoglyph(cp)) {
+            unmatched = true;
+          }
+          lower |= Character.isLowerCase(cp);
+        }
+        i += Character.charCount(cp);
+      }
+      if (!latin && letters > 0) {
+        if (nonLatin == null) {
+          nonLatin = new BitSet(n);
+        }
+        nonLatin.set(start, i);
+        foreign |= unmatched || (letters >= 3 && lower);
+      }
+    }
+    return foreign ? nonLatin : null;
+  }
+
+  /**
+   * Letters, digits and marks: unicode Alphabetic and the general categories N and M.
+   */
+  private static boolean isWordChar(int cp) {
+    if (Character.isAlphabetic(cp)) {
+      return true;
+    }
+    switch (Character.getType(cp)) {
+      case Character.DECIMAL_DIGIT_NUMBER:
+      case Character.LETTER_NUMBER:
+      case Character.OTHER_NUMBER:
+      case Character.NON_SPACING_MARK:
+      case Character.ENCLOSING_MARK:
+      case Character.COMBINING_SPACING_MARK:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * A letter of the latin script: Basic Latin, Latin-1, Latin Extended-A to -E, the IPA and phonetic extensions,
+   * Latin Extended Additional and the latin ligatures.
+   */
+  private static boolean isLatin(int cp) {
+    return Character.isAlphabetic(cp) && (
+        (cp >= 0x41 && cp <= 0x5A) || (cp >= 0x61 && cp <= 0x7A) || cp == 0xAA || cp == 0xBA
+        || (cp >= 0xC0 && cp <= 0x2AF) || (cp >= 0x1D00 && cp <= 0x1DBF) || (cp >= 0x1E00 && cp <= 0x1EFF)
+        || (cp >= 0x2C60 && cp <= 0x2C7F) || (cp >= 0xA720 && cp <= 0xA7FF) || (cp >= 0xAB30 && cp <= 0xAB6F)
+        || (cp >= 0xFB00 && cp <= 0xFB06)
+    );
   }
 
   private static boolean isHyphenHomoglyph(int cp) {
@@ -261,7 +375,8 @@ public class UnicodeUtils {
   }
 
   /**
-   * Replaces all known homoglyphs with their canonical character.
+   * Replaces all known homoglyphs with their canonical character,
+   * except in words written in another script (Азербайджанский буйвол), see {@link #containsHomoglyphs(CharSequence)}.
    * @param inclHyphens if true homoglyphs for hyphens (which are sometimes wanted) will be replaced
    */
   public static String replaceHomoglyphs(final CharSequence cs, boolean inclHyphens) {
@@ -269,7 +384,8 @@ public class UnicodeUtils {
   }
 
   /**
-   * Replaces all known homoglyphs with their canonical character.
+   * Replaces all known homoglyphs with their canonical character,
+   * except in words written in another script (Азербайджанский буйвол), see {@link #containsHomoglyphs(CharSequence)}.
    * @param inclHyphens if true homoglyphs for hyphens (which are sometimes wanted) will be replaced
    * @param keep optional list of unicode characters/codepoints to not replace even though they are considered homoglyphs
    */
@@ -279,6 +395,8 @@ public class UnicodeUtils {
     }
     final int n = cs.length();
     StringBuilder sb = null; // only allocated once the first replacement is needed
+    BitSet foreign = null; // words in another script, only looked for once the first homoglyph is found
+    boolean foreignChecked = false;
     for (int i = 0; i < n; ) {
       final int cp = Character.codePointAt(cs, i);
       final int len = Character.charCount(cp);
@@ -287,7 +405,13 @@ public class UnicodeUtils {
         if (inclHyphens && isHyphenHomoglyph(cp)) {
           repl = '-';
         } else if (isHomoglyph(cp)) {
-          repl = HOMOGLYHPS_CANONICALS[Arrays.binarySearch(HOMOGLYHPS_CPS, cp)];
+          if (!foreignChecked) {
+            foreign = foreignWords(cs);
+            foreignChecked = true;
+          }
+          if (foreign == null || !foreign.get(i)) {
+            repl = HOMOGLYHPS_CANONICALS[Arrays.binarySearch(HOMOGLYHPS_CPS, cp)];
+          }
         }
       }
       if (repl != 0) {

@@ -1,0 +1,29 @@
+# How homoglyphs.txt is applied: UnicodeUtils.replaceHomoglyphs(s, false) in name-parser-api and
+# nameparser::unicode::replace_homoglyphs in name-parser-rust must turn each input into its output.
+# One case per line, input and expected output separated by a tab. Kept identical in both repos
+# (name-parser-api: src/test/resources/unicode/homoglyph-cases.txt) -- change both copies.
+#
+# A look-alike in Latin text is replaced. A look-alike on the row of a digit is the ASCII letter
+# of its case, not the digit (Cyrillic о, Greek ο, fullwidth ｌ). The hybrid marker, ligatures and
+# the Turkish dotless ı are letters of their own. A word in another script is left alone (#257).
+Abies alba Mill.	Abies alba Mill.
+Abies × Picea	Abies × Picea
+Musca domeſtica Linnaeus 1758	Musca domestica Linnaeus 1758
+Amphisbæna fuliginoſa	Amphisbæna fuliginosa
+Aus аbus L.	Aus abus L.
+Bubalus bubаlis 'буйвол'	Bubalus bubalis 'буйвол'
+R.Т.Craig	R.T.Craig
+Rhizobium оleiformis	Rhizobium oleiformis
+Anabarhynchus longepilοsus Lyneborg, 1992	Anabarhynchus longepilosus Lyneborg, 1992
+Іnula helenium	Inula helenium
+Ｉnula ｌongifolia	Inula longifolia
+Yıldırım & Kılıç	Yıldırım & Kılıç
+Hieracium alpinum α genuinum	Hieracium alpinum a genuinum
+Gallus gallus domesticus 'LINE СЗ – 80 B'	Gallus gallus domesticus 'LINE C3 – 80 B'
+Bos taurus 'ВВС'	Bos taurus 'BBC'
+Bubalus bubalis 'Азербайджанский (кавказский) буйвол'	Bubalus bubalis 'Азербайджанский (кавказский) буйвол'
+Bos taurus 'Москва'	Bos taurus 'Москва'
+Bos taurus 'ВВС Москва'	Bos taurus 'ВВС Москва'
+Abies alba Иванов	Abies alba Иванов
+Бос таурус	Бос таурус
+Βούβαλος	Βούβαλος
