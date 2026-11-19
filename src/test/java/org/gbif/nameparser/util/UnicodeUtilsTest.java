@@ -1,5 +1,7 @@
 package org.gbif.nameparser.util;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 
 import org.junit.Test;
@@ -91,6 +93,49 @@ public class UnicodeUtilsTest {
         fail("homoglyph wrongly detected");
       }
     }
+  }
+
+  /**
+   * The cases shared with name-parser-rust's nameparser::unicode::replace_homoglyphs, which tests the same file:
+   * both implementations must agree.
+   */
+  @Test
+  public void homoglyphCasesSharedWithRust() throws Exception {
+    int n = 0;
+    try (InputStream in = getClass().getResourceAsStream("/unicode/homoglyph-cases.txt")) {
+      assertNotNull(in);
+      for (String line : new String(in.readAllBytes(), StandardCharsets.UTF_8).split("\n")) {
+        if (line.isEmpty() || line.startsWith("#")) continue;
+        String[] cols = line.split("\t", -1);
+        assertEquals(line, 2, cols.length);
+        assertEquals(cols[0], cols[1], UnicodeUtils.replaceHomoglyphs(cols[0], false));
+        assertEquals(cols[0], !cols[0].equals(cols[1]), UnicodeUtils.containsHomoglyphs(cols[0]));
+        n++;
+      }
+    }
+    assertTrue("only " + n + " cases read", n >= 20);
+  }
+
+  /**
+   * A word written in another script keeps its letters, look-alikes or not (name-parser-rust#257).
+   */
+  @Test
+  public void wordsInAnotherScriptAreNoHomoglyphs() {
+    for (String x : new String[]{
+        "Азербайджанский (кавказский) буйвол",
+        "Москва",
+        "ВВС Москва",
+        "Βούβαλος"
+    }) {
+      assertFalse(x, UnicodeUtils.containsHomoglyphs(x));
+      assertEquals(-1, UnicodeUtils.findHomoglyph(x));
+      assertEquals(x, UnicodeUtils.replaceHomoglyphs(x, false));
+    }
+    // look-alikes among latin letters are still replaced
+    assertEquals("LINE C3 – 80 B", UnicodeUtils.replaceHomoglyphs("LINE СЗ – 80 B", false));
+    assertEquals("Bubalus bubalis 'буйвол'", UnicodeUtils.replaceHomoglyphs("Bubalus bubаlis 'буйвол'", false));
+    // the cyrillic о is an o, not a zero
+    assertEquals("oleiformis", UnicodeUtils.replaceHomoglyphs("оleiformis", false));
   }
 
   /**
