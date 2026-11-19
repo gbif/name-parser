@@ -30,6 +30,31 @@ public class Warnings {
   public static final String ABBREVIATED_SUBGENUS = "abbreviated subgenus name";
   public static final String REMOVED_PREFIX = "Removed: ";
   public static final String LONG_NAME = "unusually long name";
+  /**
+   * An author with a digit in it, left when no code or year could be told from it: Aus bus Smith2, 1900
+   */
+  public static final String AUTHOR_WITH_NUMBER = "author with attached number";
+  /**
+   * A separately supplied authorship differs from the one in the name string beyond holding less of it.
+   */
+  public static final String AUTHORSHIP_CONFLICT = "separate authorship differs from the name string's";
+  /**
+   * A species epithet written with a capital, as Linnaeus did (Ovis Aries), was put in lower case.
+   */
+  public static final String CAPITALISED_EPITHET = "capitalised epithet put in lower case";
+  /**
+   * A genus or epithet of a single letter, a designation or a broken record: M mus, Polypedates leucomystax b
+   */
+  public static final String SINGLE_LETTER = "single letter genus or epithet";
+  /**
+   * A genus or uninomial holding a digit or a character no scientific name uses: Imsh8ia aleurites
+   */
+  public static final String UNUSUAL_GENUS = "genus or uninomial with digit or unusual character";
+  /**
+   * An infrageneric, specific or infraspecific epithet holding a digit or a character no scientific name uses:
+   * Imshia aleu3ites, Ephedra przewalskiiß
+   */
+  public static final String UNUSUAL_EPITHET = "epithet with digit or unusual character";
 
   private Warnings() {
   }
