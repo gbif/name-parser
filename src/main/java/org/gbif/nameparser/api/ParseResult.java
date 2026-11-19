@@ -112,7 +112,14 @@ public sealed interface ParseResult permits ParseResult.Parsed, ParseResult.Unpa
   /**
    * A name that cannot be expressed as a {@link ParsedName}: a virus, hybrid formula, placeholder,
    * BOLD BIN or other non-name text. Carries the classifying {@link NameType} and, when known, the
-   * {@link NomCode} (e.g. VIRUS names).
+   * {@link NomCode} (e.g. VIRUS names). The type is the reason the name could not be parsed:
+   * <ul>
+   *   <li>{@link NameType#FORMULA}: a hybrid or graft-chimaera formula, two names joined by a cross</li>
+   *   <li>{@link NameType#PLACEHOLDER}: a placeholder with no real taxon to hang off, "incertae sedis"</li>
+   *   <li>{@link NameType#IDENTIFIER}: a machine identifier such as a BOLD BIN or a UNITE species hypothesis</li>
+   *   <li>{@link NameType#OTHER}: anything else, a virus among them, see there</li>
+   * </ul>
+   * An unparsable result carries no warnings: the type and code are all there is.
    */
   record Unparsable(NameType type, @Nullable NomCode code, String name) implements ParseResult {
     public Unparsable {

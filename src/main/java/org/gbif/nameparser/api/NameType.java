@@ -63,7 +63,19 @@ public enum NameType {
   IDENTIFIER,
 
   /**
-   * Any other unparsable name including numerical values, abbreviations or free text extracts.
+   * Any other unparsable name: no name could be read from it. Together with the {@link NomCode} of the
+   * {@link ParseResult.Unparsable} it is all the parser can say about why. Frequent reasons are:
+   * <ul>
+   *   <li>a virus, phage or viroid, which carries the code {@link NomCode#VIRUS}: "Tobacco mosaic virus",
+   *       "HIV-1 06TG.HT064"</li>
+   *   <li>a code or label rather than a name, the first word holding digits: "Lepidostoma1", "ANME-1 cluster
+   *       archaeon", "SAR324"</li>
+   *   <li>alternatives in different genera or without a genus: "Anser/Branta", "obsoletus/scoticus"</li>
+   *   <li>a vector, plasmid or other construct</li>
+   *   <li>numerical values, abbreviations or free text extracts</li>
+   * </ul>
+   * Problems inside a name that could still be parsed are flagged as {@link Warnings} on the
+   * {@link ParsedName} instead.
    */
   OTHER;
   
