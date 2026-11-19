@@ -307,10 +307,7 @@ public class NameFormatter {
       } else {
         // species part
         sb.append(' ');
-        if (showQualifier && n.hasEpithetQualifier(NamePart.SPECIFIC )) {
-          sb.append(n.getEpithetQualifier().get(NamePart.SPECIFIC))
-              .append(" ");
-        }
+        appendQualifier(sb, n, NamePart.SPECIFIC, showQualifier);
         if (hybridMarker && hasNotho(n, NamePart.SPECIFIC)) {
           sb.append(HYBRID_MARKER)
               .append(" ");
@@ -458,10 +455,7 @@ public class NameFormatter {
   private static StringBuilder appendInfraspecific(StringBuilder sb, ParsedName n, boolean hybridMarker, boolean showQualifier, boolean rankMarker, boolean forceRankMarker, boolean html) {
     // infraspecific part
     sb.append(' ');
-    if (showQualifier && n.hasEpithetQualifier(NamePart.INFRASPECIFIC )) {
-      sb.append(n.getEpithetQualifier().get(NamePart.INFRASPECIFIC))
-          .append(" ");
-    }
+    appendQualifier(sb, n, NamePart.INFRASPECIFIC, showQualifier);
     if (hybridMarker && hasNotho(n, NamePart.INFRASPECIFIC)) {
       if (rankMarker && n.getRank() != null && isInfraspecificMarker(n.getRank())) {
         sb.append("notho");
@@ -574,11 +568,22 @@ public class NameFormatter {
     return false;
   }
   
-  private static StringBuilder appendGenus(StringBuilder sb, ParsedName n, boolean hybridMarker, boolean showQualifier, boolean html) {
-    if (showQualifier && n.hasEpithetQualifier(NamePart.GENERIC )) {
-      sb.append(n.getEpithetQualifier().get(NamePart.GENERIC ))
-        .append(" ");
+  /**
+   * Appends the qualifier of a name part and a space, if shown and there is one: Abies cf. alba.
+   * The "?" of a doubted part is left out, the doubtful flag and the qualifier itself carry it:
+   * "Metacnephia ? sommermanae" is rendered "Metacnephia sommermanae".
+   */
+  private static void appendQualifier(StringBuilder sb, ParsedName n, NamePart part, boolean showQualifier) {
+    if (showQualifier && n.hasEpithetQualifier(part)) {
+      String qualifier = n.getEpithetQualifier().get(part);
+      if (!"?".equals(qualifier)) {
+        sb.append(qualifier).append(" ");
+      }
     }
+  }
+
+  private static StringBuilder appendGenus(StringBuilder sb, ParsedName n, boolean hybridMarker, boolean showQualifier, boolean html) {
+    appendQualifier(sb, n, NamePart.GENERIC, showQualifier);
     if (hybridMarker && n.isGraftChimaera()) {
       sb.append(GRAFT_MARKER)
           .append(" ");

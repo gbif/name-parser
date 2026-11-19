@@ -666,6 +666,27 @@ public class NameFormatterTest {
     assertEquals("× Abies alba cf. var. alpina (Carl.) Mill., 1887", NameFormatter.canonical(pn));
     assertEquals("× Abies alba cf. var. alpina (Carl.) Mill., 1887, nom. illeg.", NameFormatter.canonicalComplete(pn));
   }
+
+  /**
+   * The question mark of a doubted name part stays out of the name, the doubtful flag and the qualifier carry it.
+   */
+  @Test
+  public void questionMarkQualifiers() throws Exception {
+    pn.setGenus("Metacnephia");
+    pn.setSpecificEpithet("sommermanae");
+    pn.setEpithetQualifier(NamePart.SPECIFIC, "?");
+    pn.setDoubtful(true);
+    assertEquals("Metacnephia sommermanae", pn.canonicalName());
+    assertEquals("Metacnephia sommermanae", pn.canonicalNameComplete());
+
+    pn.getEpithetQualifier().clear();
+    pn.setEpithetQualifier(NamePart.GENERIC, "?");
+    assertEquals("Metacnephia sommermanae", pn.canonicalName());
+
+    pn.getEpithetQualifier().clear();
+    pn.setEpithetQualifier(NamePart.SPECIFIC, "cf.");
+    assertEquals("Metacnephia cf. sommermanae", pn.canonicalName());
+  }
   
   @Test
   public void testCanonicalName() throws Exception {
